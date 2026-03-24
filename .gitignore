@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# ffmpeg (Windows binaries)
+ffmpeg/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data files (ignored to keep repo clean)
+RecordedVideos/
+StabilizedVideos/
+Reports/
+Statistics/
+Flows/
+
+# OS files
+.DS_Store
+Thumbs.db
