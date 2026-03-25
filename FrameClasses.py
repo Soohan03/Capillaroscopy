@@ -542,7 +542,7 @@ class VideoFrame(tk.Frame):
 
             if platform =='win32':
                 k = [8,12]
-            if platform == 'darwin':
+            if platform == 'darwin' or platform == 'linux':
                 k = [4,6]
 
             if self.master.current_key in k: #control button (ctrl):
@@ -785,7 +785,7 @@ class VideoFrame(tk.Frame):
 
             if platform == 'win32':
                 file_name = self.master.video.path.split('\\')[-1][:-4]
-            if platform == 'darwin':
+            if platform == 'darwin' or platform == 'linux':
                 file_name = self.master.video.path.split('/')[-1][:-4]
 
 
@@ -811,7 +811,7 @@ class VideoFrame(tk.Frame):
 
         if platform == 'win32':
             file_name = self.master.video.path.split('\\')[-1][:-4]
-        if platform == 'darwin':
+        if platform == 'darwin' or platform == 'linux':
             file_name = self.master.video.path.split('/')[-1][:-4]
 
 
@@ -1010,7 +1010,7 @@ class FlowFrame(tk.Frame):
 
             if platform =='win32':
                 k = [8,12]
-            if platform == 'darwin':
+            if platform == 'darwin' or platform == 'linux':
                 k = [4,6]
 
             if self.master.current_key not in k: #control button (ctrl):
@@ -1218,7 +1218,7 @@ class FlowFrame(tk.Frame):
 
         if platform == 'win32':
             file_name = self.master.video.path.split('\\')[-1][:-4]
-        if platform == 'darwin':
+        if platform == 'darwin' or platform == 'linux':
             file_name = self.master.video.path.split('/')[-1][:-4]
 
         self.master.save_report_name = ''
@@ -1251,7 +1251,7 @@ class FlowFrame(tk.Frame):
 
         if platform == 'win32':
             file_name = self.master.video.path.split('\\')[-1][:-4]
-        if platform == 'darwin':
+        if platform == 'darwin' or platform == 'linux':
             file_name = self.master.video.path.split('/')[-1][:-4]
 
 
@@ -1340,7 +1340,7 @@ class FlowFrame(tk.Frame):
         #
         # if platform == 'win32':
         #     file_name = self.master.video.path.split('\\')[-1][:-4]
-        # if platform == 'darwin':
+        # if platform == 'darwin' or platform == 'linux':
         #     file_name = self.master.video.path.split('/')[-1][:-4]
         #
         # if os.path.isfile(os.path.join(self.master.statistics_directory_path,file_name + 'distance_vector.csv')) and \
@@ -1531,7 +1531,7 @@ class ParticipantList(tk.Frame):
         if platform == 'win32':
             a = [item.split('\\')[-1].split('.')[-2] for item in items]
             b = [item.split('\\')[-1].split('.')[-2] for item in stabilized_items]
-        if platform == 'darwin':
+        if platform == 'darwin' or platform == 'linux':
             a = [item.split('/')[-1].split('.')[-2] for item in items]
             b = [item.split('/')[-1].split('.')[-2] for item in stabilized_items]
         print('windows mac:')
@@ -1622,7 +1622,7 @@ class ParticipantList(tk.Frame):
 
             if platform == 'win32':
                 text_to_place = seperator.join([item.split('\\')[-1],'Length: ' + str(duration_in_seconds) + ' seconds'])
-            if platform == 'darwin':
+            if platform == 'darwin' or platform == 'linux':
                 text_to_place = seperator.join([item.split('/')[-1],'Length: ' + str(duration_in_seconds) + ' seconds'])
 
 

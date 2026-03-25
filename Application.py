@@ -37,7 +37,7 @@ class Application(tk.Frame):
         # self.canvas = tk.Canvas(self.master)
         self.master.color_rgb = (230,230,230,0)
         self.master.color_hex = rgb_to_hex(self.master.color_rgb[:3])
-        if platform == 'darwin':
+        if platform == 'darwin' or platform == 'linux':
             self.master.font = ("Helvetica",14)
             self.master.height = 770
         else:

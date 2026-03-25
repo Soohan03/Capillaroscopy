@@ -78,7 +78,7 @@ class Stabilize_Frame(tk.Frame):
         if platform == 'win32':
             a = [item.split('\\')[-1].split('.')[-2] for item in items]
             b = [item.split('\\')[-1].split('.')[-2] for item in stabilized_items]
-        if platform == 'darwin':
+        if platform == 'darwin' or platform == 'linux':
             a = [item.split('/')[-1].split('.')[-2] for item in items]
             b = [item.split('/')[-1].split('.')[-2] for item in stabilized_items]
 
