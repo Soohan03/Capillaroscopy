@@ -137,7 +137,7 @@ class CameraFrameSettings(tk.Frame):
 
     def generate_recording_button(self):
         temp_img = Image.open(self.image_path) #Source/logo_small.png
-        temp_img = temp_img.resize((int(self.size_of_icon),int(self.size_of_icon)),Image.ANTIALIAS)
+        temp_img = temp_img.resize((int(self.size_of_icon),int(self.size_of_icon)),Image.Resampling.LANCZOS)
         blank_image = Image.new('RGBA',(self.size_of_icon,self.size_of_icon),self.master.color_rgb)
         blank_image.paste(temp_img,mask=temp_img)
         r,g,b,a = cv2.split(np.array(blank_image))
@@ -171,7 +171,7 @@ class Menu(tk.Frame):
 
         logotype_size = self.size_of_logos
         temp_img = Image.open('Source/Capture-Logo.png')
-        temp_img = temp_img.resize((int(logotype_size ),int(logotype_size )),Image.ANTIALIAS)
+        temp_img = temp_img.resize((int(logotype_size ),int(logotype_size )),Image.Resampling.LANCZOS)
         blank_image = Image.new('RGBA',(logotype_size,logotype_size ),self.master.color_rgb)
         blank_image.paste(temp_img,mask=temp_img)
         r,g,b,a = cv2.split(np.array(blank_image))
@@ -185,7 +185,7 @@ class Menu(tk.Frame):
 
 
         temp_img = Image.open('Source/Capture3.png') #Source/logo_small.png
-        temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.ANTIALIAS)
+        temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.Resampling.LANCZOS)
         blank_image = Image.new('RGBA',(self.size_of_logos,self.size_of_logos),self.master.color_rgb)
         blank_image.paste(temp_img,mask=temp_img)
         r,g,b,a = cv2.split(np.array(blank_image))
@@ -193,7 +193,7 @@ class Menu(tk.Frame):
         self.icon_capture = ImageTk.PhotoImage(temp_img)
 
         temp_img = Image.open('Source/Analyze.png') #Source/logo_small.png
-        temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.ANTIALIAS)
+        temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.Resampling.LANCZOS)
         blank_image = Image.new('RGBA',(self.size_of_logos,self.size_of_logos),self.master.color_rgb)
         blank_image.paste(temp_img,mask=temp_img)
         r,g,b,a = cv2.split(np.array(blank_image))
@@ -201,7 +201,7 @@ class Menu(tk.Frame):
         self.icon_analyze = ImageTk.PhotoImage(temp_img)
 
         # temp_img = Image.open('Source/Stabilize.png') #Source/logo_small.png
-        # temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.ANTIALIAS)
+        # temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.Resampling.LANCZOS)
         # blank_image = Image.new('RGBA',(self.size_of_logos,self.size_of_logos),self.master.color_rgb)
         # blank_image.paste(temp_img,mask=temp_img)
         # r,g,b,a = cv2.split(np.array(blank_image))
@@ -209,7 +209,7 @@ class Menu(tk.Frame):
         # self.icon_stabilize = ImageTk.PhotoImage(temp_img)
 
         temp_img = Image.open('Source/Stabilize.png') #Source/logo_small.png
-        temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.ANTIALIAS)
+        temp_img = temp_img.resize((int(self.size_of_logos),int(self.size_of_logos)),Image.Resampling.LANCZOS)
         blank_image = Image.new('RGBA',(self.size_of_logos,self.size_of_logos),self.master.color_rgb)
         blank_image.paste(temp_img,mask=temp_img)
         r,g,b,a = cv2.split(np.array(blank_image))
@@ -223,7 +223,7 @@ class Menu(tk.Frame):
 
 
 
-        # self.img = self.img.resize((int(self.width),int(self.height)),Image.ANTIALIAS)
+        # self.img = self.img.resize((int(self.width),int(self.height)),Image.Resampling.LANCZOS)
 
 
         # self.plot_image = Image.fromarray(cv2.merge((r,g,b)))
@@ -371,7 +371,7 @@ class MatplotlibFrame(tk.Frame):
         buf.seek(0)
         buf_image = Image.open(buf)
 
-        buf_image = buf_image.resize((int(self.plot_canvas_w),int(self.plot_canvas_h)),Image.ANTIALIAS)
+        buf_image = buf_image.resize((int(self.plot_canvas_w),int(self.plot_canvas_h)),Image.Resampling.LANCZOS)
 
         blank_image = Image.new('RGBA',(self.plot_canvas_w,self.plot_canvas_h),self.master.color_rgb)
         blank_image.paste(buf_image,mask=buf_image)
@@ -426,7 +426,7 @@ class MatplotlibFrame(tk.Frame):
                 buf_image = Image.open(buf)
 
                 buf_image = buf_image.resize((int(self.plot_canvas_w),int(self.plot_canvas_h)),
-                                             Image.ANTIALIAS)
+                                             Image.Resampling.LANCZOS)
                 blank_image = Image.new('RGBA',(self.plot_canvas_w,self.plot_canvas_h),self.master.color_rgb)
                 blank_image.paste(buf_image,mask=buf_image)
 
@@ -886,7 +886,7 @@ class VideoFrame(tk.Frame):
 
 
                     self.frame_Image = Image.fromarray(frame)
-                    self.frame_Image = self.frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.ANTIALIAS)
+                    self.frame_Image = self.frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.Resampling.LANCZOS)
 
 
                     self.frame = ImageTk.PhotoImage(self.frame_Image)
@@ -900,7 +900,7 @@ class VideoFrame(tk.Frame):
                 frame = self.rectangle2.draw_rectangle(frame)
                 frame_Image = Image.fromarray(frame)
                 # self.video_frame_w,self.video_frame_h = self.canvas_size(self.canvas_w,self.canvas_h)
-                frame_Image = frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.ANTIALIAS)
+                frame_Image = frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.Resampling.LANCZOS)
                 self.frame = ImageTk.PhotoImage(frame_Image)
                 self.video_canvas.itemconfig(self.image_id,image=self.frame)
                 pass
@@ -1421,7 +1421,7 @@ class FlowFrame(tk.Frame):
 
 
                 self.frame_Image = Image.fromarray(frame)
-                self.frame_Image = self.frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.ANTIALIAS)
+                self.frame_Image = self.frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.Resampling.LANCZOS)
 
 
                 self.frame = ImageTk.PhotoImage(self.frame_Image)
@@ -1435,7 +1435,7 @@ class FlowFrame(tk.Frame):
             frame = self.rectangle1.draw_rectangle_drag(frame)
             self.frame_Image = Image.fromarray(frame)
             # self.video_frame_w,self.video_frame_h = self.canvas_size(self.canvas_w,self.canvas_h)
-            self.frame_Image = self.frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.ANTIALIAS)
+            self.frame_Image = self.frame_Image.resize((self.video_canvas_w,self.video_canvas_h),Image.Resampling.LANCZOS)
             self.frame = ImageTk.PhotoImage(self.frame_Image)
             self.video_canvas.itemconfig(self.image_id,image=self.frame)
 

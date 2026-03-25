@@ -247,7 +247,7 @@ class Camera_Frame(tk.Frame):
         try:  # error only happens on program start
             self.frame_Image = self.frame_Image.resize((self.video_frame_w,
                                                         self.video_frame_h),
-                                                       Image.ANTIALIAS)
+                                                       Image.Resampling.LANCZOS)
         except:
             self.video_frame_w,self.video_frame_h = self.canvas_size(self.canvas_w,self.canvas_h)
 
