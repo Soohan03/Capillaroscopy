@@ -1481,7 +1481,10 @@ class ParticipantList(tk.Frame):
         self.temp_thumbnail_size=[]
 
         # self.selected_item =
-        self.master.selected_item = self.items[0]  # always set first item as selected when initializing
+        if len(self.items) > 0:
+            self.master.selected_item = self.items[0]  # always set first item as selected when initializing
+        else:
+            self.master.selected_item = None
         # try:
         #
         # except:
@@ -1537,7 +1540,7 @@ class ParticipantList(tk.Frame):
         print('windows mac:')
         print(a)
 
-        return np.in1d(a,b) #in both lists
+        return np.isin(a,b) #in both lists
 
     def options_cmd(self,url):
         self.popup = Popup_Frame(self.master,url=url)
