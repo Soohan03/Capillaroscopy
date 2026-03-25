@@ -228,7 +228,8 @@ class Application(tk.Frame):
     def _resize(self,event=None,force=False):
         # print(self.master.width,self.master.height)
         self.master.stop=True
-        self.master.video.pause =1
+        if hasattr(self.master, 'video') and self.master.video is not None:
+            self.master.video.pause =1
         if self.mouse_released:
             if event.width<300 or event.height<300:
                 self.master.width = 1000

@@ -45,7 +45,10 @@ class Analyze_Frame(tk.Frame):
         self.master.screen_height = self.master.height
 
         self.participant_list = ParticipantList(self.master,path=self.master.recorded_video_directory_path)
-        self.video_frame = VideoFrame(self.master,path=self.master.selected_item)
+        if self.master.selected_item is not None:
+            self.video_frame = VideoFrame(self.master,path=self.master.selected_item)
+        else:
+            self.video_frame = None
         # self.matplotlib_frame = MatplotlibFrame(self.master)
 
         # self.master.bind("<Escape>",self.end_fullscreen)
@@ -66,26 +69,30 @@ class Analyze_Frame(tk.Frame):
     def _resize(self,event=None):
         # self.main_frame.configure(width=self.master.width,
         #                             height=self.master.height)
-        self.video_frame._resize()
+        if self.video_frame is not None:
+            self.video_frame._resize()
         pass
 
         #move all resizing here
 
     def _unpack(self):
         self.participant_list._unpack()
-        self.video_frame._unpack()
+        if self.video_frame is not None:
+            self.video_frame._unpack()
         # self.matplotlib_frame._unpack()
         # self.main_frame.pack_forget()
 
     def _pack(self):
         self.participant_list._pack()
-        self.video_frame._pack()
+        if self.video_frame is not None:
+            self.video_frame._pack()
         # self.matplotlib_frame._pack()
         # self.main_frame.pack()
 
     def _destroy(self):
         self.participant_list._destroy()
-        self.video_frame._destroy()
+        if self.video_frame is not None:
+            self.video_frame._destroy()
         # self.matplotlib_frame._destroy()
 
     def end_fullscreen(self,event):
@@ -101,12 +108,17 @@ class Analyze_Frame(tk.Frame):
 
         if self.master.selected_item != None:
             if self.master.selected_item!=self.master.previously_selected_item:
-                self.video_frame.set_video(self.master.selected_item)
+                if self.video_frame is not None:
+                    self.video_frame.set_video(self.master.selected_item)
+                else:
+                    self.video_frame = VideoFrame(self.master,path=self.master.selected_item)
+                    self.video_frame._pack()
                 self.master.previously_selected_item=self.master.selected_item
                 self.video_frame.update(force=True)
 
         self.test+=1
-        self.video_frame.update(stop=self.master.stop)
+        if self.video_frame is not None:
+            self.video_frame.update(stop=self.master.stop)
         # self.matplotlib_frame.update()
 
 
