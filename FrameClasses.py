@@ -638,7 +638,7 @@ class VideoFrame(tk.Frame):
         time_points = self.registered_time_points
         if len(time_points)>0:
             for time_point in time_points:
-                time_point_percent =(time_point*30) / (self.master.video.number_of_frames_)
+                time_point_percent =(time_point*self.master.video.fps_) / (self.master.video.number_of_frames_)
 
                 bar[:,int(time_point_percent *width)-1:int(time_point_percent *width)+1,0] = time_point_color[0]
                 bar[:,int(time_point_percent * width) - 1:int(time_point_percent * width) + 1,1] = time_point_color[1]
@@ -732,7 +732,8 @@ class VideoFrame(tk.Frame):
         self.rectangle1 = Rectangle(isForward=True)
         self.rectangle2 = Rectangle(isForward=False)
 
-        self.cross_correlation = CrossCorrelation(self.master.video,self.rectangle1,self.rectangle2)
+        self.cross_correlation = CrossCorrelation(self.master.video,self.rectangle1,self.rectangle2,
+                                                  mm_per_pixel=getattr(self.master,'mm_per_pixel',0.001328903654))
 
         self.video_bar_w = self.video_canvas_w
         self.video_bar_h = int(self.video_canvas_h * self.video_bar_relative_to_canvas)
@@ -803,7 +804,7 @@ class VideoFrame(tk.Frame):
             tk.messagebox.showerror("Error", "Not enought data to save yet")
 
     def register_time_point(self):
-        self.registered_time_points.append(self.frame_number/30)
+        self.registered_time_points.append(self.frame_number/self.master.video.fps_)
 
     def generate_report(self):
 
@@ -851,7 +852,7 @@ class VideoFrame(tk.Frame):
 
             if self.frame_number % 5 == 0:
                 self.get_rectangle_width_and_height()
-                self.video_time.set('Time: ' + str(int(self.frame_number / 30))+'s')
+                self.video_time.set('Time: ' + str(int(self.frame_number / self.master.video.fps_))+'s')
 
             if self.frame_number % 20 == 0:
                 cross_correlation_estimation=self.cross_correlation.estimate_cross_correlation(self.frame_number)
@@ -1280,7 +1281,8 @@ class FlowFrame(tk.Frame):
 
 
         # this is the average flow magnitude for the selected area, measured in pixels.
-        magnificationCoefficient = 1.328903654e-06 * 1000  # *1000 to get it in mm
+        magnificationCoefficient = getattr(self.master,'mm_per_pixel',0.001328903654) # spatial calibration, configured in settings.csv
+        fps = self.master.video.fps_ or 30
 
 
         up = np.array([[np.nan] * (len(b) - 1)])[0]
@@ -1315,10 +1317,10 @@ class FlowFrame(tk.Frame):
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
 
-        flow_field_up = pd.DataFrame(up,columns=['flow']).set_index(pd.Series(up).index / 30).dropna().ewm(span=100).mean()
+        flow_field_up = pd.DataFrame(up,columns=['flow']).set_index(pd.Series(up).index / fps).dropna().ewm(span=100).mean()
         plt.plot(flow_field_up,label='up')
 
-        flow_field_down = pd.DataFrame(down,columns=['flow']).set_index(pd.Series(down).index / 30).dropna().ewm(span=100).mean()
+        flow_field_down = pd.DataFrame(down,columns=['flow']).set_index(pd.Series(down).index / fps).dropna().ewm(span=100).mean()
         plt.plot(flow_field_down,label='down')
 
         plt.title('Flow field magnitude ')
@@ -1328,7 +1330,7 @@ class FlowFrame(tk.Frame):
         f.savefig(os.path.join(self.master.report_directory_path,file_name+ '___' + self.master.chosen_report_to_generate + '___up_and_down_.png'),dpi=f.dpi,transparent=True,bbox_inches = 'tight')
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
-        flow_field_both = pd.DataFrame(both,columns=['flow']).set_index(pd.Series(both).index / 30).dropna().ewm(span=100).mean()
+        flow_field_both = pd.DataFrame(both,columns=['flow']).set_index(pd.Series(both).index / fps).dropna().ewm(span=100).mean()
         plt.plot(flow_field_both,label='omnidirectional')
         plt.title('Flow field magnitude ')
         plt.ylabel('Magnitude (mm)')
@@ -1390,7 +1392,7 @@ class FlowFrame(tk.Frame):
 
         if self.frame_number%5==0:
             self.generate_progress_bar()
-            self.video_time.set('Time: ' + str(int(self.frame_number / 30)) + 's')
+            self.video_time.set('Time: ' + str(int(self.frame_number / self.master.video.fps_)) + 's')
             # self.video_bar.itemconfig(self.video_bar_image_id,image=self.bar)
 
         if self.master.video.pause == 0 or force==True:

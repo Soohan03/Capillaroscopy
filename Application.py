@@ -67,82 +67,45 @@ class Application(tk.Frame):
         self.master.master_canvas=tk.Frame(self.master,bg=self.master.color_hex,borderwidth=0, highlightthickness=0,width=100,height=10)
         self.master.master_canvas.pack(fill=tk.BOTH,expand=1)
 
-        #set settings by using **kwargs!
+        # settings.csv holds persistent configuration:
+        #   Application_path - folder holding RecordedVideos/, StabilizedVideos/ etc.
+        #   mm_per_pixel     - spatial calibration of the capillaroscope optics
+        #                      (mm per image pixel), used to convert pixel velocities
+        #                      to mm/s. The default was calibrated for the original
+        #                      study microscope; recalibrate when the hardware changes.
+        default_settings = {'mm_per_pixel': '0.001328903654'}
         try:
-            #first time open program = False
             df = pd.read_csv('settings.csv')
             self.master.settings = pd.DataFrame(df.to_numpy()[:,1],index=df.to_numpy()[:,0])
-
             self.master.program_directory = self.master.settings.loc['Application_path'].values[0]
-            self.master.recorded_video_directory_path = os.path.join(self.master.program_directory,'RecordedVideos')
-            self.master.stabilized_video_directory_path = os.path.join(self.master.program_directory,'StabilizedVideos')
-            self.master.report_directory_path = os.path.join(self.master.program_directory,'Reports')
-            self.master.statistics_directory_path = os.path.join(self.master.program_directory,'Statistics')
-            self.master.flows_directory_path = os.path.join(self.master.program_directory,'Flows')
-            try:
-                os.mkdir(self.master.recorded_video_directory_path)
-            except:
-                pass
-
-            try:
-                os.mkdir(self.master.stabilized_video_directory_path)
-            except:
-                pass
-
-            try:
-                os.mkdir(self.master.report_directory_path)
-            except:
-                pass
-
-            try:
-                os.mkdir(self.master.statistics_directory_path)
-            except:
-                pass
-
-            try:
-                os.mkdir(self.master.flows_directory_path)
-            except:
-                pass
-        except:
-            # first time open program = True
+        except Exception:
+            # first time the program is opened: ask for a data folder
+            logging.exception('Could not read settings.csv, creating a new one')
             self.master.program_directory = filedialog.askdirectory(initialdir='desktop',title='Select application folder')
-            self.master.recorded_video_directory_path = os.path.join(self.master.program_directory,'RecordedVideos')
-            self.master.stabilized_video_directory_path = os.path.join(self.master.program_directory,'StabilizedVideos')
-            self.master.report_directory_path = os.path.join(self.master.program_directory,'Reports')
-            self.master.statistics_directory_path = os.path.join(self.master.program_directory,'Statistics')
-            self.master.flows_directory_path = os.path.join(self.master.program_directory,'Flows')
+            self.master.settings = pd.DataFrame([self.master.program_directory],index=['Application_path'])
 
-            try:
-                os.mkdir(self.master.recorded_video_directory_path)
-            except:
-                pass
+        # fill in any missing settings with defaults and persist them
+        settings_changed = not os.path.isfile('settings.csv')
+        for key,value in default_settings.items():
+            if key not in self.master.settings.index:
+                self.master.settings.loc[key] = value
+                settings_changed = True
+        if settings_changed:
+            self.master.settings.to_csv('settings.csv')
 
-            try:
-                os.mkdir(self.master.stabilized_video_directory_path)
-            except:
-                pass
+        self.master.mm_per_pixel = float(self.master.settings.loc['mm_per_pixel'].values[0])
 
-            try:
-                os.mkdir(self.master.report_directory_path)
-            except:
-                pass
-
-            try:
-                os.mkdir(self.master.statistics_directory_path)
-            except:
-                pass
-
-            try:
-                os.mkdir(self.master.flows_directory_path)
-            except:
-                pass
-
-            temp = np.array([
-                ['Application_path',self.master.program_directory],
-                ['logo2','test2'],
-                ])
-            df = pd.DataFrame(temp[:,1],index=temp[:,0])
-            df.to_csv('settings.csv')
+        self.master.recorded_video_directory_path = os.path.join(self.master.program_directory,'RecordedVideos')
+        self.master.stabilized_video_directory_path = os.path.join(self.master.program_directory,'StabilizedVideos')
+        self.master.report_directory_path = os.path.join(self.master.program_directory,'Reports')
+        self.master.statistics_directory_path = os.path.join(self.master.program_directory,'Statistics')
+        self.master.flows_directory_path = os.path.join(self.master.program_directory,'Flows')
+        for directory_path in (self.master.recorded_video_directory_path,
+                               self.master.stabilized_video_directory_path,
+                               self.master.report_directory_path,
+                               self.master.statistics_directory_path,
+                               self.master.flows_directory_path):
+            os.makedirs(directory_path,exist_ok=True)
 
 
 

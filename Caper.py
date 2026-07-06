@@ -110,7 +110,7 @@ class Video:
 
         self.cap.open(self.path)
         self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
         self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.resolution_ = int(self.width_*self.height_)
@@ -166,7 +166,7 @@ class Video:
         else:
             self.number_of_frames_ = max_frames
 
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
         self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.resolution_ = int(self.width_*self.height_)
@@ -193,7 +193,7 @@ class Video:
         if self.cap_open == False:
             self.cap.open(self.path)
             self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
             self.width_ = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height_ = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self.resolution_ = int(self.width_ * self.height_)
@@ -360,7 +360,7 @@ class ColorVideo(Video):
         if self.cap_open == False:
             self.cap.open(self.path)
             self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
             self.width_ = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height_ = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self.resolution_ = int(self.width_ * self.height_)
@@ -412,7 +412,7 @@ class ColorVideo(Video):
         else:
             self.number_of_frames_ = max_frames
 
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
         self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.resolution_ = int(self.width_*self.height_)
@@ -474,7 +474,7 @@ class VideoStabilization(Video):
             else:
                 self.number_of_frames_ = max_frames
 
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
             self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self.resolution_ = int(self.width_*self.height_)
@@ -790,10 +790,14 @@ class CrossCorrelation:
     # därför måste
     # 1an är först, iallafall här, vilket innebär att vi utgår ifrån 1an. 1an ger vid den tidpunkten lagget av
 
-    def __init__(self,video,rectangle1,rectangle2):
+    def __init__(self,video,rectangle1,rectangle2,mm_per_pixel=0.001328903654):
         self.video = video
         self.rectangle_first = rectangle1
         self.rectangle_last = rectangle2
+
+        # use the video's real frame rate; a hardcoded 30 here would bias
+        # every velocity estimate for videos recorded at another rate
+        self.fps = float(video.fps_) if getattr(video,'fps_',0) else 30.0
 
         # data first encounters new data
         self.first_vec = dict(
@@ -805,7 +809,7 @@ class CrossCorrelation:
 
         self.distance_vector= np.array([np.nan] * self.video.number_of_frames_)
 
-        self.magnificationCoefficient = 1.328903654e-06 * 1000 # *1000 to get it in mm
+        self.magnificationCoefficient = mm_per_pixel # spatial calibration, configured in settings.csv
 
     def check_if_enough_data_for_report(self):
 
@@ -924,7 +928,7 @@ class CrossCorrelation:
         # t = df.loc[:,df.columns.str.contains('correlation2')].mean(axis=1)
         #
         df2 = df.copy()
-        df2['time']= df.index/30
+        df2['time']= df.index #index is already in seconds (set in calculate_cross_correlation)
         df2['velocity'] = temp_vec.values
         df2['correlation'] = df.loc[:,df.columns.str.contains('correlation')].mean(axis=1).rolling(30,min_periods=1).mean()
 
@@ -1081,11 +1085,11 @@ class CrossCorrelation:
         d_vec = d_vec.loc[[lookup[i] for i in index_]]
         d_vec.columns = ['distance']
         report_data = pd.concat([report_data,d_vec],axis=1)
-        magnification_coefficient = 1.328903654e-06 * 1000
+        magnification_coefficient = self.magnificationCoefficient
 
         for col in result.columns.values:
             report_data['velocity' + col] = ((report_data['distance'] / -report_data[col]) / (
-                        1 / 30)) * magnification_coefficient
+                        1.0 / self.fps)) * magnification_coefficient
 
             # distance (pixels) /time (1/30) = pixels per 1/30 seconds.
             # pixels per 1/30 seconds * 30 = pixels per seconds
@@ -1100,7 +1104,7 @@ class CrossCorrelation:
         #
         # report_data = report_data.set_index(s_indx_)
 
-        report_data = report_data.set_index(np.array(list(report_data.index)) * (1 / 30))
+        report_data = report_data.set_index(np.array(list(report_data.index)) * (1.0 / self.fps))
 
 
         return report_data
