@@ -2,8 +2,11 @@
 # import rumps
 # rumps.debug_mode(True)
 import sys
+import logging
+import traceback
 if "Tkinter" not in sys.modules:
     import tkinter as tk
+from tkinter import messagebox
 import numpy as np
 import pickle
 from PIL import ImageTk,Image
@@ -56,6 +59,7 @@ class Application(tk.Frame):
 
         self.mouse_released = False
         self.state = False
+        self._reported_errors = set()
         self.master.options=None
         self.master.url=None
         self.master.stop=False
@@ -295,6 +299,25 @@ class Application(tk.Frame):
             self.master.fps = 30
 
     def update(self):
+        # Any uncaught exception here would end the after() chain and freeze the
+        # whole UI, so log it and keep the loop alive instead.
+        try:
+            self._update_body()
+        except Exception:
+            logging.exception('Unhandled error in main update loop')
+            self._report_update_error(traceback.format_exc())
+        self.master.after(self.delay,self.update)
+
+    def _report_update_error(self,tb):
+        error_key = tb.strip().splitlines()[-1]
+        if error_key not in self._reported_errors:
+            self._reported_errors.add(error_key)
+            messagebox.showerror('Unexpected error',
+                                 'The application hit an error but will keep running.\n\n'
+                                 + error_key +
+                                 '\n\nSee capillaroscopy.log for the full traceback.')
+
+    def _update_body(self):
         self.options_update()
         self.delay=1 #one millisecond, (can't be zero)
 
@@ -361,30 +384,18 @@ class Application(tk.Frame):
         self.tab.update()
 
         self.previously_selected_tab = self.selected_tab
-        self.master.after(self.delay,self.update)
 
 
 if __name__ == "__main__":
-    #
-    import logging
-    import sys
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+        handlers=[
+            logging.FileHandler('capillaroscopy.log'),
+            logging.StreamHandler(),
+        ],
+    )
 
-    # logging.basicConfig(filename='example.log',level=logging.DEBUG)
-    # logging.debug('___Logfile___')
-    # logger = logging.getLogger('mylogger')
-    #
-    # # Configure logger to write to a file...
-    #
-    # def my_handler(type,value,tb):
-    #     logger.exception("Uncaught exception: {0}".format(str(value)))
-    #
-    # # Install exception handler
-    # sys.excepthook = my_handler
-    # #
-
-
-    # import os
-    # import tkinter as tk
     root = tk.Tk()
     root.title("Capture")
     root.wm_title("Capture")
