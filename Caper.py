@@ -79,7 +79,9 @@ class Video:
     #this class will can be given to a videoplayer object that is integrated with TKinter Canvas
     def __init__(self,path=''):
         # do super of identification class
-        self.path = path
+        # path can arrive as None when no video is selected (e.g. empty Flows/);
+        # keep it a string so path manipulation below doesn't crash.
+        self.path = path if path is not None else ''
         self.number_of_frames_ = 0
         self.fps_ = 30
         self.resolution_ = None
