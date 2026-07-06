@@ -1527,6 +1527,39 @@ class ParticipantList(tk.Frame):
         #needs to be updated if new formats are allowed
         return sorted(glob.glob(path+'/*.avi') + glob.glob(path + '/*.mp4'))
 
+    def get_thumbnail_and_duration(self,item):
+        #thumbnails are cached on disk so the list does not have to decode
+        #every video again on each refresh
+        cache_dir = os.path.join(os.path.dirname(item),'.thumbnails')
+        cache_file = os.path.join(cache_dir,os.path.basename(item) + '.pickle')
+        try:
+            if os.path.getmtime(cache_file) >= os.path.getmtime(item):
+                cached = pickle_load(cache_file)
+                return cached['thumbnail'],cached['duration']
+        except (OSError,KeyError,pickle.UnpicklingError,EOFError):
+            pass #no usable cache entry, regenerate below
+
+        try:
+            temp = ColorVideo(item)
+        except (FileNotFoundError,EOFError,pickle.UnpicklingError):
+            #not a flow video (no sidecar pickle) - treat as a plain video
+            temp = Video(item)
+
+        temp.generate_thumbnail()
+        thumbnail = temp.thumbnail_
+        temp.cap.release()
+        try:
+            duration = int(temp.number_of_frames_ * (1 / temp.fps_))
+        except ZeroDivisionError:
+            duration = 0
+
+        try:
+            os.makedirs(cache_dir,exist_ok=True)
+            pickle_save({'thumbnail': thumbnail,'duration': duration},cache_file)
+        except OSError:
+            logging.exception('Could not write thumbnail cache for %s',item)
+        return thumbnail,duration
+
     def check_which_items_are_stabilized(self):
 
         stabilized_items = self.get_items_from_path(self.path.replace('RecordedVideos','StabilizedVideos'))
@@ -1608,21 +1641,10 @@ class ParticipantList(tk.Frame):
             url=None
             b=None
 
-            try:
-                temp = ColorVideo(item)
-            except (FileNotFoundError,EOFError,pickle.UnpicklingError):
-                #not a flow video (no sidecar pickle) - treat as a plain video
-                temp = Video(item)
-
-            temp.generate_thumbnail()
-            thumbnail = temp.thumbnail_
+            thumbnail,duration_in_seconds = self.get_thumbnail_and_duration(item)
             self.temp_thumbnail_size = thumbnail.shape
 
             photo = ImageTk.PhotoImage(Image.fromarray(thumbnail))
-            try:
-                duration_in_seconds = int(temp.number_of_frames_ * (1 / temp.fps_))
-            except:
-                duration_in_seconds = 0
             seperator = '\n'
 
             if platform == 'win32':

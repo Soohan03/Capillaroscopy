@@ -18,6 +18,10 @@ Reports/
 Statistics/
 Flows/
 
+# Generated at runtime
+capillaroscopy.log
+.thumbnails/
+
 # OS files
 .DS_Store
 Thumbs.db
