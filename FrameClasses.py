@@ -1,4 +1,5 @@
 import sys
+import logging
 if "Tkinter" not in sys.modules:
     import tkinter as tk
 # from VideoCamera import VideoCamera
@@ -721,9 +722,7 @@ class VideoFrame(tk.Frame):
 
         try:
             self.registered_time_points = list(pd.read_csv(path.replace('StabilizedVideos','Statistics').replace('RecordedVideos','Statistics')[:-4]+'_registered_time_points.csv')['0'].values)
-            print('success')
-
-        except:
+        except (FileNotFoundError,KeyError):
             self.registered_time_points=[]
 
         self.master.blur_vector = np.zeros([self.master.video.number_of_frames_])
@@ -769,8 +768,8 @@ class VideoFrame(tk.Frame):
             self.rectangle1.set_width_and_height(w,h)
             self.rectangle2.set_width_and_height(w,h)
 
-        except:
-            pass
+        except (ValueError,IndexError):
+            pass #entry does not contain a number (yet)
 
     def save_data(self):
 
@@ -1238,8 +1237,9 @@ class FlowFrame(tk.Frame):
             # pd.DataFrame(self.flow_vector).to_csv(os.path.join(self.master.statistics_directory_path,file_name + 'flow.csv'))
             # pd.DataFrame(self.mask_vector).to_csv(os.path.join(self.master.statistics_directory_path,file_name + 'mask.csv'))
 
-        except:
-            tk.messagebox.showerror("Error","An unknown error has occured")
+        except Exception:
+            logging.exception('Saving flow data failed')
+            tk.messagebox.showerror("Error","Saving flow data failed, see capillaroscopy.log")
 
 
 
@@ -1524,16 +1524,8 @@ class ParticipantList(tk.Frame):
         self.destroy()
 
     def get_items_from_path(self,path):
-        a =glob.glob(path+'/*.avi')
-        a.extend(glob.glob(path + '/*.mp4'))
-
-        try:
-            for index,file_name in enumerate(a):
-                os.rename(file_name,file_name.replace(',',''))
-                a[index] = file_name.replace(',','')
-        except:
-            pass
-        return a #needs to be updated if new formats are allowed
+        #needs to be updated if new formats are allowed
+        return sorted(glob.glob(path+'/*.avi') + glob.glob(path + '/*.mp4'))
 
     def check_which_items_are_stabilized(self):
 
@@ -1618,7 +1610,8 @@ class ParticipantList(tk.Frame):
 
             try:
                 temp = ColorVideo(item)
-            except:
+            except (FileNotFoundError,EOFError,pickle.UnpicklingError):
+                #not a flow video (no sidecar pickle) - treat as a plain video
                 temp = Video(item)
 
             temp.generate_thumbnail()

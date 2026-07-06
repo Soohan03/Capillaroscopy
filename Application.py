@@ -158,15 +158,15 @@ class Application(tk.Frame):
             if event.char=='s' or event.char=='S' or event.char=='\uf701':
                 self.tab.video_frame.rectangle1.move_clicks(0,jump)
                 self.tab.video_frame.rectangle2.move_clicks(0,jump)
-        except:
-            pass
 
-        if event.char == 'q' or event.char == 'Q':
-            self.master.video.go_back_or_forward_n_frames(-500)
-        if event.char == 'e' or event.char == 'E':
-            self.master.video.go_back_or_forward_n_frames(500)
-        if event.char == 'p' or event.char == ' ':
-            self.master.video.pause= 1-self.master.video.pause
+            if event.char == 'q' or event.char == 'Q':
+                self.master.video.go_back_or_forward_n_frames(-500)
+            if event.char == 'e' or event.char == 'E':
+                self.master.video.go_back_or_forward_n_frames(500)
+            if event.char == 'p' or event.char == ' ':
+                self.master.video.pause= 1-self.master.video.pause
+        except AttributeError:
+            pass #no video loaded yet, so there is nothing to control
 
     def key_release(self,event):
         self.master.current_key = None
@@ -256,8 +256,8 @@ class Application(tk.Frame):
             if ((-1.0/self.master.fps))>(1.0/30.0):
                 self.delay = int((1.0 / 30.0)-(-1.0 / self.master.fps)*1000) #measured in milliseconds
 
-        except:
-
+        except (AttributeError,ZeroDivisionError):
+            #first tick has no previous timestamp yet
             self.previous_timestamp = datetime.datetime.now()
             self.master.fps = 30
 
