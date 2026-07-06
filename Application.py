@@ -398,9 +398,5 @@ if __name__ == "__main__":
     #sp=os.getcwd()
     imgicon = tk.PhotoImage(file=os.path.join('Source','Capture-Logo.png'))
     root.tk.call('wm','iconphoto',root._w,imgicon)
-    import pdb
-
     gui = Application(root)
-    # gui.mainloop()
-    pdb.set_trace()
 

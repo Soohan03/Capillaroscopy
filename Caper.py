@@ -33,10 +33,10 @@ from skimage.filters import threshold_multiotsu
 
 class VideoCamera:
     def __init__(self,directory):
-        self.cap = cv2.VideoCapture(0) #make more smart function here for handeling windows/mac and other connected devices. Find way to detect actual microscope.
-        self.width_ = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height_ = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.fps_ = self.cap.get(cv2.CAP_PROP_FPS)
+        self.cap = cv2.VideoCapture(0)
+        self.width_ = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640.0
+        self.height_ = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480.0
+        self.fps_ = self.cap.get(cv2.CAP_PROP_FPS) or 30.0
         self.resolution_ = int(self.width_*self.height_)
         self.aspect_ratio_ = self.height_/self.width_
 
@@ -47,6 +47,8 @@ class VideoCamera:
 
     def get_frame(self):
         (grabbed,frame) = self.cap.read()
+        if not grabbed or frame is None:
+            return np.zeros((int(self.height_),int(self.width_),3),dtype=np.uint8)
         return frame[:,:,::-1]
 
     def destroy_capture(self):

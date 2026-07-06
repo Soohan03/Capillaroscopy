@@ -1461,6 +1461,13 @@ class ParticipantList(tk.Frame):
         self.master = master
         self.path = path
         self.items = self.get_items_from_path(self.path)
+
+        if len(self.items) == 0 and 'RecordedVideos' in self.path:
+            stabilized_path = self.path.replace('RecordedVideos','StabilizedVideos')
+            if len(self.get_items_from_path(stabilized_path)) > 0:
+                self.path = stabilized_path
+                self.items = self.get_items_from_path(self.path)
+
         self.boolean_stabilized = self.check_which_items_are_stabilized()
 
         self.master.videos_to_stabilize = np.array(self.items)[np.invert(self.boolean_stabilized)]
