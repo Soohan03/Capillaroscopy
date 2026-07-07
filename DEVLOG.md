@@ -6,6 +6,45 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-07-07 — Fix Flow tab drag-rectangle crash (empty reports)
+
+**Branch:** `fix/short-term-improvements` (continued)
+
+**Symptom reported by user:** after calculating flow for a video and
+saving the selection as "Test_1", the generated flow report chart was
+empty.
+
+**Diagnosis:** inspected the saved pickles in `Statistics/`. Of 4,306
+frames only 1 had flow data, and that frame's region was the default
+10x10 corner box with 0 vessel pixels in its mask. The report divides
+flow by vessel-pixel count, so every value was NaN and the plot was
+blank. Root cause in `capillaroscopy.log`: `UnboundLocalError: 'ltr'` in
+`Rectangle.calculate_corners_drag` (Caper.py). The function only set its
+left-to-right flag when the drag's x-coordinates differed and only set
+corners when the y-coordinates differed, so a pure click or a
+vertical/horizontal drag either crashed or returned None (resetting to
+the 10x10 default). The crash was caught by the new update-loop guard but
+stopped flow recording after the first frame.
+
+**Fix (commit — Caper.py):** rewrote `calculate_corners_drag` to
+normalize any two drag endpoints into an axis-aligned rectangle
+regardless of direction, enforce a minimum size so the region is never
+degenerate, and clamp to the frame bounds. Always returns True. Corner
+naming kept consistent with `get_selected_data_for_flow`/`_for_mask`
+(image coordinates, y down).
+
+**Verification:** headless test over pure click, vertical drag,
+horizontal drag, both diagonal directions, and off-edge points — every
+case yields a valid non-empty box and no exception; the two opposite
+diagonals produce the identical rectangle.
+
+**User-facing note:** on the Flow tab the ROI is selected by click-and-
+drag over a vessel (not a single click as on the Analyze tab). The old
+"Test_1" data was captured with an empty region and should be re-recorded
+after this fix.
+
+---
+
 ## 2026-07-06 — Codebase audit + short-term fixes
 
 **Branch:** `fix/short-term-improvements` (pushed to GitLab, 7 commits)

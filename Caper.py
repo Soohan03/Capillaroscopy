@@ -682,49 +682,33 @@ class Rectangle:
         self.lower_right = (x+int(w/2),y-int(h/2))
         self.lower_left = (x - int(w / 2),y - int(h / 2))
 
-    def calculate_corners_drag(self,point1,point2):
-        #
-        # self.rectangle1.point1 = self.clickevent
-        # self.rectangle1.point2 = self.releaseevent
-        if point1[0]<point2[0]:
-            ltr = True
-            # print('left to right')
-        if point1[0] > point2[0]:
-            ltr = False
-            # print('right to left')
+    def calculate_corners_drag(self,point1,point2,min_size=5):
+        # Normalize the two drag endpoints into an axis-aligned rectangle,
+        # independent of drag direction. The previous version only worked for
+        # diagonal drags: it left the left-to-right flag unset when the two x
+        # (or y) coordinates were equal, which crashed on pure clicks and
+        # vertical/horizontal drags. Corner naming follows image coordinates
+        # (y grows downward), matching get_selected_data_for_flow/_for_mask.
+        x_left,x_right = sorted((int(point1[0]),int(point2[0])))
+        y_top,y_bottom = sorted((int(point1[1]),int(point2[1])))
 
+        # guarantee a non-degenerate region so the selection is never empty
+        if x_right - x_left < min_size:
+            x_right = x_left + min_size
+        if y_bottom - y_top < min_size:
+            y_bottom = y_top + min_size
 
-        if point1[1]>point2[1]:
-            # print('bottom to top')
-            if ltr:
-                self.lower_left = self.point1
-                self.top_right = self.point2
-                self.lower_right = (self.lower_left[0]+(self.point2[0]-self.point1[0]),self.lower_left[1])
-                self.top_left = (self.top_right[0]-(self.point2[0]-self.point1[0]),self.top_right[1])
+        # keep the rectangle inside the frame
+        x_left = max(0,min(x_left,self.width - min_size))
+        x_right = max(min_size,min(x_right,self.width))
+        y_top = max(0,min(y_top,self.height - min_size))
+        y_bottom = max(min_size,min(y_bottom,self.height))
 
-                return True
-
-            else:
-                self.lower_right = self.point1
-                self.top_left = self.point2
-                self.lower_left = (self.lower_right[0]-(self.point1[0]-self.point2[0]),self.lower_right[1])
-                self.top_right = (self.top_left[0]+(self.point1[0]-self.point2[0]),self.top_left[1])
-                return True
-
-        if point1[1]<point2[1]:
-            # print('top to bottom')
-            if ltr:
-                self.top_left = self.point1
-                self.lower_right = self.point2
-                self.top_right = (self.top_left[0]+ (self.point2[0]-self.point1[0]),self.top_left[1])
-                self.lower_left= (self.lower_right[0] - (self.point2[0] - self.point1[0]),self.lower_right[1])
-                return True
-            else:
-                self.top_right = self.point1
-                self.lower_left = self.point2
-                self.top_left = (self.top_right[0]- (self.point1[0]-self.point2[0]),self.top_right[1])
-                self.lower_right= (self.lower_left[0] + (self.point1[0] - self.point2[0]),self.lower_left[1])
-                return True
+        self.top_left = (x_left,y_top)
+        self.top_right = (x_right,y_top)
+        self.lower_left = (x_left,y_bottom)
+        self.lower_right = (x_right,y_bottom)
+        return True
 
 
 
