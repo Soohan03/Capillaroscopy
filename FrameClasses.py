@@ -541,12 +541,13 @@ class VideoFrame(tk.Frame):
             self.click_x = int(event.x / linear_map_width)
             self.click_y = int(event.y / linear_map_height)
 
-            if platform =='win32':
-                k = [8,12]
-            if platform == 'darwin' or platform == 'linux':
-                k = [4,6]
-
-            if self.master.current_key in k: #control button (ctrl):
+            # Read the Ctrl modifier straight off the mouse event. Bit 0x0004 is
+            # the Control mask on both X11 (Linux/WSLg) and Windows. The old code
+            # relied on a separately-tracked key state (current_key) that never
+            # became "Control" under X11, so Ctrl+click always fell through to
+            # rectangle1 and box 2 could not be placed.
+            control_held = bool(event.state & 0x0004)
+            if control_held: #control button (ctrl):
                 self.rectangle2.set_clicks(self.click_x,self.click_y)
             else:
                 self.rectangle1.set_clicks(self.click_x,self.click_y)
@@ -752,7 +753,11 @@ class VideoFrame(tk.Frame):
 
         # self._resize()
         self.master.video.set_frame(0)
-        self.master.video.pause = 1
+        # Start playing as soon as a video is loaded. This used to be set to 1
+        # (paused), so a freshly loaded video sat frozen on frame 0 and looked
+        # broken. Press P / Space to pause when you want to position the ROI
+        # boxes on a still frame.
+        self.master.video.pause = 0
 
 
         self.written_csvs = 0

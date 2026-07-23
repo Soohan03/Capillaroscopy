@@ -6,6 +6,75 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-07-23 — Fix Ctrl+click (2nd ROI box) and video-not-playing on Analyze tab
+
+**Branch:** `fix/short-term-improvements` (continued)
+
+**Symptoms reported by user:** on the Analyze tab, (1) Ctrl + left-click did
+not place the second ROI box, and (2) a loaded video did not appear to play.
+
+**Diagnosis:**
+
+1. *Ctrl+click.* The video-canvas click handler in `FrameClasses.py`
+   (`VideoFrame.callback`) decided whether Ctrl was held by reading a
+   separately-tracked keyboard state (`self.master.current_key`, set from
+   `<Key>`/`<KeyRelease>` events) and comparing it against platform-specific
+   magic numbers (`[4,6]` on Linux/darwin, `[8,12]` on win32). Under X11/WSLg
+   `current_key` never actually holds the Control value at click time
+   (`<KeyRelease>` resets it to `None`, and a Control key-press reports the
+   modifier state *before* the press), so the test was always false and every
+   click — Ctrl or not — fell through to `rectangle1`. Box 2 could never be
+   placed.
+
+2. *Video not playing.* Three compounding causes:
+   - `VideoFrame.set_video()` ended by setting `self.master.video.pause = 1`,
+     so every freshly loaded video started **frozen on frame 0**.
+   - `Application._resize` (bound to `<Configure>`) set `video.pause = 1` on
+     *every* configure event — which fires during normal window setup and
+     redraws — and never reset it. So even after pressing P/Space, any window
+     move/resize re-froze the video.
+   - The main update loop's `delay` was hard-pinned to 1 ms, so once a video
+     did advance it ran at hundreds of fps and flashed past in a fraction of a
+     second (also reading as "not playing").
+   The frozen state was visible in the console as a flood of identical `N/A`
+   lines (~26+/sec): `estimate_cross_correlation` prints on
+   `frame_number % 20 == 0`, and with the counter stuck at frame 0 that fired
+   on essentially every tick.
+
+**Fixes:**
+- `FrameClasses.py` (`VideoFrame.callback`): detect Ctrl directly from the
+  mouse event's modifier mask — `bool(event.state & 0x0004)` (0x0004 is the
+  Control bit on both X11 and Windows). Removed the `current_key` /
+  platform-magic-number path.
+- `FrameClasses.py` (`VideoFrame.set_video`): load videos **playing**
+  (`pause = 0`) instead of paused. Users pause with P/Space to position ROI
+  boxes on a still frame.
+- `Application.py` (`_resize`): removed the unconditional `video.pause = 1` on
+  `<Configure>`. The video canvas is a fixed size, so there is nothing to
+  protect by pausing on resize.
+- `Application.py` (`_update_body`): pace the loop to the video's native frame
+  rate — `delay = max(1, round(1000 / video.fps_))` — instead of a hard 1 ms,
+  so playback runs at real (~30 fps) speed.
+
+**Verification:** `python -m py_compile Application.py FrameClasses.py` passes.
+Relaunched the app under WSLg. *Before* the fixes the console flooded with
+~26 identical `N/A`/sec (counter frozen at frame 0); *after*, that flood stops
+and the log shows advancing, varied output including real correlation estimates
+(e.g. `0.5`, `0.8`) with no traceback — i.e. frames now advance at a sane rate.
+The Ctrl+click fix was verified by inspection (standard X11/Windows Control
+mask `0x0004`); the actual GUI click is not scriptable in this environment, so
+the user was asked to confirm it interactively.
+
+**Notes / not changed:**
+- The `RuntimeWarning: Mean of empty slice` at `Caper.py:831` is pre-existing
+  and benign (numpy `nanmean` over an empty ROI selection before boxes are
+  placed); it is unrelated to these changes.
+- The second video frame class (`FrameClasses.py:1194`, used by the crash-prone
+  Flow tab) still loads paused and still uses the old `current_key` click path.
+  Left untouched deliberately — see Known Issues (Flow tab).
+
+---
+
 ## 2026-07-07 — Fix Flow tab drag-rectangle crash (empty reports)
 
 **Branch:** `fix/short-term-improvements` (continued)

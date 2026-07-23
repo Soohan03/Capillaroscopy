@@ -195,8 +195,10 @@ class Application(tk.Frame):
     def _resize(self,event=None,force=False):
         # print(self.master.width,self.master.height)
         self.master.stop=True
-        if hasattr(self.master, 'video') and self.master.video is not None:
-            self.master.video.pause =1
+        # Do NOT force video.pause here. <Configure> fires during normal window
+        # setup and redraws, and this handler never set pause back to 0, so the
+        # video froze on frame 0 and appeared to never play. The video canvas is
+        # a fixed size, so there is nothing to protect by pausing on resize.
         if self.mouse_released:
             if event.width<300 or event.height<300:
                 self.master.width = 1000
@@ -282,7 +284,14 @@ class Application(tk.Frame):
 
     def _update_body(self):
         self.options_update()
+        # Pace the loop to the video's native frame rate so playback runs at real
+        # speed. This was hard-coded to 1 ms, which ran videos at hundreds of fps
+        # -- they flashed past in a fraction of a second and looked frozen.
         self.delay=1 #one millisecond, (can't be zero)
+        if hasattr(self.master,'video') and self.master.video is not None:
+            fps = getattr(self.master.video,'fps_',0) or 0
+            if fps > 0:
+                self.delay = max(1,int(round(1000.0/fps)))
 
 
         self.previously_selected_tab =self.selected_tab
