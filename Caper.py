@@ -33,10 +33,10 @@ from skimage.filters import threshold_multiotsu
 
 class VideoCamera:
     def __init__(self,directory):
-        self.cap = cv2.VideoCapture(0) #make more smart function here for handeling windows/mac and other connected devices. Find way to detect actual microscope.
-        self.width_ = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height_ = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.fps_ = self.cap.get(cv2.CAP_PROP_FPS)
+        self.cap = cv2.VideoCapture(0)
+        self.width_ = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640.0
+        self.height_ = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480.0
+        self.fps_ = self.cap.get(cv2.CAP_PROP_FPS) or 30.0
         self.resolution_ = int(self.width_*self.height_)
         self.aspect_ratio_ = self.height_/self.width_
 
@@ -47,6 +47,8 @@ class VideoCamera:
 
     def get_frame(self):
         (grabbed,frame) = self.cap.read()
+        if not grabbed or frame is None:
+            return np.zeros((int(self.height_),int(self.width_),3),dtype=np.uint8)
         return frame[:,:,::-1]
 
     def destroy_capture(self):
@@ -77,7 +79,9 @@ class Video:
     #this class will can be given to a videoplayer object that is integrated with TKinter Canvas
     def __init__(self,path=''):
         # do super of identification class
-        self.path = path
+        # path can arrive as None when no video is selected (e.g. empty Flows/);
+        # keep it a string so path manipulation below doesn't crash.
+        self.path = path if path is not None else ''
         self.number_of_frames_ = 0
         self.fps_ = 30
         self.resolution_ = None
@@ -106,7 +110,7 @@ class Video:
 
         self.cap.open(self.path)
         self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
         self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.resolution_ = int(self.width_*self.height_)
@@ -162,7 +166,7 @@ class Video:
         else:
             self.number_of_frames_ = max_frames
 
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
         self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.resolution_ = int(self.width_*self.height_)
@@ -189,7 +193,7 @@ class Video:
         if self.cap_open == False:
             self.cap.open(self.path)
             self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
             self.width_ = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height_ = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self.resolution_ = int(self.width_ * self.height_)
@@ -356,7 +360,7 @@ class ColorVideo(Video):
         if self.cap_open == False:
             self.cap.open(self.path)
             self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
             self.width_ = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height_ = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self.resolution_ = int(self.width_ * self.height_)
@@ -408,7 +412,7 @@ class ColorVideo(Video):
         else:
             self.number_of_frames_ = max_frames
 
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
         self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.resolution_ = int(self.width_*self.height_)
@@ -470,7 +474,7 @@ class VideoStabilization(Video):
             else:
                 self.number_of_frames_ = max_frames
 
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
             self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self.resolution_ = int(self.width_*self.height_)
@@ -678,49 +682,33 @@ class Rectangle:
         self.lower_right = (x+int(w/2),y-int(h/2))
         self.lower_left = (x - int(w / 2),y - int(h / 2))
 
-    def calculate_corners_drag(self,point1,point2):
-        #
-        # self.rectangle1.point1 = self.clickevent
-        # self.rectangle1.point2 = self.releaseevent
-        if point1[0]<point2[0]:
-            ltr = True
-            # print('left to right')
-        if point1[0] > point2[0]:
-            ltr = False
-            # print('right to left')
+    def calculate_corners_drag(self,point1,point2,min_size=5):
+        # Normalize the two drag endpoints into an axis-aligned rectangle,
+        # independent of drag direction. The previous version only worked for
+        # diagonal drags: it left the left-to-right flag unset when the two x
+        # (or y) coordinates were equal, which crashed on pure clicks and
+        # vertical/horizontal drags. Corner naming follows image coordinates
+        # (y grows downward), matching get_selected_data_for_flow/_for_mask.
+        x_left,x_right = sorted((int(point1[0]),int(point2[0])))
+        y_top,y_bottom = sorted((int(point1[1]),int(point2[1])))
 
+        # guarantee a non-degenerate region so the selection is never empty
+        if x_right - x_left < min_size:
+            x_right = x_left + min_size
+        if y_bottom - y_top < min_size:
+            y_bottom = y_top + min_size
 
-        if point1[1]>point2[1]:
-            # print('bottom to top')
-            if ltr:
-                self.lower_left = self.point1
-                self.top_right = self.point2
-                self.lower_right = (self.lower_left[0]+(self.point2[0]-self.point1[0]),self.lower_left[1])
-                self.top_left = (self.top_right[0]-(self.point2[0]-self.point1[0]),self.top_right[1])
+        # keep the rectangle inside the frame
+        x_left = max(0,min(x_left,self.width - min_size))
+        x_right = max(min_size,min(x_right,self.width))
+        y_top = max(0,min(y_top,self.height - min_size))
+        y_bottom = max(min_size,min(y_bottom,self.height))
 
-                return True
-
-            else:
-                self.lower_right = self.point1
-                self.top_left = self.point2
-                self.lower_left = (self.lower_right[0]-(self.point1[0]-self.point2[0]),self.lower_right[1])
-                self.top_right = (self.top_left[0]+(self.point1[0]-self.point2[0]),self.top_left[1])
-                return True
-
-        if point1[1]<point2[1]:
-            # print('top to bottom')
-            if ltr:
-                self.top_left = self.point1
-                self.lower_right = self.point2
-                self.top_right = (self.top_left[0]+ (self.point2[0]-self.point1[0]),self.top_left[1])
-                self.lower_left= (self.lower_right[0] - (self.point2[0] - self.point1[0]),self.lower_right[1])
-                return True
-            else:
-                self.top_right = self.point1
-                self.lower_left = self.point2
-                self.top_left = (self.top_right[0]- (self.point1[0]-self.point2[0]),self.top_right[1])
-                self.lower_right= (self.lower_left[0] + (self.point1[0] - self.point2[0]),self.lower_left[1])
-                return True
+        self.top_left = (x_left,y_top)
+        self.top_right = (x_right,y_top)
+        self.lower_left = (x_left,y_bottom)
+        self.lower_right = (x_right,y_bottom)
+        return True
 
 
 
@@ -786,10 +774,14 @@ class CrossCorrelation:
     # därför måste
     # 1an är först, iallafall här, vilket innebär att vi utgår ifrån 1an. 1an ger vid den tidpunkten lagget av
 
-    def __init__(self,video,rectangle1,rectangle2):
+    def __init__(self,video,rectangle1,rectangle2,mm_per_pixel=0.001328903654):
         self.video = video
         self.rectangle_first = rectangle1
         self.rectangle_last = rectangle2
+
+        # use the video's real frame rate; a hardcoded 30 here would bias
+        # every velocity estimate for videos recorded at another rate
+        self.fps = float(video.fps_) if getattr(video,'fps_',0) else 30.0
 
         # data first encounters new data
         self.first_vec = dict(
@@ -801,7 +793,7 @@ class CrossCorrelation:
 
         self.distance_vector= np.array([np.nan] * self.video.number_of_frames_)
 
-        self.magnificationCoefficient = 1.328903654e-06 * 1000 # *1000 to get it in mm
+        self.magnificationCoefficient = mm_per_pixel # spatial calibration, configured in settings.csv
 
     def check_if_enough_data_for_report(self):
 
@@ -920,7 +912,7 @@ class CrossCorrelation:
         # t = df.loc[:,df.columns.str.contains('correlation2')].mean(axis=1)
         #
         df2 = df.copy()
-        df2['time']= df.index/30
+        df2['time']= df.index #index is already in seconds (set in calculate_cross_correlation)
         df2['velocity'] = temp_vec.values
         df2['correlation'] = df.loc[:,df.columns.str.contains('correlation')].mean(axis=1).rolling(30,min_periods=1).mean()
 
@@ -1077,11 +1069,11 @@ class CrossCorrelation:
         d_vec = d_vec.loc[[lookup[i] for i in index_]]
         d_vec.columns = ['distance']
         report_data = pd.concat([report_data,d_vec],axis=1)
-        magnification_coefficient = 1.328903654e-06 * 1000
+        magnification_coefficient = self.magnificationCoefficient
 
         for col in result.columns.values:
             report_data['velocity' + col] = ((report_data['distance'] / -report_data[col]) / (
-                        1 / 30)) * magnification_coefficient
+                        1.0 / self.fps)) * magnification_coefficient
 
             # distance (pixels) /time (1/30) = pixels per 1/30 seconds.
             # pixels per 1/30 seconds * 30 = pixels per seconds
@@ -1096,7 +1088,7 @@ class CrossCorrelation:
         #
         # report_data = report_data.set_index(s_indx_)
 
-        report_data = report_data.set_index(np.array(list(report_data.index)) * (1 / 30))
+        report_data = report_data.set_index(np.array(list(report_data.index)) * (1.0 / self.fps))
 
 
         return report_data

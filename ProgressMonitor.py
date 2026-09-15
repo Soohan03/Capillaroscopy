@@ -57,9 +57,3 @@ class ProgressMonitor:
             return output
         else:
             pass
-        # except:
-        #     pass
-
-
-monitor = ProgressMonitor()
-monitor.update_progress(70)

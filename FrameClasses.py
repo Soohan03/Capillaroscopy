@@ -1,4 +1,5 @@
 import sys
+import logging
 if "Tkinter" not in sys.modules:
     import tkinter as tk
 # from VideoCamera import VideoCamera
@@ -540,12 +541,13 @@ class VideoFrame(tk.Frame):
             self.click_x = int(event.x / linear_map_width)
             self.click_y = int(event.y / linear_map_height)
 
-            if platform =='win32':
-                k = [8,12]
-            if platform == 'darwin' or platform == 'linux':
-                k = [4,6]
-
-            if self.master.current_key in k: #control button (ctrl):
+            # Read the Ctrl modifier straight off the mouse event. Bit 0x0004 is
+            # the Control mask on both X11 (Linux/WSLg) and Windows. The old code
+            # relied on a separately-tracked key state (current_key) that never
+            # became "Control" under X11, so Ctrl+click always fell through to
+            # rectangle1 and box 2 could not be placed.
+            control_held = bool(event.state & 0x0004)
+            if control_held: #control button (ctrl):
                 self.rectangle2.set_clicks(self.click_x,self.click_y)
             else:
                 self.rectangle1.set_clicks(self.click_x,self.click_y)
@@ -638,7 +640,7 @@ class VideoFrame(tk.Frame):
         time_points = self.registered_time_points
         if len(time_points)>0:
             for time_point in time_points:
-                time_point_percent =(time_point*30) / (self.master.video.number_of_frames_)
+                time_point_percent =(time_point*self.master.video.fps_) / (self.master.video.number_of_frames_)
 
                 bar[:,int(time_point_percent *width)-1:int(time_point_percent *width)+1,0] = time_point_color[0]
                 bar[:,int(time_point_percent * width) - 1:int(time_point_percent * width) + 1,1] = time_point_color[1]
@@ -721,9 +723,7 @@ class VideoFrame(tk.Frame):
 
         try:
             self.registered_time_points = list(pd.read_csv(path.replace('StabilizedVideos','Statistics').replace('RecordedVideos','Statistics')[:-4]+'_registered_time_points.csv')['0'].values)
-            print('success')
-
-        except:
+        except (FileNotFoundError,KeyError):
             self.registered_time_points=[]
 
         self.master.blur_vector = np.zeros([self.master.video.number_of_frames_])
@@ -732,7 +732,8 @@ class VideoFrame(tk.Frame):
         self.rectangle1 = Rectangle(isForward=True)
         self.rectangle2 = Rectangle(isForward=False)
 
-        self.cross_correlation = CrossCorrelation(self.master.video,self.rectangle1,self.rectangle2)
+        self.cross_correlation = CrossCorrelation(self.master.video,self.rectangle1,self.rectangle2,
+                                                  mm_per_pixel=getattr(self.master,'mm_per_pixel',0.001328903654))
 
         self.video_bar_w = self.video_canvas_w
         self.video_bar_h = int(self.video_canvas_h * self.video_bar_relative_to_canvas)
@@ -752,7 +753,11 @@ class VideoFrame(tk.Frame):
 
         # self._resize()
         self.master.video.set_frame(0)
-        self.master.video.pause = 1
+        # Start playing as soon as a video is loaded. This used to be set to 1
+        # (paused), so a freshly loaded video sat frozen on frame 0 and looked
+        # broken. Press P / Space to pause when you want to position the ROI
+        # boxes on a still frame.
+        self.master.video.pause = 0
 
 
         self.written_csvs = 0
@@ -768,8 +773,8 @@ class VideoFrame(tk.Frame):
             self.rectangle1.set_width_and_height(w,h)
             self.rectangle2.set_width_and_height(w,h)
 
-        except:
-            pass
+        except (ValueError,IndexError):
+            pass #entry does not contain a number (yet)
 
     def save_data(self):
 
@@ -803,7 +808,7 @@ class VideoFrame(tk.Frame):
             tk.messagebox.showerror("Error", "Not enought data to save yet")
 
     def register_time_point(self):
-        self.registered_time_points.append(self.frame_number/30)
+        self.registered_time_points.append(self.frame_number/self.master.video.fps_)
 
     def generate_report(self):
 
@@ -851,7 +856,7 @@ class VideoFrame(tk.Frame):
 
             if self.frame_number % 5 == 0:
                 self.get_rectangle_width_and_height()
-                self.video_time.set('Time: ' + str(int(self.frame_number / 30))+'s')
+                self.video_time.set('Time: ' + str(int(self.frame_number / self.master.video.fps_))+'s')
 
             if self.frame_number % 20 == 0:
                 cross_correlation_estimation=self.cross_correlation.estimate_cross_correlation(self.frame_number)
@@ -1237,8 +1242,9 @@ class FlowFrame(tk.Frame):
             # pd.DataFrame(self.flow_vector).to_csv(os.path.join(self.master.statistics_directory_path,file_name + 'flow.csv'))
             # pd.DataFrame(self.mask_vector).to_csv(os.path.join(self.master.statistics_directory_path,file_name + 'mask.csv'))
 
-        except:
-            tk.messagebox.showerror("Error","An unknown error has occured")
+        except Exception:
+            logging.exception('Saving flow data failed')
+            tk.messagebox.showerror("Error","Saving flow data failed, see capillaroscopy.log")
 
 
 
@@ -1280,7 +1286,8 @@ class FlowFrame(tk.Frame):
 
 
         # this is the average flow magnitude for the selected area, measured in pixels.
-        magnificationCoefficient = 1.328903654e-06 * 1000  # *1000 to get it in mm
+        magnificationCoefficient = getattr(self.master,'mm_per_pixel',0.001328903654) # spatial calibration, configured in settings.csv
+        fps = self.master.video.fps_ or 30
 
 
         up = np.array([[np.nan] * (len(b) - 1)])[0]
@@ -1315,10 +1322,10 @@ class FlowFrame(tk.Frame):
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
 
-        flow_field_up = pd.DataFrame(up,columns=['flow']).set_index(pd.Series(up).index / 30).dropna().ewm(span=100).mean()
+        flow_field_up = pd.DataFrame(up,columns=['flow']).set_index(pd.Series(up).index / fps).dropna().ewm(span=100).mean()
         plt.plot(flow_field_up,label='up')
 
-        flow_field_down = pd.DataFrame(down,columns=['flow']).set_index(pd.Series(down).index / 30).dropna().ewm(span=100).mean()
+        flow_field_down = pd.DataFrame(down,columns=['flow']).set_index(pd.Series(down).index / fps).dropna().ewm(span=100).mean()
         plt.plot(flow_field_down,label='down')
 
         plt.title('Flow field magnitude ')
@@ -1328,7 +1335,7 @@ class FlowFrame(tk.Frame):
         f.savefig(os.path.join(self.master.report_directory_path,file_name+ '___' + self.master.chosen_report_to_generate + '___up_and_down_.png'),dpi=f.dpi,transparent=True,bbox_inches = 'tight')
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
-        flow_field_both = pd.DataFrame(both,columns=['flow']).set_index(pd.Series(both).index / 30).dropna().ewm(span=100).mean()
+        flow_field_both = pd.DataFrame(both,columns=['flow']).set_index(pd.Series(both).index / fps).dropna().ewm(span=100).mean()
         plt.plot(flow_field_both,label='omnidirectional')
         plt.title('Flow field magnitude ')
         plt.ylabel('Magnitude (mm)')
@@ -1390,7 +1397,7 @@ class FlowFrame(tk.Frame):
 
         if self.frame_number%5==0:
             self.generate_progress_bar()
-            self.video_time.set('Time: ' + str(int(self.frame_number / 30)) + 's')
+            self.video_time.set('Time: ' + str(int(self.frame_number / self.master.video.fps_)) + 's')
             # self.video_bar.itemconfig(self.video_bar_image_id,image=self.bar)
 
         if self.master.video.pause == 0 or force==True:
@@ -1461,6 +1468,13 @@ class ParticipantList(tk.Frame):
         self.master = master
         self.path = path
         self.items = self.get_items_from_path(self.path)
+
+        if len(self.items) == 0 and 'RecordedVideos' in self.path:
+            stabilized_path = self.path.replace('RecordedVideos','StabilizedVideos')
+            if len(self.get_items_from_path(stabilized_path)) > 0:
+                self.path = stabilized_path
+                self.items = self.get_items_from_path(self.path)
+
         self.boolean_stabilized = self.check_which_items_are_stabilized()
 
         self.master.videos_to_stabilize = np.array(self.items)[np.invert(self.boolean_stabilized)]
@@ -1515,16 +1529,41 @@ class ParticipantList(tk.Frame):
         self.destroy()
 
     def get_items_from_path(self,path):
-        a =glob.glob(path+'/*.avi')
-        a.extend(glob.glob(path + '/*.mp4'))
+        #needs to be updated if new formats are allowed
+        return sorted(glob.glob(path+'/*.avi') + glob.glob(path + '/*.mp4'))
+
+    def get_thumbnail_and_duration(self,item):
+        #thumbnails are cached on disk so the list does not have to decode
+        #every video again on each refresh
+        cache_dir = os.path.join(os.path.dirname(item),'.thumbnails')
+        cache_file = os.path.join(cache_dir,os.path.basename(item) + '.pickle')
+        try:
+            if os.path.getmtime(cache_file) >= os.path.getmtime(item):
+                cached = pickle_load(cache_file)
+                return cached['thumbnail'],cached['duration']
+        except (OSError,KeyError,pickle.UnpicklingError,EOFError):
+            pass #no usable cache entry, regenerate below
 
         try:
-            for index,file_name in enumerate(a):
-                os.rename(file_name,file_name.replace(',',''))
-                a[index] = file_name.replace(',','')
-        except:
-            pass
-        return a #needs to be updated if new formats are allowed
+            temp = ColorVideo(item)
+        except (FileNotFoundError,EOFError,pickle.UnpicklingError):
+            #not a flow video (no sidecar pickle) - treat as a plain video
+            temp = Video(item)
+
+        temp.generate_thumbnail()
+        thumbnail = temp.thumbnail_
+        temp.cap.release()
+        try:
+            duration = int(temp.number_of_frames_ * (1 / temp.fps_))
+        except ZeroDivisionError:
+            duration = 0
+
+        try:
+            os.makedirs(cache_dir,exist_ok=True)
+            pickle_save({'thumbnail': thumbnail,'duration': duration},cache_file)
+        except OSError:
+            logging.exception('Could not write thumbnail cache for %s',item)
+        return thumbnail,duration
 
     def check_which_items_are_stabilized(self):
 
@@ -1607,20 +1646,10 @@ class ParticipantList(tk.Frame):
             url=None
             b=None
 
-            try:
-                temp = ColorVideo(item)
-            except:
-                temp = Video(item)
-
-            temp.generate_thumbnail()
-            thumbnail = temp.thumbnail_
+            thumbnail,duration_in_seconds = self.get_thumbnail_and_duration(item)
             self.temp_thumbnail_size = thumbnail.shape
 
             photo = ImageTk.PhotoImage(Image.fromarray(thumbnail))
-            try:
-                duration_in_seconds = int(temp.number_of_frames_ * (1 / temp.fps_))
-            except:
-                duration_in_seconds = 0
             seperator = '\n'
 
             if platform == 'win32':

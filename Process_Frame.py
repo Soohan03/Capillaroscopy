@@ -183,16 +183,8 @@ class Process_Frame(tk.Frame):
 
 
     def get_items_from_path(self,path):
-        # print(path+'/*.mp4')
-        a =glob.glob(path+'/*.avi')
-        a.extend(glob.glob(path + '/*.mp4'))
-        try:
-            for index,file_name in enumerate(a):
-                os.rename(file_name,file_name.replace(',',''))
-                a[index] = file_name.replace(',','')
-        except:
-            pass
-        return a #needs to be updated if new formats are allowed
+        #needs to be updated if new formats are allowed
+        return sorted(glob.glob(path+'/*.avi') + glob.glob(path + '/*.mp4'))
 
     def update(self):
         # print('here')

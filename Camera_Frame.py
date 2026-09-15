@@ -34,6 +34,8 @@ import datetime
 from Utilities import *
 from FrameClasses import VideoFrame,CameraFrameSettings
 import os
+import pandas as pd
+from tkinter import messagebox
 # import matplotlib.pyplot as plt
 # from matplotlib.figure import Figure
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -221,7 +223,13 @@ class Camera_Frame(tk.Frame):
         return "break"
 
     def register_time_point(self):
-        self.registered_time_points.append(self.frame/30)
+        #time points are stored in seconds from the start of the recording
+        recording_start = self.camera_frame_settings.recording_timestamp
+        if recording_start is None:
+            messagebox.showerror("Error","Start a recording before registering time points")
+            return
+        self.registered_time_points.append(
+            (datetime.datetime.now() - recording_start).total_seconds())
 
         #updates the saved file if there is one.
         file_name = self.master.video.path[:-4] #removes .avi
