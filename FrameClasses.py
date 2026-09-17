@@ -922,7 +922,24 @@ class VideoFrame(tk.Frame):
 
 
 
+def canvas_to_video_coordinates(canvas_x,canvas_y,canvas_w,canvas_h,video_w,video_h):
+    """Map a click on the (scaled) video canvas back to a pixel in the video.
+
+    The canvas shows the frame resized to canvas_w x canvas_h, so a canvas
+    coordinate has to be divided by that scale factor before it can index the
+    frame. Kept as a plain function so it can be checked without a display.
+    """
+    scale_x = float(canvas_w) / float(video_w)
+    scale_y = float(canvas_h) / float(video_h)
+    return int(canvas_x / scale_x),int(canvas_y / scale_y)
+
+
 class FlowFrame(tk.Frame):
+    def _canvas_to_video(self,canvas_x,canvas_y):
+        return canvas_to_video_coordinates(canvas_x,canvas_y,
+                                           self.video_canvas_w,self.video_canvas_h,
+                                           self.master.video.width_,self.master.video.height_)
+
     def __init__(self,master,path,*args,**kwargs):
         super(FlowFrame, self).__init__()
         # tk.Frame.__init__(self,master,*args,**kwargs)
@@ -1002,31 +1019,21 @@ class FlowFrame(tk.Frame):
 
 
 
+        # The Flow tab selects its region by click-and-drag. Both endpoints
+        # must be in *video* pixel coordinates, because Rectangle clamps and
+        # slices against the frame. The release handler used to store the raw
+        # canvas coordinates while the press handler scaled to video
+        # coordinates, so the box was drawn and sampled at the wrong place
+        # whenever the canvas was not exactly the video's size (it never is:
+        # the canvas is 70% of the window, aspect-fitted). The old Ctrl check
+        # here was dead code — this tab has only one rectangle.
         def callback(event):
-            self.clickevent=(event.x,event.y)
-
-            #scale so that it's returned in percentage of display
-
-            linear_map_width = self.video_canvas_w/self.master.video.width_
-            linear_map_height = self.video_canvas_h / self.master.video.height_
-
-            self.click_x = int(event.x / linear_map_width)
-            self.click_y = int(event.y / linear_map_height)
-
-            if platform =='win32':
-                k = [8,12]
-            if platform == 'darwin' or platform == 'linux':
-                k = [4,6]
-
-            if self.master.current_key not in k: #control button (ctrl):
-                self.rectangle1.set_clicks(self.click_x,self.click_y)
-            else:
-                pass
-
-
+            self.click_x,self.click_y = self._canvas_to_video(event.x,event.y)
+            self.clickevent = (self.click_x,self.click_y)
+            self.rectangle1.set_clicks(self.click_x,self.click_y)
 
         def callback_release(event):
-            self.releaseevent=(event.x,event.y)
+            self.releaseevent = self._canvas_to_video(event.x,event.y)
             self.rectangle1.point1 = self.clickevent
             self.rectangle1.point2 = self.releaseevent
         #
@@ -1404,8 +1411,12 @@ class FlowFrame(tk.Frame):
             # print('update')
 
             current_frame,rolling_frame = self.master.video.get_frame(rolling_average=10,return_non_average=1)
+            # Keep the *unprocessed* frame: the paused branch below runs
+            # process_flow_frame on previous_frame, and this used to store the
+            # already-converted frame, so pausing (the state every flow video
+            # loads in) showed an HSV->BGR conversion applied twice.
+            self.previous_frame = rolling_frame
             frame = self.process_flow_frame(rolling_frame)
-            self.previous_frame = frame
 
             if frame is not None:
                 # print(frame)
