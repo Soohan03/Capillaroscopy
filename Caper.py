@@ -31,6 +31,11 @@ import os
 from skimage import data
 from skimage.filters import threshold_multiotsu
 
+# The measurement itself lives in the GUI-free `capillary` package so that the
+# Analyze tab, the batch CLI and the unit tests all run the same arithmetic.
+from capillary.roi import ROI
+from capillary.velocity import lag_and_correlation
+
 class VideoCamera:
     def __init__(self,directory):
         self.cap = cv2.VideoCapture(0)
@@ -660,27 +665,19 @@ class Rectangle:
         self.set_clicks(x+delta_x,y+delta_y)
 
     def calculate_corners(self,x,y):
+        # Geometry delegated to capillary.roi.ROI so the boxes the GUI samples
+        # and the boxes the batch CLI samples are the same boxes. self.width /
+        # self.height are the frame extent here (set in draw_rectangle).
+        # Corner names keep this class's original orientation, where "top" is
+        # the larger y — get_selected_data slices lower_left -> top_left.
+        x_start,x_stop,y_start,y_stop = ROI(
+            int(x),int(y),self.rectangle_width,self.rectangle_height
+        ).bounds((self.height,self.width))
 
-        w = self.rectangle_width
-        h = self.rectangle_height
-
-        if x + int(w / 2)>=self.width:
-            x = x+(self.width - (x + int(w / 2))) #add on the diff, which is negative
-
-        if x - int(w / 2)<0:
-            x = x- (x - int(w / 2))
-
-        if y + int(h / 2) >= self.height:
-            y = y + (self.height- (y + int(h / 2)))  # add on the diff, which is negative
-
-        if y - int(h / 2) < 0:
-            y = y - (y - int(h / 2))
-
-
-        self.top_right = (x+int(w/2),y+int(h/2))
-        self.top_left = (x - int(w / 2),y + int(h / 2))
-        self.lower_right = (x+int(w/2),y-int(h/2))
-        self.lower_left = (x - int(w / 2),y - int(h / 2))
+        self.top_right = (x_stop,y_stop)
+        self.top_left = (x_start,y_stop)
+        self.lower_right = (x_stop,y_start)
+        self.lower_left = (x_start,y_start)
 
     def calculate_corners_drag(self,point1,point2,min_size=5):
         # Normalize the two drag endpoints into an axis-aligned rectangle,
@@ -936,21 +933,17 @@ class CrossCorrelation:
 
                 df_window.columns = ['first_vector','last_vector']
 
-                m = df_window.mean()
-                df_window = df_window - m
-                a = np.correlate(df_window['first_vector'],df_window['last_vector'],'same')
+                # Same estimator as the batch pipeline (capillary.velocity),
+                # including the corrected correlation origin — see the module
+                # docstring there for the off-by-one this replaced.
+                _lag,cross_correlation_estimation = lag_and_correlation(
+                    df_window['first_vector'].to_numpy(),
+                    df_window['last_vector'].to_numpy())
 
-                lag = int(np.ceil(len(df_window['first_vector']) / 2) - np.argmax(a))
+                if not np.isfinite(cross_correlation_estimation):
+                    return 'N/A'
 
-                #        a0 stöter på datan först, därför ska den förskjutas framåt, för att se om den matchar med den rutan som stöter på datan sist.
-                #        det är alltså a1 som avgör vårat index, vilket är annu en anledning till varför den ej ska förskjutas
-                a0 = (df_window.shift(lag))['first_vector']
-                a1 = (df_window.shift(0))['last_vector']
-
-                cross_correlation_estimation = pd.DataFrame(list(zip(a0,a1))).dropna().corr().loc[0,1]
-                ccc=str(np.round(cross_correlation_estimation,1))
-
-                return ccc
+                return str(np.round(cross_correlation_estimation,1))
 
         return 'N/A'
 
@@ -991,22 +984,17 @@ class CrossCorrelation:
             for index in range(index_starts_at,index_ends_at):
                 # w = df_selected_reset_index.iloc[index-window:index]
                 df_window = df_selected_reset_index.iloc[index - window:index]
-                m = df_window.mean()
-                df_window = df_window - m
-                a = []
 
-                a = np.correlate(df_window[0],df_window[1],'same')
-
-                lag = int(np.ceil(len(df_window[0]) / 2) - np.argmax(a))
+                # Shared estimator (capillary.velocity.lag_and_correlation):
+                # mean-subtracts both windows, takes the lag at the correlation
+                # peak, then Pearson r at that alignment. It replaces an inline
+                # copy whose correlation origin was one frame off on the odd
+                # windows this report uses, which biased every velocity high.
+                lag,ccc = lag_and_correlation(
+                    np.asarray(df_window[0],dtype=float),
+                    np.asarray(df_window[1],dtype=float))
 
                 offset.append(lag)
-
-                #        a0 stöter på datan först, därför ska den förskjutas framåt, för att se om den matchar med den rutan som stöter på datan sist.
-                #        det är alltså a1 som avgör vårat index, vilket är annu en anledning till varför den ej ska förskjutas
-                a0 = (df_selected_reset_index[index - window:index].shift(lag) - m[0])[0]
-                a1 = (df_selected_reset_index[index - window:index].shift(0) - m[1])[1]
-
-                ccc = pd.DataFrame(list(zip(a0,a1))).dropna().corr().loc[0,1]
                 #
                 #        plt.plot(a0)
                 #        plt.plot(a1)
@@ -1072,7 +1060,12 @@ class CrossCorrelation:
         magnification_coefficient = self.magnificationCoefficient
 
         for col in result.columns.values:
-            report_data['velocity' + col] = ((report_data['distance'] / -report_data[col]) / (
+            # A zero lag means the plug crossed both boxes inside one frame, not
+            # that it moved infinitely fast; leaving the division to produce inf
+            # would drag every downstream mean to inf, so it becomes NaN.
+            lag_column = report_data[col].replace(0,np.nan)
+
+            report_data['velocity' + col] = ((report_data['distance'] / -lag_column) / (
                         1.0 / self.fps)) * magnification_coefficient
 
             # distance (pixels) /time (1/30) = pixels per 1/30 seconds.
