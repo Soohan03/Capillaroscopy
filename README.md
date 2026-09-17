@@ -42,3 +42,38 @@ Activate your virtual environment and start the application:
 source venv/bin/activate
 python3 Application.py
 ```
+
+## Batch analysis without the GUI
+
+The measurement itself — ROI geometry, per-frame intensity sampling and the
+cross-correlation velocity estimate — lives in the `capillary` package, which
+imports no GUI toolkit. The Analyze tab and the command line therefore run the
+same arithmetic, and a result can be regenerated from the command line alone:
+
+```bash
+python3 -m capillary.cli StabilizedVideos/clip.avi \
+    --roi1 320,240 --roi2 320,300 --size 10x10 \
+    --out report.csv --summary-out summary.csv
+```
+
+`--roi1` is rectangle 1 (the white box, downstream) and `--roi2` is rectangle 2,
+in pixel coordinates; `--size` sets the box size for ROIs given as just `x,y`.
+The spatial calibration comes from `settings.csv` (`mm_per_pixel`) unless
+`--mm-per-pixel` overrides it. `python3 -m capillary.cli --help` lists the rest.
+
+Because every parameter is on the command line, a report made this way is
+reproducible: the ROI coordinates, box size, window lengths and calibration that
+produced it are all recorded, rather than living in where someone clicked.
+
+## Tests
+
+```bash
+source venv/bin/activate
+pip install pytest
+python3 -m pytest
+```
+
+The suite checks the engine against synthetic videos with an exactly known
+velocity — a real clip has no ground truth, so it cannot tell you whether the
+estimator is right. `tests/synthetic.py` generates a pattern moving at a chosen
+pixels-per-frame rate, which fixes the true lag and the true mm/s.
