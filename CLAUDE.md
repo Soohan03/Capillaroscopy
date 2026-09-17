@@ -39,16 +39,29 @@ before relaunching.
 - `StabilizedVideos/` — stabilized videos ready for analysis (8 videos as of 2026-06)
 - `Reports/`, `Statistics/`, `Flows/` — generated analysis outputs
 
+## Analysis engine (`capillary/`)
+
+The measurement — ROI geometry, per-frame intensity sampling, cross-correlation lag,
+velocity — lives in the GUI-free `capillary` package. `Caper.py` calls into it, so the
+Analyze tab, the batch CLI and the tests all run the same arithmetic; put new
+measurement code there, not in the Tkinter classes.
+
+- Batch: `python3 -m capillary.cli <video> --roi1 x,y --roi2 x,y --out report.csv`
+- Tests: `python3 -m pytest` (78 tests, ~8 s; synthetic videos with known velocity)
+
+Velocities computed before 2026-09-17 are biased — the lag was one frame too large on
+every (odd) report window. See the 2026-09-17 DEVLOG entry; `--legacy-lag` reproduces
+the old numbers.
+
 ## Known issues
 
-- **Flow tab crash**: clicking "Flow" always raises `AttributeError: 'NoneType' object has
-  no attribute 'replace'` in `Caper.py` (`Video.__init__`), because `Flow_Frame`'s
-  `ParticipantList` is built from `Flows/` (empty), which resets `selected_item` to `None`,
-  and `Caper.Video.__init__` doesn't handle `path=None`. This freezes the app's update loop
-  (no traceback recovery). Not yet fixed.
+- **Flow tab**: historically crashed with `AttributeError: 'NoneType' object has no
+  attribute 'replace'` when `Flows/` is empty; fixed in `ee10cd7`, but the tab is still
+  the least exercised part of the app and its video frame class still uses the old
+  `current_key` click path. Treat with care.
 
 ## Repo state notes
 
-- `Application.py`, `Caper.py`, `settings.csv`, `FrameClasses.py` have uncommitted WIP
-  changes (camera fallback handling, settings path fix, StabilizedVideos fallback for the
-  Analyze tab list). `run_app.sh` is an untracked helper script. Ask before committing.
+- `main` is at the PR #1 merge (`c3e57f4`); the earlier WIP is committed and `run_app.sh`
+  is tracked. `Thesis/` (LaTeX draft + bibliography) and `.claude/` are untracked by
+  choice. Ask before committing either.
