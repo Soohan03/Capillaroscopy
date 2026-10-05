@@ -8,6 +8,9 @@ import cv2
 import numpy as np
 from scipy import signal
 
+# The sharpness score moved into the measurement engine; re-exported for Caper.py.
+from capillary.quality import calculate_blur  # noqa: F401
+
 
 def pickle_save(file,filename):
     with open(filename, 'wb') as handle:
@@ -27,17 +30,6 @@ def video_stem(path):
     Recorded, stabilized, flow and statistics files for one video share this stem.
     """
     return os.path.splitext(os.path.basename(path))[0]
-
-def calculate_blur(img): #255 img
-
-    rows,cols = img.shape
-    crow,ccol = int(rows / 2),int(cols / 2)
-    f = np.fft.fft2(img / 255.0)
-    fshift = np.fft.ifftshift(f)
-    fshift[crow - 75:crow + 75,ccol - 75:ccol + 75] = 0
-    f_ishift = np.fft.ifftshift(fshift)
-    img_fft = np.fft.ifft2(f_ishift)
-    return np.mean(np.abs(img_fft))  # calibrate this by running all the videos and checking average, then set arbitrary threshold...
 
 def clahe(img,clip_limit = 7.65,tileGridSize=(3,3)): #255
     clahe_filter = cv2.createCLAHE(clipLimit=clip_limit,tileGridSize=tileGridSize)

@@ -10,6 +10,9 @@ widgets and calls into these functions so that both paths compute velocity with
 exactly the same code.
 
 See `capillary.cli` for the batch entry point (`python -m capillary.cli`).
+`capillary.measure` is what the GUI's Measure button runs, `capillary.datasets`
+the file layout of saved measurements, and `capillary.flow` the Flow tab's
+region arithmetic.
 """
 
 from .roi import ROI
@@ -21,6 +24,8 @@ from .velocity import (
     sliding_lag,
     analyze_trace,
     velocity_from_lag,
+    resolvable_range,
+    velocity_summary,
 )
 from .video import VideoInfo, probe_video, iter_frames
 
@@ -35,6 +40,8 @@ __all__ = [
     'sliding_lag',
     'analyze_trace',
     'velocity_from_lag',
+    'resolvable_range',
+    'velocity_summary',
     'VideoInfo',
     'probe_video',
     'iter_frames',

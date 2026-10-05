@@ -74,21 +74,34 @@ def to_single_channel(frame: np.ndarray) -> np.ndarray:
     return frame
 
 
-def iter_frames(path: str, max_frames: Optional[int] = None) -> Iterator[np.ndarray]:
-    """Yield single-channel frames from `path`, one at a time.
+def iter_frames(
+    path: str,
+    max_frames: Optional[int] = None,
+    start: int = 0,
+    single_channel: bool = True,
+) -> Iterator[np.ndarray]:
+    """Yield frames from `path`, one at a time, beginning at frame `start`.
+
+    Frames are reduced to one channel (see `to_single_channel`) unless
+    `single_channel` is False; flow videos keep all three, since they store
+    direction, saturation and magnitude in separate channels.
 
     Stops at `max_frames` if given, or when the decoder runs out — a container
     whose header over-reports its frame count (common after stabilisation
     re-encodes) simply ends early instead of raising.
     """
+    if start < 0:
+        raise ValueError(f'start frame must not be negative, got {start}')
     cap = _open(path)
     try:
+        if start:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, start)
         yielded = 0
         while max_frames is None or yielded < max_frames:
             ok, frame = cap.read()
             if not ok or frame is None:
                 break
-            yield to_single_channel(frame)
+            yield to_single_channel(frame) if single_channel else frame
             yielded += 1
     finally:
         cap.release()
