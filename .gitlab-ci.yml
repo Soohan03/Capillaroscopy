@@ -24,7 +24,7 @@ test:
   stage: test
   script:
     - python -c "import Application; print('Import successful')"
-    - python -c "import FrameClasses; print('FrameClasses import successful')"
+    - python -c "import gui.app; print('gui import successful')"
     - python -c "import Caper; print('Caper import successful')"
 
 # The measurement itself lives in the GUI-free `capillary` package, so it can be

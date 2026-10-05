@@ -17,7 +17,11 @@ Flows/
 
 # Generated at runtime
 capillaroscopy.log
+capillaroscopy.log.*
 .thumbnails/
+.partial/
+# Deleted videos and data sets (the app moves them here; empty it by hand)
+.trash/
 
 # OS files
 .DS_Store

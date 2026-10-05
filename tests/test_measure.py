@@ -111,6 +111,22 @@ def test_invalid_ranges_are_rejected(video_file, start, stop):
         measure_velocity(video_file, ROI_DOWNSTREAM, ROI_UPSTREAM, start, stop)
 
 
+def test_saved_measurement_gives_the_known_velocity_in_the_report(video_file, tmp_path):
+    """Measure, save as a data set, run the (unchanged) report on it."""
+    import Caper
+
+    measurement = measure_velocity(video_file, ROI_DOWNSTREAM, ROI_UPSTREAM, 0, N_FRAMES)
+    datasets.write_velocity_dataset(str(tmp_path), 'clip', 'set1', measurement.trace.a, measurement.trace.b,
+                                    measurement.trace.distance_px, measurement.blur,
+                                    measurement.start_frame, measurement.frame_count)
+    report = Caper.CrossCorrelation(fps=measurement.fps, mm_per_pixel=MM_PER_PIXEL).calculate_cross_correlation(
+        datasets.dataset_prefix(str(tmp_path), 'clip', 'set1'))
+
+    velocity = report.loc[:, report.columns.str.startswith('velocity')].mean(axis=1)
+    expected = expected_velocity_mm_s(VELOCITY_PX_PER_FRAME, FPS, MM_PER_PIXEL)
+    assert velocity.median() == pytest.approx(expected, rel=0.05)
+
+
 @pytest.fixture(scope='module')
 def flow_video(tmp_path_factory):
     """A 3-channel clip standing in for a flow video, uncompressed so every value survives."""

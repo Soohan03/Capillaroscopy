@@ -1,12 +1,11 @@
-"""Video, stabilization, optical-flow, ROI and report classes behind the GUI.
+"""Stabilization, optical flow and the report generators behind the GUI.
 
-The velocity arithmetic itself lives in the GUI-free `capillary` package; the
-classes here read and write videos, draw the ROI boxes and assemble the
-report from the CSV files the Analyze tab saves.
+The measurement itself — ROI geometry, intensity sampling, the lag estimator,
+the flow-region arithmetic — lives in the GUI-free `capillary` package. The
+classes here write the stabilized and flow videos, and the report functions
+turn a saved data set (see `capillary.datasets`) into the report CSVs and
+plots. None of this imports tkinter; the GUI runs it in worker threads.
 """
-import datetime
-import os
-
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,42 +13,12 @@ import pandas as pd
 from skimage.filters import threshold_multiotsu
 
 import SingleStepDFT as DFT
-from Utilities import (pickle_save,pickle_load,calculate_blur,clahe,median_filter,
-                       rgb_to_negR_posG,distance_between_two_points)
+from Utilities import pickle_save,calculate_blur,clahe,median_filter
 
 # The measurement itself lives in the GUI-free `capillary` package so that the
-# Analyze tab, the batch CLI and the unit tests all run the same arithmetic.
-from capillary.roi import ROI
+# GUI, the batch CLI and the unit tests all run the same arithmetic.
+from capillary.flow import flow_magnitudes
 from capillary.velocity import lag_and_correlation
-
-class VideoCamera:
-    def __init__(self,directory):
-        self.cap = cv2.VideoCapture(0)
-        self.width_ = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640.0
-        self.height_ = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480.0
-        self.fps_ = self.cap.get(cv2.CAP_PROP_FPS) or 30.0
-        self.aspect_ratio_ = self.height_/self.width_
-
-        self.path = str(datetime.datetime.now().strftime('%m-%d-%Y_%H-%M-%S-%f'))+'.avi'
-        self.directory = directory
-        self.outputfile = os.path.join(self.directory,self.path)
-        self.writer = None
-
-    def get_frame(self):
-        (grabbed,frame) = self.cap.read()
-        if not grabbed or frame is None:
-            return np.zeros((int(self.height_),int(self.width_),3),dtype=np.uint8)
-        return frame[:,:,::-1]
-
-    def destroy_writer(self):
-        self.writer.release()
-
-    def save_frame(self,frame):
-        if self.writer is None:
-            self.writer = cv2.VideoWriter(self.outputfile,cv2.VideoWriter_fourcc(*'MP4V'),30.0,(640,480))
-        frame = rgb_to_negR_posG(frame)
-        frame = cv2.merge((frame,frame,frame))
-        self.writer.write(frame.astype(np.uint8))
 
 
 class Video:
@@ -65,7 +34,6 @@ class Video:
         self.frames_ = []
         self.frames_processed_ = []
         self.blur_vector = []
-        self.thumbnail_ = None
         self.cap = cv2.VideoCapture()
         self.cap_open=False
         self.writer = None
@@ -74,20 +42,6 @@ class Video:
         self.frame = None
 
         self.output_path = self.path.replace('RecordedVideos','StabilizedVideos')
-
-    def generate_thumbnail(self,factor=0.15):
-        self.cap.open(self.path)
-        self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
-        self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-        frame =self.get_frame()
-        try: # flow videos are stored as HSV; plain videos come back single-channel and raise here
-            frame = cv2.cvtColor(frame,cv2.COLOR_HSV2BGR)
-        except:
-            pass
-        self.thumbnail_ = cv2.resize(frame,None,fx=factor,fy=factor)
 
     def destroy_writer(self):
         self.writer.release()
@@ -133,14 +87,6 @@ class Video:
 
     def get_frame_number(self):
         return int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))-1
-
-    def go_back_or_forward_n_frames(self,n):
-
-        frame_number = self.get_frame_number()
-        if (frame_number+n) > self.number_of_frames_ or (frame_number+n)<0:
-            pass
-        else:
-            self.set_frame(frame_number+n)
 
 
 class FlowVideo(Video):
@@ -211,84 +157,6 @@ class FlowVideo(Video):
         regions1 = np.digitize(average_,bins=[thresholds[1]])
         area = cv2.bitwise_and(regions2,1 - regions1).astype(np.uint8)
         pickle_save(cv2.merge((average_flow_,average_,area)),self.output_path[:-4] + '.pickle')
-
-
-class FlowVideoMultiple:
-    def __init__(self,paths):
-        self.current_stage = 'processing'
-        self.paths = paths
-        self.current_object = 0
-        self.object = FlowVideo(path=self.paths[self.current_object])
-
-    def update(self):
-
-        if self.current_stage == 'processing':
-            if self.object.current_stage == 'finished':
-                self.current_object +=1
-
-                if self.current_object < len(self.paths):
-                    self.object = FlowVideo(path=self.paths[self.current_object])
-                else:
-                    self.current_stage = 'finished'
-            else:
-                self.object.update()
-
-
-class ColorVideo(Video):
-    """Reader for flow videos (3-channel), with the vessel mask from their pickle."""
-    def __init__(self,path):
-        Video.__init__(self,path=path)
-        self.stack = []
-        self.file = pickle_load(self.path[:-4] + '.pickle')
-        self.mask = self.file[:,:,2].astype(np.uint8)
-
-    def get_frame(self,rolling_average=0,return_non_average=0):
-
-        if self.cap_open == False:
-            self.cap.open(self.path)
-            self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
-            self.width_ = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            self.height_ = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            self.aspect_ratio_ = self.height_/self.width_
-            self.pause = 0
-            self.cap_open=True
-
-            self.frame_number = self.get_frame_number()
-            self.current_frame = self.cap.read()[1]
-            self.stack.append(self.current_frame)
-
-            return self.current_frame
-        else:
-            if self.get_frame_number() < self.number_of_frames_-1:
-                self.frame_number = self.get_frame_number()
-                self.current_frame = self.cap.read()[1]
-
-                if rolling_average!=0:
-                    self.stack.append(self.current_frame)
-                    if len(self.stack) > rolling_average:
-                        self.stack.pop(0)
-
-                    self.frame=np.mean(np.array(self.stack),axis=0)
-                else:
-                    self.frame = self.current_frame
-
-                if return_non_average:
-                    return self.current_frame,self.frame.astype(np.uint8)
-                else:
-                    return self.frame.astype(np.uint8)
-            else:
-                self.finished = True
-
-                if return_non_average:
-                    return self.current_frame,self.frame.astype(np.uint8)
-                else:
-                    return self.frame.astype(np.uint8)
-
-    def set_frame(self,frame_number):
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES,frame_number)
-        self.finished = False
-        self.stack=[]
 
 
 class VideoStabilization(Video):
@@ -395,201 +263,38 @@ class VideoStabilization(Video):
                 self.current_stage = 'finished'
 
 
-class VideoStabilizationMultiple:
-    def __init__(self,paths):
-        self.current_stage = 'processing'
-        self.paths = paths
-        self.current_object = 0
-        self.object = VideoStabilization(path=self.paths[self.current_object])
-
-    def update(self):
-        if self.current_stage == 'processing':
-            if self.object.current_stage == 'finished':
-                self.current_object +=1
-
-                if self.current_object < len(self.paths):
-                    self.object = VideoStabilization(path=self.paths[self.current_object])
-                else:
-                    self.current_stage = 'finished'
-            else:
-                self.object.update()
-
-
-class Rectangle:
-    """One ROI box on the video frame, in video pixel coordinates.
-
-    The Analyze tab centres a fixed-size box on a click (calculate_corners); the
-    Flow tab spans the box between the two ends of a drag (calculate_corners_drag).
-    """
-
-    def __init__(self,isForward=True):
-        self.rectangle_width = 10
-        self.rectangle_height = 10
-        self.isForward = isForward
-        self.click_x = 0
-        self.click_y = 0
-
-        if self.isForward:
-            self.color = (255,255,255)
-        else:
-            self.color = (0,0,0)
-
-        self.thickness = 1
-
-        self.top_right = None
-        self.top_left = None
-        self.lower_right = None
-        self.lower_left = None
-
-        self.point1=(0,0)
-        self.point2=(10,10)
-
-    def set_clicks(self,x,y):
-        self.click_x = x
-        self.click_y = y
-
-    def set_width_and_height(self,w,h):
-        self.width = w
-        self.rectangle_width=w
-        self.height = h
-        self.rectangle_height=h
-
-    def get_clicks(self):
-        return self.click_x,self.click_y
-
-    def move_clicks(self,delta_x,delta_y):
-        x,y = self.get_clicks()
-        self.set_clicks(x+delta_x,y+delta_y)
-
-    def calculate_corners(self,x,y):
-        # Geometry delegated to capillary.roi.ROI so the boxes the GUI samples
-        # and the boxes the batch CLI samples are the same boxes. self.width /
-        # self.height are the frame extent here (set in draw_rectangle).
-        # Corner names keep this class's original orientation, where "top" is
-        # the larger y — get_selected_data slices lower_left -> top_left.
-        x_start,x_stop,y_start,y_stop = ROI(
-            int(x),int(y),self.rectangle_width,self.rectangle_height
-        ).bounds((self.height,self.width))
-
-        self.top_right = (x_stop,y_stop)
-        self.top_left = (x_start,y_stop)
-        self.lower_right = (x_stop,y_start)
-        self.lower_left = (x_start,y_start)
-
-    def calculate_corners_drag(self,point1,point2,min_size=5):
-        # Normalize the two drag endpoints into an axis-aligned rectangle,
-        # independent of drag direction. The previous version only worked for
-        # diagonal drags: it left the left-to-right flag unset when the two x
-        # (or y) coordinates were equal, which crashed on pure clicks and
-        # vertical/horizontal drags. Corner naming follows image coordinates
-        # (y grows downward), matching get_selected_data_for_flow/_for_mask.
-        x_left,x_right = sorted((int(point1[0]),int(point2[0])))
-        y_top,y_bottom = sorted((int(point1[1]),int(point2[1])))
-
-        # guarantee a non-degenerate region so the selection is never empty
-        if x_right - x_left < min_size:
-            x_right = x_left + min_size
-        if y_bottom - y_top < min_size:
-            y_bottom = y_top + min_size
-
-        # keep the rectangle inside the frame
-        x_left = max(0,min(x_left,self.width - min_size))
-        x_right = max(min_size,min(x_right,self.width))
-        y_top = max(0,min(y_top,self.height - min_size))
-        y_bottom = max(min_size,min(y_bottom,self.height))
-
-        self.top_left = (x_left,y_top)
-        self.top_right = (x_right,y_top)
-        self.lower_left = (x_left,y_bottom)
-        self.lower_right = (x_right,y_bottom)
-
-    def draw_rectangle(self,frame):
-        self.frame = frame
-        self.height=self.frame.shape[0]
-        self.width= self.frame.shape[1]
-
-        self.calculate_corners(self.click_x,self.click_y)
-
-        frame = cv2.rectangle(self.frame.copy(),self.lower_left,self.top_right,self.color,self.thickness)
-
-        return frame
-
-    def draw_rectangle_drag(self,frame):
-        self.frame = frame
-        self.height=self.frame.shape[0]
-        self.width= self.frame.shape[1]
-
-        self.calculate_corners_drag(self.point1,self.point2)
-
-        frame = cv2.rectangle(self.frame.copy(),self.lower_left,self.top_right,self.color,self.thickness)
-
-        return frame
-
-    def get_selected_data(self):
-        return self.frame[self.lower_left[1]:self.top_left[1],self.lower_left[0]:self.lower_right[0]]  # indexed y,x
-
-    def get_selected_data_for_flow(self,frame):
-        return frame[self.top_left[1]:self.lower_left[1],self.lower_left[0]:self.lower_right[0],:]  # indexed y,x
-
-    def get_selected_data_for_mask(self,mask):
-        return mask[self.top_left[1]:self.lower_left[1],self.lower_left[0]:self.lower_right[0]]
-
-
 class CrossCorrelation:
-    """Per-frame ROI intensities of the Analyze tab, and the velocity report built from them.
+    """The velocity report, built from a saved velocity data set.
 
-    Box convention (the report's column names spell it out):
-      rectangle1 -> first_vec, column 0: the white box, which the blood reaches LAST
-      rectangle2 -> last_vec,  column 1: the black box, which the blood reaches FIRST
+    The data set (see capillary.datasets) holds the per-frame mean intensity
+    of both boxes and their separation. Box convention (the report's column
+    names spell it out, from when the boxes were drawn white and black):
+      box 1, column 0: the downstream box, which the blood reaches LAST
+      box 2, column 1: the upstream box, which the blood reaches FIRST
     hence velocity = distance / -lag in calculate_cross_correlation. The module
     docstring of capillary.velocity describes the same convention.
     """
 
-    def __init__(self,video,rectangle1,rectangle2,mm_per_pixel=0.001328903654):
-        self.video = video
-        self.rectangle_first = rectangle1
-        self.rectangle_last = rectangle2
-
+    def __init__(self,fps=30.0,mm_per_pixel=0.001328903654):
         # use the video's real frame rate; a hardcoded 30 here would bias
         # every velocity estimate for videos recorded at another rate
-        self.fps = float(video.fps_) if getattr(video,'fps_',0) else 30.0
-
-        # data first encounters new data
-        self.first_vec = dict(
-            zip(np.arange(0,self.video.number_of_frames_),[np.nan] * self.video.number_of_frames_))
-
-        # data that last encounters new data
-        self.last_vec = dict(
-            zip(np.arange(0,self.video.number_of_frames_),[np.nan] * self.video.number_of_frames_))
-
-        self.distance_vector= np.array([np.nan] * self.video.number_of_frames_)
+        self.fps = float(fps) if fps else 30.0
 
         self.magnificationCoefficient = mm_per_pixel # spatial calibration, configured in settings.csv
 
-    def check_if_enough_data_for_report(self):
-        return pd.Series(self.distance_vector).notna().sum()>300
+    def generate_report(self,path,registered_time_points,report_path=None,progress=None):
+        """Write the report for the data set at `path` and return its table.
 
-    def calculate_distance(self,index):
-        c1=self.rectangle_first.get_clicks()
-        c2=self.rectangle_last.get_clicks()
-
-        self.distance_vector[index] = distance_between_two_points(c1[1],c2[1],c1[0],c2[0])
-
-    def set_cropped_frame_data(self,index,data_first,data_last):
-        self.first_vec[index] = data_first
-        self.last_vec[index] = data_last
-
-    def get_mean_intensity(self):
-        return np.array(list(zip([[np.nanmean(self.first_vec[i]) for i in range(self.video.number_of_frames_-1) ],[np.nanmean(self.last_vec[i]) for i in range(self.video.number_of_frames_-1)]])))[:,0]
-
-    def get_mean_intensity_in_range(self,range_start,range_end):
-        return np.array(list(zip([[np.nanmean(self.first_vec[i]) for i in range(range_start,range_end) ],[np.nanmean(self.last_vec[i]) for i in range(range_start,range_end)]])))[:,0]
-
-    def generate_report(self,path,registered_time_points):
-        df = self.calculate_cross_correlation(path)
+        `path` is the data set's prefix in Statistics/ (``<stem>___<name>``);
+        the table goes next to it as ``___report.csv``, the plots and the
+        summary to `report_path` (by default `path` with Statistics replaced
+        by Reports). `registered_time_points` (seconds) become red lines on the
+        last plot. `progress` is called with 0..1 while the lags are computed.
+        """
+        df = self.calculate_cross_correlation(path,progress=progress)
         df.to_csv(path+'___report.csv')
 
-        path = path.replace('Statistics','Reports')
+        path = report_path if report_path is not None else path.replace('Statistics','Reports')
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
         df.loc[:,df.columns.str.contains('velocity')].mean(axis=1).rolling(30,min_periods=1).mean().plot(ax=ax)
@@ -597,6 +302,7 @@ class CrossCorrelation:
         plt.ylabel('mm/s')
         plt.xlabel('Seconds')
         f.savefig(path+ 'velocity.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
+        plt.close(f)
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
         temp_vec = df.loc[:,df.columns.str.contains('velocity')].mean(axis=1).rolling(30,min_periods=1).mean()
@@ -606,6 +312,7 @@ class CrossCorrelation:
         plt.ylabel('mm/s')
         plt.xlabel('Seconds')
         f.savefig(path+ 'velocity_above_zero.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
+        plt.close(f)
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
         df.loc[:,df.columns.str.contains('correlation')].mean(axis=1).rolling(30,min_periods=1).mean().plot(ax=ax)
@@ -613,6 +320,7 @@ class CrossCorrelation:
         plt.ylabel('Percent')
         plt.xlabel('Seconds')
         f.savefig(path+ 'correlation.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
+        plt.close(f)
 
         f,ax = plt.subplots(figsize=(10,5),dpi=300)
         temp_vec = df.loc[:,df.columns.str.contains('velocity')].mean(axis=1).rolling(30,min_periods=1).mean()
@@ -644,6 +352,7 @@ class CrossCorrelation:
 
         plt.legend()
         f.savefig(path + 'velocity_above_zero_with_correlation.png',dpi=f.dpi,transparent=True,bbox_inches='tight')
+        plt.close(f)
 
         df2 = df.copy()
         df2['time']= df.index #index is already in seconds (set in calculate_cross_correlation)
@@ -652,38 +361,9 @@ class CrossCorrelation:
 
         df2=df2.loc[:,['time','velocity','correlation']]
         df2.to_csv(path+'___report_summary.csv')
+        return df
 
-    def estimate_cross_correlation(self,frame_number):
-
-        window_length = 100
-
-        range_start,range_end = (frame_number - 1) - (window_length+1),frame_number - 1
-
-        if range_start>0:
-
-            df_window=self.get_mean_intensity_in_range(range_start,range_end)
-
-            df_window = pd.DataFrame(df_window).T
-
-            if len(df_window.dropna())>window_length:
-
-                df_window.columns = ['first_vector','last_vector']
-
-                # Same estimator as the batch pipeline (capillary.velocity),
-                # including the corrected correlation origin — see the module
-                # docstring there for the off-by-one this replaced.
-                _lag,cross_correlation_estimation = lag_and_correlation(
-                    df_window['first_vector'].to_numpy(),
-                    df_window['last_vector'].to_numpy())
-
-                if not np.isfinite(cross_correlation_estimation):
-                    return 'N/A'
-
-                return str(np.round(cross_correlation_estimation,1))
-
-        return 'N/A'
-
-    def calculate_cross_correlation(self,path='',st=201,en=311,jump=20):
+    def calculate_cross_correlation(self,path='',st=201,en=311,jump=20,progress=None):
         # this prepares a dataframe with the largest section of data that all have sequential values
         df = pd.read_csv(path + '___cross_correlation.csv')
         df = df.T
@@ -696,6 +376,8 @@ class CrossCorrelation:
         df_selected_reset_index = df_selected.reset_index(drop=True)
 
         windows = np.arange(st,en,jump)
+        total_steps = sum(max(0,len(df_selected_reset_index) - window) for window in windows)
+        steps_done = 0
 
         combined = []
         combined_correlation = []
@@ -707,6 +389,9 @@ class CrossCorrelation:
             offset = []
             correlation = []
             for index in range(index_starts_at,index_ends_at):
+                steps_done += 1
+                if progress is not None and steps_done % 250 == 0:
+                    progress(steps_done / total_steps)
                 df_window = df_selected_reset_index.iloc[index - window:index]
 
                 # Shared estimator (capillary.velocity.lag_and_correlation):
@@ -775,3 +460,41 @@ class CrossCorrelation:
         report_data = report_data.set_index(np.array(list(report_data.index)) * (1.0 / self.fps))
 
         return report_data
+
+
+def generate_flow_report(flow_regions,mask_regions,fps,mm_per_pixel,report_prefix):
+    """Plot the flow report of a saved flow data set; returns ``(up, down, both)``.
+
+    `flow_regions` / `mask_regions` are the data set's ``{frame: region}`` dicts
+    (capillary.datasets.load_flow_dataset); the per-frame values come from
+    capillary.flow.flow_magnitudes. `report_prefix` is ``Reports/<stem>___<name>``.
+    Both plots are smoothed with an exponential moving average over 100 frames.
+    """
+    up,down,both = flow_magnitudes(flow_regions,mask_regions,mm_per_pixel)
+    fps = fps or 30
+
+    f,ax = plt.subplots(figsize=(10,5),dpi=300)
+
+    flow_field_up = pd.DataFrame(up,columns=['flow']).set_index(pd.Series(up).index / fps).dropna().ewm(span=100).mean()
+    plt.plot(flow_field_up,label='up')
+
+    flow_field_down = pd.DataFrame(down,columns=['flow']).set_index(pd.Series(down).index / fps).dropna().ewm(span=100).mean()
+    plt.plot(flow_field_down,label='down')
+
+    plt.title('Flow field magnitude ')
+    plt.ylabel('Magnitude (mm)')
+    plt.xlabel('Seconds')
+    plt.legend()
+    f.savefig(report_prefix + '___up_and_down_.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
+    plt.close(f)
+
+    f,ax = plt.subplots(figsize=(10,5),dpi=300)
+    flow_field_both = pd.DataFrame(both,columns=['flow']).set_index(pd.Series(both).index / fps).dropna().ewm(span=100).mean()
+    plt.plot(flow_field_both,label='omnidirectional')
+    plt.title('Flow field magnitude ')
+    plt.ylabel('Magnitude (mm)')
+    plt.xlabel('Seconds')
+    plt.legend()
+    f.savefig(report_prefix + '___omnidirectional_.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
+    plt.close(f)
+    return up,down,both
