@@ -4,8 +4,6 @@ opencv-python
 webcolors
 pandas
 matplotlib
-seaborn
-sk-video
 scikit-image
 image-registration
 scipy
