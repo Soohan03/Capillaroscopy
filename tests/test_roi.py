@@ -1,7 +1,8 @@
 """ROI geometry — the arithmetic that decides which pixels a measurement uses.
 
-The expected values here are the behaviour of `Caper.Rectangle`, written out
-explicitly so the engine can be checked without importing the GUI.
+The expected values here are the behaviour of the original GUI's
+`Caper.Rectangle` (removed in the 2026-10 GUI rebuild), written out explicitly
+so every measurement keeps sampling the same pixels.
 """
 
 import numpy as np

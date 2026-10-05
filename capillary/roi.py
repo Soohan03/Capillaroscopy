@@ -1,15 +1,15 @@
 """Region-of-interest geometry, independent of any GUI toolkit.
 
-The two ROI boxes the user positions on the Analyze tab are centred boxes of a
-fixed width/height, clamped so they stay inside the frame. `Caper.Rectangle`
-implements that with mutable state and drawing code mixed in; `ROI` below is the
-same arithmetic as a plain value object, so it can be constructed from a CLI
-argument and unit-tested without a canvas.
+The two ROI boxes the user positions on the Analyze page are centred boxes of a
+fixed width/height, clamped so they stay inside the frame. The original GUI's
+`Caper.Rectangle` (removed in the 2026-10 GUI rebuild) did that with mutable
+state and drawing code mixed in; `ROI` below is the same arithmetic as a plain
+value object, used by the GUI and the CLI alike and unit-tested without a canvas.
 
-The clamping reproduces `Caper.Rectangle.calculate_corners` exactly, including
-its use of ``int(w / 2)`` halves (so an odd width yields a box one pixel
-narrower than requested) and its ``>=`` edge test. Changing that would silently
-shift every historical measurement by a pixel, so it is kept as-is and pinned by
+The clamping reproduces `Rectangle.calculate_corners` exactly, including its
+use of ``int(w / 2)`` halves (so an odd width yields a box one pixel narrower
+than requested) and its ``>=`` edge test. Changing that would silently shift
+every historical measurement by a pixel, so it is kept as-is and pinned by
 tests in `tests/test_roi.py`.
 """
 
@@ -22,7 +22,7 @@ from dataclasses import dataclass
 def _clamp_center(center: int, half: int, extent: int) -> int:
     """Move `center` so a box of half-size `half` fits inside `[0, extent)`.
 
-    Mirrors `Caper.Rectangle.calculate_corners`.
+    Mirrors the original GUI's `Caper.Rectangle.calculate_corners`.
     """
     if center + half >= extent:
         center = center + (extent - (center + half))
@@ -37,7 +37,7 @@ class ROI:
 
     `center_x` / `center_y` are where the user clicked, in frame pixel
     coordinates (x to the right, y downwards). `width` / `height` are the box
-    size taken from the Analyze tab entries.
+    size set on the Analyze page.
     """
 
     center_x: int
@@ -82,10 +82,10 @@ class ROI:
     def distance_to(self, other: 'ROI', frame_shape: tuple[int, ...]) -> float:
         """Centre-to-centre distance in pixels, after clamping both boxes.
 
-        The GUI measures between the raw click coordinates; using the clamped
-        centres instead means the reported distance matches where the sampling
-        boxes actually sit. The two agree except when a box is pushed off the
-        edge of the frame.
+        The original GUI measured between the raw click coordinates; using the
+        clamped centres instead means the reported distance matches where the
+        sampling boxes actually sit. The two agree except when a box is pushed
+        off the edge of the frame. The current GUI and the CLI both use this.
         """
         x1, y1 = self.clamped_center(frame_shape)
         x2, y2 = other.clamped_center(frame_shape)

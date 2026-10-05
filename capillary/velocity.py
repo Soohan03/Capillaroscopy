@@ -18,11 +18,11 @@ the plug reaches box A first and the flow runs A -> B. `velocity_from_lag`
 therefore returns velocity along A -> B, negative if the flow actually runs the
 other way.
 
-The Analyze tab names its boxes the opposite way round: rectangle 1 (the white
-box, `isForward=True`) is the box the blood reaches *last*, which is why the
-legacy report formula divides by `-lag`. `analyze_trace` keeps that convention
-by default (`positive_flow='b_to_a'`) so batch reports carry the same sign as
-the reports generated from the GUI.
+The Analyze page names its boxes the opposite way round: box 1 (the white box,
+`isForward=True`, in the original GUI) is the box the blood reaches *last*,
+which is why the legacy report formula divides by `-lag`. `analyze_trace`
+keeps that convention by default (`positive_flow='b_to_a'`) so batch reports
+carry the same sign as the reports generated from the GUI.
 
 The off-by-one
 --------------
