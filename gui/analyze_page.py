@@ -593,9 +593,12 @@ class AnalyzePage(MeasurePage):
         median = summary.get('median', float('nan'))
         big = ttk.Frame(frame, style='Panel.TFrame')
         big.pack(fill='x', pady=(0, px(6)))
-        ttk.Label(big, text=f'{median:.3f}' if math.isfinite(median) else '–', style='Big.Panel.TLabel').pack(
-            side='left')
-        ttk.Label(big, text=' mm/s median', style='Muted.Panel.TLabel').pack(side='left', anchor='s', pady=(0, px(4)))
+        if math.isfinite(median):
+            ttk.Label(big, text=f'{median:.3f}', style='Big.Panel.TLabel').pack(side='left')
+            ttk.Label(big, text=' mm/s median', style='Muted.Panel.TLabel').pack(side='left', anchor='s',
+                                                                                 pady=(0, px(4)))
+        else:
+            ttk.Label(big, text='No velocity could be resolved', style='Bold.Panel.TLabel').pack(side='left')
         q25, q75 = summary.get('q25', float('nan')), summary.get('q75', float('nan'))
         stat(frame, 'Middle 50 %', f'{q25:.3f} – {q75:.3f} mm/s' if math.isfinite(q25) else '–',
              tooltip='Interquartile range of the window estimates.')
