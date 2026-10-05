@@ -26,3 +26,11 @@ test:
     - python -c "import Application; print('Import successful')"
     - python -c "import FrameClasses; print('FrameClasses import successful')"
     - python -c "import Caper; print('Caper import successful')"
+
+# The measurement itself lives in the GUI-free `capillary` package, so it can be
+# tested properly: these run against synthetic videos with a known velocity.
+unit-tests:
+  stage: test
+  script:
+    - pip install pytest
+    - python -m pytest

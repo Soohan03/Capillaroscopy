@@ -6,6 +6,206 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-09-17 — Extract the analysis engine, and fix an off-by-one in the lag
+
+**Branch:** `feat/analysis-engine-extraction` (off `main` at `c3e57f4`, the merge
+of PR #1 `fix/short-term-improvements`)
+
+**Commits:**
+
+- `e002558` Add CLAUDE.md project instructions
+- `e85763a` Extract the analysis engine into a GUI-free `capillary` package
+- `5eb538f` Fix off-by-one in the cross-correlation lag and route the GUI through the engine
+- `7a29e47` Document batch analysis and run the unit tests in CI
+
+This is item 1 of the long-term list at the bottom of this file ("extract the
+analysis engine into a GUI-free module with a CLI batch mode and unit tests
+against synthetic videos with known velocity"). Writing the tests immediately
+turned up a measurement bug, described in full below — it affects every velocity
+this tool has ever reported, so read that section before using any earlier
+report in the thesis.
+
+### Why extract the engine
+
+The measurement was only reachable by clicking. ROI geometry lived in
+`Caper.Rectangle` interleaved with cv2 drawing calls; the velocity estimate
+lived in `CrossCorrelation.calculate_cross_correlation`, which read its inputs
+back from CSV files the GUI had written moments earlier and could not be invoked
+without a Tk canvas. Nothing about the arithmetic could be run, checked, or
+re-run on a different day with the same parameters.
+
+For a methods section that has to defend its numbers, that is the wrong shape:
+a result should be reproducible from recorded parameters, and the estimator
+should be checkable against a signal whose answer is known in advance.
+
+### The new package (`capillary/`)
+
+No module in it imports tkinter, PIL or matplotlib.
+
+| Module | What it holds |
+| --- | --- |
+| `roi.py` | `ROI`: the centred, frame-clamped sampling box as a value object |
+| `video.py` | `probe_video` / `iter_frames`: streaming frame access |
+| `intensity.py` | `IntensityTrace`, `extract_traces`: per-frame mean ROI intensity |
+| `velocity.py` | `signed_lag`, `lag_and_correlation`, `sliding_lag`, `analyze_trace` |
+| `cli.py` | `python -m capillary.cli` batch entry point |
+
+Design decisions worth recording:
+
+- **`ROI` reproduces `Rectangle.calculate_corners` exactly**, including its
+  `int(w / 2)` halves (an 11-px box samples 10 columns) and its `>=` edge test.
+  Those quirks were kept deliberately: "fixing" them would silently move every
+  historical measurement by a pixel. The equivalence was verified mechanically
+  (see Verification) rather than by eye.
+- **Frames are streamed, not loaded.** `Caper.Video.load` allocates two float64
+  arrays covering the whole clip (~26 GB for 60 s at 640x480), which is why
+  batch analysis of a long recording was never possible. `iter_frames` holds one
+  frame at a time. This is a partial answer to item 2 of the long-term list —
+  the *analysis* path no longer has the problem; stabilisation still does.
+- **Sliding windows are indexed by their centre frame.** The legacy report
+  assigned each window's estimate to the frame at its *end* and then applied two
+  compensating shifts (`(window - st) / 2`, then `-ceil(st / 2)`) to push the
+  index back towards the middle. The engine just uses the centre directly, so a
+  velocity is attributed to the moment it actually describes.
+- **Explicit sign convention.** `signed_lag(a, b)` is positive when trace `b`
+  lags `a`, so `velocity_from_lag` returns velocity along A -> B. The Analyze tab
+  names its boxes the other way round (rectangle 1, the white box, is the one
+  the blood reaches *last* — hence the legacy `/ -lag`), so `analyze_trace`
+  defaults to `positive_flow='b_to_a'` and batch reports carry the same sign as
+  GUI reports. This was previously only recoverable from Swedish comments and a
+  column name reading `firstvec_white_islast_rect1_0`.
+
+### The bug: every reported lag was one frame too large
+
+`np.correlate(a, b, 'same')` places zero displacement at index `n // 2`. The
+estimator computed
+
+```python
+lag = int(np.ceil(len(window) / 2) - np.argmax(correlation))
+```
+
+`ceil(n / 2)` equals `n // 2` for an even `n` and exceeds it by one for an odd
+`n`. Every window length the report uses — `np.arange(201, 311, 20)` = 201, 221,
+241, 261, 281, 301 — is odd. So every lag the tool has ever produced was one
+frame too large, and velocity goes as `1 / lag`.
+
+The bias is not a constant scale factor; it is a shift of the whole lag axis,
+so its size depends on how fast the flow was:
+
+- A true lag of -5 frames was reported as -4: **25% too fast**.
+- A true lag of -1 frame was reported as 0: an infinite velocity.
+- A true lag of -50 frames was reported as -49: 2% too fast, negligible.
+
+It systematically **over**estimates the speeds the report plots as positive
+(those come from negative lags, whose magnitude the shift shrinks).
+
+`capillary.velocity.signed_lag` uses `n // 2`. `legacy=True` (and `--legacy-lag`
+on the CLI) reproduces the old behaviour for comparison against existing
+reports.
+
+### What that means for the data already collected
+
+Regenerating the saved `FP01_Qefter_22-Oct-2019_09-46-17___Test` report with the
+fixed estimator (read-only; nothing in `Statistics/` was overwritten):
+
+- All **5824** lag values move by exactly **1.0** frame, and nothing else
+  changes — so the correction is the only behavioural difference, and the
+  refactor itself is inert.
+- **22.4%** of that recording's window estimates (1690 of 7542) had a true lag
+  of **zero**: the plug crossed both boxes within one frame. The old code
+  recorded these as a definite 1-frame lag, i.e. a spurious velocity of
+  ~1.16 mm/s — which is simply the fastest that ROI separation (median 29.1 px)
+  can express at 30 fps. They now report as unresolvable instead of as a
+  measurement.
+- Of the estimates that do resolve, the median absolute lag is 59 frames — about
+  2 s to cross 29 px, i.e. genuinely slow flow — where a 1-frame error is under
+  2%. That is why the *median* positive velocity only moves +3.7% while the mean
+  and the upper tail move a lot (positive-sample mean 0.145 -> 0.100 mm/s,
+  p95 0.605 -> 0.322 mm/s): the bias is concentrated in the fast samples.
+
+**Implication for the thesis, to discuss with the supervisors:** the sizeable
+zero-lag fraction is a real limitation of the method as configured, not a
+software fault. At 30 fps with boxes ~29 px apart, anything faster than
+~1.16 mm/s is unmeasurable. If faster flows matter, the boxes need to sit
+further apart, or the lag needs sub-frame interpolation. Any velocity previously
+reported at or near ~1.16 mm/s for this configuration should be treated as
+"too fast to measure" rather than as a value.
+
+### Other corrections made in passing
+
+- A correlation window containing missing samples now yields NaN. Previously
+  `np.argmax` of an all-NaN array returned 0, which silently produced a lag of
+  `ceil(n / 2)` — a fabricated estimate. It is rare in the saved report (31 of
+  7542 values) but indistinguishable from a real measurement when it happens.
+- A zero lag yields NaN rather than an infinite velocity. The saved report
+  contains 12 infinities, each of which drags any mean computed over its column
+  to infinity.
+
+### Single source of truth
+
+`Caper.py` now calls into the package rather than keeping its own copies:
+`Rectangle.calculate_corners` delegates to `ROI`, and both
+`estimate_cross_correlation` (the live "Correlation" readout) and
+`calculate_cross_correlation` (the saved report) call
+`capillary.velocity.lag_and_correlation`. The GUI, the batch CLI and the tests
+cannot drift apart.
+
+### Batch mode
+
+```bash
+python3 -m capillary.cli StabilizedVideos/clip.avi \
+    --roi1 320,240 --roi2 320,300 --size 10x10 \
+    --out report.csv --summary-out summary.csv
+```
+
+`mm_per_pixel` is read from `settings.csv` unless `--mm-per-pixel` overrides it.
+The point is reproducibility: the ROI coordinates, box size, window lengths and
+calibration that produced a report are all on the command line, instead of
+living in where somebody clicked.
+
+### Verification
+
+- **78 unit tests pass** (`python3 -m pytest`, 8 s). They cover ROI geometry and
+  clamping, lag recovery, the velocity formula, NaN and zero-lag handling, the
+  sliding window, CLI argument handling, and an end-to-end run.
+- **Ground truth.** `tests/synthetic.py` generates clips in which an intensity
+  pattern is translated at a chosen pixels-per-frame rate, so the true lag
+  between two boxes and the true mm/s are both known exactly. A real clip cannot
+  do this job — nobody knows how fast the blood in it was moving. The pipeline
+  recovers the planted velocity to within 5%, and doubling the planted speed
+  doubles the measured one (within 10%).
+- **The off-by-one is pinned by tests** in both directions: `legacy=True` must
+  return `true_lag + 1` on odd windows and `true_lag` on even ones, and on a
+  synthetic clip the legacy path must land further from the known truth.
+- **The refactor is inert.** `Rectangle.calculate_corners` was compared against
+  a verbatim copy of the pre-refactor arithmetic over 768 combinations of click
+  position, box size and frame size (including boxes clamped against all four
+  edges): 768/768 identical, and the selected pixel patch is unmoved.
+- **Real data.** The saved report regeneration described above: 5824/5824 lag
+  values differ by exactly 1.0 and nothing else changed.
+- **The app still runs.** Relaunched under WSLg after the rewiring: the update
+  loop runs and the Analyze tab's correlation readout works, with no traceback.
+  (The `RuntimeWarning: Mean of empty slice` at `Caper.py:828` is the
+  pre-existing benign one — `nanmean` over an empty ROI before boxes are placed.)
+- `python3 -m py_compile` passes on `Caper.py`, `Application.py`,
+  `FrameClasses.py` and every new module.
+- CI (`.gitlab-ci.yml`) gained a `unit-tests` job running pytest. The existing
+  job could only prove the modules import.
+
+### Not done
+
+- The legacy report path still round-trips through `Statistics/*.csv` files and
+  still applies its own index shifts; only the estimator inside it was replaced.
+  Rewriting `generate_report` on top of `analyze_trace` is the natural follow-up.
+- `Video.load` (stabilisation) still allocates whole-clip arrays — long-term
+  item 2 remains open for that path.
+- No provenance sidecar yet (long-term item 3); the CLI makes parameters
+  explicit but does not yet record them alongside the output.
+- Flow/stabilisation are still GUI-bound. Only the cross-correlation velocity
+  path was extracted.
+
+---
+
 ## 2026-07-23 — Fix Ctrl+click (2nd ROI box) and video-not-playing on Analyze tab
 
 **Branch:** `fix/short-term-improvements` (continued)
@@ -241,9 +441,12 @@ The capture handle is released after thumbnail generation (was leaked).
 1. Extract the analysis engine (CrossCorrelation, stabilization, flow) into
    a GUI-free module with a CLI batch mode and unit tests against synthetic
    videos with known velocity — key for thesis reproducibility.
+   *Done for the cross-correlation velocity path on 2026-09-17 (`capillary/`);
+   stabilization and flow are still GUI-bound.*
 2. Stream video processing: `Video.load` still allocates two float64 arrays
    covering the whole video (~26 GB for a 60 s clip) — stabilization of
-   long videos will exhaust memory.
+   long videos will exhaust memory. *The analysis path now streams
+   (`capillary.video.iter_frames`, 2026-09-17); stabilization still does not.*
 3. Save analysis provenance (ROI coordinates, rectangle size, window
    parameters, git hash) as a JSON sidecar with every report.
 4. Worker thread/process for stabilization/flow instead of one frame per
