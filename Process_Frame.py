@@ -72,7 +72,7 @@ class Process_Frame(tk.Frame):
             flow_items = list_videos(self.master.flows_directory_path)
             a = [video_stem(item) for item in stabilized_items]
             b = [video_stem(item) for item in flow_items]
-            items_to_flow_process = np.array(stabilized_items)[np.invert(np.in1d(a,b))]
+            items_to_flow_process = np.array(stabilized_items)[np.invert(np.isin(a,b))]
 
             self.process = FlowVideoMultiple(paths=items_to_flow_process)
 
@@ -96,7 +96,7 @@ class Process_Frame(tk.Frame):
         stabilized_items = list_videos(self.master.recorded_video_directory_path.replace('RecordedVideos','StabilizedVideos'))
         a = [video_stem(item) for item in recorded_items]
         b = [video_stem(item) for item in stabilized_items]
-        return np.array(recorded_items)[np.invert(np.in1d(a,b))]
+        return np.array(recorded_items)[np.invert(np.isin(a,b))]
 
     def update(self):
         if self.process is None:
