@@ -1,6 +1,5 @@
 """End-to-end: pixels in, mm/s out, checked against a known velocity."""
 
-import numpy as np
 import pytest
 
 import cv2
