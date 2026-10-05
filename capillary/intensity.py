@@ -21,9 +21,9 @@ from .video import DEFAULT_FPS, iter_frames, probe_video
 class IntensityTrace:
     """Mean ROI intensity per frame for the two boxes.
 
-    `a` and `b` correspond to rectangle 1 (white box) and rectangle 2 (black
-    box) on the Analyze tab. Frames where a box fell outside the image, or that
-    failed to decode, are NaN.
+    `a` and `b` correspond to box 1 (downstream) and box 2 (upstream) on the
+    Analyze page; the original GUI drew them white and black. Frames where a
+    box fell outside the image, or that failed to decode, are NaN.
     """
 
     a: np.ndarray

@@ -18,11 +18,11 @@ the plug reaches box A first and the flow runs A -> B. `velocity_from_lag`
 therefore returns velocity along A -> B, negative if the flow actually runs the
 other way.
 
-The Analyze tab names its boxes the opposite way round: rectangle 1 (the white
-box, `isForward=True`) is the box the blood reaches *last*, which is why the
-legacy report formula divides by `-lag`. `analyze_trace` keeps that convention
-by default (`positive_flow='b_to_a'`) so batch reports carry the same sign as
-the reports generated from the GUI.
+The Analyze page names its boxes the opposite way round: box 1 (the white box,
+`isForward=True`, in the original GUI) is the box the blood reaches *last*,
+which is why the legacy report formula divides by `-lag`. `analyze_trace`
+keeps that convention by default (`positive_flow='b_to_a'`) so batch reports
+carry the same sign as the reports generated from the GUI.
 
 The off-by-one
 --------------
@@ -114,6 +114,54 @@ def velocity_from_lag(
     if not np.isfinite(lag) or lag == 0:
         return float('nan')
     return float((distance_px / lag) * fps * mm_per_pixel)
+
+
+def resolvable_range(
+    distance_px: float, fps: float, mm_per_pixel: float, window: int = DEFAULT_WINDOWS[0]
+) -> tuple[float, float]:
+    """Slowest and fastest speed (mm/s) that boxes `distance_px` apart can resolve.
+
+    The lag is a whole number of frames. The fastest measurable flow crosses
+    the separation in one frame; anything faster gives a lag of zero, which is
+    reported as unresolved (NaN), not as a speed. The slowest is set by the
+    largest lag a window of `window` frames can express, ``window // 2``.
+    """
+    if not np.isfinite(distance_px) or distance_px <= 0:
+        return float('nan'), float('nan')
+    slowest = velocity_from_lag(window // 2, distance_px, fps, mm_per_pixel)
+    fastest = velocity_from_lag(1, distance_px, fps, mm_per_pixel)
+    return slowest, fastest
+
+
+def velocity_summary(velocity, correlation=None, lag=None) -> dict:
+    """Headline numbers for a series of velocity estimates.
+
+    `velocity` holds one estimate per window position (NaN where unresolved);
+    `correlation` and `lag` are optional, of any shape, and contribute the
+    median correlation and the share of lags that were zero — the estimates
+    too fast to resolve at this box separation.
+    """
+    values = np.asarray(velocity, dtype=float).ravel()
+    finite = values[np.isfinite(values)]
+    summary = {
+        'estimates': int(values.size),
+        'resolved': int(finite.size),
+        'resolved_fraction': finite.size / values.size if values.size else float('nan'),
+        'median': float(np.median(finite)) if finite.size else float('nan'),
+        'q25': float(np.percentile(finite, 25)) if finite.size else float('nan'),
+        'q75': float(np.percentile(finite, 75)) if finite.size else float('nan'),
+        'mean': float(np.mean(finite)) if finite.size else float('nan'),
+        'positive_fraction': float(np.mean(finite > 0)) if finite.size else float('nan'),
+    }
+    if correlation is not None:
+        r = np.asarray(correlation, dtype=float).ravel()
+        r = r[np.isfinite(r)]
+        summary['median_correlation'] = float(np.median(r)) if r.size else float('nan')
+    if lag is not None:
+        lags = np.asarray(lag, dtype=float).ravel()
+        lags = lags[np.isfinite(lags)]
+        summary['zero_lag_fraction'] = float(np.mean(lags == 0)) if lags.size else float('nan')
+    return summary
 
 
 def sliding_lag(

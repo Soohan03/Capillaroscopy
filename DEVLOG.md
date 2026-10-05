@@ -6,6 +6,259 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-05 — GUI rebuilt from scratch
+
+**Branch:** `feat/gui-rebuild`, based on `refactor/remove-dead-code` (`4f785bc`),
+which is not merged yet. Merge that pull request first, then this one.
+
+**Commits:**
+
+- `24543cf` Add frame-range measurement, data set files and flow arithmetic to capillary
+- `5a1784c` Rebuild the GUI from scratch as the gui package
+- `f6ccea7` Remove the old GUI
+- `d7a3a1a` Update README and CLAUDE.md for the new GUI
+- `45a15ac` Analyze: say so when a measurement resolved no velocity
+
+### Why
+
+The user asked for the GUI to be rebuilt from scratch: it was outdated and
+not intuitive. Concretely, the old window had these problems:
+
+- **Measuring meant playing the video.** Each frame shown with the boxes on it
+  added one sample. A measurement took as long as the clip. Moving a box
+  half-way silently mixed two positions into one data set. Frames played
+  before the boxes were placed were recorded too.
+- The two boxes differed only by colour (white, black) and a modifier key.
+  Nothing said that box 1 must be the downstream one, although the sign of
+  every velocity depends on it.
+- Nothing showed whether the boxes were placed well until a report had been
+  saved and generated.
+- Stabilization and optical flow ran one frame per tick of the window's main
+  loop, so the window was unusable for minutes.
+- Six of the seven known issues listed after the clean-up were GUI defects:
+  popups took over the close button, the Capture tab broke the keyboard
+  controls, the save popup warned falsely, Generate report and the
+  "all videos" options crashed, and the camera was never released.
+- Deleting a video deleted it permanently.
+
+### The new GUI (`5a1784c`)
+
+One window: a list of recordings on the left, and four pages. A recording is
+everything that shares one video's name: raw capture, stabilized copy,
+optical flow, data sets, time points. `Application.py` only sets up logging
+(now a rotating `capillaroscopy.log`) and opens the window from the new `gui/`
+package (19 modules; `README.md` has the table).
+
+- **Analyze.** Box 1 (orange) is labelled downstream and box 2 (blue)
+  upstream. A dashed arrow from box 2 to box 1 shows the flow direction that
+  counts as positive. A click places the selected box, and selection then
+  moves on to box 2. Right-click or Ctrl+click places box 2, dragging moves a
+  box, WASD nudges it, X swaps the boxes.
+  - The panel shows the box separation (px and µm) and the velocities that
+    separation can resolve. The fastest is a lag of 1 frame, the slowest a lag
+    of 100 frames in the 201-frame window. For example, boxes 29.1 px apart
+    cannot resolve anything faster than 1.16 mm/s.
+  - A live **signal preview** reads the 201 frames around the playhead in the
+    background and runs the report's own `lag_and_correlation` on them. It
+    plots both box signals and shows the correlation, the lag and the velocity.
+    It warns when the lag is 0 (too fast for this separation, or a brightness
+    change over the whole image), when the lag hits the window limit, when the
+    correlation is weak, or when the boxes look swapped.
+- **Measure.** The user sets a frame range on the timeline (I/O), names the
+  data set and presses *Measure velocity and save*.
+  - `capillary.measure` reads that range straight from the file, with the
+    boxes fixed, in a background job: 401 frames of a real clip took 2.9 s,
+    against 13 s of playback before.
+  - The data set is saved in the existing file formats, and the report is
+    written by the unchanged report code. Old and new data sets therefore go
+    through the same arithmetic.
+  - Each data set also gets a `___velocity_provenance.json` (or
+    `___flow_provenance.json`). It records the video, box centres and size,
+    frame range, separation, calibration, report settings, a summary of the
+    result and the git commit. The numbers can be traced to their inputs, and
+    the Results page uses this file to put the boxes back.
+- **Flow.** The user draws a region over a vessel on the optical-flow video.
+  The vessel mask can be shown as an overlay, and a colour wheel explains the
+  direction colours. The region and the current frame's flow are read out
+  live. *Measure flow and save* works like velocity. Two errors in the old
+  flow display are fixed: a brightness boost that wrapped around in uint8, so
+  fast flow looked dark, and swapped red and blue. Only the picture changed;
+  measurements read the raw frames.
+- **Capture.** The camera is read on its own thread, so recording keeps the
+  camera's pace, not the window's redraw rate. The page warns if the camera's
+  measured frame rate is more than 5% away from the 30 fps written into every
+  recording. Time points marked during recording are saved at once. The
+  camera is released when the page is left.
+- **Results.** For one recording: its files, time points and data sets. Each
+  data set card shows a summary (median velocity and interquartile range,
+  share of windows resolved, share too fast to resolve, median correlation)
+  and its settings, if it has a provenance file. Its report plots open in a
+  viewer. The report can be regenerated, for example after adding time points,
+  and the boxes can be restored on the Analyze page. Data sets made before this
+  change are marked as having no recorded settings.
+- **Background work.** Stabilize, optical flow, measurements and reports run as
+  jobs in two lanes, so a measurement never waits behind a long flow
+  computation. Each job shows progress and time left and can be cancelled.
+  Videos are written into a hidden `.partial/` folder and moved into place only
+  when complete. A stabilization that would need more than 85% of the
+  available memory is refused instead of crashing the app (see Not done).
+- **Nothing is deleted outright.** Replacing a data set, re-stabilizing,
+  recomputing flow, and removing a data set or a whole recording all move the
+  old files to `.trash/<date-time>_<label>/` in the data folder. Each file
+  keeps its subfolder, so it can be put back by hand. Each of these actions
+  asks for confirmation first.
+- **Keyboard and settings.** Keys are routed in one place and ignored while
+  typing in a text field. F1 lists every control. A settings dialog holds the
+  data folder, the calibration (shown in µm per pixel as well) and the default
+  box size. The new `box_size` row is added to `settings.csv`, and rows the app
+  does not know are kept.
+
+### Engine additions (`24543cf`)
+
+Everything the GUI computes goes through GUI-free code in `capillary/`:
+
+- `measure.py`: `measure_velocity` and `measure_flow`. The first is
+  `extract_traces` (the same sampling as the CLI) plus the per-frame sharpness
+  score, computed on worker threads with an identical result. Both report
+  progress and can be cancelled.
+- `datasets.py`: file names and formats, data set names (validated, so the
+  old "not saved" false alarm cannot recur), time points, the writers, and the
+  provenance file.
+- `flow.py`: drag-box bounds and flow magnitudes. These are copied verbatim
+  from `Caper.Rectangle` and `FrameClasses.FlowFrame`, and tests check them
+  against frozen copies of the originals.
+- `quality.py`: `calculate_blur`, moved from `Utilities.py`, which still
+  re-exports it.
+- `velocity.py`: `resolvable_range` and `velocity_summary`.
+- `video.py`: `iter_frames` can start at any frame.
+
+### Caper.py (`5a1784c`)
+
+`Caper.py` keeps stabilization, optical flow and the reports, and drops what
+only the old GUI used:
+
+- `Rectangle`, `ColorVideo`, `VideoCamera`, the `…Multiple` classes, and the
+  live-recording half of `CrossCorrelation`.
+- `CrossCorrelation` now takes `fps` and `mm_per_pixel` instead of a video and
+  two GUI rectangles. Report generation can report its progress and closes its
+  figures, so a long session does not accumulate them.
+- The flow report moved here from `FrameClasses.FlowFrame` as
+  `generate_flow_report`.
+
+None of this changes a single output byte; see Verification.
+
+### Removed (`f6ccea7`)
+
+- `Analyze_Frame`, `Flow_Frame`, `Camera_Frame`, `FrameClasses`, `Popup_Frame`,
+  `Save_Data_Popup`, `Choose_Report_Popup` and `Process_Frame`. Together with
+  the old `Application.py` that is 1,897 lines, replaced by 6,542 lines in
+  `gui/`.
+- Five icons only they used; `Source/` keeps `Capture-Logo.png` as the window
+  icon.
+- The `Utilities` helpers only they called.
+- `.gitlab-ci.yml` imports `gui.app` instead of `FrameClasses`. `.gitignore`
+  covers `.trash/`, `.partial/` and the rotated log files.
+
+### Differences between old and new data sets
+
+Methods-relevant. The report arithmetic is unchanged, but the inputs are now
+collected differently:
+
+1. **Frame index.** The old Analyze tab read the next frame, then stored it
+   under the previous frame's number, so frame k+1 sat at index k. Times in
+   old data sets therefore read one frame (33 ms) early. New data sets store
+   frame k at index k. Velocities are unaffected, since both boxes share the
+   shift.
+2. **Frame rate.** The old report used the integer part of the file's frame
+   rate; the new one uses the exact value. This makes no difference for the
+   existing videos, which are all exactly 30 fps.
+3. **Box separation.** The old tab stored, per frame, the distance between the
+   raw click points. The new tab stores one constant distance between the box
+   centres after they are kept inside the image, as the CLI always did. The two
+   differ only for a box touching the image edge.
+4. **Which frames.** Old data sets contain every frame that happened to be
+   played, including frames before the boxes were placed, and a replayed
+   stretch overwrote the earlier samples. New data sets contain exactly the
+   chosen range; all other frames are NaN. The intensity table now has a
+   column for every frame; the old one dropped the last.
+5. **Flow units.** The flow report's values are optical-flow displacement per
+   frame (mm/frame), not per second. This is unchanged and now stated in the
+   provenance file.
+
+### Verification
+
+- **Unit tests:** 154 pass, up from 78 before this work. New tests cover:
+  - `measure_velocity`: exactly equal to `extract_traces_from_video` on MP4V
+    and uncompressed video, plus ranges, the sharpness cache, progress and
+    cancelling.
+  - End to end: a synthetic clip is measured, saved and run through the
+    unchanged report, which recovers the known velocity within 5%.
+  - File formats and data set names.
+  - The flow arithmetic against the original code, for all 8⁴ drag
+    combinations.
+  - The GUI's non-visual logic: settings, the recording list, the trash,
+    recording names and background jobs.
+
+  Each of the three code commits was also tested on its own, from a checkout of
+  exactly that commit (141, 154 and 154 pass). At the first one the old GUI
+  still imports.
+- **Reports are byte-identical:** the refactored `Caper` regenerated the
+  velocity reports of `…___Test` and `…___Test2` and the flow reports of
+  `…___Test_1` and the unnamed flow data set. All 26 files are identical to the
+  output of the code at `4f785bc`.
+- **Scripted GUI sessions.** These ran the real window under WSLg on a scratch
+  data folder: links to the real videos plus copies of `Statistics/` and
+  `Reports/`. Screenshots were reviewed after each round, and every session
+  ended with no Tk errors.
+  - Placing boxes and checking the preview.
+  - Measuring a range of a real recording.
+  - Stabilizing and computing flow for a synthetic jittered recording, then
+    measuring flow on it.
+  - The Results page, report viewer, dialogs, and Capture without a camera.
+  - Replacing a data set and moving a recording to the trash.
+  - 30 keyboard checks through the key router.
+  - Starting through `main()` and quitting while a preview was reading frames.
+- **Two bugs found by those sessions and fixed before committing:**
+  - Moving a recording to the trash flattened the folders. Its raw, stabilized
+    and flow videos share a file name, so they would have overwritten each
+    other. This was caught on the scratch copy of the synthetic recording. Files
+    now keep their subfolders, and a test pins it.
+  - Quitting while a background thread was inside OpenCV aborted the process
+    ("terminate called…"). Shutdown now stops every thread and waits for it.
+- **One false alarm.** In one session a "Replace data set?" confirmation seemed
+  never to appear. The scripts had kept only the main test window from taking
+  keyboard focus, not its dialogs, so keys typed on the desktop at that moment
+  could close a dialog. With the dialogs made unfocusable as well, the
+  confirmation stays open until the script answers it, and the replacement
+  then runs. The app was not at fault.
+- **Static checks:** pyflakes reports only the intentional `calculate_blur`
+  re-export and the old unused import in `SingleStepDFT.py`. The CI's flake8
+  error selection finds nothing.
+- **Real data untouched:** no file in `RecordedVideos/`, `StabilizedVideos/`,
+  `Flows/`, `Statistics/` or `Reports/` was modified during this session. The
+  newest, the `…___Test` report written at 16:46, predates the session.
+  There is no `.trash/` or `.partial/` in the repository folder.
+
+### Not done
+
+- **Stabilization still has its two problems.** It is off by one frame (see
+  Known issues). It also keeps the whole video in memory twice as float64:
+  about 21 GB for the 4,306-frame clip and 37 GB for the longest, 7,524
+  frames. The new memory check refuses such runs instead of letting them crash
+  the app. On a typical machine, recordings as long as the existing ones
+  therefore cannot be stabilized in the app until `VideoStabilization` is
+  reworked. That rework changes its output, so it needs its own verification.
+- Recording has not been tried with a real camera; none is reachable under
+  WSL.
+- The GUI has been driven by scripts and checked on screenshots, but not yet by
+  hand. A hands-on session should come first: dragging boxes, zoom, playback,
+  the general feel.
+- The `.thumbnails/` caches of the old GUI in `StabilizedVideos/` and `Flows/`
+  are no longer used and can be deleted by hand.
+- CI is still defined only in `.gitlab-ci.yml`, which GitHub ignores.
+
+---
+
 ## 2026-10-05 — Clean-up: remove dead code and unused files
 
 **Branch:** `refactor/remove-dead-code` (off `main` at `f87891c`), to be merged through a pull request.

@@ -189,3 +189,44 @@ def test_lag_and_correlation_returns_plain_floats():
     lag, correlation = lag_and_correlation(*delayed_pair(3))
     assert isinstance(lag, float) and isinstance(correlation, float)
     assert not isinstance(correlation, pd.Series)
+
+
+def test_resolvable_range_spans_one_frame_to_half_a_window():
+    from capillary.velocity import resolvable_range
+
+    # 100 px at 0.002 mm/px is 0.2 mm; crossing it in 1 frame at 30 fps is 6 mm/s,
+    # in 100 frames (half of a 201-frame window) 0.06 mm/s.
+    slowest, fastest = resolvable_range(100, 30, 0.002)
+    assert fastest == pytest.approx(6.0)
+    assert slowest == pytest.approx(0.06)
+    assert all(np.isnan(v) for v in resolvable_range(0, 30, 0.002))
+
+
+def test_resolvable_range_matches_the_zero_lag_limit_found_in_real_data():
+    """The 2026-09-17 entry: ~29.1 px apart at 30 fps, nothing above ~1.16 mm/s resolves."""
+    from capillary.velocity import resolvable_range
+
+    assert resolvable_range(29.1, 30, 0.001328903654)[1] == pytest.approx(1.16, abs=0.005)
+
+
+def test_velocity_summary():
+    from capillary.velocity import velocity_summary
+
+    summary = velocity_summary([1.0, 2.0, np.nan, -1.0, 3.0], correlation=[0.2, 0.8, np.nan],
+                               lag=[[0, 4], [np.nan, 0], [2, 3]])
+    assert summary['estimates'] == 5 and summary['resolved'] == 4
+    assert summary['resolved_fraction'] == pytest.approx(0.8)
+    assert summary['median'] == pytest.approx(1.5)
+    assert summary['positive_fraction'] == pytest.approx(0.75)
+    assert summary['median_correlation'] == pytest.approx(0.5)
+    assert summary['zero_lag_fraction'] == pytest.approx(2 / 5)
+
+    empty = velocity_summary([np.nan, np.nan])
+    assert empty['resolved'] == 0 and np.isnan(empty['median'])
+
+
+def test_sharpness_score_is_shared_with_utilities():
+    import Utilities
+    from capillary.quality import calculate_blur
+
+    assert Utilities.calculate_blur is calculate_blur

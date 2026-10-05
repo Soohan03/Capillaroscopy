@@ -78,3 +78,22 @@ def expected_velocity_mm_s(
 ) -> float:
     """Ground-truth velocity in mm/s."""
     return velocity_px_per_frame * fps * mm_per_pixel
+
+
+def write_video(path, frames, fps: float = 30.0, fourcc: str = 'mp4v') -> bool:
+    """Encode greyscale or 3-channel frames to `path`; False if this build cannot.
+
+    ``fourcc=''`` writes uncompressed frames, like the stabilized videos the
+    app works on (an ``.avi`` path is needed for that).
+    """
+    import cv2
+
+    height, width = frames[0].shape[:2]
+    code = cv2.VideoWriter_fourcc(*fourcc) if fourcc else 0
+    writer = cv2.VideoWriter(str(path), code, fps, (width, height))
+    if not writer.isOpened():
+        return False
+    for frame in frames:
+        writer.write(cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR) if frame.ndim == 2 else frame)
+    writer.release()
+    return True

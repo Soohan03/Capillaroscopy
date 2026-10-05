@@ -2,15 +2,13 @@
 
 import pytest
 
-import cv2
-
 from capillary.cli import main, parse_size, read_mm_per_pixel
 from capillary.intensity import extract_traces, extract_traces_from_video
 from capillary.roi import ROI
 from capillary.velocity import analyze_trace, signed_lag
 from capillary.video import probe_video
 
-from .synthetic import expected_lag_frames, expected_velocity_mm_s, make_flow_frames
+from .synthetic import expected_lag_frames, expected_velocity_mm_s, make_flow_frames, write_video
 
 FPS = 30.0
 MM_PER_PIXEL = 0.002
@@ -97,18 +95,6 @@ def test_empty_input_is_rejected(rois):
     roi_a, roi_b = rois
     with pytest.raises(ValueError, match='no frames'):
         extract_traces([], roi_a, roi_b)
-
-
-def write_video(path, frames, fps=FPS):
-    """Encode frames to `path`; returns False if this build cannot encode."""
-    height, width = frames[0].shape
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
-    if not writer.isOpened():
-        return False
-    for frame in frames:
-        writer.write(cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR))
-    writer.release()
-    return True
 
 
 @pytest.fixture(scope='module')
