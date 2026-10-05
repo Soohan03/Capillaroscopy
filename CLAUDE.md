@@ -25,10 +25,12 @@ without asking:
    (camera-not-found warnings are normal and harmless).
 3. Tell the user the app window should now be visible via WSLg, and remind them:
    - The Analyze tab lists videos from `StabilizedVideos/` (since `RecordedVideos/` is empty).
-   - Avoid the "Flow" tab — see Known Issues.
-   - Controls: WASD/arrows move the two ROI rectangles, Q/E jump ±500 frames, P/space
-     pause/resume. "Correlation: N/A" in the console is normal until both ROI rectangles
-     are positioned over a capillary segment.
+   - Click places ROI box 1 (white), Ctrl+click places box 2 (black). WASD/arrows move
+     both boxes, Q/E jump ±500 frames, P/space pause/resume. The "Correlation" readout
+     shows N/A until both boxes sit on a capillary segment.
+   - Middle-click a video in the list for its options (stabilize, calculate flow, delete).
+   - The Flow tab is the least exercised part of the app; its 2026-09-17 drag fix has
+     not been confirmed by hand yet.
 
 If the user reports the app froze or crashed, check the task output file for a traceback
 before relaunching.
@@ -38,6 +40,12 @@ before relaunching.
 - `RecordedVideos/` — raw captures (currently empty)
 - `StabilizedVideos/` — stabilized videos ready for analysis (8 videos as of 2026-06)
 - `Reports/`, `Statistics/`, `Flows/` — generated analysis outputs
+
+## Code layout
+
+See the table in `README.md`. The GUI is `Application.py` → one tab module per tab
+(`Analyze_Frame`, `Flow_Frame`, `Camera_Frame`) → widgets in `FrameClasses.py` → video,
+stabilization, flow and report classes in `Caper.py`.
 
 ## Analysis engine (`capillary/`)
 
@@ -55,13 +63,28 @@ the old numbers.
 
 ## Known issues
 
-- **Flow tab**: historically crashed with `AttributeError: 'NoneType' object has no
-  attribute 'replace'` when `Flows/` is empty; fixed in `ee10cd7`, but the tab is still
-  the least exercised part of the app and its video frame class still uses the old
-  `current_key` click path. Treat with care.
+Found during the 2026-10-05 clean-up and deliberately left unchanged (see that DEVLOG
+entry for details):
+
+- **Stabilization is off by one frame**: frame 0 of a video stabilized by the app is
+  black, frame k holds recorded frame k-1, and the last recorded frame is dropped. The 8
+  existing videos in `StabilizedVideos/` do not show this, so they were not made by the
+  current stabilizer.
+- Opening any popup re-binds the main window's close button to that popup, so the
+  window's X no longer quits the app afterwards (Escape still does).
+- Visiting the Capture tab replaces the window's key bindings, so the Analyze/Flow
+  keyboard controls stop working until restart; P/space on the Capture tab raises an
+  AttributeError (the camera object has no `pause`).
+- The Save-report popup warns "the file was not saved" for names with spaces or
+  non-ASCII characters, but the data is saved under that name anyway.
+- Flow tab "Generate report" without saved flow data raises `UnboundLocalError`.
+- "Stabilize all videos" / "Calculate flow for all" with nothing left to process raise
+  `IndexError`.
+- The camera is never released when leaving the Capture tab.
 
 ## Repo state notes
 
-- `main` is at the PR #1 merge (`c3e57f4`); the earlier WIP is committed and `run_app.sh`
-  is tracked. `Thesis/` (LaTeX draft + bibliography) and `.claude/` are untracked by
-  choice. Ask before committing either.
+- Work happens in the private repo `Soohan03/Capillaroscopy` (`origin`);
+  `Widaeus/capillaroscopy` is `upstream`, used only to pull updates. `main` is protected:
+  make changes on a branch and open a pull request. `Thesis/` (LaTeX draft + bibliography)
+  and `.claude/` are untracked by choice. Ask before committing either.

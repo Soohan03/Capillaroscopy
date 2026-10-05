@@ -2,15 +2,25 @@
 
 This application is a GUI-based tool built with Tkinter and OpenCV for analyzing capillaroscopy videos. It provides functionalities for capturing, stabilizing, processing, and analyzing video frames.
 
-## Project Structure
+## Code layout
 
-This project separates the **Application Code** from the **Research Data**:
+| File | What it holds |
+| --- | --- |
+| `Application.py` | Entry point: window, `settings.csv`, tab switching, the main update loop |
+| `Analyze_Frame.py`, `Flow_Frame.py`, `Camera_Frame.py` | The Analyze, Flow and Capture tabs |
+| `FrameClasses.py` | The widgets inside the tabs: menu, video panels, video list, record controls |
+| `Popup_Frame.py`, `Save_Data_Popup.py`, `Choose_Report_Popup.py`, `Process_Frame.py` | Small windows: a video's options, naming saved data, choosing a report, running a processing job |
+| `Caper.py` | Video reading and writing, stabilization, optical flow, ROI boxes, report generation |
+| `SingleStepDFT.py` | Sub-pixel image registration used by stabilization (vendored, see its docstring) |
+| `Utilities.py` | Small shared helpers |
+| `capillary/` | The GUI-free measurement engine and batch CLI (see below) |
+| `tests/` | Unit tests for `capillary/` |
 
-1.  **Code Repository:** `/home/jacob-widaeus/Projects/Dev/capillaroscopy` (This folder)
-2.  **Data Directory:** `/home/jacob-widaeus/Projects/Dev/CapillaroscopyData` (External folder for videos and reports)
+## Data folder
 
-### Data Directory Organization
-When you first run the application, it will ask for an "Application folder". Point it to your data directory. The app will then automatically create the following structure within that folder:
+`settings.csv` stores `Application_path`, the folder that holds the research data, and
+`mm_per_pixel`, the spatial calibration of the microscope. If the file is missing, the
+application asks for a folder on first start. Inside that folder it creates:
 - `RecordedVideos/`: Raw captures from the microscope.
 - `StabilizedVideos/`: Videos after stabilization processing.
 - `Reports/`: Generated analysis reports.
@@ -19,22 +29,19 @@ When you first run the application, it will ask for an "Application folder". Poi
 
 ## Setup Instructions
 
-1. **Install system dependencies:**
-   Ensure `ffmpeg` is installed on your system.
-   ```bash
-   sudo apt install ffmpeg
-   ```
-
-2. **Set up the Python environment:**
+1. **Set up the Python environment:**
    Create a virtual environment and install the required dependencies.
    ```bash
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
    ```
+   Tkinter comes from the system Python (on Ubuntu: `sudo apt install python3-tk`).
+   No separate ffmpeg is needed; the OpenCV wheel brings its own.
 
-3. **Configure Settings:**
-   The `settings.csv` file is pre-configured to point to `/home/jacob-widaeus/Projects/Dev/CapillaroscopyData`. If you move your data folder, update the `Application_path` value in this file.
+2. **Configure Settings:**
+   Set `Application_path` in `settings.csv` to your data folder, or delete the file to be
+   asked on the next start.
 
 ## Running the Application
 Activate your virtual environment and start the application:

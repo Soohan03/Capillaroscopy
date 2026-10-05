@@ -6,6 +6,168 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-05 — Clean-up: remove dead code and unused files
+
+**Branch:** `refactor/remove-dead-code` (off `main` at `f87891c`), to be merged through a pull request.
+
+**Commits:**
+
+- `839626e` Normalize line endings to LF
+- `cc99fb4` Remove dead code, unused files and leftover debugging
+- `a7e53dd` Fix "Stabilize all videos" and "Calculate flow for all" on NumPy 2
+- `9feb83b` Update docs and config after the clean-up
+
+### Why
+
+The GUI code carried a lot of material that no longer did anything: an
+unreachable tab, a scratch script, never-instantiated classes, broken methods
+nobody called, hundreds of lines of commented-out code, copy-pasted imports and
+debug prints. It made the code hard to read and hid which parts actually run.
+The aim was to remove that **without changing behaviour**, and to prove it.
+
+Python code went from **6,426 to 4,346 lines (−32%)**; 15 unused binary
+assets (about 7 MB) left the working tree. Everything removed stays in the git
+history.
+
+### Line endings first
+
+The original modules were stored with Windows (CRLF) line endings; the newer
+code uses LF. `839626e` converts them on its own, with no content changes
+(`git diff --ignore-cr-at-eol` is empty), so the following commits show only
+real changes. A `.gitattributes` keeps text files LF from now on.
+
+### What was removed (`cc99fb4`)
+
+Files:
+
+| File | Why it was dead |
+| --- | --- |
+| `Stabilization.py` | Scratch script; ran on import against a hard-coded `Data/FP07_…avi` that does not exist |
+| `Stabilize_Frame.py` | The Stabilize tab: its menu button was commented out and nothing else selected it. Stabilizing runs through a video's options popup and `Process_Frame` |
+| `ProgressMonitor.py` | Its time-remaining text was only displayed on that unreachable tab |
+| `Logo/` (12 files) | Photoshop sources and PNG/BMP icons; nothing references them |
+| `Source/Capture.png`, `Source/Capture2.png`, `Source/Quicksand-Regular.ttf` | Not referenced (the font only in commented-out code) |
+
+Code: `MatplotlibFrame` (never instantiated); `VideoStabilization.stabilize()`
+(unreachable, and would have crashed: it called methods with missing
+arguments); `CrossCorrelation.test()` (broken); `Video.load()` and
+`ColorVideo.load()` (used only by the removed script and method); a shadowed
+duplicate `Menu._resize`; unused methods, attributes and parameters; all
+commented-out code; debug prints (`print('here mate')`, the correlation value
+every 20 frames, the canvas size, the video list); duplicate and unused
+imports, including `seaborn` and `scikit-video`. The `from Utilities import *`
+star imports are now explicit, so static checks can see every name.
+
+One removal saves work every frame: `Video.get_frame` ran a sharpness FFT on
+each frame into a vector that nothing read (the blur vector that *is* saved is
+computed separately in `VideoFrame.update`). Playback in the test run reached
+frame 320 about 20% sooner.
+
+### Refactors (same commit)
+
+- `Utilities.list_videos` / `video_stem` replace three copies of the video
+  listing and the Windows/Linux path splitting. For file names with a single
+  dot (all current data) the result is identical; names with extra dots are
+  now matched by their full stem instead of the last dot-separated part.
+- `FrameClasses.load_icon` replaces five copies of the icon loading code.
+- The Analyze tab maps a click to video pixels with
+  `canvas_to_video_coordinates`, the function the Flow tab fix introduced; it is
+  the same arithmetic the Analyze tab had inline.
+- `EntryWithSet` moved from `Caper.py` to `FrameClasses.py`, so `Caper.py` no
+  longer imports tkinter.
+- The Swedish notes on which box is which in `CrossCorrelation` contradicted
+  the code (they called rectangle 1 black; it is drawn white). They are replaced by
+  an English summary that matches the report's column names and
+  `capillary/velocity.py`: rectangle 1 (white) is the box the blood reaches
+  last, hence `velocity = distance / -lag`.
+- `SingleStepDFT.py` is a modified copy of `image_registration.register_images`
+  (different defaults and a different embedding index range). Only its unused
+  imports were removed, and a docstring now records where it came from and why it
+  must not be swapped for the package version unchecked.
+
+### The one intentional behaviour change (`a7e53dd`)
+
+"Stabilize all videos" and "Calculate flow for all" used `np.in1d`, which
+NumPy 2.4 (the version in the venv) no longer has. On `main` both options
+showed "AttributeError: module 'numpy' has no attribute 'in1d'" and processed
+nothing. `np.isin` is NumPy's documented replacement and gives the same result
+for these lists. With it, both options process the pending video and return
+to the Analyze tab, and the output is byte-identical to processing that clip
+on its own.
+
+### Docs and config (`9feb83b`)
+
+`requirements.txt` drops `seaborn` and `sk-video`. The README loses the stale
+`/home/jacob-widaeus/...` paths and the ffmpeg install step (only scikit-video
+needed it; OpenCV ships its own), and gains a code-layout table.
+`settings.csv` loses an unused `logo2,test2` row, `.gitignore` the `ffmpeg/`
+entry. `CLAUDE.md` now lists the controls and the known issues below.
+
+### Verification
+
+Baselines were recorded on `main` *before* any change, then compared with the
+cleaned code. The harness scripts lived outside the repository and only read
+real data; all outputs went to a scratch folder.
+
+- **Unit tests:** 78/78 pass before and after.
+- **Report pipeline:** `CrossCorrelation.calculate_cross_correlation` and
+  `generate_report` regenerated both saved data sets in `Statistics/`
+  (`…___Test` and `…___Test2`). All report CSVs are **byte-identical** to
+  `main` and all plots **pixel-identical**, so dropping the seaborn import did
+  not change the plot style.
+- **Stabilization and optical flow:** a synthetic 640×480 clip (known jitter
+  plus a moving blob) was stabilized and flow-processed, singly and through the
+  "all videos" classes. The registration vectors, the stabilized video, the
+  flow video and the flow pickle are all **byte-identical** to `main`.
+- **Whole GUI:** a scripted session drove every reachable part of the app
+  through Tk. On the Analyze tab: ROI click and Ctrl+click, WASD, the box size
+  field, Save data, Generate report, Register time, pause, ±500 frames and the
+  video bar. On the Flow tab: drag-select, Save data and Generate report. On
+  the Capture tab: recording start and stop and Register time. From the options
+  popup: Stabilize, Calculate flow and Delete, the latter on scratch copies.
+  Before and after, the run produced the same files, the same box positions,
+  the same correlation readout and **no errors**. Stabilize and flow run from
+  the GUI produced byte-identical files.
+- Static checks: pyflakes is clean apart from one unused import inside the
+  vendored registration function; every module imports and compiles.
+- The real data folders were checked afterwards: no file modified.
+
+### Found, not fixed (listed in CLAUDE.md under Known issues)
+
+These are real defects, left alone so that this change stays
+behaviour-preserving. Each needs its own fix and check.
+
+- **Stabilization is off by one frame.** `load_stabilization` reopens the
+  video on its first step without reading a frame. As a result frame 0 of every
+  video stabilized by the app is black, stabilized frame k is recorded frame
+  k−1, and the last recorded frame is dropped. This was verified on the
+  synthetic clip: frame 0 has mean intensity 0, and frame k matches input frame
+  k−1 exactly. The 8 videos in `StabilizedVideos/` do **not** start with a
+  black frame, so they were not produced by this code. Velocities from the
+  cross-correlation are unaffected, since both boxes see the same delay, but
+  timestamps are shifted by one frame (33 ms at 30 fps).
+- Opening any popup re-binds the **main** window's close button to that
+  popup, so the window's X no longer quits the app (Escape still does).
+- Visiting the Capture tab replaces the window's key bindings, so the
+  Analyze/Flow keyboard controls stop working until restart. P/space on the
+  Capture tab raises an AttributeError, because the camera object has no `pause`.
+- The Save-report popup says "the file was not saved" for names with spaces or
+  non-ASCII characters, but the data is saved under that name anyway.
+- Flow tab "Generate report" with no saved flow data raises `UnboundLocalError`.
+- "Stabilize all videos" / "Calculate flow for all" with nothing left to process
+  raise `IndexError`; `RecordedVideos/` is currently empty, so the former
+  would.
+- The camera is never released when leaving the Capture tab.
+
+### Not done
+
+- No restructuring into packages; file names and the tab/widget split are
+  unchanged. `VideoFrame` and `FlowFrame` still duplicate their canvas and
+  progress-bar code, and the four popup classes their window set-up.
+- CI is still defined only in `.gitlab-ci.yml`, which GitHub ignores.
+
+---
+
 ## 2026-10-05 — Merge the 2026-09-17 branches into `main`; work moved to own GitHub copy
 
 **Branch:** `main`

@@ -3,9 +3,6 @@ venv/
 .venv/
 env/
 
-# ffmpeg (Windows binaries)
-ffmpeg/
-
 # Python cache
 __pycache__/
 *.py[cod]

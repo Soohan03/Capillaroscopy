@@ -1,9 +1,15 @@
-from image_registration.fft_tools import correlate2d, fast_ffts
-from image_registration.fft_tools import dftups, upsample_image, shift
-import warnings
-import numpy as np
+"""Sub-pixel image registration used by VideoStabilization.
 
-# __all__ = ['register_images']
+Vendored from image_registration.register_images (image-registration 0.2.x,
+after Guizar-Sicairos, Thurman & Fienup, Opt. Lett. 33, 156-158, 2008) with
+local changes: different defaults (usfac=100, zeromean=False,
+use_numpy_fft=True) and a different index range when embedding the spectrum
+for the 2x upsampling. Do not swap in the package version without checking
+that stabilization results stay the same.
+"""
+from image_registration.fft_tools import fast_ffts
+from image_registration.fft_tools import dftups
+import numpy as np
 
 
 def register_images(im1, im2, usfac=100, return_registered=False,
