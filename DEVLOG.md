@@ -6,6 +6,92 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-09-17 — Flow tab: drag-rectangle lands in the wrong place, paused frame double-converted
+
+**Branch:** `fix/flow-tab-roi-selection` (off `main` at `c3e57f4`). Independent
+of `feat/analysis-engine-extraction`, which is still open as a PR; both branches
+add an entry at the top of this file, so expect a trivial merge conflict here.
+
+**Context:** the 2026-07-23 entry fixed Ctrl+click on the Analyze tab and
+deliberately left the Flow tab's video frame class (`FlowFrame`,
+`FrameClasses.py`) alone. This session went back to it. The stated suspicion —
+that Flow tab needed the same Ctrl+click fix — turned out to be wrong: the Flow
+tab has only one rectangle, selected by click-and-drag, so the Ctrl branch there
+was dead code. Reading the handlers properly found three real defects instead.
+
+### Defect 1 — the drag rectangle was stored in canvas pixels, not video pixels
+
+`FlowFrame` shows the video resized to fit the window: a 1150x770 window gives a
+805x539 area, and a 640x480 clip is aspect-fitted into that as **718x539**. So a
+canvas pixel is not a video pixel (scale 1.122 in both axes).
+
+The press handler (`callback`) correctly divided `event.x/y` by that scale. But
+the release handler (`callback_release`) stored the raw `event.x/y`, and then
+set `rectangle1.point1 = self.clickevent` — which the press handler had *also*
+stored raw, alongside the scaled copy it never used. `Rectangle.calculate_corners_drag`
+then clamped and sliced those canvas coordinates against the *frame*. Result:
+the box the user dragged and the box the tool sampled were different boxes —
+offset towards the bottom-right by up to ~12%, and 12% too large. A drag over a
+vessel near the right or bottom edge sampled a region partly or wholly off it.
+
+This matters for the thesis: the flow report divides flow by vessel-pixel count
+inside the selection (see the 2026-07-07 entry). A mis-placed selection changes
+that count and therefore every value in the report.
+
+**Fix:** both handlers now go through one mapping,
+`canvas_to_video_coordinates()` (a plain module-level function in
+`FrameClasses.py`, kept GUI-free so it can be checked headlessly), wrapped by
+`FlowFrame._canvas_to_video()`. `point1` and `point2` are both video pixels.
+
+### Defect 2 — dead Ctrl detection
+
+The press handler still carried the `self.master.current_key` /
+platform-magic-number test (`[4,6]` / `[8,12]`) that the 2026-07-23 entry showed
+never fires under X11. Here it guarded nothing — the `else` branch was `pass`
+and there is no second rectangle — so it was removed rather than ported.
+
+### Defect 3 — paused frames were HSV->BGR converted twice
+
+`update()` stored the *processed* frame (`process_flow_frame` = HSV->BGR, x4)
+as `self.previous_frame`, and the paused branch then ran `process_flow_frame`
+on it again. Every flow video loads paused (`pause = 1` in `set_video`), and the
+user pauses to drag the selection, so the still image people actually work on
+had a colour conversion applied twice. `previous_frame` now holds the raw
+rolling-average frame; both branches convert exactly once.
+
+### Not changed
+
+- Flow videos still load paused. Unlike the Analyze tab, that is the right
+  default here: the selection is drawn on a still frame.
+- `process_flow_frame` multiplies a `uint8` frame by 4, which wraps rather than
+  saturates. Pre-existing, visual only, left alone.
+- `CLAUDE.md` says `Flows/` is empty; it isn't (one generated flow video and
+  its mask pickle from 2026-07-07). The file lives on the engine branch; fix the
+  note there when that merges.
+
+### Verification
+
+- `python3 -m py_compile FrameClasses.py` passes.
+- **Headless, against the real class.** A script constructed an actual
+  `FlowFrame` under the WSLg display on the flow video in `Flows/`, confirmed
+  the canvas came out 718x539 for the 640x480 clip (so the bug is visible, not
+  masked by a coincidental 1:1 size), ran the paused branch first (as the app
+  does), then one played tick, then paused again — `previous_frame` stayed a
+  raw `uint8 (480, 640, 3)` frame throughout. It then delivered a synthetic
+  press at canvas (100,100) and release at (400,300) through Tk's own event
+  queue so the real bound handlers ran. Stored endpoints: `point1=(89, 89)`,
+  `point2=(356, 267)` — the correct video pixels. The old code would have stored
+  `(100,100)` and `(400,300)`. A further paused tick drew the box at
+  x 89..356, y 89..267 and sliced a `(178, 267, 3)` region from the frame.
+- The pure mapping was checked at the corners and centre, and for the identity
+  case (canvas == video size).
+- Note for reproducing: Tk silently drops synthetic button events aimed at an
+  unmapped window; the frame has to be packed and the root shown first.
+- App relaunched under WSLg after the change; the user was asked to try a drag
+  on the Flow tab interactively.
+
+---
+
 ## 2026-09-17 — Extract the analysis engine, and fix an off-by-one in the lag
 
 **Branch:** `feat/analysis-engine-extraction` (off `main` at `c3e57f4`, the merge
