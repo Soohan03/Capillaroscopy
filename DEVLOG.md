@@ -6,6 +6,55 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-05 — Merge the 2026-09-17 branches into `main`; work moved to own GitHub copy
+
+**Branch:** `main`
+
+**Repository.** Work now happens in a separate private copy,
+`Soohan03/Capillaroscopy` (remote `origin`), so thesis work is independent of
+the shared repo. The original `Widaeus/capillaroscopy` is kept as remote
+`upstream` for pulling updates. All branches were copied with full history,
+except `dev`, which was dropped as not relevant.
+
+**Merges:**
+
+- `53f1e4e` Merge `feat/analysis-engine-extraction`: the `capillary` engine package,
+  the cross-correlation lag off-by-one fix and the unit tests (2026-09-17 entry
+  below).
+- `c2150be` Merge `fix/flow-tab-roi-selection`: Flow tab drag-rectangle and
+  paused-frame fixes (2026-09-17 entry below).
+
+`fix/short-term-improvements` needed no merge: PR #1 (`c3e57f4`) already
+brought it into `main`.
+
+**Conflict.** Only `DEVLOG.md`, where both branches added their entry at the
+top. Both entries were kept, newest first. There were no code conflicts: the
+branches touch disjoint files (`Caper.py` plus the new `capillary/` and
+`tests/`, versus `FrameClasses.py`). The Flow tab still passes video-pixel
+coordinates into `Rectangle.calculate_corners`, which now delegates to
+`capillary.roi.ROI`, so the two changes compose.
+
+### Verification
+
+- Before merging, both merge orders were dry-run with `git merge-tree`. Both
+  give the same single `DEVLOG.md` conflict.
+- The final merge tree is byte-identical to the dry-run tree checked
+  beforehand. It differs from each branch only by the other branch's changes.
+- On merged `main`, all unit tests pass (`python -m pytest`), `capillary`,
+  `Caper`, `FrameClasses` and `Application` import, and `compileall` is
+  clean.
+- The Flow tab coordinate fix survives the merge: a click at (350, 200) on a
+  700x400 canvas showing a 1400x800 video maps to (700, 400).
+
+### Not done
+
+- CI exists only as `.gitlab-ci.yml`, which GitHub ignores, so the unit tests
+  do not run automatically on the new repository.
+- The Flow tab drag has not yet been confirmed interactively since its fix. One
+  manual drag test is worth doing.
+
+---
+
 ## 2026-09-17 — Flow tab: drag-rectangle lands in the wrong place, paused frame double-converted
 
 **Branch:** `fix/flow-tab-roi-selection` (off `main` at `c3e57f4`). Independent
