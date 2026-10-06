@@ -6,6 +6,162 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-06 — Optical-flow measurement removed
+
+**Branch:** `refactor/remove-optical-flow`, from `main` at `95472ee` (the GUI
+rebuild, merged as pull request #3).
+
+**Commits:**
+
+- `284d67e` Remove the optical-flow measurement
+- `38ddd3a` Update README and CLAUDE.md for the velocity-only app
+
+### Why
+
+At the end of the 2026-10-05 session we agreed to build the tool around the
+primary endpoint, red-cell velocity, and to drop the optical-flow measurement
+first. The flow measure was not a planned endpoint, and as implemented it was
+not a valid one:
+
+- **Fast motion was discarded.** Magnitudes above 10 px/frame were set to 0
+  before anything else. At 1.329 µm/px and 30 fps that is about 0.4 mm/s,
+  well inside the range of capillary red-cell velocities.
+- **Lossy storage.** The flow was multiplied by 25.5, saved as an 8-bit MP4V
+  video and read back for the measurement. That quantizes it and adds
+  compression artefacts.
+- **Wrong denominator.** The flow summed over the whole region (vessel and
+  background) was divided by the number of vessel pixels in it.
+- **Direction and unit.** "Up" and "down" meant towards the top or bottom of
+  the image, not along the vessel. The unit was mm per frame, not mm/s.
+
+### What the app no longer has
+
+- The **Flow** page. The pages are now Analyze, Capture and Results, and
+  Ctrl + 1 … 3 switches between them. Ctrl + 4 now does nothing.
+- *Compute optical flow* / *Recompute optical flow…* in a recording's
+  right-click menu and on the Results page, and *Compute missing optical flow*
+  in the **⋯** menu above the list.
+- *Measure flow* in the right-click menu and on the Results page, the "Flow"
+  chip in the recording list, the "Optical flow" row of the Results page's
+  Files card, and flow data set cards.
+- The "Region (Flow)" section of the F1 list.
+
+### Code removed (`284d67e`)
+
+- `gui/flow_page.py` (426 lines), `capillary/flow.py` (138) and
+  `tests/test_flow.py` (162).
+- `Caper.FlowVideo` (the Farneback flow and the vessel-mask pickle) and
+  `Caper.generate_flow_report`.
+- From `capillary/measure.py`: `measure_flow` and `flow_region_size_bytes`.
+  From `capillary/datasets.py`: the flow file names, writers, readers and
+  listing. From `gui/tasks.py`: the flow job, the flow measurement and the flow
+  report.
+- `pickle_save` and `pickle_load` from `Utilities.py`.
+- `scikit-image` from `requirements.txt`; only `FlowVideo` used it. It can be
+  removed from an existing venv with `pip uninstall scikit-image`, but it does
+  no harm there.
+- Things only the Flow page needed:
+  - colour frames in `FrameSource`
+  - the skipped-frame callback of the player
+  - the `prepare_frame` / `video_opened` hooks of the measure page
+  - the green region colour
+  - `iter_frames(single_channel=False)`
+  - the second capture handle in `tasks._release`
+- With one kind of data set left, the "velocity or flow" switch went too.
+  `datasets.dataset_paths`, `tasks.dataset_info` and the Results page's card
+  actions now take just the data set name. The measure page has no `kind` or
+  `color` attribute.
+
+In all: 28 files, 270 lines added, 1,461 removed.
+
+### Old flow files
+
+Nothing on disk was deleted or moved. The real data folder still holds:
+
+- `Flows/FP01_Qefter_22-Oct-2019_09-46-17.avi` and its `.pickle`
+- two flow data sets of that recording: `Test_1` and an unnamed one
+  (`…______flow.pickle`, `…______mask.pickle`)
+- the two plots of `Test_1` in `Reports/`
+
+The app stops listing these, but it still knows where they are. Each recording
+gets a `legacy_flow_files` list: its files in `Flows/`, plus the files of any
+old flow data set in `Statistics/` and `Reports/` (found by
+`datasets.legacy_flow_dataset_paths`).
+
+- **Move recording to trash** therefore still takes them along. The
+  confirmation then says "… and old optical-flow files".
+- A recording that has only a flow video and no raw or stabilized video is
+  no longer listed, since nothing can be done with it. No such recording
+  exists at the moment.
+- New data folders no longer get an empty `Flows/` folder. An existing one is
+  left alone.
+
+### Effect on measurements
+
+None. `capillary/velocity.py`, `intensity.py`, `roi.py`, `quality.py`,
+`cli.py` and `SingleStepDFT.py` are unchanged. In `Caper.py` the
+`VideoStabilization` and `CrossCorrelation` classes are identical apart from
+blank lines, and so is `measure_velocity`; this was checked by diffing them
+between `95472ee` and `284d67e`. Provenance files of new velocity data sets
+still record `"kind": "velocity"`, so the file format is unchanged.
+
+### Verification
+
+- **Unit tests:** 141 pass, down from 154.
+  - 15 flow tests went: the 11 in `test_flow.py`, 3 in `test_measure.py` and
+    the flow round trip in `test_datasets.py`.
+  - 2 new tests check that old flow data sets are found with their plots
+    (including the unnamed one) and that old flow files belong to their
+    recording without being listed. A flow-only recording is not listed.
+  - The trash test now puts an old flow video, its summary, a flow data set
+    and its plots beside a recording. It checks that all of them reach the
+    trash in their own subfolders.
+- **Lint:** pyflakes reports only the two notes it reported before (the
+  deliberate re-export in `Utilities.py`, an unused import in the vendored
+  `SingleStepDFT.py`). The CI's flake8 selection is clean. `capillary.cli` and
+  `Application` import.
+- **Scripted GUI session.** This ran the real window under WSLg on a scratch
+  data folder: links to the 8 real videos and the real flow video, plus copies
+  of the flow summary, `Statistics/` and `Reports/`. The screenshots were
+  reviewed, and the session ended with no Tk errors.
+  - The header shows Analyze, Capture and Results. Ctrl + 1, 2 and 3 switch
+    pages; Ctrl + 4 does nothing.
+  - The list shows no flow chip. `FP01_Qefter_22-Oct-2019_09-46-17` shows its
+    2 velocity data sets and carries its 8 old flow files.
+  - The right-click menu holds *Measure velocity*, *Results*, *Stabilize*,
+    *Show in folder* and *Move to trash…*. The **⋯** menu holds *Stabilize
+    all raw recordings* and *Open the data folder*.
+  - Frames 1000–1400 of that recording were measured as `noflow_test` in
+    2.3 s, writing its five files. The boxes were placed at fixed test
+    coordinates, not on a chosen capillary, so this range resolved no
+    velocity; that does not bear on this change.
+  - The data set was then replaced (the old files went to `.trash/`), opened in
+    Results (its card highlighted), its report regenerated, its positions
+    restored (both boxes and the range 1000–1400 came back), and moved to the
+    trash.
+  - The F1 list shows no flow section and "Ctrl + 1 … 3".
+  - *Move recording to trash* listed 22 files and named the old optical-flow
+    files. All 22 ended up in one `.trash/` folder with their subfolders: both
+    `Flows/` files, the four flow pickles and the two flow plots. No file of
+    that recording was left behind, and the real `Flows/` folder was
+    untouched.
+
+### Not done
+
+- The old flow files in the real data folder are still there. Deleting them, or
+  moving them somewhere for the record, is the user's call.
+- Next, as planned: improve the velocity estimator. The list in last session's
+  notes includes:
+  - verify the real frame rate and the calibration
+  - sub-frame lag
+  - trend removal
+  - treat lag 0 as censored instead of dropping it
+  - path length along the vessel
+  - the negative-to-zero clipping in `report_summary.csv`
+  - validation
+
+---
+
 ## 2026-10-05 — GUI rebuilt from scratch
 
 **Branch:** `feat/gui-rebuild`, based on `refactor/remove-dead-code` (`4f785bc`),
