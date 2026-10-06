@@ -4,6 +4,5 @@ opencv-python
 webcolors
 pandas
 matplotlib
-scikit-image
 image-registration
 scipy

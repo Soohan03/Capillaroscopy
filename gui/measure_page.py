@@ -1,10 +1,11 @@
-"""What the Analyze and Flow pages share: video with timeline, a frame range,
-time points, naming a data set, running the measurement and showing its result.
+"""The frame of the Analyze page: video with timeline, a frame range, time
+points, naming a data set, running the measurement and showing its result.
 
-The workflow on both pages is the same: position the boxes (or the region) on
-the video, choose the range of frames, name the data set, press Measure. The
-frames of the range are read straight from the file in a background job, the
-data set is saved and its report written, and the result appears in the panel.
+The workflow: position the boxes on the video, choose the range of frames,
+name the data set, press Measure. The frames of the range are read straight
+from the file in a background job, the data set is saved and its report
+written, and the result appears in the panel. `AnalyzePage` adds the boxes and
+the live signal preview.
 """
 
 from __future__ import annotations
@@ -33,8 +34,6 @@ INSPECTOR_WIDTH = 380
 class MeasurePage(ttk.Frame):
     key = ''
     title = ''
-    kind = 'velocity'           # 'velocity' or 'flow': which data sets this page makes
-    color = False               # read 3-channel frames
     uses_library = True
     measure_label = 'Measure and save'
     min_frames = 1
@@ -69,13 +68,7 @@ class MeasurePage(ttk.Frame):
     def build_sections(self, body):
         """Add the page's own inspector sections (above Measurement)."""
 
-    def prepare_frame(self, index, frame):
-        return frame
-
     def after_frame(self, index):
-        pass
-
-    def video_opened(self):
         pass
 
     def capture_state(self) -> dict:
@@ -223,8 +216,7 @@ class MeasurePage(ttk.Frame):
         self.result_title.pack(anchor='w')
         self.result_body = ttk.Frame(frame, style='Panel.TFrame')
         self.result_body.pack(fill='x', pady=(px(6), 0))
-        self.result_chart = LineChart(frame, height=96, zero_line=True,
-                                      unit='mm/s' if self.kind == 'velocity' else '')
+        self.result_chart = LineChart(frame, height=96, zero_line=True, unit='mm/s')
         self.result_chart.pack(fill='x', pady=(px(10), 0))
         actions = ttk.Frame(frame, style='Panel.TFrame')
         actions.pack(fill='x', pady=(px(10), 0))
@@ -255,14 +247,14 @@ class MeasurePage(ttk.Frame):
     def existing_names(self):
         if self.recording is None:
             return []
-        return self.recording.velocity_sets if self.kind == 'velocity' else self.recording.flow_sets
+        return self.recording.velocity_sets
 
     def _open_video(self, path):
         self.player.close()
         source = None
         if path is not None:
             try:
-                source = FrameSource(path, color=self.color)
+                source = FrameSource(path)
             except (OSError, ValueError) as exc:
                 self.view.clear()
                 self.view.set_empty_message('This video cannot be opened', str(exc))
@@ -271,11 +263,9 @@ class MeasurePage(ttk.Frame):
             self.view.clear()
             self.view.set_empty_message(*self.empty_state(self.recording))
             self.timeline.configure_video(0, 30.0)
-            self.video_opened()
             self.transport.update_state()
             return
         self.timeline.configure_video(source.frame_count, source.fps)
-        self.video_opened()
         self.player.open(source)
         self.transport.update_state()
 
@@ -304,7 +294,7 @@ class MeasurePage(ttk.Frame):
 
     # ------------------------------------------------------------------------ frames
     def _show_frame(self, index, frame):
-        self.view.show(self.prepare_frame(index, frame))
+        self.view.show(frame)
         self.timeline.set_position(index)
         self.transport.update_state()
         self.after_frame(index)
@@ -472,12 +462,12 @@ class MeasurePage(ttk.Frame):
         name = self.name_var.get().strip()
         recording = self.recording
         if name in self.existing_names():
-            if not confirm(self, 'Replace data set?', f'A {self.kind} data set named "{name}" already exists '
+            if not confirm(self, 'Replace data set?', f'A data set named "{name}" already exists '
                            f'for {recording.stem}.', 'Its files are moved to the .trash folder in the data folder, '
                            'where you can restore them by hand.', ok='Replace', danger=True):
                 return
             folder = self.app.folder
-            paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, self.kind)
+            paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
             try:
                 tasks.move_to_trash(folder, paths, f'{recording.stem} {name}')
             except OSError as exc:
@@ -554,7 +544,7 @@ class MeasurePage(ttk.Frame):
         result = self.results.get(self.recording.stem) if self.recording else None
         self.app.show_page('results')
         if result is not None:
-            self.app.pages['results'].focus_dataset(result['kind'], result['name'])
+            self.app.pages['results'].focus_dataset(result['name'])
 
     # ----------------------------------------------------------------------- keyboard
     def handle_key(self, event) -> bool:

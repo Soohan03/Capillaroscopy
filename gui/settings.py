@@ -94,6 +94,7 @@ class DataFolder:
 
     @property
     def flows(self) -> str:
+        """Optical flow from versions before 2026-10-06; only read to trash it with its recording."""
         return os.path.join(self.root, 'Flows')
 
     @property
@@ -114,5 +115,5 @@ class DataFolder:
         return os.path.join(folder, '.partial')
 
     def ensure(self) -> None:
-        for folder in (self.recorded, self.stabilized, self.flows, self.statistics, self.reports):
+        for folder in (self.recorded, self.stabilized, self.statistics, self.reports):
             os.makedirs(folder, exist_ok=True)

@@ -11,9 +11,8 @@ its own widgets and calls into these functions so that both paths compute
 velocity with exactly the same code.
 
 See `capillary.cli` for the batch entry point (`python -m capillary.cli`).
-`capillary.measure` is what the GUI's Measure button runs, `capillary.datasets`
-the file layout of saved measurements, and `capillary.flow` the Flow tab's
-region arithmetic.
+`capillary.measure` is what the GUI's Measure button runs, and
+`capillary.datasets` the file layout of saved measurements.
 """
 
 from .roi import ROI

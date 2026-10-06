@@ -1,31 +1,29 @@
-"""Stabilization, optical flow and the report generators behind the GUI.
+"""Stabilization and the velocity report behind the GUI.
 
-The measurement itself — ROI geometry, intensity sampling, the lag estimator,
-the flow-region arithmetic — lives in the GUI-free `capillary` package. The
-classes here write the stabilized and flow videos, and the report functions
-turn a saved data set (see `capillary.datasets`) into the report CSVs and
-plots. None of this imports tkinter; the GUI runs it in worker threads.
+The measurement itself — ROI geometry, intensity sampling, the lag estimator —
+lives in the GUI-free `capillary` package. The classes here write the
+stabilized videos and turn a saved data set (see `capillary.datasets`) into the
+report CSVs and plots. None of this imports tkinter; the GUI runs it in worker
+threads.
 """
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from skimage.filters import threshold_multiotsu
 
 import SingleStepDFT as DFT
-from Utilities import pickle_save,calculate_blur,clahe,median_filter
+from Utilities import calculate_blur,clahe,median_filter
 
 # The measurement itself lives in the GUI-free `capillary` package so that the
 # GUI, the batch CLI and the unit tests all run the same arithmetic.
-from capillary.flow import flow_magnitudes
 from capillary.velocity import lag_and_correlation
 
 
 class Video:
     """Frame-by-frame reader for a grayscale video (channel 0 of the file)."""
     def __init__(self,path=''):
-        # path can arrive as None when no video is selected (e.g. empty Flows/);
-        # keep it a string so path manipulation below doesn't crash.
+        # path can arrive as None when no video is selected; keep it a string
+        # so path manipulation below doesn't crash.
         self.path = path if path is not None else ''
         self.number_of_frames_ = 0
         self.fps_ = 30
@@ -87,76 +85,6 @@ class Video:
 
     def get_frame_number(self):
         return int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))-1
-
-
-class FlowVideo(Video):
-    """Dense optical flow (Farneback) of a stabilized video, one frame per update().
-
-    Writes an HSV-encoded flow video to Flows/ and, every 20 frames and at the
-    end, a pickle with the average flow magnitude, average intensity and the
-    vessel mask derived from them.
-    """
-    def __init__(self,path):
-        Video.__init__(self,path=path)
-        self.video_path = path
-        self.video = Video(self.video_path)
-        self.output_path = path.replace('StabilizedVideos','Flows')
-        self.video.get_frame()
-        self.video.get_frame()
-        self.video.set_frame(0)
-        self.previous_frame = self.video.get_frame()
-        self.frame = cv2.merge((self.previous_frame,self.previous_frame,self.previous_frame))
-        self.average = np.zeros_like(self.previous_frame).astype(np.float64)
-        self.average_flow = np.zeros_like(self.previous_frame).astype(np.float64)
-        self.current_stage = 'processing'
-
-    def _close(self):
-        self.destroy_writer()
-
-    def update(self):
-
-        fr_num = self.video.get_frame_number()
-        if fr_num < self.video.number_of_frames_ - 1:
-            fr = self.video.get_frame()
-            self.average += fr
-            flow = cv2.calcOpticalFlowFarneback(self.previous_frame,fr,None,0.5,6,7,7,5,1.2,0)
-            self.previous_frame = fr
-            mag,ang = cv2.cartToPolar(flow[...,0],flow[...,1])
-
-            temp = np.zeros_like(self.frame)
-            temp[...,1] = 255
-            temp[...,0] = ang * 180 / np.pi / 2
-
-            mag[mag > 10] = 0  # very few values are higher than 10, most are 0.5 or similar, some are up to 5
-            mag = mag * 25.5
-            self.average_flow += mag.astype(np.float64)
-            temp[...,2] = mag
-
-            self.save_frame(temp)
-
-            if self.video.get_frame_number() % 20 == 0 and fr_num > 20:
-                self.create_pickle()
-        else:
-            self.create_pickle()
-            self._close()
-            self.current_stage = 'finished'
-
-    def save_frame(self,frame):
-        if self.writer is None:
-            self.writer = cv2.VideoWriter(self.output_path,cv2.VideoWriter_fourcc(*'MP4V'),30.0,(640,480))
-
-        self.writer.write(frame.astype(np.uint8))
-
-    def create_pickle(self):
-        average_flow_ = (self.average_flow / (self.video.get_frame_number() - 1)).astype(np.uint8)
-        average_ = (self.average / (self.video.get_frame_number() - 1)).astype(np.uint8)
-
-        thresholds = threshold_multiotsu(average_flow_[75:350,100:450],classes=2)
-        regions2 = np.digitize(average_flow_,bins=thresholds)
-        thresholds = threshold_multiotsu(average_[75:350,100:450],classes=3)
-        regions1 = np.digitize(average_,bins=[thresholds[1]])
-        area = cv2.bitwise_and(regions2,1 - regions1).astype(np.uint8)
-        pickle_save(cv2.merge((average_flow_,average_,area)),self.output_path[:-4] + '.pickle')
 
 
 class VideoStabilization(Video):
@@ -460,41 +388,3 @@ class CrossCorrelation:
         report_data = report_data.set_index(np.array(list(report_data.index)) * (1.0 / self.fps))
 
         return report_data
-
-
-def generate_flow_report(flow_regions,mask_regions,fps,mm_per_pixel,report_prefix):
-    """Plot the flow report of a saved flow data set; returns ``(up, down, both)``.
-
-    `flow_regions` / `mask_regions` are the data set's ``{frame: region}`` dicts
-    (capillary.datasets.load_flow_dataset); the per-frame values come from
-    capillary.flow.flow_magnitudes. `report_prefix` is ``Reports/<stem>___<name>``.
-    Both plots are smoothed with an exponential moving average over 100 frames.
-    """
-    up,down,both = flow_magnitudes(flow_regions,mask_regions,mm_per_pixel)
-    fps = fps or 30
-
-    f,ax = plt.subplots(figsize=(10,5),dpi=300)
-
-    flow_field_up = pd.DataFrame(up,columns=['flow']).set_index(pd.Series(up).index / fps).dropna().ewm(span=100).mean()
-    plt.plot(flow_field_up,label='up')
-
-    flow_field_down = pd.DataFrame(down,columns=['flow']).set_index(pd.Series(down).index / fps).dropna().ewm(span=100).mean()
-    plt.plot(flow_field_down,label='down')
-
-    plt.title('Flow field magnitude ')
-    plt.ylabel('Magnitude (mm)')
-    plt.xlabel('Seconds')
-    plt.legend()
-    f.savefig(report_prefix + '___up_and_down_.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
-    plt.close(f)
-
-    f,ax = plt.subplots(figsize=(10,5),dpi=300)
-    flow_field_both = pd.DataFrame(both,columns=['flow']).set_index(pd.Series(both).index / fps).dropna().ewm(span=100).mean()
-    plt.plot(flow_field_both,label='omnidirectional')
-    plt.title('Flow field magnitude ')
-    plt.ylabel('Magnitude (mm)')
-    plt.xlabel('Seconds')
-    plt.legend()
-    f.savefig(report_prefix + '___omnidirectional_.png',dpi=f.dpi,transparent=True,bbox_inches = 'tight')
-    plt.close(f)
-    return up,down,both

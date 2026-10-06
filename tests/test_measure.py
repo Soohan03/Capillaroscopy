@@ -4,9 +4,8 @@ import numpy as np
 import pytest
 
 from capillary import datasets
-from capillary.flow import crop_box
 from capillary.intensity import extract_traces_from_video
-from capillary.measure import Cancelled, flow_region_size_bytes, measure_flow, measure_velocity
+from capillary.measure import Cancelled, measure_velocity
 from capillary.quality import calculate_blur
 from capillary.roi import ROI
 from capillary.video import iter_frames
@@ -125,40 +124,3 @@ def test_saved_measurement_gives_the_known_velocity_in_the_report(video_file, tm
     velocity = report.loc[:, report.columns.str.startswith('velocity')].mean(axis=1)
     expected = expected_velocity_mm_s(VELOCITY_PX_PER_FRAME, FPS, MM_PER_PIXEL)
     assert velocity.median() == pytest.approx(expected, rel=0.05)
-
-
-@pytest.fixture(scope='module')
-def flow_video(tmp_path_factory):
-    """A 3-channel clip standing in for a flow video, uncompressed so every value survives."""
-    rng = np.random.default_rng(5)
-    clip = [rng.integers(0, 256, (48, 64, 3), dtype=np.uint8) for _ in range(40)]
-    path = tmp_path_factory.mktemp('flow') / 'flow.avi'
-    if not write_video(path, clip, FPS, fourcc=''):
-        pytest.skip('this OpenCV build cannot write uncompressed video')
-    return str(path)
-
-
-def test_flow_measurement_collects_the_region_of_each_frame(flow_video):
-    mask = (np.arange(48 * 64).reshape(48, 64) % 3 == 0).astype(np.uint8)
-    bounds = (10, 30, 5, 25)
-    flow, mask_regions, frames_read = measure_flow(flow_video, mask, bounds, 12, 20)
-
-    decoded = list(iter_frames(flow_video, single_channel=False))
-    assert frames_read == 8
-    assert len(flow) == len(mask_regions) == 40
-    for i in range(40):
-        if 12 <= i < 20:
-            np.testing.assert_array_equal(flow[i], crop_box(decoded[i], bounds))
-            np.testing.assert_array_equal(mask_regions[i], crop_box(mask, bounds))
-        else:
-            assert str(flow[i]) == 'nan' and str(mask_regions[i]) == 'nan'
-
-
-def test_flow_measurement_can_be_cancelled(flow_video):
-    mask = np.ones((48, 64), dtype=np.uint8)
-    with pytest.raises(Cancelled):
-        measure_flow(flow_video, mask, (0, 10, 0, 10), 0, 40, should_cancel=lambda: True)
-
-
-def test_flow_memory_estimate():
-    assert flow_region_size_bytes((0, 10, 0, 20), 100) == 10 * 20 * 4 * 100

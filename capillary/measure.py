@@ -1,15 +1,15 @@
 """Measuring a frame range with fixed boxes: what the GUI's Measure button runs.
 
-Up to the 2026-10 GUI rebuild the Analyze and Flow tabs recorded data while the
-video *played*: each displayed frame added one sample, a measurement took as
-long as the clip, and moving a box mid-way silently mixed positions. Here the
-boxes are fixed and an explicit frame range is read straight from the file, so
-a measurement takes seconds and is fully described by its parameters.
+Up to the 2026-10 GUI rebuild the Analyze tab recorded data while the video
+*played*: each displayed frame added one sample, a measurement took as long as
+the clip, and moving a box mid-way silently mixed positions. Here the boxes are
+fixed and an explicit frame range is read straight from the file, so a
+measurement takes seconds and is fully described by its parameters.
 
-The sampling itself is `extract_traces`, exactly as in the batch CLI. The two
-functions add progress reporting and cancellation, so a front end can run them
-in a worker thread, plus the per-frame sharpness score saved with velocity
-data sets.
+The sampling itself is `extract_traces`, exactly as in the batch CLI.
+`measure_velocity` adds progress reporting and cancellation, so a front end can
+run it in a worker thread, plus the per-frame sharpness score saved with
+velocity data sets.
 """
 
 from __future__ import annotations
@@ -21,7 +21,6 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from .flow import crop_box, empty_frame_dict
 from .intensity import IntensityTrace, extract_traces
 from .quality import calculate_blur
 from .roi import ROI
@@ -124,49 +123,3 @@ def measure_velocity(
         width=info.width,
         height=info.height,
     )
-
-
-def flow_region_size_bytes(bounds, frame_count: int) -> int:
-    """Memory (and roughly disk) a flow measurement of `frame_count` frames needs."""
-    x_left, x_right, y_top, y_bottom = bounds
-    pixels = max(0, x_right - x_left) * max(0, y_bottom - y_top)
-    return pixels * 4 * frame_count  # three flow channels plus the mask, one byte each
-
-
-def measure_flow(
-    path: str,
-    mask: np.ndarray,
-    bounds,
-    start: int,
-    stop: int,
-    progress: ProgressCallback = None,
-    should_cancel: CancelCheck = None,
-) -> tuple[dict, dict, int]:
-    """Collect the region `bounds` of flow frames ``start..stop-1``.
-
-    Returns ``(flow, mask, frames_read)``: two ``{frame: region}`` dicts that
-    cover every frame of the video, NaN outside the range, in the layout the
-    flow report reads. `mask` is the vessel mask of the flow video
-    (`capillary.flow.vessel_mask`).
-    """
-    info = probe_video(path)
-    if not 0 <= start < stop:
-        raise ValueError(f'invalid frame range {start}..{stop}')
-    wanted = stop - start
-    flow_regions = empty_frame_dict(info.frame_count)
-    mask_regions = empty_frame_dict(info.frame_count)
-    mask_region = crop_box(mask, bounds)
-
-    frames_read = 0
-    wanted = min(wanted, max(0, info.frame_count - start))  # the saved dicts cover the header's frame count
-    for offset, frame in enumerate(iter_frames(path, max_frames=wanted, start=start, single_channel=False)):
-        _check(should_cancel)
-        index = start + offset
-        flow_regions[index] = crop_box(frame, bounds).copy()
-        mask_regions[index] = mask_region.copy()
-        frames_read += 1
-        if progress is not None and offset % 25 == 0:
-            progress(offset / wanted)
-    if progress is not None:
-        progress(1.0)
-    return flow_regions, mask_regions, frames_read

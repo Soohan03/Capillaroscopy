@@ -1,9 +1,9 @@
 """The main window: header with the pages, the recording list, the status bar.
 
-Pages: Analyze (velocity between two boxes), Flow (optical flow in a region),
-Capture (camera and recording) and Results (saved data sets and reports).
-The window owns the selected recording, the background jobs and the
-application-wide actions (stabilize, compute flow, move to trash, settings).
+Pages: Analyze (velocity between two boxes), Capture (camera and recording)
+and Results (saved data sets and reports). The window owns the selected
+recording, the background jobs and the application-wide actions (stabilize,
+move to trash, settings).
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ from . import library, tasks, theme
 from .analyze_page import AnalyzePage
 from .capture_page import CapturePage
 from .dialogs import SettingsDialog, ShortcutsDialog, confirm, show_error
-from .flow_page import FlowPage
 from .jobs import JobManager
 from .library_view import LibraryPanel
 from .results_page import ResultsPage
@@ -33,7 +32,7 @@ from .widgets import Tooltip, install_wheel_router
 
 log = logging.getLogger(__name__)
 
-PAGES = (('analyze', AnalyzePage), ('flow', FlowPage), ('capture', CapturePage), ('results', ResultsPage))
+PAGES = (('analyze', AnalyzePage), ('capture', CapturePage), ('results', ResultsPage))
 TEXT_INPUT_CLASSES = ('Entry', 'TEntry', 'Spinbox', 'TSpinbox', 'TCombobox', 'Text', 'Listbox')
 
 
@@ -114,9 +113,8 @@ class App:
                                      command=lambda k=key: self.show_page(k))
             button.pack(side='left')
             Tooltip(button, {'analyze': 'Velocity between two boxes on a capillary (Ctrl + 1)',
-                             'flow': 'Optical flow in a region over a vessel (Ctrl + 2)',
-                             'capture': 'Camera preview and recording (Ctrl + 3)',
-                             'results': 'Saved data sets and their reports (Ctrl + 4)'}[key])
+                             'capture': 'Camera preview and recording (Ctrl + 2)',
+                             'results': 'Saved data sets and their reports (Ctrl + 3)'}[key])
         help_button = ttk.Button(header, text='?', style='Header.TButton', command=self.show_shortcuts, width=2)
         help_button.pack(side='right')
         Tooltip(help_button, 'Keyboard and mouse (F1)')
@@ -263,44 +261,12 @@ class App:
         else:
             self.set_status(f'Stabilizing {stem} in the background; you can keep working.')
 
-    def compute_flow(self, recording):
-        if not recording.stabilized:
-            return
-        if recording.has_flow and not confirm(
-                self.root, 'Compute the optical flow again?', f'{recording.stem} already has an optical flow video. '
-                'Computing it again replaces it; the current one is moved to the .trash folder.', ok='Compute again'):
-            return
-        self._submit_flow(recording)
-
-    def _submit_flow(self, recording):
-        stem = recording.stem
-        job = self.jobs.submit(f'Optical flow · {stem}', partial(tasks.compute_flow, folder=self.folder,
-                                                                 stabilized_path=recording.stabilized),
-                               lane='processing', key=('flow', stem),
-                               on_done=lambda path: self._processing_done(f'Optical flow of {stem} computed.', stem),
-                               on_error=lambda exc: self._processing_failed('Optical flow failed', stem, exc),
-                               on_cancel=lambda: self.set_status(f'Optical flow of {stem} cancelled.'))
-        if job is None:
-            self.set_status(f'The optical flow of {stem} is already being computed.')
-        else:
-            self.set_status(f'Computing the optical flow of {stem} in the background; you can keep working.')
-        page = self.current_page
-        if isinstance(page, FlowPage):
-            page.update_banner()
-
     def stabilize_many(self, recordings):
         if recordings and confirm(self.root, 'Stabilize all raw recordings?',
                                   f'{len(recordings)} recording(s) will be stabilized one after another in the '
                                   'background.', ok='Stabilize'):
             for recording in recordings:
                 self._submit_stabilize(recording)
-
-    def compute_flow_many(self, recordings):
-        if recordings and confirm(self.root, 'Compute missing optical flow?',
-                                  f'The optical flow of {len(recordings)} recording(s) will be computed one after '
-                                  'another in the background. Each takes a few minutes.', ok='Compute'):
-            for recording in recordings:
-                self._submit_flow(recording)
 
     def _processing_done(self, message, stem):
         self.set_status(message)
@@ -321,9 +287,12 @@ class App:
         listing = '\n'.join(tasks.relative_path(self.folder, path) for path in paths[:12])
         if len(paths) > 12:
             listing += f'\n… and {len(paths) - 12} more'
-        if not confirm(self.root, 'Move recording to trash?', f'All {len(paths)} files of {recording.stem} (videos, '
-                       'data sets, reports and time points) are moved to the .trash folder in the data folder, '
-                       'where you can restore them by hand.', listing, ok='Move to trash', danger=True):
+        kinds = 'videos, data sets, reports and time points'
+        if recording.legacy_flow_files:
+            kinds = 'videos, data sets, reports, time points and old optical-flow files'
+        if not confirm(self.root, 'Move recording to trash?', f'All {len(paths)} files of {recording.stem} ({kinds}) '
+                       'are moved to the .trash folder in the data folder, where you can restore them by hand.',
+                       listing, ok='Move to trash', danger=True):
             return
         for page in self.pages.values():
             if getattr(page, 'recording', None) is not None and page.recording.stem == recording.stem:
@@ -485,16 +454,15 @@ class App:
             pass
 
     def _clean_partial_outputs(self):
-        for folder in (self.folder.stabilized, self.folder.flows):
-            partial_dir = self.folder.partial(folder)
-            if os.path.isdir(partial_dir):
-                for name in os.listdir(partial_dir):
-                    path = os.path.join(partial_dir, name)
-                    try:
-                        os.remove(path)
-                        log.info('Removed the unfinished output %s', path)
-                    except OSError:
-                        log.warning('Could not remove %s', path)
+        partial_dir = self.folder.partial(self.folder.stabilized)
+        if os.path.isdir(partial_dir):
+            for name in os.listdir(partial_dir):
+                path = os.path.join(partial_dir, name)
+                try:
+                    os.remove(path)
+                    log.info('Removed the unfinished output %s', path)
+                except OSError:
+                    log.warning('Could not remove %s', path)
 
     # ------------------------------------------------------------------------ quit
     def quit(self):

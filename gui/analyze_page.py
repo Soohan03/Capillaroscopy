@@ -72,7 +72,6 @@ class BoxTool(Tool):
 class AnalyzePage(MeasurePage):
     key = 'analyze'
     title = 'Analyze'
-    kind = 'velocity'
     measure_label = 'Measure velocity and save'
     min_frames = datasets.MIN_VELOCITY_FRAMES
 
@@ -200,12 +199,6 @@ class AnalyzePage(MeasurePage):
     # ----------------------------------------------------------------------- state
     def video_for(self, recording):
         return recording.video
-
-    def empty_state(self, recording):
-        if recording is not None and recording.video is None:
-            return ('No video to analyse', 'This recording has only its optical flow. '
-                                           'Open it on the Flow page instead.')
-        return super().empty_state(recording)
 
     def capture_state(self):
         state = super().capture_state()
