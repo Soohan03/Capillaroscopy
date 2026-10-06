@@ -26,3 +26,6 @@ capillaroscopy.log.*
 # OS files
 .DS_Store
 Thumbs.db
+
+# python -m capillary.benchmark writes here by default
+benchmark/

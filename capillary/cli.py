@@ -1,11 +1,17 @@
 """Batch entry point: analyse a video without opening the GUI.
 
+    python -m capillary.cli StabilizedVideos/clip.avi \\
+        --line "372,110;352,160;338,205" --out blocks.csv
+
     python -m capillary.cli StabilizedVideos/clip.mp4 \\
         --roi1 320,240 --roi2 320,300 --size 10x10 --out report.csv
 
-Running the same measurement from a script is what makes a result reproducible:
-the ROI coordinates, box size and calibration are all on the command line, so a
-report can be regenerated months later without re-clicking on a canvas.
+``--line`` measures along a centre line (`capillary.spacetime`, the Centre
+line page); ``--roi1``/``--roi2`` with two boxes (`capillary.velocity`, the
+Two boxes page). Running the same measurement from a script is what makes a
+result reproducible: the line or boxes, frames and calibration are all on the
+command line (and in a data set's provenance file), so a report can be
+regenerated months later without re-clicking on a canvas.
 """
 
 from __future__ import annotations
@@ -18,10 +24,11 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from .intensity import extract_traces_from_video
+from . import spacetime
+from .intensity import extract_traces
 from .roi import ROI
 from .velocity import DEFAULT_WINDOWS, analyze_trace
-from .video import probe_video
+from .video import iter_frames, probe_video
 
 DEFAULT_MM_PER_PIXEL = 0.001328903654
 
@@ -54,6 +61,18 @@ def parse_size(text: str) -> tuple[int, int]:
     raise argparse.ArgumentTypeError(f'invalid box size {text!r}, expected "WxH"')
 
 
+def parse_line(text: str) -> spacetime.Centreline:
+    """Parse ``"x1,y1;x2,y2;..."`` (points may also be separated by spaces) into a centre line."""
+    points = []
+    for part in str(text).replace(';', ' ').split():
+        try:
+            x, y = (float(v) for v in part.split(','))
+        except ValueError as exc:
+            raise ValueError(f'invalid point {part!r} in --line; expected "x,y"') from exc
+        points.append((x, y))
+    return spacetime.Centreline.from_points(points)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='python -m capillary.cli',
@@ -61,10 +80,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument('video', help='path to the (stabilised) video file')
     parser.add_argument(
-        '--roi1', required=True,
+        '--line', default=None,
+        help='centre line as "x1,y1;x2,y2;..." from where the blood comes from (the Centre line method)',
+    )
+    parser.add_argument(
+        '--roi1', default=None,
         help='rectangle 1 as "x,y" or "x,y,w,h" (the downstream box in the GUI convention)',
     )
-    parser.add_argument('--roi2', required=True, help='rectangle 2 as "x,y" or "x,y,w,h"')
+    parser.add_argument('--roi2', default=None, help='rectangle 2 as "x,y" or "x,y,w,h"')
     parser.add_argument(
         '--size', type=parse_size, default=(10, 10),
         help='default box size "WxH" for ROIs given as "x,y" (default: 10x10)',
@@ -85,11 +108,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--step', type=int, default=1, help='advance the window by this many frames (default: 1)',
     )
-    parser.add_argument('--max-frames', type=int, default=None, help='analyse only the first N frames')
-    parser.add_argument('--out', default=None, help='write the full per-frame report here (CSV)')
+    parser.add_argument('--start', type=int, default=0, help='first frame to analyse (default: 0)')
+    parser.add_argument('--max-frames', type=int, default=None, help='analyse at most N frames')
+    parser.add_argument('--out', default=None,
+                        help='write the full report here (CSV): per frame for boxes, per block for a line')
     parser.add_argument(
         '--summary-out', default=None,
-        help='write the time/velocity/correlation summary here (CSV)',
+        help='write the time/velocity summary here (CSV)',
     )
     parser.add_argument(
         '--positive-flow', choices=('a_to_b', 'b_to_a'), default='b_to_a',
@@ -106,6 +131,22 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if (args.line is None) == (args.roi1 is None and args.roi2 is None):
+        parser.error('give either --line, or --roi1 and --roi2')
+    if args.line is None and (args.roi1 is None or args.roi2 is None):
+        parser.error('--roi1 and --roi2 go together')
+
+    mm_per_pixel = args.mm_per_pixel
+    if mm_per_pixel is None:
+        mm_per_pixel = read_mm_per_pixel(args.settings)
+    if mm_per_pixel is None:
+        mm_per_pixel = DEFAULT_MM_PER_PIXEL
+    if args.line is not None:
+        try:
+            line = parse_line(args.line)
+        except ValueError as exc:
+            parser.error(str(exc))
+        return _measure_line(args, line, mm_per_pixel)
 
     try:
         roi_a = ROI.parse(args.roi1, *args.size)
@@ -114,17 +155,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except ValueError as exc:
         parser.error(str(exc))
 
-    mm_per_pixel = args.mm_per_pixel
-    if mm_per_pixel is None:
-        mm_per_pixel = read_mm_per_pixel(args.settings)
-    if mm_per_pixel is None:
-        mm_per_pixel = DEFAULT_MM_PER_PIXEL
-
     try:
         info = probe_video(args.video)
-        trace = extract_traces_from_video(
-            args.video, roi_a, roi_b, max_frames=args.max_frames, fps=args.fps
-        )
+        trace = extract_traces(iter_frames(args.video, max_frames=args.max_frames, start=args.start),
+                               roi_a, roi_b, fps=args.fps or info.fps, source=str(args.video))
         report = analyze_trace(
             trace,
             mm_per_pixel=mm_per_pixel,
@@ -144,6 +178,36 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if not args.quiet:
         _print_summary(args.video, info, trace, report, mm_per_pixel)
+    return 0
+
+
+def _measure_line(args, line: spacetime.Centreline, mm_per_pixel: float) -> int:
+    try:
+        info = probe_video(args.video)
+        fps = args.fps or info.fps
+        diagram = spacetime.space_time_diagram(iter_frames(args.video, max_frames=args.max_frames, start=args.start),
+                                               line)
+        blocks = spacetime.analyze_space_time(diagram, fps, mm_per_pixel, first_frame=args.start)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f'error: {exc}', file=sys.stderr)
+        return 1
+    if args.out:
+        blocks.to_csv(args.out)
+    if args.summary_out:
+        blocks.loc[:, ['time_s', 'velocity_mm_s']].to_csv(args.summary_out)
+    if not args.quiet:
+        summary = spacetime.space_time_summary(blocks)
+        slowest, fastest = spacetime.resolvable_speeds(line.length_px, fps, mm_per_pixel)
+        print(f'{args.video}')
+        print(f'  {info.width}x{info.height}, {diagram.shape[0]} frames from {args.start} @ {fps:g} fps '
+              f'({diagram.shape[0] / fps:.1f} s)')
+        print(f'  centre line    : {len(line.points)} points, {line.length_px:.1f} px '
+              f'({line.length_px * mm_per_pixel:.4f} mm), measurable {slowest:.4f} to {fastest:.3f} mm/s')
+        print(f'  estimates      : {summary["resolved"]}/{summary["blocks"]} blocks resolved')
+        if summary['resolved']:
+            print(f'  velocity       : median {summary["median"]:.4f} mm/s '
+                  f'(IQR {summary["q25"]:.4f} to {summary["q75"]:.4f}), '
+                  f'median signal-to-noise {summary["median_snr"]:.0f}')
     return 0
 
 
