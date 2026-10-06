@@ -2,19 +2,16 @@
 
 A desktop tool (Tkinter + OpenCV) for recording and analysing nailfold
 capillaroscopy videos: it records from the microscope camera, stabilizes the
-recording, measures red-cell velocity between two boxes on a capillary, and
-measures optical flow over a vessel region.
+recording, and measures red-cell velocity between two boxes on a capillary.
 
 ## Using the app
 
 The window has a list of recordings on the left (everything that shares one
-video's name: raw capture, stabilized copy, optical flow, data sets) and four
-pages:
+video's name: raw capture, stabilized copy, data sets) and three pages:
 
 | Page | What you do there |
 | --- | --- |
 | **Analyze** | Place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary. A live preview shows both box signals, their correlation and the velocity around the current frame, and which velocities these boxes can resolve. Choose a frame range, name the data set, press **Measure velocity and save**. |
-| **Flow** | Draw a region over a vessel on the optical-flow video and press **Measure flow and save**. |
 | **Capture** | Camera preview, recording into `RecordedVideos/`, marking time points (e.g. cuff release) while recording. |
 | **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the boxes of a data set restored on the Analyze page. |
 
@@ -24,9 +21,14 @@ and it is fully described by its parameters. Each data set gets a small
 `…_provenance.json` file beside it that records the box positions, frame
 range, calibration, video and code version it was made with.
 
-Stabilizing and computing optical flow run in the background (right-click a
-recording, or the **⋯** menu above the list for all at once); you can keep
-working meanwhile. Press **F1** for all keyboard and mouse controls.
+Stabilizing runs in the background (right-click a recording, or the **⋯** menu
+above the list for all at once); you can keep working meanwhile. Press **F1**
+for all keyboard and mouse controls.
+
+Versions before 2026-10-06 also computed optical flow and measured it in a
+region over a vessel. That measurement was removed so the tool concentrates on
+velocity, the study's primary endpoint (see the 2026-10-06 entry in
+`DEVLOG.md`). Files it left behind are kept on disk but no longer shown.
 
 Nothing is deleted outright: replaced or removed videos and data sets go to
 `.trash/` in the data folder, keeping their subfolders, so they can be put back
@@ -42,7 +44,9 @@ button. Inside the folder it uses:
 
 - `RecordedVideos/`: raw captures from the microscope.
 - `StabilizedVideos/`: stabilized copies, used for measuring.
-- `Flows/`: optical-flow videos and their summaries (`.pickle`).
+- `Flows/`: optical-flow videos from versions before 2026-10-06. The app no
+  longer creates or reads this folder, except to move a recording's old flow
+  files to the trash along with the recording.
 - `Statistics/`: the saved data sets (`<recording>___<data set>___…`), their
   provenance files, and each recording's time points.
 - `Reports/`: the plots and summary tables written from the data sets.
@@ -54,12 +58,12 @@ button. Inside the folder it uses:
 | --- | --- |
 | `Application.py` | Entry point: logging, then the window from `gui/` |
 | `gui/app.py` | The main window: header, recording list, pages, status bar, keyboard routing, application-wide actions |
-| `gui/analyze_page.py`, `gui/flow_page.py`, `gui/capture_page.py`, `gui/results_page.py` | The four pages |
-| `gui/measure_page.py` | What Analyze and Flow share: video, timeline, frame range, time points, the Measure footer, the last result |
+| `gui/analyze_page.py`, `gui/capture_page.py`, `gui/results_page.py` | The three pages |
+| `gui/measure_page.py` | What the Analyze page builds on: video, timeline, frame range, time points, the Measure footer, the last result |
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
-| `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, optical flow, measure, reports) |
+| `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, measure, reports) |
 | `gui/library.py`, `gui/settings.py`, `gui/media.py`, `gui/camera.py` | Finding recordings, settings, frames for display, camera capture |
-| `Caper.py` | Stabilization, optical flow and report generation |
+| `Caper.py` | Stabilization and report generation |
 | `SingleStepDFT.py` | Sub-pixel image registration used by stabilization (vendored, see its docstring) |
 | `Utilities.py` | Small shared helpers |
 | `capillary/` | The GUI-free measurement engine and batch CLI (see below) |
@@ -116,5 +120,5 @@ velocity — a real clip has no ground truth, so it cannot tell you whether the
 estimator is right. `tests/synthetic.py` generates a pattern moving at a chosen
 pixels-per-frame rate, which fixes the true lag and the true mm/s. Further
 tests cover the measurement used by the Measure button, the saved file
-formats, the flow-region arithmetic, and the GUI's non-visual logic (settings,
-the recording list, the trash, background jobs). None of them needs a display.
+formats, and the GUI's non-visual logic (settings, the recording list, the
+trash, background jobs). None of them needs a display.
