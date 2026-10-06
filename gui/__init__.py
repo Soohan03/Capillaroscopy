@@ -12,7 +12,8 @@ implementation.
     video_view.py    the zoomable video canvas and its overlay
     transport.py     playback, timeline and transport bar
     library_view.py  the list of recordings on the left
-    measure_page.py  video, frame range, time points and Measure footer of Analyze
+    measure_page.py  video, frame range, time points and Measure footer of both measure pages
+    line_page.py     velocity along a centre line (space-time diagram)
     analyze_page.py  velocity measurement with two boxes
     capture_page.py  camera preview and recording
     results_page.py  saved data sets and their reports

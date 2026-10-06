@@ -59,6 +59,38 @@ def test_dataset_paths_do_not_mix_up_similar_names(tmp_path):
     assert not any('Test2' in os.path.basename(p) for p in paths)
 
 
+def test_line_data_set_files_and_round_trip(tmp_path):
+    statistics, reports = tmp_path / 'Statistics', tmp_path / 'Reports'
+    statistics.mkdir()
+    reports.mkdir()
+    files = datasets.line_dataset_files(str(statistics), STEM, 'line1')
+    assert os.path.basename(files['space_time']) == f'{STEM}___line1___space_time.npy'
+    assert os.path.basename(files['velocity']) == f'{STEM}___line1___line_velocity.csv'
+    assert os.path.basename(files['provenance']) == f'{STEM}___line1___line_provenance.json'
+    plots = datasets.line_report_files(str(reports), STEM, 'line1')
+    assert os.path.basename(plots['space_time']) == f'{STEM}___line1___space_time.png'
+
+    diagram = np.arange(12, dtype=float).reshape(4, 3)
+    blocks = pd.DataFrame({'time_s': [1.5], 'speed_px_per_frame': [0.5], 'velocity_mm_s': [0.03], 'snr': [20.0],
+                           'coherence': [0.2], 'resolved': [True]}, index=pd.Index([45], name='frame'))
+    written = datasets.write_line_dataset(str(statistics), STEM, 'line1', diagram, blocks)
+    assert set(written) == {'space_time', 'velocity'}
+    loaded_diagram, loaded_blocks = datasets.load_line_dataset(str(statistics), STEM, 'line1')
+    assert loaded_diagram.dtype == np.float32
+    np.testing.assert_array_equal(loaded_diagram, diagram)
+    assert list(loaded_blocks.index) == [45] and bool(loaded_blocks['resolved'].iloc[0])
+
+    assert datasets.list_line_datasets(str(statistics), STEM) == ['line1']
+    assert datasets.list_velocity_datasets(str(statistics), STEM) == []
+    touch(plots['space_time'])
+    paths = datasets.dataset_paths(str(statistics), str(reports), STEM, 'line1', 'line')
+    assert sorted(os.path.basename(p) for p in paths) == sorted(
+        [f'{STEM}___line1___space_time.npy', f'{STEM}___line1___line_velocity.csv', f'{STEM}___line1___space_time.png'])
+    assert datasets.dataset_paths(str(statistics), str(reports), STEM, 'line1') == []     # not a two-box set
+    with pytest.raises(ValueError, match='kind'):
+        datasets.dataset_paths(str(statistics), str(reports), STEM, 'line1', 'flow')
+
+
 def test_old_flow_data_sets_are_found_with_their_plots(tmp_path):
     statistics, reports = tmp_path / 'Statistics', tmp_path / 'Reports'
     statistics.mkdir()

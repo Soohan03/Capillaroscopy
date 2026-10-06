@@ -28,7 +28,8 @@ class Recording:
     stem: str
     raw: Optional[str] = None
     stabilized: Optional[str] = None
-    velocity_sets: list = field(default_factory=list)
+    velocity_sets: list = field(default_factory=list)       # two-box data sets
+    line_sets: list = field(default_factory=list)           # centre-line data sets
     #: files of the removed optical-flow feature: the flow video and its summary
     #: in Flows/, flow data sets and their plots
     legacy_flow_files: list = field(default_factory=list)
@@ -44,7 +45,11 @@ class Recording:
 
     @property
     def dataset_count(self) -> int:
-        return len(self.velocity_sets)
+        return len(self.velocity_sets) + len(self.line_sets)
+
+    def datasets_of(self, kind: str) -> list:
+        """Names of this recording's data sets of `kind` ('velocity' or 'line')."""
+        return self.line_sets if kind == 'line' else self.velocity_sets
 
 
 def _files(folder: str) -> list[str]:
@@ -66,7 +71,7 @@ def stem_of(path: str) -> str:
 
 
 def _datasets(statistics: str, stems) -> dict:
-    """``{stem: (velocity names, legacy flow names)}`` from one listing of ``Statistics/``.
+    """``{stem: (velocity names, line names, legacy flow names)}`` from one listing of ``Statistics/``.
 
     A file belongs to the known stem it starts with, so names containing the
     separator (possible in data sets from older versions) still match.
@@ -76,7 +81,8 @@ def _datasets(statistics: str, stems) -> dict:
         names = [entry.name for entry in os.scandir(statistics) if entry.is_file()]
     except OSError:
         return found
-    endings = ((f'{SEPARATOR}cross_correlation.csv', 0), (f'{SEPARATOR}{LEGACY_FLOW_STATISTICS[0]}', 1))
+    endings = ((f'{SEPARATOR}cross_correlation.csv', 0), (f'{SEPARATOR}line_velocity.csv', 1),
+               (f'{SEPARATOR}{LEGACY_FLOW_STATISTICS[0]}', 2))
     for file_name in names:
         for ending, kind in endings:
             if not file_name.endswith(ending):
@@ -85,7 +91,7 @@ def _datasets(statistics: str, stems) -> dict:
             start = prefix.find(SEPARATOR)
             while start != -1:
                 if prefix[:start] in stems:
-                    found.setdefault(prefix[:start], ([], []))[kind].append(prefix[start + len(SEPARATOR):])
+                    found.setdefault(prefix[:start], ([], [], []))[kind].append(prefix[start + len(SEPARATOR):])
                     break
                 start = prefix.find(SEPARATOR, start + 1)
     return found
@@ -108,9 +114,10 @@ def scan(folder: DataFolder) -> list[Recording]:
     for path in _files(folder.flows):
         if stem_of(path) in recordings:
             recordings[stem_of(path)].legacy_flow_files.append(path)
-    for stem, (velocity, flow) in _datasets(folder.statistics, set(recordings)).items():
+    for stem, (velocity, line, flow) in _datasets(folder.statistics, set(recordings)).items():
         recording = recordings[stem]
         recording.velocity_sets = sorted(velocity)
+        recording.line_sets = sorted(line)
         for name in sorted(flow):
             recording.legacy_flow_files += legacy_flow_dataset_paths(folder.statistics, folder.reports, stem, name)
     return sorted(recordings.values(), key=lambda r: r.stem.lower())

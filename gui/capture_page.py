@@ -303,7 +303,7 @@ class CapturePage(ttk.Frame):
     def _show_last(self):
         if self._last_saved is not None:
             self.app.select_recording(self._last_saved[0])
-            self.app.show_page('analyze')
+            self.app.show_page('line')
 
     def handle_key(self, event) -> bool:
         if event.keysym.lower() == 'm':

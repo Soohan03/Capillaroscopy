@@ -71,12 +71,14 @@ def test_scan_groups_the_files_of_each_recording(folder):
     for stem, name in (('FP01', 'Test'), ('FP01', 'Test2'), ('FP01_b', 'set1'), ('FP01', 'old___name'),
                        ('FP09', 'orphan')):
         touch(datasets.velocity_dataset_files(folder.statistics, stem, name)['cross_correlation'])
+    touch(datasets.line_dataset_files(folder.statistics, 'FP01', 'line1')['velocity'])
 
     recordings = {recording.stem: recording for recording in library.scan(folder)}
     assert sorted(recordings) == ['FP01', 'FP01_b', 'FP02']
     fp01 = recordings['FP01']
     assert fp01.video == fp01.stabilized and fp01.raw
-    assert fp01.velocity_sets == ['Test', 'Test2', 'old___name'] and fp01.dataset_count == 3
+    assert fp01.velocity_sets == ['Test', 'Test2', 'old___name'] and fp01.line_sets == ['line1']
+    assert fp01.dataset_count == 4 and fp01.datasets_of('line') == ['line1']
     assert recordings['FP01_b'].velocity_sets == ['set1'] and recordings['FP01_b'].video.endswith('FP01_b.avi')
     assert recordings['FP02'].is_stabilized and recordings['FP02'].dataset_count == 0
     assert all(recording.legacy_flow_files == [] for recording in recordings.values())
@@ -117,11 +119,15 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
     files = datasets.velocity_dataset_files(folder.statistics, stem, 'Test')
     for part in datasets.VELOCITY_INPUTS:
         touch(files[part], part.encode())
+    line_files = datasets.line_dataset_files(folder.statistics, stem, 'line1')
+    touch(line_files['velocity'], b'v')
+    touch(line_files['space_time'], b's')
     datasets.save_time_points(datasets.time_points_file(folder.statistics, stem), [12.5])
 
     recording = library.scan(folder)[0]
     paths = tasks.recording_files(folder, recording)
-    assert len(paths) == 2 + 3 + 1 + len(old)
+    assert len(paths) == 2 + 3 + 2 + 1 + len(old)
+    assert line_files['space_time'] in paths
     target = tasks.move_to_trash(folder, paths, recording.stem)
 
     assert os.path.dirname(target) == folder.trash

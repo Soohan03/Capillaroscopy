@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 import Caper
-from capillary import datasets
+from capillary import datasets, spacetime
 from capillary.intensity import extract_traces
 from capillary.measure import measure_velocity
 from capillary.roi import ROI
@@ -148,8 +148,9 @@ def move_to_trash(folder: DataFolder, paths: Iterable[str], label: str) -> str:
 def recording_files(folder: DataFolder, recording: Recording) -> list[str]:
     """Every file that belongs to `recording`: videos, data sets, reports, time points, old flow files."""
     paths = [recording.raw, recording.stabilized]
-    for name in recording.velocity_sets:
-        paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
+    for kind in datasets.KINDS:
+        for name in recording.datasets_of(kind):
+            paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, kind)
     paths.append(datasets.time_points_file(folder.statistics, recording.stem))
     paths += recording.legacy_flow_files
     seen, result = set(), []
@@ -300,10 +301,11 @@ def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, v
         }
         datasets.write_provenance(files['provenance'], record)
     except BaseException:
-        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name):
+        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name, 'velocity'):
             _remove(path)
         raise
-    return {'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report), 'record': record}
+    return {'kind': 'velocity', 'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report),
+            'record': record}
 
 
 def regenerate_velocity_report(job, *, folder: DataFolder, stem: str, name: str, fps: float,
@@ -322,32 +324,169 @@ def regenerate_velocity_report(job, *, folder: DataFolder, stem: str, name: str,
         record['time_points_s'] = sorted(float(t) for t in time_points)
         record['report_regenerated'] = datetime.datetime.now().isoformat(timespec='seconds')
         datasets.write_provenance(provenance, record)
-    return {'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report)}
+    return {'kind': 'velocity', 'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report)}
+
+
+# ------------------------------------------------------------- centre-line velocity
+
+#: Frames the centre-line preview reads around the playhead (4 s at 30 fps), measured as one block.
+LINE_PREVIEW_FRAMES = 120
+
+
+def line_preview(path: str, points, start: int, count: int, mm_per_pixel: float) -> dict:
+    """Space-time diagram of `count` frames from `start` along the line, and one estimate over all of them."""
+    info = probe_video(path)
+    line = spacetime.Centreline.from_points(points)
+    diagram = spacetime.space_time_diagram(iter_frames(path, max_frames=count, start=start), line)
+    estimate = spacetime.streak_speed(diagram)
+    to_mm_s = info.fps * mm_per_pixel
+    return {'start': start, 'diagram': diagram, 'fps': info.fps, 'length_px': line.length_px,
+            'speed': estimate.speed_px_per_frame, 'snr': estimate.snr, 'coherence': estimate.coherence,
+            'in_range': estimate.in_range, 'resolved': estimate.resolved,
+            'velocity': estimate.speed_px_per_frame * to_mm_s if estimate.resolved else float('nan'),
+            'limits_mm_s': tuple(v * to_mm_s for v in spacetime.speed_limits(diagram.shape[1], diagram.shape[0]))}
+
+
+def line_series(blocks: pd.DataFrame) -> dict:
+    """Time and velocity of the resolved blocks, for the result chart."""
+    resolved = blocks[blocks['resolved'].astype(bool)]
+    return {'t': resolved['time_s'].astype(float).tolist(), 'v': resolved['velocity_mm_s'].astype(float).tolist()}
+
+
+def summarize_line_blocks(blocks: pd.DataFrame, length_px: float, fps: float, mm_per_pixel: float) -> dict:
+    """Headline numbers of a centre-line measurement, plus its measurable range."""
+    summary = spacetime.space_time_summary(blocks)
+    slowest, fastest = spacetime.resolvable_speeds(length_px, fps, mm_per_pixel)
+    times = blocks['time_s'].astype(float)
+    summary.update(first_s=float(times.min()) if len(times) else float('nan'),
+                   last_s=float(times.max()) if len(times) else float('nan'),
+                   slowest_mm_s=slowest, fastest_mm_s=fastest)
+    return summary
+
+
+def _estimator_record() -> dict:
+    return {'method': 'capillary.spacetime: slope of the streaks in the space-time diagram (Radon transform '
+                      'evaluated in the Fourier domain, mirror line subtracted)',
+            'block_frames': spacetime.DEFAULT_BLOCK_FRAMES, 'step_frames': spacetime.DEFAULT_STEP_FRAMES,
+            'min_snr': spacetime.MIN_SNR, 'min_coherence': spacetime.MIN_COHERENCE, 'k_max': spacetime.K_MAX,
+            'omega_taper': [spacetime.TAPER_START, spacetime.MAX_OMEGA],
+            'fastest_fraction': spacetime.FASTEST_FRACTION, 'half_width_px': spacetime.DEFAULT_HALF_WIDTH_PX}
+
+
+def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str, points,
+                         start: int, end: int, mm_per_pixel: float, time_points=()) -> dict:
+    """Measure frames ``start..end`` (inclusive) along the centre line, save the data set, write its report."""
+    info = probe_video(video_path)
+    line = spacetime.Centreline.from_points(points)
+    sampler = spacetime.SpaceTimeSampler(line)
+    wanted = end - start + 1
+    rows = []
+    job.report(0.0, 'Reading frames')
+    for offset, frame in enumerate(iter_frames(video_path, max_frames=wanted, start=start)):
+        rows.append(sampler.row(frame))
+        if offset % 25 == 0:
+            job.report(0.5 * offset / wanted, 'Reading frames')
+    if len(rows) < spacetime.DEFAULT_BLOCK_FRAMES:
+        raise ValueError(f'Only {len(rows)} frames could be read; a measurement needs at least '
+                         f'{spacetime.DEFAULT_BLOCK_FRAMES}.')
+    diagram = np.asarray(rows, dtype=np.float32)
+    blocks = spacetime.analyze_space_time(diagram, info.fps, mm_per_pixel, first_frame=start,
+                                          progress=lambda p: job.report(0.5 + 0.4 * p, 'Measuring the streaks'))
+    files = datasets.line_dataset_files(folder.statistics, stem, name)
+    try:
+        job.report(0.92, 'Saving the data set')
+        datasets.write_line_dataset(folder.statistics, stem, name, diagram, blocks)
+        summary = summarize_line_blocks(blocks, line.length_px, info.fps, mm_per_pixel)
+        Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, info.fps,
+                                   mm_per_pixel, start, sorted(time_points), summary)
+        record = {
+            'kind': 'line',
+            'dataset': name,
+            'recording': stem,
+            'created': datetime.datetime.now().isoformat(timespec='seconds'),
+            'video': _video_record(video_path, info),
+            'frames': {'first': start, 'last': start + len(rows) - 1, 'count': len(rows)},
+            'line': {'points': [[round(x, 2), round(y, 2)] for x, y in line.points],
+                     'length_px': line.length_px,
+                     'length_um': line.length_px * mm_per_pixel * 1000.0,
+                     'coordinates': 'clicked points in video pixels, x to the right, y down from the top-left '
+                                    'corner; positive velocity runs from the first point towards the last'},
+            'mm_per_pixel': mm_per_pixel,
+            'resolvable_mm_per_s': {'slowest': summary['slowest_mm_s'], 'fastest': summary['fastest_mm_s']},
+            'time_points_s': sorted(float(t) for t in time_points),
+            'estimator': _estimator_record(),
+            'summary': summary,
+            'software': datasets.software_version(),
+        }
+        datasets.write_provenance(files['provenance'], record)
+    except BaseException:
+        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name, 'line'):
+            _remove(path)
+        raise
+    return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks),
+            'record': record}
+
+
+def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps: float, mm_per_pixel: float,
+                           time_points=()) -> dict:
+    """Measure a saved centre-line diagram again and rewrite its report (no video needed)."""
+    job.report(0.0, 'Loading the space-time diagram')
+    diagram, old_blocks = datasets.load_line_dataset(folder.statistics, stem, name)
+    files = datasets.line_dataset_files(folder.statistics, stem, name)
+    record = datasets.read_provenance(files['provenance'])
+    frames = (record or {}).get('frames') or {}
+    if 'first' in frames:
+        first = int(frames['first'])
+    else:
+        first = int(old_blocks.index.min()) - spacetime.DEFAULT_BLOCK_FRAMES // 2 if len(old_blocks) else 0
+    blocks = spacetime.analyze_space_time(diagram, fps, mm_per_pixel, first_frame=first,
+                                          progress=lambda p: job.report(0.1 + 0.75 * p, 'Measuring the streaks'))
+    blocks.to_csv(files['velocity'])
+    length = ((record or {}).get('line') or {}).get('length_px') or float(diagram.shape[1] - 1)
+    summary = summarize_line_blocks(blocks, length, fps, mm_per_pixel)
+    job.report(0.9, 'Drawing the report')
+    Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, fps,
+                               mm_per_pixel, first, sorted(time_points), summary)
+    if record is not None:
+        record.update(summary=summary, estimator=_estimator_record(), mm_per_pixel=mm_per_pixel,
+                      time_points_s=sorted(float(t) for t in time_points),
+                      report_regenerated=datetime.datetime.now().isoformat(timespec='seconds'))
+        datasets.write_provenance(files['provenance'], record)
+    return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks)}
 
 
 # ------------------------------------------------------------------ results browsing
 
-def dataset_info(folder: DataFolder, stem: str, name: str) -> dict:
+def dataset_info(folder: DataFolder, stem: str, name: str, kind: str = 'velocity') -> dict:
     """What the Results page shows for one data set (run off the Tk thread)."""
-    files = datasets.velocity_dataset_files(folder.statistics, stem, name)
-    inputs = [files[part] for part in datasets.VELOCITY_INPUTS]
-    images = datasets.velocity_report_files(folder.reports, stem, name)
+    if kind == 'line':
+        files = datasets.line_dataset_files(folder.statistics, stem, name)
+        inputs = [files['space_time'], files['velocity']]
+        images = datasets.line_report_files(folder.reports, stem, name)
+        table = files['velocity']
+    else:
+        files = datasets.velocity_dataset_files(folder.statistics, stem, name)
+        inputs = [files[part] for part in datasets.VELOCITY_INPUTS]
+        images = datasets.velocity_report_files(folder.reports, stem, name)
+        table = files['report']
     images = {role: path for role, path in images.items() if path.endswith('.png')}
     record = datasets.read_provenance(files['provenance'])
     summary = (record or {}).get('summary')
-    if summary is None and os.path.exists(files['report']):
+    if summary is None and os.path.exists(table):
         try:
-            summary = summarize_velocity_report(pd.read_csv(files['report'], index_col=0))
+            frame = pd.read_csv(table, index_col=0)
+            summary = spacetime.space_time_summary(frame) if kind == 'line' else summarize_velocity_report(frame)
         except Exception:  # noqa: BLE001 - a damaged report just has no summary
-            log.warning('Could not read %s', files['report'], exc_info=True)
+            log.warning('Could not read %s', table, exc_info=True)
     existing_inputs = [path for path in inputs if os.path.exists(path)]
     modified = max((os.path.getmtime(path) for path in existing_inputs), default=None)
     return {
+        'kind': kind,
         'name': name,
         'record': record,
         'summary': summary,
         'complete': len(existing_inputs) == len(inputs),
         'images': [(role, path) for role, path in images.items() if os.path.exists(path)],
         'modified': datetime.datetime.fromtimestamp(modified) if modified else None,
-        'report_table': files['report'] if os.path.exists(files['report']) else None,
+        'report_table': table if os.path.exists(table) else None,
     }

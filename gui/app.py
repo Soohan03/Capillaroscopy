@@ -1,9 +1,10 @@
 """The main window: header with the pages, the recording list, the status bar.
 
-Pages: Analyze (velocity between two boxes), Capture (camera and recording)
-and Results (saved data sets and reports). The window owns the selected
-recording, the background jobs and the application-wide actions (stabilize,
-move to trash, settings).
+Pages: Centre line (velocity from the space-time diagram along a capillary),
+Two boxes (velocity from the delay between two boxes), Capture (camera and
+recording) and Results (saved data sets and reports). The window owns the
+selected recording, the background jobs and the application-wide actions
+(stabilize, move to trash, settings).
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from .capture_page import CapturePage
 from .dialogs import SettingsDialog, ShortcutsDialog, confirm, show_error
 from .jobs import JobManager
 from .library_view import LibraryPanel
+from .line_page import LinePage
 from .results_page import ResultsPage
 from .settings import APP_DIR, DataFolder, Settings
 from .theme import COLORS, icon, px
@@ -32,7 +34,8 @@ from .widgets import Tooltip, install_wheel_router
 
 log = logging.getLogger(__name__)
 
-PAGES = (('analyze', AnalyzePage), ('capture', CapturePage), ('results', ResultsPage))
+PAGES = (('line', LinePage), ('analyze', AnalyzePage), ('capture', CapturePage), ('results', ResultsPage))
+START_PAGE = 'line'
 TEXT_INPUT_CLASSES = ('Entry', 'TEntry', 'Spinbox', 'TSpinbox', 'TCombobox', 'Text', 'Listbox')
 
 
@@ -82,7 +85,7 @@ class App:
         self._build()
         self.jobs.add_listener(self._update_jobs)
         self.refresh_library()
-        self.show_page('analyze')
+        self.show_page(START_PAGE)
 
         root.bind_all('<KeyPress>', self._on_key, add='+')
         root.protocol('WM_DELETE_WINDOW', self.quit)
@@ -107,14 +110,15 @@ class App:
         brand.create_line(px(8), px(23), px(8), px(10), px(14), px(4), px(20), px(10), px(20), px(23),
                           fill=COLORS['record'], width=px(3.2), smooth=True, capstyle='round')
         ttk.Label(header, text='Capillaroscopy', style='Brand.Header.TLabel').pack(side='left', padx=(0, px(26)))
-        self.nav = tk.StringVar(value='analyze')
+        self.nav = tk.StringVar(value=START_PAGE)
         for key, page in PAGES:
             button = ttk.Radiobutton(header, text=page.title, value=key, variable=self.nav, style='Nav.Toolbutton',
                                      command=lambda k=key: self.show_page(k))
             button.pack(side='left')
-            Tooltip(button, {'analyze': 'Velocity between two boxes on a capillary (Ctrl + 1)',
-                             'capture': 'Camera preview and recording (Ctrl + 2)',
-                             'results': 'Saved data sets and their reports (Ctrl + 3)'}[key])
+            Tooltip(button, {'line': 'Velocity along a line drawn on a capillary (Ctrl + 1)',
+                             'analyze': 'Velocity between two boxes on a capillary: the original method (Ctrl + 2)',
+                             'capture': 'Camera preview and recording (Ctrl + 3)',
+                             'results': 'Saved data sets and their reports (Ctrl + 4)'}[key])
         help_button = ttk.Button(header, text='?', style='Header.TButton', command=self.show_shortcuts, width=2)
         help_button.pack(side='right')
         Tooltip(help_button, 'Keyboard and mouse (F1)')
