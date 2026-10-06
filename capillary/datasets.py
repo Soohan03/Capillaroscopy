@@ -6,21 +6,22 @@ without extension and ``<name>`` is what the user typed. The report code reads
 them back from there. Data sets written by earlier versions of the app use the
 same names and formats, so they stay readable.
 
-Velocity data set (Analyze tab)
+Velocity data set (Analyze page)
     ``___cross_correlation.csv``  mean intensity of box 1 (row 0) and box 2
                                   (row 1), one column per frame
     ``___distance_vector.csv``    box separation in pixels, one row per frame
     ``___blur_vector.csv``        sharpness score (`capillary.quality`), per frame
     ``___report.csv``             written by the report (`Caper.CrossCorrelation`)
 
-Flow data set (Flow tab)
-    ``___flow.pickle``            ``{frame: region of the flow frame}``
-    ``___mask.pickle``            ``{frame: region of the vessel mask}``
-
 Frames outside the measured range are NaN. Since the 2026-10 GUI rebuild each
-data set also gets ``___velocity_provenance.json`` or ``___flow_provenance.json``
-recording the video, boxes or region, frame range, calibration and software
-version behind it, so the numbers can be traced back and reproduced.
+data set also gets ``___velocity_provenance.json`` recording the video, boxes,
+frame range, calibration and software version behind it, so the numbers can be
+traced back and reproduced.
+
+Versions before 2026-10-06 also had an optical-flow measurement, saved as
+``___flow.pickle`` and ``___mask.pickle`` (plus ``___flow_provenance.json``)
+with plots in ``Reports/``. Nothing reads those any more; they are only moved
+to the trash together with their recording (`legacy_flow_dataset_paths`).
 
 Time points marked on a recording live in ``<stem>_registered_time_points.csv``
 (one underscore), in seconds from the start of the video.
@@ -32,7 +33,6 @@ import datetime
 import glob
 import json
 import os
-import pickle
 import re
 import subprocess
 from typing import Iterable, Optional
@@ -43,7 +43,6 @@ import pandas as pd
 SEPARATOR = '___'
 
 VELOCITY_INPUTS = ('cross_correlation', 'distance_vector', 'blur_vector')
-FLOW_INPUTS = ('flow', 'mask')
 
 #: Plot and summary files the velocity report writes to ``Reports/``, by role.
 #: Note the missing separator before the plot names, kept from the original.
@@ -55,11 +54,10 @@ VELOCITY_REPORT_FILES = {
     'summary': '___report_summary.csv',
 }
 
-#: Plot files the flow report writes to ``Reports/``.
-FLOW_REPORT_FILES = {
-    'up_and_down': '___up_and_down_.png',
-    'omnidirectional': '___omnidirectional_.png',
-}
+#: Files of an optical-flow data set from before 2026-10-06, after ``<stem>___<name>___``:
+#: the first marks the data set; the plots are in ``Reports/``, the rest in ``Statistics/``.
+LEGACY_FLOW_STATISTICS = ('flow.pickle', 'mask.pickle', 'flow_provenance.json')
+LEGACY_FLOW_REPORTS = ('up_and_down_.png', 'omnidirectional_.png')
 
 #: Shortest range the velocity report can use: its longest window is 301 frames.
 MIN_VELOCITY_FRAMES = 301
@@ -83,24 +81,10 @@ def velocity_dataset_files(statistics_dir: str, stem: str, name: str) -> dict:
     return files
 
 
-def flow_dataset_files(statistics_dir: str, stem: str, name: str) -> dict:
-    """Paths of a flow data set's files, keyed by part."""
-    prefix = dataset_prefix(statistics_dir, stem, name)
-    files = {part: f'{prefix}{SEPARATOR}{part}.pickle' for part in FLOW_INPUTS}
-    files['provenance'] = f'{prefix}{SEPARATOR}flow_provenance.json'
-    return files
-
-
 def velocity_report_files(reports_dir: str, stem: str, name: str) -> dict:
     """Paths of the files the velocity report writes to ``Reports/``."""
     prefix = dataset_prefix(reports_dir, stem, name)
     return {role: prefix + suffix for role, suffix in VELOCITY_REPORT_FILES.items()}
-
-
-def flow_report_files(reports_dir: str, stem: str, name: str) -> dict:
-    """Paths of the files the flow report writes to ``Reports/``."""
-    prefix = dataset_prefix(reports_dir, stem, name)
-    return {role: prefix + suffix for role, suffix in FLOW_REPORT_FILES.items()}
 
 
 def time_points_file(statistics_dir: str, stem: str) -> str:
@@ -120,11 +104,6 @@ def _names_with_suffix(directory: str, stem: str, suffix: str) -> list[str]:
 def list_velocity_datasets(statistics_dir: str, stem: str) -> list[str]:
     """Names of the velocity data sets saved for `stem`, sorted."""
     return _names_with_suffix(statistics_dir, stem, f'{SEPARATOR}cross_correlation.csv')
-
-
-def list_flow_datasets(statistics_dir: str, stem: str) -> list[str]:
-    """Names of the flow data sets saved for `stem`, sorted."""
-    return _names_with_suffix(statistics_dir, stem, f'{SEPARATOR}flow.pickle')
 
 
 def validate_dataset_name(name: str) -> Optional[str]:
@@ -218,26 +197,6 @@ def write_velocity_dataset(
     return {part: files[part] for part in VELOCITY_INPUTS}
 
 
-def write_flow_dataset(statistics_dir: str, stem: str, name: str, flow_regions: dict, mask_regions: dict) -> dict:
-    """Save the inputs of a flow report (two pickled ``{frame: region}`` dicts)."""
-    files = flow_dataset_files(statistics_dir, stem, name)
-    for part, data in (('flow', flow_regions), ('mask', mask_regions)):
-        with open(files[part], 'wb') as handle:
-            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    return {part: files[part] for part in FLOW_INPUTS}
-
-
-def load_flow_dataset(statistics_dir: str, stem: str, name: str) -> tuple[dict, dict]:
-    """The ``(flow, mask)`` dicts of a flow data set. Only open your own files:
-    pickles can run code when loaded."""
-    files = flow_dataset_files(statistics_dir, stem, name)
-    with open(files['flow'], 'rb') as handle:
-        flow = pickle.load(handle)
-    with open(files['mask'], 'rb') as handle:
-        mask = pickle.load(handle)
-    return flow, mask
-
-
 # --------------------------------------------------------------------- provenance
 
 def software_version(repository: Optional[str] = None) -> dict:
@@ -299,21 +258,23 @@ def read_provenance(path: str) -> Optional[dict]:
 
 # -------------------------------------------------------------------- whole data set
 
-def dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str, kind: str) -> list[str]:
-    """Every file belonging to one data set that exists on disk.
+def dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str) -> list[str]:
+    """Every file belonging to one velocity data set that exists on disk.
 
-    `kind` is ``'velocity'`` or ``'flow'``. Used to move a data set to the
-    trash as a unit; names are matched exactly, so ``Test`` never picks up the
-    files of ``Test2``.
+    Used to move a data set to the trash as a unit; names are matched exactly,
+    so ``Test`` never picks up the files of ``Test2``.
     """
-    if kind == 'velocity':
-        candidates = list(velocity_dataset_files(statistics_dir, stem, name).values())
-        candidates += list(velocity_report_files(reports_dir, stem, name).values())
-    elif kind == 'flow':
-        candidates = list(flow_dataset_files(statistics_dir, stem, name).values())
-        candidates += list(flow_report_files(reports_dir, stem, name).values())
-    else:
-        raise ValueError(f"kind must be 'velocity' or 'flow', got {kind!r}")
+    candidates = list(velocity_dataset_files(statistics_dir, stem, name).values())
+    candidates += list(velocity_report_files(reports_dir, stem, name).values())
+    return [path for path in candidates if os.path.exists(path)]
+
+
+def legacy_flow_dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str) -> list[str]:
+    """Every file of an optical-flow data set from before 2026-10-06 that exists on disk."""
+    statistics = dataset_prefix(statistics_dir, stem, name) + SEPARATOR
+    reports = dataset_prefix(reports_dir, stem, name) + SEPARATOR
+    candidates = [statistics + part for part in LEGACY_FLOW_STATISTICS]
+    candidates += [reports + part for part in LEGACY_FLOW_REPORTS]
     return [path for path in candidates if os.path.exists(path)]
 
 

@@ -60,28 +60,47 @@ def test_settings_first_start_and_unusable_values(tmp_path):
 # --------------------------------------------------------------------- the library
 
 def test_scan_groups_the_files_of_each_recording(folder):
+    assert not os.path.exists(folder.flows)  # new data folders get no Flows/ any more
+    assert library.scan(folder) == []
     touch(os.path.join(folder.recorded, 'FP01.avi'))
     touch(os.path.join(folder.stabilized, 'FP01.avi'))
-    touch(os.path.join(folder.flows, 'FP01.avi'))
-    touch(os.path.join(folder.flows, 'FP01.pickle'))
     touch(os.path.join(folder.recorded, 'FP01_b.avi'))
     touch(os.path.join(folder.stabilized, 'FP02.mp4'))
-    touch(os.path.join(folder.flows, 'FP02.avi'))                    # no summary yet: not usable
     touch(os.path.join(folder.stabilized, '.partial', 'FP03.avi'))   # an unfinished job's output
     touch(os.path.join(folder.stabilized, 'notes.txt'))
     for stem, name in (('FP01', 'Test'), ('FP01', 'Test2'), ('FP01_b', 'set1'), ('FP01', 'old___name'),
                        ('FP09', 'orphan')):
         touch(datasets.velocity_dataset_files(folder.statistics, stem, name)['cross_correlation'])
-    touch(datasets.flow_dataset_files(folder.statistics, 'FP01', 'region')['flow'])
 
     recordings = {recording.stem: recording for recording in library.scan(folder)}
     assert sorted(recordings) == ['FP01', 'FP01_b', 'FP02']
     fp01 = recordings['FP01']
-    assert fp01.video == fp01.stabilized and fp01.raw and fp01.has_flow
-    assert fp01.flow_summary.endswith('FP01.pickle')
-    assert fp01.velocity_sets == ['Test', 'Test2', 'old___name'] and fp01.flow_sets == ['region']
+    assert fp01.video == fp01.stabilized and fp01.raw
+    assert fp01.velocity_sets == ['Test', 'Test2', 'old___name'] and fp01.dataset_count == 3
     assert recordings['FP01_b'].velocity_sets == ['set1'] and recordings['FP01_b'].video.endswith('FP01_b.avi')
-    assert recordings['FP02'].is_stabilized and not recordings['FP02'].has_flow
+    assert recordings['FP02'].is_stabilized and recordings['FP02'].dataset_count == 0
+    assert all(recording.legacy_flow_files == [] for recording in recordings.values())
+
+
+def old_flow_files(folder, stem, name):
+    """The files the removed optical-flow feature left for `stem`: flow video, summary, one data set."""
+    paths = [os.path.join(folder.flows, stem + '.avi'), os.path.join(folder.flows, stem + '.pickle')]
+    prefix = f'{stem}___{name}___'
+    paths += [os.path.join(folder.statistics, prefix + part) for part in ('flow.pickle', 'mask.pickle')]
+    paths += [os.path.join(folder.reports, prefix + part) for part in ('up_and_down_.png', 'omnidirectional_.png')]
+    return [touch(path, path.encode()) for path in paths]
+
+
+def test_old_flow_files_are_not_listed_but_belong_to_their_recording(folder):
+    touch(os.path.join(folder.stabilized, 'FP01.avi'))
+    old = old_flow_files(folder, 'FP01', 'region')
+    old_flow_files(folder, 'FP04', '')   # flow of a recording whose videos are gone
+
+    recordings = library.scan(folder)
+    assert [recording.stem for recording in recordings] == ['FP01']
+    fp01 = recordings[0]
+    assert fp01.velocity_sets == [] and fp01.dataset_count == 0
+    assert sorted(fp01.legacy_flow_files) == sorted(old)
 
 
 # ------------------------------------------------------------------------ the trash
@@ -90,11 +109,11 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
     stem = 'FP01_W_14-Oct-2019_08-36-26'
     videos = {path: path.encode() for path in (
         os.path.join(folder.recorded, stem + '.avi'),
-        os.path.join(folder.stabilized, stem + '.avi'),
-        os.path.join(folder.flows, stem + '.avi'),
-        os.path.join(folder.flows, stem + '.pickle'))}
+        os.path.join(folder.stabilized, stem + '.avi'))}
     for path, content in videos.items():
         touch(path, content)
+    old = old_flow_files(folder, stem, 'Test_1')
+    videos[old[0]] = old[0].encode()     # the old flow video shares the file name too
     files = datasets.velocity_dataset_files(folder.statistics, stem, 'Test')
     for part in datasets.VELOCITY_INPUTS:
         touch(files[part], part.encode())
@@ -102,7 +121,7 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
 
     recording = library.scan(folder)[0]
     paths = tasks.recording_files(folder, recording)
-    assert len(paths) == 8
+    assert len(paths) == 2 + 3 + 1 + len(old)
     target = tasks.move_to_trash(folder, paths, recording.stem)
 
     assert os.path.dirname(target) == folder.trash
@@ -112,6 +131,9 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
         with open(os.path.join(target, tasks.relative_path(folder, path)), 'rb') as handle:
             assert handle.read() == content
     assert os.path.isfile(os.path.join(target, 'Statistics', os.path.basename(files['cross_correlation'])))
+    for path in old:
+        assert not os.path.exists(path)
+        assert os.path.isfile(os.path.join(target, tasks.relative_path(folder, path)))
     assert library.scan(folder) == []
 
 
@@ -124,7 +146,8 @@ def test_trash_folders_never_collide(folder):
 
 
 def test_relative_path(folder, tmp_path):
-    assert tasks.relative_path(folder, os.path.join(folder.flows, 'x.avi')) == os.path.join('Flows', 'x.avi')
+    assert tasks.relative_path(folder, os.path.join(folder.stabilized, 'x.avi')) == \
+        os.path.join('StabilizedVideos', 'x.avi')
     assert tasks.relative_path(folder, str(tmp_path / 'elsewhere' / 'x.avi')) == 'x.avi'
 
 

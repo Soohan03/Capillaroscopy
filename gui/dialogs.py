@@ -145,7 +145,7 @@ class SettingsDialog(Dialog):
             ttk.Label(body, style='Panel.TLabel', wraplength=px(500), justify='left',
                       text='Choose the folder that holds your research data. The app keeps its videos, '
                            'measurements and reports in these subfolders, and creates any that are missing:\n'
-                           'RecordedVideos, StabilizedVideos, Flows, Statistics and Reports.').pack(
+                           'RecordedVideos, StabilizedVideos, Statistics and Reports.').pack(
                 anchor='w', pady=(px(8), px(14)))
         else:
             ttk.Label(body, text='Settings', style='Title.Panel.TLabel').pack(anchor='w', pady=(0, px(12)))
@@ -266,11 +266,6 @@ SHORTCUTS = (
         ('X', 'Swap the boxes'),
         ('Delete', 'Remove the selected box'),
     )),
-    ('Region (Flow)', (
-        ('Drag on the video', 'Draw the region'),
-        ('Drag inside / on a corner', 'Move / resize it'),
-        ('V', 'Show or hide the vessel mask'),
-    )),
     ('Measurement', (
         ('I / O', 'Start / end the range at the current frame'),
         ('R', 'Reset the range to the whole video'),
@@ -278,7 +273,7 @@ SHORTCUTS = (
         ('Right-click a marker', 'Remove it'),
     )),
     ('Window', (
-        ('Ctrl + 1 … 4', 'Analyze, Flow, Capture, Results'),
+        ('Ctrl + 1 … 3', 'Analyze, Capture, Results'),
         ('Ctrl + R', 'Look for new videos and data sets'),
         ('Ctrl + ,', 'Settings'),
         ('F1 or ?', 'This list'),

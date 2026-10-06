@@ -20,8 +20,7 @@ from .widgets import Tooltip
 class Player:
     """Plays a `FrameSource` into ``on_frame(index, frame)``; ``on_state()`` on play/pause changes.
 
-    `on_skipped(index, frame)`, if set, receives the frames read but not shown
-    when playing faster than real time (the Flow tab averages over them).
+    Faster than real time, frames in between are skipped, not read.
     """
 
     SPEEDS = (0.25, 0.5, 1.0, 2.0, 4.0)
@@ -30,7 +29,6 @@ class Player:
         self.widget = widget
         self.on_frame = on_frame
         self.on_state = on_state
-        self.on_skipped: Optional[Callable] = None
         self.source: Optional[FrameSource] = None
         self.index = 0
         self.playing = False
@@ -124,11 +122,6 @@ class Player:
             self.show(self.frame_count - 1)
             self.pause()
             return
-        if step > 1 and self.on_skipped is not None:
-            for skipped in range(self.index + 1, target):
-                frame = self.source.read(skipped)
-                if frame is not None:
-                    self.on_skipped(skipped, frame)
         if not self.show(target):
             self.pause()
             return

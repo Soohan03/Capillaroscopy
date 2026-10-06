@@ -22,9 +22,6 @@ def test_file_names_follow_the_legacy_layout(tmp_path):
     reports = datasets.velocity_report_files(str(tmp_path), STEM, 'set1')
     assert os.path.basename(reports['velocity']) == f'{STEM}___set1velocity.png'
     assert os.path.basename(reports['summary']) == f'{STEM}___set1___report_summary.csv'
-
-    flow = datasets.flow_report_files(str(tmp_path), STEM, 'a')
-    assert os.path.basename(flow['up_and_down']) == f'{STEM}___a___up_and_down_.png'
     assert os.path.basename(datasets.time_points_file(str(tmp_path), STEM)) == f'{STEM}_registered_time_points.csv'
 
 
@@ -36,12 +33,10 @@ def touch(path):
 def test_listing_matches_names_exactly(tmp_path):
     for name in ('Test', 'Test2', 'Test_1'):
         touch(datasets.velocity_dataset_files(str(tmp_path), STEM, name)['cross_correlation'])
-    touch(datasets.flow_dataset_files(str(tmp_path), STEM, '')['flow'])
     # another recording whose name starts the same way must not be listed
     touch(datasets.velocity_dataset_files(str(tmp_path), STEM + 'b', 'Other')['cross_correlation'])
 
     assert datasets.list_velocity_datasets(str(tmp_path), STEM) == ['Test', 'Test2', 'Test_1']
-    assert datasets.list_flow_datasets(str(tmp_path), STEM) == ['']
 
 
 def test_listing_copes_with_glob_characters_in_the_stem(tmp_path):
@@ -59,9 +54,29 @@ def test_dataset_paths_do_not_mix_up_similar_names(tmp_path):
             touch(path)
         for path in datasets.velocity_report_files(str(reports), STEM, name).values():
             touch(path)
-    paths = datasets.dataset_paths(str(statistics), str(reports), STEM, 'Test', 'velocity')
+    paths = datasets.dataset_paths(str(statistics), str(reports), STEM, 'Test')
     assert len(paths) == 10
     assert not any('Test2' in os.path.basename(p) for p in paths)
+
+
+def test_old_flow_data_sets_are_found_with_their_plots(tmp_path):
+    statistics, reports = tmp_path / 'Statistics', tmp_path / 'Reports'
+    statistics.mkdir()
+    reports.mkdir()
+    # the names an optical-flow data set had before 2026-10-06, including one saved without a name
+    for name in ('', 'Test_1', 'Test_12'):
+        for part in ('flow.pickle', 'mask.pickle'):
+            touch(statistics / f'{STEM}___{name}___{part}')
+    for part in ('up_and_down_.png', 'omnidirectional_.png'):
+        touch(reports / f'{STEM}___Test_1___{part}')
+    touch(statistics / f'{STEM}___Test_1___flow_provenance.json')
+
+    paths = datasets.legacy_flow_dataset_paths(str(statistics), str(reports), STEM, 'Test_1')
+    assert sorted(os.path.basename(p) for p in paths) == sorted(
+        f'{STEM}___Test_1___{part}' for part in ('flow.pickle', 'mask.pickle', 'flow_provenance.json',
+                                                  'up_and_down_.png', 'omnidirectional_.png'))
+    assert [os.path.basename(p) for p in datasets.legacy_flow_dataset_paths(
+        str(statistics), str(reports), STEM, '')] == [f'{STEM}______flow.pickle', f'{STEM}______mask.pickle']
 
 
 @pytest.mark.parametrize('name', ['set1', 'Före test', 'baseline-2.1', 'a b c'])
@@ -117,16 +132,6 @@ def test_velocity_dataset_layout(tmp_path):
 
     sharpness = pd.read_csv(written['blur_vector'], index_col=0)['0']
     np.testing.assert_allclose(sharpness.iloc[3:8], blur)
-
-
-def test_flow_dataset_round_trip(tmp_path):
-    flow = {0: np.nan, 1: np.ones((2, 2, 3), dtype=np.uint8)}
-    mask = {0: np.nan, 1: np.ones((2, 2), dtype=np.uint8)}
-    datasets.write_flow_dataset(str(tmp_path), STEM, 'f', flow, mask)
-    loaded_flow, loaded_mask = datasets.load_flow_dataset(str(tmp_path), STEM, 'f')
-    assert np.isnan(loaded_flow[0])
-    np.testing.assert_array_equal(loaded_flow[1], flow[1])
-    np.testing.assert_array_equal(loaded_mask[1], mask[1])
 
 
 def test_provenance_is_strict_json(tmp_path):

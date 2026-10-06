@@ -1,7 +1,7 @@
 """Start the capillaroscopy analysis tool: ``python3 Application.py``.
 
 The window itself lives in the `gui` package (see gui/app.py), the measurement
-in `capillary`, stabilization, optical flow and the reports in Caper.py.
+in `capillary`, stabilization and the reports in Caper.py.
 """
 import logging
 import logging.handlers

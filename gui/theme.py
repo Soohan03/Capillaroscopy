@@ -42,7 +42,6 @@ COLORS = {
     'danger_soft': '#FBE3E3',
     'box1': '#FF9F1C',          # box 1, downstream (orange)
     'box2': '#29B2FF',          # box 2, upstream (sky blue)
-    'region': '#3DDC84',        # Flow tab region
     'marker': '#E5484D',        # time points, red like the lines in the report
     'record': '#E5484D',
 }

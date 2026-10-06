@@ -224,8 +224,6 @@ class RecordingList(tk.Canvas):
                 chips.append(('Stabilized', COLORS['success'], COLORS['success_soft']))
             elif item.raw:
                 chips.append(('Raw only', COLORS['warning'], COLORS['warning_soft']))
-            if item.has_flow:
-                chips.append(('Flow', COLORS['accent'], COLORS['accent_soft']))
             if item.dataset_count:
                 label = f'{item.dataset_count} data set' + ('s' if item.dataset_count != 1 else '')
                 chips.append((label, COLORS['muted'], COLORS['panel_alt'] if not selected else COLORS['panel']))
@@ -313,10 +311,7 @@ class LibraryPanel(ttk.Frame):
         self._apply_filter()
         self.list.set_selected(selected_stem)
         for recording in recordings:
-            if recording.video:
-                self.loader.request(recording.stem, recording.video)
-            elif recording.flow:
-                self.loader.request(recording.stem, recording.flow)
+            self.loader.request(recording.stem, recording.video)
         total = len(recordings)
         self.count.configure(text=str(total) if total else '')
 
@@ -341,20 +336,14 @@ class LibraryPanel(ttk.Frame):
     def _context(self, recording, event):
         menu = tk.Menu(self, tearoff=False)
         app = self.app
-        menu.add_command(label='Measure velocity', command=lambda: app.show_page('analyze'),
-                         state='normal' if recording.video else 'disabled')
-        menu.add_command(label='Measure flow', command=lambda: app.show_page('flow'),
-                         state='normal' if recording.has_flow else 'disabled')
+        menu.add_command(label='Measure velocity', command=lambda: app.show_page('analyze'))
         menu.add_command(label='Results', command=lambda: app.show_page('results'))
         menu.add_separator()
         menu.add_command(label='Re-stabilize…' if recording.is_stabilized else 'Stabilize',
                          command=lambda: app.stabilize(recording),
                          state='normal' if recording.raw else 'disabled')
-        menu.add_command(label='Recompute optical flow…' if recording.has_flow else 'Compute optical flow',
-                         command=lambda: app.compute_flow(recording),
-                         state='normal' if recording.stabilized else 'disabled')
         menu.add_separator()
-        menu.add_command(label='Show in folder', command=lambda: app.open_folder(recording.video or recording.flow))
+        menu.add_command(label='Show in folder', command=lambda: app.open_folder(recording.video))
         menu.add_command(label='Move to trash…', command=lambda: app.trash_recording(recording))
         try:
             menu.tk_popup(event.x_root, event.y_root)
@@ -365,12 +354,8 @@ class LibraryPanel(ttk.Frame):
         app = self.app
         self.menu.delete(0, 'end')
         pending_stabilize = [r for r in self.recordings if r.raw and not r.is_stabilized]
-        pending_flow = [r for r in self.recordings if r.is_stabilized and not r.has_flow]
         self.menu.add_command(label=f'Stabilize all raw recordings ({len(pending_stabilize)})',
                               command=lambda: app.stabilize_many(pending_stabilize),
                               state='normal' if pending_stabilize else 'disabled')
-        self.menu.add_command(label=f'Compute missing optical flow ({len(pending_flow)})',
-                              command=lambda: app.compute_flow_many(pending_flow),
-                              state='normal' if pending_flow else 'disabled')
         self.menu.add_separator()
         self.menu.add_command(label='Open the data folder', command=lambda: app.open_folder(app.folder.root))

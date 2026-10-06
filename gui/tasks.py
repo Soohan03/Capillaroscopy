@@ -23,7 +23,7 @@ import pandas as pd
 import Caper
 from capillary import datasets
 from capillary.intensity import extract_traces
-from capillary.measure import measure_flow, measure_velocity
+from capillary.measure import measure_velocity
 from capillary.roi import ROI
 from capillary.velocity import (DEFAULT_WINDOWS, lag_and_correlation, resolvable_range, velocity_from_lag,
                                 velocity_summary)
@@ -48,17 +48,14 @@ def _remove(path: Optional[str]) -> None:
 
 
 def _release(process) -> None:
-    """Close the captures and writer a Caper processing object holds."""
-    for owner in (process, getattr(process, 'video', None)):
-        if owner is None:
-            continue
-        for attribute in ('cap', 'writer'):
-            handle = getattr(owner, attribute, None)
-            if handle is not None:
-                try:
-                    handle.release()
-                except Exception:  # noqa: BLE001 - best effort while cleaning up
-                    pass
+    """Close the capture and writer a Caper processing object holds."""
+    for attribute in ('cap', 'writer'):
+        handle = getattr(process, attribute, None)
+        if handle is not None:
+            try:
+                handle.release()
+            except Exception:  # noqa: BLE001 - best effort while cleaning up
+                pass
 
 
 def available_memory_bytes() -> Optional[int]:
@@ -125,9 +122,9 @@ def relative_path(folder: DataFolder, path: str) -> str:
 def move_to_trash(folder: DataFolder, paths: Iterable[str], label: str) -> str:
     """Move `paths` into a new, dated folder under ``.trash``; returns that folder.
 
-    Each file keeps its place relative to the data folder, so the raw,
-    stabilized and flow videos of a recording (which share a file name) stay
-    apart and can be put back where they were.
+    Each file keeps its place relative to the data folder, so the raw and
+    stabilized videos of a recording (which share a file name) stay apart and
+    can be put back where they were.
     """
     stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     target = os.path.join(folder.trash, f'{stamp}_{datasets.safe_file_part(label)}')
@@ -149,13 +146,12 @@ def move_to_trash(folder: DataFolder, paths: Iterable[str], label: str) -> str:
 
 
 def recording_files(folder: DataFolder, recording: Recording) -> list[str]:
-    """Every file that belongs to `recording`: videos, data sets, reports, time points."""
-    paths = [recording.raw, recording.stabilized, recording.flow, recording.flow_summary]
+    """Every file that belongs to `recording`: videos, data sets, reports, time points, old flow files."""
+    paths = [recording.raw, recording.stabilized]
     for name in recording.velocity_sets:
-        paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, 'velocity')
-    for name in recording.flow_sets:
-        paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, 'flow')
+        paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
     paths.append(datasets.time_points_file(folder.statistics, recording.stem))
+    paths += recording.legacy_flow_files
     seen, result = set(), []
     for path in paths:
         if path and path not in seen and os.path.exists(path):
@@ -194,38 +190,6 @@ def stabilize(job, folder: DataFolder, raw_path: str) -> str:
     finally:
         _release(process)
         _remove(partial)
-    return final
-
-
-def compute_flow(job, folder: DataFolder, stabilized_path: str) -> str:
-    """Dense optical flow of a stabilized video into Flows/ (Caper.FlowVideo)."""
-    name = os.path.basename(stabilized_path)
-    final = os.path.join(folder.flows, name)
-    final_summary = os.path.splitext(final)[0] + '.pickle'
-    partial_dir = folder.partial(folder.flows)
-    os.makedirs(partial_dir, exist_ok=True)
-    partial = os.path.join(partial_dir, name)
-    partial_summary = os.path.splitext(partial)[0] + '.pickle'
-
-    job.report(0.0, 'Computing optical flow')
-    process = Caper.FlowVideo(path=stabilized_path)
-    process.output_path = partial
-    total = max(1, process.video.number_of_frames_)
-    try:
-        while process.current_stage != 'finished':
-            job.report(max(0, process.video.get_frame_number()) / total, 'Computing optical flow')
-            process.update()
-        _release(process)
-        previous = [path for path in (final, final_summary) if os.path.exists(path)]
-        if previous:
-            move_to_trash(folder, previous, f'{os.path.splitext(name)[0]} previous optical flow')
-        # the summary first: the library lists a flow video only once its summary exists
-        os.replace(partial_summary, final_summary)
-        os.replace(partial, final)
-    finally:
-        _release(process)
-        _remove(partial)
-        _remove(partial_summary)
     return final
 
 
@@ -273,15 +237,6 @@ def velocity_series(report: pd.DataFrame, max_points: int = 600) -> dict:
     step = max(1, int(np.ceil(len(smoothed) / max_points)))
     times = pd.to_numeric(pd.Series(report.index), errors='coerce').to_numpy(dtype=float)
     return {'t': times[::step].tolist(), 'v': smoothed.to_numpy(dtype=float)[::step].tolist()}
-
-
-def flow_summary(up, down, both) -> dict:
-    def median(values):
-        values = np.asarray(values, dtype=float)
-        values = values[np.isfinite(values)]
-        return float(np.median(values)) if values.size else float('nan')
-    return {'frames': int(np.isfinite(np.asarray(both, dtype=float)).sum()),
-            'median_up': median(up), 'median_down': median(down), 'median_both': median(both)}
 
 
 def _video_record(path: str, info) -> dict:
@@ -345,56 +300,10 @@ def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, v
         }
         datasets.write_provenance(files['provenance'], record)
     except BaseException:
-        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name, 'velocity'):
+        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name):
             _remove(path)
         raise
-    return {'kind': 'velocity', 'stem': stem, 'name': name, 'summary': summary,
-            'series': velocity_series(report), 'record': record}
-
-
-def measure_flow_dataset(job, *, folder: DataFolder, stem: str, name: str, flow_path: str, mask,
-                         bounds, start: int, end: int, mm_per_pixel: float) -> dict:
-    """Collect the region `bounds` of flow frames ``start..end`` (inclusive), save it, write the report."""
-    job.report(0.0, 'Reading flow frames')
-    info = probe_video(flow_path)
-    flow, mask_regions, frames_read = measure_flow(flow_path, mask, bounds, start, end + 1,
-                                                   progress=lambda p: job.report(0.55 * p, 'Reading flow frames'),
-                                                   should_cancel=job.cancelled)
-    if frames_read == 0:
-        raise ValueError('No frames could be read from the flow video in that range.')
-    files = datasets.flow_dataset_files(folder.statistics, stem, name)
-    try:
-        job.report(0.6, 'Saving the data set')
-        datasets.write_flow_dataset(folder.statistics, stem, name, flow, mask_regions)
-        job.report(0.75, 'Drawing the flow report')
-        up, down, both = Caper.generate_flow_report(flow, mask_regions, info.fps, mm_per_pixel,
-                                                    datasets.dataset_prefix(folder.reports, stem, name))
-        summary = flow_summary(up, down, both)
-        x_left, x_right, y_top, y_bottom = (int(v) for v in bounds)
-        record = {
-            'kind': 'flow',
-            'dataset': name,
-            'recording': stem,
-            'created': datetime.datetime.now().isoformat(timespec='seconds'),
-            'video': _video_record(flow_path, info),
-            'frames': {'first': start, 'last': start + frames_read - 1, 'count': frames_read},
-            'region': {'x_left': x_left, 'x_right': x_right, 'y_top': y_top, 'y_bottom': y_bottom,
-                       'width_px': x_right - x_left, 'height_px': y_bottom - y_top,
-                       'vessel_pixels': int(np.sum(mask[y_top:y_bottom, x_left:x_right])),
-                       'coordinates': 'slice bounds in video pixels: frame[y_top:y_bottom, x_left:x_right]'},
-            'mm_per_pixel': mm_per_pixel,
-            'units': 'flow per frame: optical-flow displacement summed over the region, in mm, '
-                     'divided by the number of vessel pixels in it',
-            'summary': summary,
-            'software': datasets.software_version(),
-        }
-        datasets.write_provenance(files['provenance'], record)
-    except BaseException:
-        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name, 'flow'):
-            _remove(path)
-        raise
-    return {'kind': 'flow', 'stem': stem, 'name': name, 'summary': summary, 'record': record,
-            'series': {'t': (np.arange(len(both)) / (info.fps or 30)).tolist(), 'v': np.asarray(both).tolist()}}
+    return {'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report), 'record': record}
 
 
 def regenerate_velocity_report(job, *, folder: DataFolder, stem: str, name: str, fps: float,
@@ -413,34 +322,20 @@ def regenerate_velocity_report(job, *, folder: DataFolder, stem: str, name: str,
         record['time_points_s'] = sorted(float(t) for t in time_points)
         record['report_regenerated'] = datetime.datetime.now().isoformat(timespec='seconds')
         datasets.write_provenance(provenance, record)
-    return {'kind': 'velocity', 'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report)}
-
-
-def regenerate_flow_report(job, *, folder: DataFolder, stem: str, name: str, fps: float, mm_per_pixel: float) -> dict:
-    job.report(0.0, 'Loading the flow data set')
-    flow, mask = datasets.load_flow_dataset(folder.statistics, stem, name)
-    job.report(0.4, 'Drawing the flow report')
-    up, down, both = Caper.generate_flow_report(flow, mask, fps, mm_per_pixel,
-                                                datasets.dataset_prefix(folder.reports, stem, name))
-    return {'kind': 'flow', 'stem': stem, 'name': name, 'summary': flow_summary(up, down, both)}
+    return {'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report)}
 
 
 # ------------------------------------------------------------------ results browsing
 
-def dataset_info(folder: DataFolder, stem: str, name: str, kind: str) -> dict:
+def dataset_info(folder: DataFolder, stem: str, name: str) -> dict:
     """What the Results page shows for one data set (run off the Tk thread)."""
-    if kind == 'velocity':
-        files = datasets.velocity_dataset_files(folder.statistics, stem, name)
-        inputs = [files[part] for part in datasets.VELOCITY_INPUTS]
-        images = datasets.velocity_report_files(folder.reports, stem, name)
-        images = {role: path for role, path in images.items() if path.endswith('.png')}
-    else:
-        files = datasets.flow_dataset_files(folder.statistics, stem, name)
-        inputs = [files[part] for part in datasets.FLOW_INPUTS]
-        images = datasets.flow_report_files(folder.reports, stem, name)
+    files = datasets.velocity_dataset_files(folder.statistics, stem, name)
+    inputs = [files[part] for part in datasets.VELOCITY_INPUTS]
+    images = datasets.velocity_report_files(folder.reports, stem, name)
+    images = {role: path for role, path in images.items() if path.endswith('.png')}
     record = datasets.read_provenance(files['provenance'])
     summary = (record or {}).get('summary')
-    if summary is None and kind == 'velocity' and os.path.exists(files['report']):
+    if summary is None and os.path.exists(files['report']):
         try:
             summary = summarize_velocity_report(pd.read_csv(files['report'], index_col=0))
         except Exception:  # noqa: BLE001 - a damaged report just has no summary
@@ -448,12 +343,11 @@ def dataset_info(folder: DataFolder, stem: str, name: str, kind: str) -> dict:
     existing_inputs = [path for path in inputs if os.path.exists(path)]
     modified = max((os.path.getmtime(path) for path in existing_inputs), default=None)
     return {
-        'kind': kind,
         'name': name,
         'record': record,
         'summary': summary,
         'complete': len(existing_inputs) == len(inputs),
         'images': [(role, path) for role, path in images.items() if os.path.exists(path)],
         'modified': datetime.datetime.fromtimestamp(modified) if modified else None,
-        'report_table': files.get('report') if kind == 'velocity' and os.path.exists(files.get('report', '')) else None,
+        'report_table': files['report'] if os.path.exists(files['report']) else None,
     }

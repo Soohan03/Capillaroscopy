@@ -1,12 +1,11 @@
 """Background jobs, so long work never freezes the window.
 
-The old GUI ran stabilization and optical flow one frame per tick of its main
-loop, inside the UI. Here a job is a function run on a worker thread: it gets
-its `Job` to report progress to (reporting is also where cancellation is
-noticed) and its result or error comes back on the Tk thread through the
-callbacks given to `JobManager.submit`. Jobs in the same lane run one after
-another; lanes run side by side, so a measurement need not wait for a long
-optical-flow computation.
+The old GUI ran stabilization one frame per tick of its main loop, inside the
+UI. Here a job is a function run on a worker thread: it gets its `Job` to
+report progress to (reporting is also where cancellation is noticed) and its
+result or error comes back on the Tk thread through the callbacks given to
+`JobManager.submit`. Jobs in the same lane run one after another; lanes run
+side by side, so a measurement need not wait for a long stabilization.
 
 Nothing here touches Tk except through the `after` method of the widget the
 manager is given; the worker threads never call Tk.

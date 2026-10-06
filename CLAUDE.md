@@ -25,7 +25,7 @@ without asking:
    (camera-not-found warnings are normal and harmless).
 3. Tell the user the app window should now be visible via WSLg, and remind them:
    - The list on the left shows the recordings (the 8 videos in `StabilizedVideos/`);
-     right-click one to stabilize it, compute its optical flow or move it to the trash.
+     right-click one to stabilize it or move it to the trash.
    - Analyze page: click places box 1 (orange, downstream), the next click box 2 (blue,
      upstream); right-click or Ctrl+click places box 2, dragging moves a box, WASD
      nudges the selected box (Shift: both). Space plays/pauses, ←/→ step a frame, Q/E
@@ -41,7 +41,8 @@ If the user reports the app froze or crashed, check the task output file and
 
 - `RecordedVideos/` — raw captures (currently empty)
 - `StabilizedVideos/` — stabilized videos ready for analysis (8 videos as of 2026-06)
-- `Flows/` — optical-flow videos, each with a `.pickle` summary (vessel mask)
+- `Flows/` — optical-flow video of one recording, from before the flow feature was
+  removed (2026-10-06); kept on disk, not shown, trashed along with its recording
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time points
 - `Reports/` — plots and summary tables written from the data sets
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
@@ -51,10 +52,14 @@ If the user reports the app froze or crashed, check the task output file and
 
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
 recording list, keyboard routing) → one module per page (`gui/analyze_page.py`,
-`flow_page.py`, `capture_page.py`, `results_page.py`; Analyze and Flow share
-`gui/measure_page.py`). Long work runs as background jobs: `gui/jobs.py` runs them,
-`gui/tasks.py` holds the work and has no Tk in it. Stabilization, optical flow and the
-report plots are in `Caper.py`.
+`capture_page.py`, `results_page.py`; Analyze builds on `gui/measure_page.py`).
+Long work runs as background jobs: `gui/jobs.py` runs them, `gui/tasks.py` holds the
+work and has no Tk in it. Stabilization and the report plots are in `Caper.py`.
+
+The app measures velocity only. The optical-flow measurement (Flow page, flow
+videos, flow data sets) was removed on 2026-10-06 because it was not a valid measure
+as implemented and not an endpoint; see that DEVLOG entry. Old flow files are listed
+on a recording only so that moving it to the trash takes them along.
 
 ## Analysis engine (`capillary/`)
 
@@ -66,7 +71,7 @@ frame range read straight from the file) and save through `capillary.datasets` i
 file formats the report has always read.
 
 - Batch: `python3 -m capillary.cli <video> --roi1 x,y --roi2 x,y --out report.csv`
-- Tests: `python3 -m pytest` (154 tests, ~16 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (141 tests, ~14 s; synthetic videos with known velocity,
   plus the GUI's non-visual logic; no display needed)
 
 Velocities computed before 2026-09-17 are biased — the lag was one frame too large on
@@ -84,7 +89,6 @@ the 2026-10-05 GUI rebuild entry.
 - **Stabilization needs the whole video in memory twice, as float64**: about 21 GB for
   one of the existing 2–3 minute clips. The app refuses to start a stabilization that
   would need more than 85% of the available memory, instead of crashing.
-- Flow report values are optical-flow displacement **per frame** (mm/frame), not mm/s.
 - Recordings are stamped 30 fps whatever the camera delivers; the Capture page warns
   when the measured rate differs by more than 5%. Recording has not been tried with a
   real camera since the rebuild (none is reachable under WSL).
@@ -95,4 +99,3 @@ the 2026-10-05 GUI rebuild entry.
   `Widaeus/capillaroscopy` is `upstream`, used only to pull updates. `main` is protected:
   make changes on a branch and open a pull request. `Thesis/` (LaTeX draft + bibliography)
   and `.claude/` are untracked by choice. Ask before committing either.
-- `feat/gui-rebuild` is based on `refactor/remove-dead-code`; merge that one first.

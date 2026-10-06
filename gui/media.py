@@ -11,22 +11,17 @@ import numpy as np
 
 from capillary.video import probe_video
 
-#: The Flow tab shows the mean of the last frames, like the old Flow tab did.
-FLOW_ROLLING_FRAMES = 10
-
 
 class FrameSource:
     """Random-access frame reader on top of one ``cv2.VideoCapture``.
 
     Sequential reads cost one decode; any other index seeks first. Frames come
-    back single-channel (channel 0, what the measurement samples) unless
-    `color` is set, as for flow videos whose channels carry different data.
+    back single-channel (channel 0, what the measurement samples).
     """
 
-    def __init__(self, path: str, color: bool = False):
+    def __init__(self, path: str):
         info = probe_video(path)
         self.path = path
-        self.color = color
         self.fps = info.fps
         self.frame_count = max(0, info.frame_count)
         self.width = info.width
@@ -50,38 +45,12 @@ class FrameSource:
             self._next = -1
             return None
         self._next = index + 1
-        if self.color or frame.ndim == 2:
-            return frame
-        return frame[:, :, 0]
+        return frame if frame.ndim == 2 else frame[:, :, 0]
 
     def close(self) -> None:
         if self._cap is not None:
             self._cap.release()
             self._cap = None
-
-
-def flow_to_rgb(hsv_frames, brightness: float = 4.0) -> np.ndarray:
-    """Display image of a flow video: mean of `hsv_frames`, hue = direction, brightness = speed.
-
-    The old Flow tab multiplied the converted frame by 4 in uint8, which wraps
-    around (fast flow showed up dark) and fed BGR to a widget expecting RGB
-    (red and blue swapped). Here the brightening saturates and the channels are
-    in the right order. Only the picture changes; measurements use the raw frames.
-    """
-    stack = np.asarray(hsv_frames)
-    mean = stack.mean(axis=0).astype(np.uint8) if stack.ndim == 4 else stack
-    rgb = cv2.cvtColor(mean, cv2.COLOR_HSV2RGB)
-    return cv2.convertScaleAbs(rgb, alpha=brightness)
-
-
-def tint(rgb: np.ndarray, mask: np.ndarray, color=(61, 220, 132), alpha: float = 0.45) -> np.ndarray:
-    """`rgb` with the pixels where `mask` is set blended towards `color`."""
-    out = rgb.copy()
-    selected = mask.astype(bool)
-    if selected.any():
-        blended = out[selected].astype(np.float32) * (1 - alpha) + np.array(color, np.float32) * alpha
-        out[selected] = blended.astype(np.uint8)
-    return out
 
 
 def make_thumbnail(path: str, max_width: int, max_height: int):

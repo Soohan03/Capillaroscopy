@@ -1,6 +1,4 @@
 """Small helpers shared by the GUI and the video classes in Caper.py."""
-import pickle
-
 import cv2
 import numpy as np
 from scipy import signal
@@ -8,14 +6,6 @@ from scipy import signal
 # The sharpness score moved into the measurement engine; re-exported for Caper.py.
 from capillary.quality import calculate_blur  # noqa: F401
 
-
-def pickle_save(file,filename):
-    with open(filename, 'wb') as handle:
-        pickle.dump(file, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-def pickle_load(filename):
-    with open(filename, 'rb') as handle:
-        return pickle.load(handle)
 
 def clahe(img,clip_limit = 7.65,tileGridSize=(3,3)): #255
     clahe_filter = cv2.createCLAHE(clipLimit=clip_limit,tileGridSize=tileGridSize)
