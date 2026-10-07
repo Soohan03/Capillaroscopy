@@ -6,6 +6,45 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-07 — Pull requests #5 and #6 merged; `settings.csv` and `Validation/` no longer tracked
+
+**Branch:** `chore/untrack-local-data`, from `main` at `2186904`.
+
+**Merged.** The user merged #5 (`feat/centreline-velocity`, the centre-line
+method) and #6 (`feat/observer-validation`, the Validation page) on GitHub,
+both with merge commits, and GitHub deleted the two branches. Locally, `main`
+was fast-forwarded to `2186904`. Every local branch already merged into it
+was deleted (`git branch -d`, which refuses unmerged ones):
+`feat/centreline-velocity`, `feat/observer-validation`, `feat/gui-rebuild`,
+`refactor/remove-dead-code` and `refactor/remove-optical-flow`. The 215 tests
+pass on `main`.
+
+**Untracked.** The user's first try of the Validation page on the real data
+worked: a reading set of 6 blocks from `set1` of `FP01_Qefter`, read by
+observer "1" (5 with streaks, 1 without), and the agreement computed, with no
+errors in the log. It also showed two things in `git status`:
+
+1. **`Validation/`** was not in `.gitignore`, unlike the other data folders,
+   so reading sets showed up as files to commit. It is now ignored.
+2. **`settings.csv`** was tracked, although the app rewrites it: the data
+   folder, the calibration, the box size (since the 2026-10-05 rebuild) and,
+   since today, the observer. It therefore always showed as modified, and the
+   tracked copy only held this computer's path. The user chose to stop
+   tracking it. It is removed from the index (the local file stays as it is)
+   and ignored.
+   - A fresh copy of the repository has no `settings.csv`, so the app's
+     welcome dialog asks for the data folder and calibration.
+   - `python -m capillary.cli` then uses the default calibration unless
+     `--mm-per-pixel` is given.
+   - On another computer with a copy, pulling this change removes its
+     `settings.csv` once.
+
+**Verification:** the 215 tests pass. `git check-ignore` confirms both paths
+are ignored, `git status` no longer lists them, and the local `settings.csv`
+is unchanged.
+
+---
+
 ## 2026-10-07 — Validation on real recordings: blinded reading by observers, and line placement
 
 **Branch:** `feat/observer-validation`, from `feat/centreline-velocity` at

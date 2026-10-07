@@ -14,6 +14,11 @@ StabilizedVideos/
 Reports/
 Statistics/
 Flows/
+Validation/
+
+# This computer's settings: data folder, calibration, box size, observer (the app writes them;
+# without the file it asks on first start)
+settings.csv
 
 # Generated at runtime
 capillaroscopy.log

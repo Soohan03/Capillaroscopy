@@ -102,8 +102,9 @@ correlation ICC(A,1); whether a block can be read at all with Cohen's kappa
 `settings.csv` stores `Application_path`, the folder that holds the research
 data, `mm_per_pixel`, the spatial calibration of the microscope,
 `box_size`, the default box size, and `observer`, the initials last entered.
-On first start (or if the file is missing) the app asks for the folder; the
-settings can be changed later with the gear button. Inside the folder it uses:
+Each computer has its own `settings.csv`; git ignores it. On first start (or
+if the file is missing) the app asks for the folder; the settings can be
+changed later with the gear button. Inside the folder it uses:
 
 - `RecordedVideos/`: raw captures from the microscope.
 - `StabilizedVideos/`: stabilized copies, used for measuring.
