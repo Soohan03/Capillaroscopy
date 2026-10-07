@@ -1,11 +1,11 @@
 """The main window: header with the pages, the recording list, the status bar.
 
 Pages: Centre line (velocity from the space-time diagram along a capillary),
-Two boxes (velocity from the delay between two boxes), Capture (camera and
-recording), Results (saved data sets and reports) and Validation (observers
-reading blocks by hand, and their agreement with the estimator). The window
-owns the selected recording, the background jobs and the application-wide
-actions (stabilize, move to trash, settings).
+Two boxes (velocity from the delay between two boxes), Results (saved data
+sets and reports) and Validation (observers reading blocks by hand, and their
+agreement with the estimator). The window owns the selected recording, the
+background jobs and the application-wide actions (stabilize, move to trash,
+settings).
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ from typing import Optional
 
 from . import library, tasks, theme
 from .analyze_page import AnalyzePage
-from .capture_page import CapturePage
 from .dialogs import SettingsDialog, ShortcutsDialog, confirm, show_error
 from .jobs import JobManager
 from .library_view import LibraryPanel
@@ -36,8 +35,7 @@ from .widgets import Tooltip, install_wheel_router
 
 log = logging.getLogger(__name__)
 
-PAGES = (('line', LinePage), ('analyze', AnalyzePage), ('capture', CapturePage), ('results', ResultsPage),
-         ('validation', ValidationPage))
+PAGES = (('line', LinePage), ('analyze', AnalyzePage), ('results', ResultsPage), ('validation', ValidationPage))
 START_PAGE = 'line'
 TEXT_INPUT_CLASSES = ('Entry', 'TEntry', 'Spinbox', 'TSpinbox', 'TCombobox', 'Text', 'Listbox')
 
@@ -113,7 +111,7 @@ class App:
         brand = tk.Canvas(header, width=px(28), height=px(28), bg=COLORS['header'], highlightthickness=0)
         brand.pack(side='left', padx=(0, px(8)))
         brand.create_line(px(8), px(23), px(8), px(10), px(14), px(4), px(20), px(10), px(20), px(23),
-                          fill=COLORS['record'], width=px(3.2), smooth=True, capstyle='round')
+                          fill=COLORS['brand'], width=px(3.2), smooth=True, capstyle='round')
         ttk.Label(header, text='Capillaroscopy', style='Brand.Header.TLabel').pack(side='left', padx=(0, px(26)))
         self.nav = tk.StringVar(value=START_PAGE)
         for key, page in PAGES:
@@ -122,10 +120,9 @@ class App:
             button.pack(side='left')
             Tooltip(button, {'line': 'Velocity along a line drawn on a capillary (Ctrl + 1)',
                              'analyze': 'Velocity between two boxes on a capillary: the original method (Ctrl + 2)',
-                             'capture': 'Camera preview and recording (Ctrl + 3)',
-                             'results': 'Saved data sets and their reports (Ctrl + 4)',
+                             'results': 'Saved data sets and their reports (Ctrl + 3)',
                              'validation': 'Observers read blocks by hand, blinded; their agreement with the '
-                                           'estimator (Ctrl + 5)'}[key])
+                                           'estimator (Ctrl + 4)'}[key])
         help_button = ttk.Button(header, text='?', style='Header.TButton', command=self.show_shortcuts, width=2)
         help_button.pack(side='right')
         Tooltip(help_button, 'Keyboard and mouse (F1)')
@@ -506,14 +503,13 @@ class App:
         self.root.destroy()
 
     def shutdown(self) -> bool:
-        """Stop the camera and every background thread; True if all of them ended.
+        """Stop every background thread; True if all of them ended.
 
         Threads are waited for because one still inside OpenCV when Python
         exits makes the process abort ("terminate called ...").
         """
         self.status_label.configure(text='Finishing background work…')
         self.root.update_idletasks()
-        self.pages['capture'].shutdown()
         for page in self.pages.values():
             player = getattr(page, 'player', None)
             if player is not None:

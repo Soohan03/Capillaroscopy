@@ -6,6 +6,84 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-07 — Capture page removed: the app no longer records
+
+**Branch:** `refactor/remove-capture`, from `main` at `a6b367c` (after pull
+request #7 was merged).
+
+**Commits:**
+
+- `3832afa` Remove the Capture page: the app no longer records
+- `80eaab6` Update README and CLAUDE.md for the app without recording
+
+The user asked what the Capture page was for and whether it could go. It
+showed the microscope camera's live image and recorded into `RecordedVideos/`
+under names like `FP03_Wföre_07-Oct-2026_14-03-22.avi` (participant and
+condition, date, time), with time points marked during the recording. The
+program began as the recording station for the capillaroscope: it has had a
+recorder since its first commit. The 2019 recordings carry exactly the names
+it produced, so they were most likely recorded with an earlier version of it.
+The computer the app now runs on has no camera, and the user confirmed that no
+new recordings for the thesis will be made with this app.
+
+**How the recorder wrote videos.** This is kept here because it probably
+describes how the 2019 recordings were made, which the data-acquisition
+section of the thesis needs. `gui/camera.py` said it wrote "as before":
+
+- every camera frame turned into one green-weighted grey image,
+  (−0.5·R + 1.5·G + 127.5) / 2 (`Utilities.rgb_to_negR_posG`), because
+  capillaries contrast best in green;
+- written as three identical channels with the MP4V codec (MPEG-4 Part 2,
+  lossy) into an `.avi`;
+- every file stamped 30 fps, whatever the camera delivered. The rebuilt page
+  warned when the measured rate differed by more than 5%.
+
+The thesis draft says the recordings were stored losslessly. If they came from
+this recorder they were not, and their true frame rate is unknown. Both are
+open points (CLAUDE.md, known issues).
+
+**Removed:**
+
+- `gui/capture_page.py` and `gui/camera.py` (471 lines);
+- the recording-name helpers in `gui/tasks.py` (`recording_name`,
+  `new_recording_path`) and their two tests;
+- `Utilities.rgb_to_negR_posG`;
+- the record, stop and camera icons and the Record button style.
+
+**Changed:**
+
+- The logo colour (the red capillary loop in the header) is renamed from
+  `record` to `brand`.
+- Messages that pointed to the Capture page now say to copy videos into
+  `RecordedVideos/` (raw, to be stabilized) or `StabilizedVideos/`.
+- The pages are Ctrl+1–4: Centre line, Two boxes, Results, Validation.
+- `RecordedVideos/` stays: raw videos copied there can still be stabilized.
+- The module list in `gui/__init__.py` also gained the two Validation modules
+  added earlier today.
+
+**Verification:**
+
+- 213 tests pass (215 before, less the two recording-name tests).
+- pyflakes reports only the two old notes, and the CI flake8 selection is
+  clean.
+- Scripted GUI session: four tabs, Ctrl+1–4 open the right pages, Ctrl+5 does
+  nothing, F1 lists Ctrl+1…4, the app shuts down cleanly, and there were no Tk
+  errors.
+
+**A mistake while starting this branch (no code).** Switching to the old
+`main` and then updating to the new one deleted the local `settings.csv`.
+
+- The old `main` still tracked the file, so checking it out replaced the
+  ignored local copy with the tracked one.
+- The new `main` untracks it, so fast-forwarding removed it.
+
+It was restored byte for byte: the last tracked version plus the two rows the
+app had added (`box_size,12` and `observer,1`), and the app reads it back.
+After a commit stops tracking a file, back it up before checking out anything
+older.
+
+---
+
 ## 2026-10-07 — Pull requests #5 and #6 merged; `settings.csv` and `Validation/` no longer tracked
 
 **Branch:** `chore/untrack-local-data`, from `main` at `2186904`.

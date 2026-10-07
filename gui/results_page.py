@@ -194,7 +194,7 @@ class ResultsPage(ttk.Frame):
         card = self._card(parent)
         ttk.Label(card, text='TIME POINTS', style='Section.Panel.TLabel').pack(anchor='w', pady=(0, px(6)))
         text = ('   '.join(format_time(p) for p in points) if points
-                else 'None marked. Mark events while measuring (M) or while recording.')
+                else 'None marked. Mark events on the Centre line or Two boxes page (M).')
         ttk.Label(card, text=text, style='Mono.Panel.TLabel' if points else 'Muted.Panel.TLabel',
                   wraplength=px(900), justify='left').pack(anchor='w')
 

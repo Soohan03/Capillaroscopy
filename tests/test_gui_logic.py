@@ -3,7 +3,6 @@
 None of these tests opens a window, so they run headless like the rest of the suite.
 """
 
-import datetime
 import os
 import threading
 import time
@@ -159,22 +158,7 @@ def test_relative_path(folder, tmp_path):
     assert tasks.relative_path(folder, str(tmp_path / 'elsewhere' / 'x.avi')) == 'x.avi'
 
 
-# --------------------------------------------------------------------- recording names
-
-def test_recording_names_match_the_existing_recordings():
-    when = datetime.datetime(2026, 10, 5, 14, 3, 22)
-    assert tasks.recording_name('FP03_Wföre', when) == 'FP03_Wföre_05-Oct-2026_14-03-22'
-    assert tasks.recording_name('', when) == '05-Oct-2026_14-03-22'
-    assert tasks.recording_name('a/b', when, time_text='hh-mm-ss') == 'a_b_05-Oct-2026_hh-mm-ss'
-
-
-def test_a_new_recording_never_overwrites_one(folder, monkeypatch):
-    monkeypatch.setattr(tasks, 'recording_name', lambda prefix='': 'FP03')
-    first = tasks.new_recording_path(folder)
-    assert first == os.path.join(folder.recorded, 'FP03.avi')
-    touch(first)
-    assert tasks.new_recording_path(folder) == os.path.join(folder.recorded, 'FP03_2.avi')
-
+# --------------------------------------------------------------------- time display
 
 def test_format_time():
     assert format_time(59.9996) == '1:00.000'

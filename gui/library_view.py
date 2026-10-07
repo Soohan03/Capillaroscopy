@@ -321,8 +321,8 @@ class LibraryPanel(ttk.Frame):
         if self.recordings:
             empty = f'No recording matches "{self.filter.get()}".'
         else:
-            empty = ('No videos yet.\n\nRecord one on the Capture page, or copy videos into '
-                     'RecordedVideos/ or StabilizedVideos/ in the data folder and refresh.')
+            empty = ('No videos yet.\n\nCopy videos into RecordedVideos/ (to be stabilized) or '
+                     'StabilizedVideos/ in the data folder and refresh.')
         self.list.set_items(items, empty)
         if text:
             self._placeholder.place_forget()

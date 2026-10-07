@@ -44,7 +44,7 @@ COLORS = {
     'box2': '#29B2FF',          # box 2, upstream (sky blue)
     'line': '#FFD24D',          # the centre line (yellow)
     'marker': '#E5484D',        # time points, red like the lines in the report
-    'record': '#E5484D',
+    'brand': '#E5484D',         # the capillary loop of the logo in the header
 }
 
 # Correlation quality bands, the same edges and colours the report uses for its dots.
@@ -191,7 +191,6 @@ def apply(root):
 
     filled('Accent.TButton', c['accent'], c['accent_hover'], c['accent_pressed'], c['accent_disabled'])
     filled('Danger.TButton', c['danger'], c['danger_hover'], c['danger_hover'], '#E9A9A9')
-    filled('Record.TButton', c['record'], c['danger_hover'], c['danger_hover'], '#E9A9A9')
 
     style.configure('Ghost.TButton', background=c['panel'], bordercolor=c['panel'], lightcolor=c['panel'],
                     darkcolor=c['panel'], padding=(px(6), px(4)))
@@ -321,10 +320,6 @@ def _draw_icon(d, name, S, fill):
         rect(76, 22, 86, 78, 2)
         d.polygon(p((44, 24), (44, 76), (74, 50)), fill=fill)
         d.polygon(p((14, 24), (14, 76), (44, 50)), fill=fill)
-    elif name == 'record':
-        d.ellipse(p((20, 20), (80, 80)), fill=fill)
-    elif name == 'stop':
-        rect(24, 24, 76, 76, 8)
     elif name == 'flag':
         rect(26, 12, 33, 90, 2)
         d.polygon(p((33, 14), (80, 28), (33, 46)), fill=fill)
@@ -381,9 +376,6 @@ def _draw_icon(d, name, S, fill):
     elif name == 'ok':
         d.ellipse(p((8, 8), (92, 92)), fill=fill)
         d.line(p((28, 52), (44, 67), (72, 36)), fill=(255, 255, 255, 255), width=int(10 * S / 100), joint='curve')
-    elif name == 'camera':
-        rect(8, 28, 72, 78, 8)
-        d.polygon(p((72, 44), (92, 30), (92, 76), (72, 62)), fill=fill)
     elif name == 'expand':
         line([(30, 40), (50, 60), (70, 40)], 10)
     else:

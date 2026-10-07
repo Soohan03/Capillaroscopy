@@ -15,8 +15,9 @@ implementation.
     measure_page.py  video, frame range, time points and Measure footer of both measure pages
     line_page.py     velocity along a centre line (space-time diagram)
     analyze_page.py  velocity measurement with two boxes
-    capture_page.py  camera preview and recording
     results_page.py  saved data sets and their reports
+    validation_page.py  reading sets, observers' readings and their agreement; line placement
+    reading_view.py  the blinded reading of one block after another
 
 No Tk in these (they can be used and tested without a display):
 
@@ -25,7 +26,6 @@ No Tk in these (they can be used and tested without a display):
     media.py         frame reading and display conversion
     jobs.py          background jobs with progress and cancel
     tasks.py         the work the pages hand to background jobs
-    camera.py        camera capture and recording thread
 """
 import matplotlib
 

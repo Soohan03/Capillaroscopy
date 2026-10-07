@@ -62,8 +62,8 @@ class MeasurePage(ttk.Frame):
         """``(title, text)`` for the video area when there is nothing to show."""
         if recording is None:
             if not self.app.recordings:
-                return ('No recordings yet', 'Record one on the Capture page, or copy videos into '
-                        'RecordedVideos/ or StabilizedVideos/ in the data folder.')
+                return ('No recordings yet', 'Copy videos into RecordedVideos/ (to be stabilized) or '
+                        'StabilizedVideos/ in the data folder, then refresh the list (Ctrl + R).')
             return 'Select a recording', 'Choose a video from the list on the left.'
         return 'Nothing to show', ''
 

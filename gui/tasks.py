@@ -34,8 +34,6 @@ from .settings import DataFolder
 
 log = logging.getLogger(__name__)
 
-_MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
-
 
 # ------------------------------------------------------------------------- helpers
 
@@ -85,29 +83,6 @@ def check_stabilization_memory(path: str) -> None:
             f'Stabilizing this video needs about {needed / 1e9:.1f} GB of memory, but only '
             f'{available / 1e9:.1f} GB is available. The stabilizer keeps the whole video in memory '
             f'({info.frame_count} frames); a shorter recording or more memory is needed.')
-
-
-def recording_name(prefix: str = '', when: Optional[datetime.datetime] = None, time_text: Optional[str] = None) -> str:
-    """``<prefix>_05-Oct-2026_14-03-22``: the stem of a recording started at `when`.
-
-    The date format matches the existing recordings (e.g. 22-Oct-2019_09-46-17),
-    independent of the system language. `time_text` replaces the time of day
-    (for showing the pattern before a recording starts).
-    """
-    when = when or datetime.datetime.now()
-    stamp = f'{when.day:02d}-{_MONTHS[when.month - 1]}-{when.year}_{time_text or f"{when:%H-%M-%S}"}'
-    return f'{datasets.safe_file_part(prefix)}_{stamp}' if prefix.strip() else stamp
-
-
-def new_recording_path(folder: DataFolder, prefix: str = '', extension: str = '.avi') -> str:
-    """A fresh file name in RecordedVideos/: ``<prefix>_<05-Oct-2026_14-03-22>.avi``."""
-    base = recording_name(prefix)
-    path = os.path.join(folder.recorded, base + extension)
-    counter = 2
-    while os.path.exists(path):
-        path = os.path.join(folder.recorded, f'{base}_{counter}{extension}')
-        counter += 1
-    return path
 
 
 def relative_path(folder: DataFolder, path: str) -> str:

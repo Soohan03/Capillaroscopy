@@ -1,20 +1,20 @@
 # Capillaroscopy Analysis Tool
 
-A desktop tool (Tkinter + OpenCV) for recording and analysing nailfold
-capillaroscopy videos: it records from the microscope camera, stabilizes the
-recording, and measures red-cell velocity in a capillary, along a line drawn
-on the vessel or between two boxes.
+A desktop tool (Tkinter + OpenCV) for analysing nailfold capillaroscopy
+videos: it stabilizes a recording and measures red-cell velocity in a
+capillary, along a line drawn on the vessel or between two boxes. Videos are
+recorded with other software and copied into the data folder (the app's own
+recorder was removed on 2026-10-07).
 
 ## Using the app
 
 The window has a list of recordings on the left (everything that shares one
-video's name: raw capture, stabilized copy, data sets) and five pages:
+video's name: raw recording, stabilized copy, data sets) and four pages:
 
 | Page | What you do there |
 | --- | --- |
 | **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range, name the data set, press **Measure velocity and save**. |
 | **Two boxes** | The original method: place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary; the velocity comes from the delay between their brightness signals. Kept for comparison and for the data sets made with it (see below). |
-| **Capture** | Camera preview, recording into `RecordedVideos/`, marking time points (e.g. cuff release) while recording. |
 | **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the line or boxes of a data set restored on its page. |
 | **Validation** | Checks the centre-line velocity on real recordings, where there is no ground truth. A *reading set* draws 3-s blocks from centre-line data sets; observers read them by hand, blinded, by drawing lines along the streaks; the agreement with the estimator, between observers and between two sessions of one observer is computed with Bland–Altman limits, intraclass correlation and kappa. *Line placement* compares data sets of the same capillary measured by different observers (or twice by one). |
 
@@ -106,7 +106,7 @@ Each computer has its own `settings.csv`; git ignores it. On first start (or
 if the file is missing) the app asks for the folder; the settings can be
 changed later with the gear button. Inside the folder it uses:
 
-- `RecordedVideos/`: raw captures from the microscope.
+- `RecordedVideos/`: raw recordings, copied in to be stabilized.
 - `StabilizedVideos/`: stabilized copies, used for measuring.
 - `Statistics/`: the saved data sets (`<recording>___<data set>___…`), their
   provenance files, and each recording's time points. A centre-line data set
@@ -129,12 +129,12 @@ changed later with the gear button. Inside the folder it uses:
 | --- | --- |
 | `Application.py` | Entry point: logging, then the window from `gui/` |
 | `gui/app.py` | The main window: header, recording list, pages, status bar, keyboard routing, application-wide actions |
-| `gui/line_page.py`, `gui/analyze_page.py`, `gui/capture_page.py`, `gui/results_page.py`, `gui/validation_page.py` | The five pages (Centre line, Two boxes, Capture, Results, Validation) |
+| `gui/line_page.py`, `gui/analyze_page.py`, `gui/results_page.py`, `gui/validation_page.py` | The four pages (Centre line, Two boxes, Results, Validation) |
 | `gui/measure_page.py` | What both measure pages build on: video, timeline, frame range, time points, the Measure footer, the last result |
 | `gui/reading_view.py` | The Validation page's reading mode: one block at a time, lines drawn along its streaks |
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
 | `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
-| `gui/library.py`, `gui/settings.py`, `gui/media.py`, `gui/camera.py` | Finding recordings, settings, frames for display, camera capture |
+| `gui/library.py`, `gui/settings.py`, `gui/media.py` | Finding recordings, settings, frames for display |
 | `Caper.py` | Stabilization, the report plots of both methods, and the agreement plots of the Validation page |
 | `SingleStepDFT.py` | Sub-pixel image registration used by stabilization (vendored, see its docstring) |
 | `Utilities.py` | Small shared helpers |

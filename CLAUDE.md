@@ -21,8 +21,7 @@ without asking:
    ```
    wsl -d Ubuntu -- bash run_app.sh
    ```
-2. Check the task output briefly to confirm it started without an immediate traceback
-   (camera-not-found warnings are normal and harmless).
+2. Check the task output briefly to confirm it started without an immediate traceback.
 3. Tell the user the app window should now be visible via WSLg, and remind them:
    - The list on the left shows the recordings (the 8 videos in `StabilizedVideos/`);
      right-click one to stabilize it or move it to the trash.
@@ -36,19 +35,20 @@ without asking:
    - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
      measured range; "Measure velocity and save" is at the bottom right, next to the
      data set name and the Observer initials (saved with the data set).
-   - Validation page (Ctrl+5): draw a reading set of 3-s blocks from centre-line data
+   - Validation page (Ctrl+4): draw a reading set of 3-s blocks from centre-line data
      sets, read them blinded (drag along the streaks, N for "no clear streaks", Enter
      next), then compute the agreement; "Line placement" compares the same capillary
      measured by different observers.
    - F1 shows every keyboard and mouse control.
-   - The Capture page has no camera under WSL unless a USB camera is attached to Linux.
+   - The app does not record: new videos are copied into `RecordedVideos/` (raw, to be
+     stabilized) or `StabilizedVideos/`.
 
 If the user reports the app froze or crashed, check the task output file and
 `capillaroscopy.log` for a traceback before relaunching.
 
 ## Data layout
 
-- `RecordedVideos/` — raw captures (currently empty)
+- `RecordedVideos/` — raw recordings copied in to be stabilized (currently empty)
 - `StabilizedVideos/` — stabilized videos ready for analysis (8 videos as of 2026-06)
 - `Flows/` — optical-flow video of one recording, from before the flow feature was
   removed (2026-10-06); kept on disk, not shown, trashed along with its recording
@@ -56,7 +56,8 @@ If the user reports the app froze or crashed, check the task output file and
   points; centre-line data sets keep their space-time diagram (`___space_time.npy`)
 - `Reports/` — plots and summary tables written from the data sets
 - `Validation/` — reading sets (`<set>/set.json`, `blocks.npz`, `readings/`, `report/`)
-  and the line-placement comparison (`line_placement/`); none made on the real data yet
+  and the line-placement comparison (`line_placement/`); so far only `reading1`, the
+  user's first try (6 blocks, observer "1")
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
   kept); emptied only by hand
 
@@ -64,16 +65,18 @@ If the user reports the app froze or crashed, check the task output file and
 
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
 recording list, keyboard routing) → one module per page (`gui/line_page.py` "Centre
-line", `analyze_page.py` "Two boxes", `capture_page.py`, `results_page.py`,
-`validation_page.py` with its reading mode in `reading_view.py`; the two measure
-pages build on `gui/measure_page.py`). Long work runs as background jobs:
-`gui/jobs.py` runs them, `gui/tasks.py` holds the work and has no Tk in it.
-Stabilization and the report plots of both methods are in `Caper.py`.
+line", `analyze_page.py` "Two boxes", `results_page.py`, `validation_page.py` with its
+reading mode in `reading_view.py`; the two measure pages build on
+`gui/measure_page.py`). Long work runs as background jobs: `gui/jobs.py` runs them,
+`gui/tasks.py` holds the work and has no Tk in it. Stabilization and the report plots
+of both methods are in `Caper.py`.
 
 The app measures velocity only. The optical-flow measurement (Flow page, flow
 videos, flow data sets) was removed on 2026-10-06 because it was not a valid measure
 as implemented and not an endpoint; see that DEVLOG entry. Old flow files are listed
-on a recording only so that moving it to the trash takes them along.
+on a recording only so that moving it to the trash takes them along. The app no
+longer records either: the Capture page (camera preview and recording) was removed
+on 2026-10-07, since the thesis recordings are not made with this app.
 
 ## Analysis engine (`capillary/`)
 
@@ -129,9 +132,10 @@ the 2026-10-05 GUI rebuild entry.
 - **Stabilization needs the whole video in memory twice, as float64**: about 21 GB for
   one of the existing 2–3 minute clips. The app refuses to start a stabilization that
   would need more than 85% of the available memory, instead of crashing.
-- Recordings are stamped 30 fps whatever the camera delivers; the Capture page warns
-  when the measured rate differs by more than 5%. Recording has not been tried with a
-  real camera since the rebuild (none is reachable under WSL).
+- **Frame rate unverified:** the 2019 recordings were made with this app's old
+  recorder (removed 2026-10-07), which stamped every file 30 fps whatever the camera
+  delivered (and wrote lossy MP4V). Every velocity scales with the true rate, which
+  was never measured.
 
 ## Repo state notes
 
