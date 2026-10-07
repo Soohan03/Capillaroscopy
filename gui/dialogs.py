@@ -291,7 +291,7 @@ SHORTCUTS = (
         ('Esc', 'Finish later (everything is saved)'),
     )),
     ('Window', (
-        ('Ctrl + 1 … 5', 'Centre line, Two boxes, Capture, Results, Validation'),
+        ('Ctrl + 1 … 4', 'Centre line, Two boxes, Results, Validation'),
         ('Ctrl + R', 'Look for new videos and data sets'),
         ('Ctrl + ,', 'Settings'),
         ('F1 or ?', 'This list'),
