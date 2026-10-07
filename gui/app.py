@@ -83,6 +83,8 @@ class App:
         self.selected_stem: Optional[str] = None
         self.current_key: Optional[str] = None
         self._status_after = None
+        #: who is measuring or reading (initials), shared by the pages and remembered in settings.csv
+        self.observer_var = tk.StringVar(value=settings.extra.get('observer', ''))
 
         self._place_window()
         self._build()
@@ -366,6 +368,21 @@ class App:
 
     def show_shortcuts(self):
         ShortcutsDialog(self.root).show()
+
+    def remember_observer(self, code: str):
+        """Keep the observer's code for the next start (settings.csv); '' forgets it."""
+        if self.observer_var.get() != code:
+            self.observer_var.set(code)
+        if self.settings.extra.get('observer', '') == code:
+            return
+        if code:
+            self.settings.extra['observer'] = code
+        else:
+            self.settings.extra.pop('observer', None)
+        try:
+            self.settings.save()
+        except OSError:
+            log.warning('Could not save the observer in the settings', exc_info=True)
 
     # -------------------------------------------------------------------- status bar
     def set_status(self, text, timeout_ms=10000):

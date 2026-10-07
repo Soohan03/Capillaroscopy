@@ -464,14 +464,15 @@ def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, firs
     pd.DataFrame([row]).to_csv(report_prefix + '___line_summary.csv', index=False)
 
 
-def generate_validation_report(report_dir, table, comparisons):
-    """Plot the comparisons of a reading set (see capillary.validation); returns the paths written.
+def generate_validation_report(report_dir, table, comparisons, unit='blocks'):
+    """Plot agreement comparisons (capillary.validation, capillary.placement); returns the paths written.
 
     One panel per comparison with at least two pairs of velocities:
     ``bland_altman.png`` (difference against mean, with the bias and the 95%
     limits of agreement) and ``scatter.png`` (first measurement against
-    second, with the line of identity). A plot with no panel left is removed,
-    so an old one is never shown as if it were current.
+    second, with the line of identity). `unit` names what a pair is (blocks of
+    a reading set, capillaries). A plot with no panel left is removed, so an
+    old one is never shown as if it were current.
     """
     os.makedirs(report_dir, exist_ok=True)
     panels = [c for c in comparisons if c.get('first_column') and (c.get('pairs') or 0) >= 2]
@@ -515,8 +516,9 @@ def generate_validation_report(report_dir, table, comparisons):
                 ax.set_xlabel(f'{second} (mm/s)', fontsize=8)
                 ax.set_ylabel(f'{first} (mm/s)', fontsize=8)
                 ax.legend(loc='upper left', fontsize=7)
-            ax.set_title(f'{comparison["comparison"]}\n{len(a)} blocks with a velocity from both', fontsize=8)
+            ax.set_title(f'{comparison["comparison"]}\n{len(a)} {unit} with a velocity from both', fontsize=8)
             ax.tick_params(labelsize=7)
+            ax.locator_params(axis='both', nbins=5)
         for ax in list(axes.flat)[len(panels):]:
             ax.axis('off')
         f.tight_layout()

@@ -66,6 +66,8 @@ MIN_LINE_FRAMES = 4.0
 SLOPE, NO_STREAKS = 'slope', 'no streaks'
 #: Observer codes: initials or a short name; they become part of file names.
 _OBSERVER = re.compile(r'^[A-Z0-9][A-Z0-9-]{0,15}$')
+#: The folder in ``Validation/`` that holds the line-placement comparison (`capillary.placement`).
+RESERVED_NAME = 'line_placement'
 
 DISPLAY = ('The block as observers see it: the mean of every position over time and the mean of every frame along '
            'the line removed, contrast from the 1st to the 99th percentile, position along the line across (its '
@@ -118,6 +120,8 @@ def validate_set_name(name: str) -> Optional[str]:
     message = datasets.validate_dataset_name(name)
     if message is None and name.startswith('.'):
         return 'The name must not start with a dot.'
+    if message is None and name.lower() == RESERVED_NAME:
+        return f'"{name}" is the folder of the line-placement comparison; choose another name.'
     return message.replace('data set', 'reading set') if message else None
 
 
@@ -696,12 +700,21 @@ def write_report_tables(reading_set: ReadingSet, table: pd.DataFrame, comparison
     return {role: files[role] for role in ('items', 'summary', 'readings')}
 
 
-def load_comparisons(reading_set: ReadingSet) -> Optional[list[dict]]:
-    """The comparisons written by the last agreement report, or None if there is none."""
-    path = reading_set.report_files()['summary']
+def read_comparisons(path: str) -> Optional[list[dict]]:
+    """Comparisons saved as a summary table (missing values None); None if there is no table.
+
+    An empty file means the report was made but had nothing to compare: [].
+    """
     try:
         frame = pd.read_csv(path)
-    except (OSError, ValueError, pd.errors.EmptyDataError):
+    except pd.errors.EmptyDataError:
+        return []
+    except (OSError, ValueError):
         return None
     return [{key: (None if isinstance(value, float) and math.isnan(value) else value)
              for key, value in row.items()} for row in frame.to_dict('records')]
+
+
+def load_comparisons(reading_set: ReadingSet) -> Optional[list[dict]]:
+    """The comparisons written by the last agreement report, or None if there is none."""
+    return read_comparisons(reading_set.report_files()['summary'])

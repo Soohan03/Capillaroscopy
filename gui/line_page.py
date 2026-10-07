@@ -473,7 +473,8 @@ class LinePage(MeasurePage):
         recording = self.recording
         work = partial(tasks.measure_line_dataset, folder=self.app.folder, stem=recording.stem, name=name,
                        video_path=self.player.source.path, points=list(self.points), start=start, end=end,
-                       mm_per_pixel=self.app.settings.mm_per_pixel, time_points=list(self.markers))
+                       mm_per_pixel=self.app.settings.mm_per_pixel, time_points=list(self.markers),
+                       observer=self.observer())
         return self.app.jobs.submit(f'Centre line · {recording.stem} · {name}', work, lane='analysis', on_done=done,
                                     on_error=failed, on_cancel=cancelled, key=('line', recording.stem))
 

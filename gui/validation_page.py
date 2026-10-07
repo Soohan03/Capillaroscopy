@@ -24,9 +24,10 @@ from tkinter import ttk
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 from PIL import Image, ImageTk
 
-from capillary import datasets, validation
+from capillary import datasets, placement, validation
 
 from . import tasks
 from .dialogs import Dialog, ImageViewer, show_error
@@ -37,6 +38,8 @@ SET_LIST_WIDTH = 300
 READER_PANEL_WIDTH = 330
 THUMB_WIDTH = 300
 PLOT_TITLES = {'bland_altman': 'Bland-Altman plots', 'scatter': 'Against each other'}
+#: Key of the line-placement entry in the list (no reading set can have it: '/' is not allowed in names).
+PLACEMENT = '/line placement'
 
 
 # ------------------------------------------------------------------------ the block
@@ -720,12 +723,13 @@ class StartReadingDialog(Dialog):
 # --------------------------------------------------------------------------- set list
 
 class SetList(tk.Canvas):
-    """The reading sets: name and a line of detail per row."""
+    """Rows of (key, title, detail): the reading sets, or the line-placement comparison."""
 
-    def __init__(self, parent, on_select):
-        super().__init__(parent, bg=COLORS['panel'], highlightthickness=0, bd=0, width=px(SET_LIST_WIDTH))
+    def __init__(self, parent, on_select, height=None):
+        super().__init__(parent, bg=COLORS['panel'], highlightthickness=0, bd=0, width=px(SET_LIST_WIDTH),
+                         **({'height': height} if height else {}))
         self.on_select = on_select
-        self.rows: list[tuple[str, str]] = []
+        self.rows: list[tuple[str, str, str]] = []
         self.selected: Optional[str] = None
         self.hover: Optional[str] = None
         self.row_height = px(58)
@@ -769,15 +773,16 @@ class SetList(tk.Canvas):
             self.create_text(width / 2, px(50), text=self.empty_text, fill=COLORS['faint'], font=FONTS['small'],
                              width=width - px(40), justify='center')
             return
-        for row, (name, detail) in enumerate(self.rows):
+        for row, (key, title, detail) in enumerate(self.rows):
             top = row * height
-            if name == self.selected:
+            if key == self.selected:
                 self.create_rectangle(0, top, width, top + height, fill=COLORS['accent_soft'], outline='')
                 self.create_rectangle(0, top, px(3), top + height, fill=COLORS['accent'], outline='')
-            elif name == self.hover:
+            elif key == self.hover:
                 self.create_rectangle(0, top, width, top + height, fill=COLORS['panel_alt'], outline='')
-            self.create_line(px(12), top + height - 1, width - px(12), top + height - 1, fill=COLORS['border'])
-            self.create_text(px(16), top + px(12), text=name, anchor='nw', font=FONTS['bold'], fill=COLORS['text'],
+            if row < len(self.rows) - 1 or len(self.rows) > 1:
+                self.create_line(px(12), top + height - 1, width - px(12), top + height - 1, fill=COLORS['border'])
+            self.create_text(px(16), top + px(12), text=title, anchor='nw', font=FONTS['bold'], fill=COLORS['text'],
                              width=width - px(28))
             self.create_text(px(16), top + px(32), text=detail, anchor='nw', font=FONTS['small'],
                              fill=COLORS['muted'], width=width - px(28))
@@ -843,6 +848,9 @@ class ValidationPage(ttk.Frame):
         self.overview.rowconfigure(0, weight=1)
         side = ttk.Frame(self.overview, style='Panel.TFrame')
         side.grid(row=0, column=0, sticky='ns')
+        self.placement_row = SetList(side, self.select, height=px(58))
+        self.placement_row.pack(fill='x')
+        ttk.Separator(side, orient='horizontal').pack(fill='x')
         header = ttk.Frame(side, style='Panel.TFrame', padding=(px(16), px(14), px(10), px(8)))
         header.pack(fill='x')
         ttk.Label(header, text='Reading sets', style='Subtitle.Panel.TLabel').pack(side='left')
@@ -890,7 +898,7 @@ class ValidationPage(ttk.Frame):
     def refresh(self):
         folder = self.app.folder.validation
         self.names = validation.list_reading_sets(folder)
-        if self.selected not in self.names:
+        if self.selected not in self.names and self.selected != PLACEMENT:
             self.selected = self.names[0] if self.names else None
         rows = []
         for name in self.names:
@@ -903,23 +911,26 @@ class ValidationPage(ttk.Frame):
                     if readings else 'not read yet')
             except (OSError, ValueError, KeyError) as exc:
                 detail = f'cannot be read: {exc}'
-            rows.append((name, detail))
+            rows.append((name, name, detail))
         self.count.configure(text=str(len(self.names)) if self.names else '')
         self.set_list.set_rows(rows, self.selected, 'No reading sets yet.')
+        self.placement_row.set_rows([(PLACEMENT, 'Line placement', 'one capillary, several observers')],
+                                    self.selected)
         self._load_selected()
         self._rebuild()
 
-    def select(self, name):
-        if name != self.selected:
-            self.selected = name
-            self.set_list.set_rows(self.set_list.rows, name, self.set_list.empty_text)
+    def select(self, key):
+        if key != self.selected:
+            self.selected = key
+            self.set_list.set_rows(self.set_list.rows, key, self.set_list.empty_text)
+            self.placement_row.set_rows(self.placement_row.rows, key)
             self._load_selected()
             self._rebuild()
 
     def _load_selected(self):
         self.current = None
         self._load_error = ''
-        if self.selected is not None:
+        if self.selected is not None and self.selected != PLACEMENT:
             try:
                 self.current = validation.load_reading_set(self.app.folder.validation, self.selected)
                 if not self.current.items:
@@ -946,6 +957,9 @@ class ValidationPage(ttk.Frame):
         for child in body.winfo_children():
             child.destroy()
         self._photos = []
+        if self.selected == PLACEMENT:
+            self._placement_view(body)
+            return
         reading_set = self.current
         if reading_set is None and self.selected is not None:
             ttk.Label(body, text=self.selected, style='Title.TLabel').pack(anchor='w')
@@ -1041,35 +1055,23 @@ class ValidationPage(ttk.Frame):
         start.pack(anchor='w', pady=(px(12), 0))
         Tooltip(start, 'Read the blocks as an observer: a new observer, a new session, or continue one')
 
-    def _agreement_card(self, body, reading_set):
-        card = self._card(body, 'Agreement')
-        ttk.Label(card, style='Muted.Panel.TLabel', wraplength=px(900), justify='left', text=(
-            'Measures every block again with the current estimator and compares it with every reading, the '
-            'observers with each other, and each observer\'s sessions with each other. It shows the estimator\'s '
-            'results, so compute it once everyone has finished reading.')).pack(anchor='w')
+    def _compute_row(self, card, command, summary_path):
         actions = ttk.Frame(card, style='Panel.TFrame')
         actions.pack(fill='x', pady=(px(10), 0))
-        self.compute_button = ttk.Button(actions, text='Compute agreement', command=self.compute_agreement)
+        self.compute_button = ttk.Button(actions, text='Compute agreement', command=command)
         self.compute_button.pack(side='left')
-        files = reading_set.report_files()
-        if os.path.exists(files['summary']):
+        if os.path.exists(summary_path):
             ttk.Button(actions, text='Show files', style='Ghost.TButton',
-                       command=lambda: self.app.open_folder(files['summary'])).pack(side='left', padx=(px(8), 0))
+                       command=lambda: self.app.open_folder(summary_path)).pack(side='left', padx=(px(8), 0))
             try:
-                when = datetime.datetime.fromtimestamp(os.path.getmtime(files['summary']))
+                when = datetime.datetime.fromtimestamp(os.path.getmtime(summary_path))
                 ttk.Label(actions, text=f'last computed {when:%d %b %Y, %H:%M}', style='Faint.Panel.TLabel').pack(
                     side='left', padx=(px(12), 0))
             except OSError:
                 pass
         self._jobs_changed()
-        comparisons = validation.load_comparisons(reading_set)
-        if comparisons is None:
-            return
-        if not comparisons:
-            ttk.Label(card, text='Nothing to compare yet: no block has been read.', style='Faint.Panel.TLabel').pack(
-                anchor='w', pady=(px(10), 0))
-            return
-        self._comparison_table(card, comparisons)
+
+    def _plots(self, card, files, title):
         cells = ttk.Frame(card, style='Panel.TFrame')
         cells.pack(fill='x', pady=(px(14), 0))
         for column, role in enumerate(('bland_altman', 'scatter')):
@@ -1087,9 +1089,91 @@ class ValidationPage(ttk.Frame):
                              highlightbackground=COLORS['border'])
             label.pack()
             label.bind('<Button-1>', lambda e, p=path, r=role: ImageViewer(
-                self, p, title=f'{PLOT_TITLES[r]}  ·  {reading_set.name}', on_open_folder=lambda: self.app.open_folder(p)))
+                self, p, title=f'{PLOT_TITLES[r]}  ·  {title}', on_open_folder=lambda: self.app.open_folder(p)))
             Tooltip(label, 'Click to enlarge')
             ttk.Label(cell, text=PLOT_TITLES[role], style='Faint.Panel.TLabel').pack(anchor='w', pady=(px(3), 0))
+
+    def _agreement_card(self, body, reading_set):
+        card = self._card(body, 'Agreement')
+        ttk.Label(card, style='Muted.Panel.TLabel', wraplength=px(900), justify='left', text=(
+            'Measures every block again with the current estimator and compares it with every reading, the '
+            'observers with each other, and each observer\'s sessions with each other. It shows the estimator\'s '
+            'results, so compute it once everyone has finished reading.')).pack(anchor='w')
+        files = reading_set.report_files()
+        self._compute_row(card, self.compute_agreement, files['summary'])
+        comparisons = validation.load_comparisons(reading_set)
+        if comparisons is None:
+            return
+        if not comparisons:
+            ttk.Label(card, text='Nothing to compare yet: no block has been read.', style='Faint.Panel.TLabel').pack(
+                anchor='w', pady=(px(10), 0))
+            return
+        self._comparison_table(card, comparisons)
+        self._plots(card, files, reading_set.name)
+
+    def _placement_view(self, body):
+        ttk.Label(body, text='Line placement', style='Title.TLabel').pack(anchor='w')
+        ttk.Label(body, style='Muted.TLabel', wraplength=px(900), justify='left', text=(
+            'How much a velocity depends on who draws the line: the same capillary measured over the same frames by '
+            'different observers, or twice by one. Centre-line data sets are matched automatically: lines on the '
+            f'same recording that run along each other (at least {placement.MIN_LINE_OVERLAP:.0%} of one line within '
+            f'{placement.MATCH_PX:g} px of the other) over frame ranges sharing at least '
+            f'{placement.MIN_FRAME_OVERLAP:.0%} of their frames. The observer of a data set is the one entered next '
+            'to its name when it was measured.')).pack(anchor='w', pady=(px(4), 0))
+        measurements = placement.load_measurements(self.app.folder.statistics, self._line_sources())
+        without = sum(1 for m in measurements if not m.observer)
+        observers = sorted({m.observer for m in measurements if m.observer})
+        text = (f'{len(measurements)} centre-line data set{"s" if len(measurements) != 1 else ""}'
+                + (f' by {", ".join(observers)}' if observers else '')
+                + (f'; {without} without an observer, which take part in no comparison' if without else '') + '.')
+        ttk.Label(body, text=text, style='Muted.TLabel', wraplength=px(900), justify='left').pack(
+            anchor='w', pady=(px(6), 0))
+
+        report_dir = os.path.join(self.app.folder.validation, placement.REPORT_DIR)
+        files = {role: os.path.join(report_dir, name) for role, name in placement.REPORT_FILES.items()}
+        card = self._card(body, 'Agreement')
+        ttk.Label(card, style='Muted.Panel.TLabel', wraplength=px(900), justify='left', text=(
+            'Compares the median velocity of each capillary between every two observers, and between the first and '
+            'second measurement of one observer. Compute it again after new measurements.')).pack(anchor='w')
+        self._compute_row(card, self.compute_placement, files['summary'])
+        comparisons = validation.read_comparisons(files['summary'])
+        if comparisons is not None:
+            if comparisons:
+                self._comparison_table(card, comparisons, unit='Capillaries', readability=False)
+                self._plots(card, files, 'line placement')
+            else:
+                ttk.Label(card, text='Nothing to compare: no capillary was measured by two observers, or twice by '
+                                     'one.', style='Faint.Panel.TLabel').pack(anchor='w', pady=(px(10), 0))
+        try:
+            rows = pd.read_csv(files['measurements']) if os.path.exists(files['measurements']) else None
+        except pd.errors.EmptyDataError:
+            rows = pd.DataFrame()                               # computed, but nothing was measured twice
+        except (OSError, ValueError):
+            rows = None
+        if rows is None:
+            return
+        card = self._card(body, 'Capillaries measured more than once')
+        if not len(rows):
+            ttk.Label(card, text='None found.', style='Muted.Panel.TLabel').pack(anchor='w')
+            return
+        table = ttk.Frame(card, style='Panel.TFrame')
+        table.pack(fill='x')
+        for column, title in enumerate(('Capillary', 'Recording', 'Observer', 'Data set', 'Frames',
+                                        'Median (mm/s)', 'Resolved')):
+            ttk.Label(table, text=title, style='Faint.Panel.TLabel').grid(row=0, column=column, sticky='w',
+                                                                          padx=(0, px(18)), pady=(0, px(4)))
+        previous = None
+        for row, record in enumerate(rows.to_dict('records'), start=1):
+            reversed_note = '  (line the other way: sign reversed)' if record.get('reversed') else ''
+            values = (record['capillary'] if record['capillary'] != previous else '', record['recording'],
+                      record.get('observer') if isinstance(record.get('observer'), str) else '–',
+                      f'{record["dataset"]}{reversed_note}',
+                      f'{int(record["first_frame"])}–{int(record["last_frame"])}',
+                      _signed(record.get('median_velocity_mm_s')), _percent(record.get('resolved_fraction')))
+            previous = record['capillary']
+            for column, value in enumerate(values):
+                ttk.Label(table, text=value, style='Bold.Panel.TLabel' if column == 0 else 'Panel.TLabel').grid(
+                    row=row, column=column, sticky='w', padx=(0, px(18)), pady=px(1))
 
     def _table(self, card, title, headings):
         ttk.Label(card, text=title, style='Bold.Panel.TLabel').pack(anchor='w', pady=(px(16), px(4)))
@@ -1108,29 +1192,32 @@ class ValidationPage(ttk.Frame):
         cell.grid(row=row, column=column, sticky='nw', padx=(0, px(16)), pady=px(3))
         ttk.Label(cell, text=text, style='Bold.Panel.TLabel' if bold else 'Panel.TLabel',
                   wraplength=px(220) if column == 0 else 0, justify='left').pack(anchor='w')
-        if below:
+        if below and below != '–':
             ttk.Label(cell, text=below, style='Faint.Panel.TLabel').pack(anchor='w')
 
-    def _comparison_table(self, card, comparisons):
+    def _comparison_table(self, card, comparisons, unit='Blocks', readability=True):
+        things = unit.lower()
         velocity = self._table(card, 'Velocity (mm/s; differences are the first minus the second)', (
             ('Comparison', None),
-            ('Blocks', 'Blocks with a velocity from both, of the blocks both have judged'),
+            (unit, f'{unit} with a velocity from both' + (', of the blocks both have judged' if readability else '')),
             ('Bias', 'Mean difference, with its 95% confidence interval below'),
             ('95% limits of agreement', 'Bias ± 1.96 SD of the differences: 95% of the differences lie between them'),
             ('As ratios', 'The limits of agreement on a log scale: how many percent the first lies above or below the '
-                          'second, for 95% of blocks'),
+                          f'second, for 95% of {things}'),
             ('ICC (A,1)', 'Intraclass correlation, absolute agreement, single measurement, with its 95% confidence '
                           'interval below'),
-            ('Same direction', 'Blocks where both see the flow go the same way along the line')))
-        readable = self._table(card, 'Whether a block can be read at all (a velocity resolved, or lines drawn)', (
-            ('Comparison', None),
-            ('Judged by both', 'Blocks both have judged (an observer may not have finished)'),
-            ('Both', 'Both read a velocity'),
-            ('Only the first', 'Only the first named read a velocity'),
-            ('Only the second', 'Only the second named read a velocity'),
-            ('Neither', 'Neither read a velocity'),
-            ('Agreement', 'Share of blocks judged the same'),
-            ('Kappa', 'Cohen\'s kappa: agreement beyond chance, with its 95% confidence interval below')))
+            ('Same direction', f'{unit} where both see the flow go the same way along the line')))
+        readable = None
+        if readability:
+            readable = self._table(card, 'Whether a block can be read at all (a velocity resolved, or lines drawn)', (
+                ('Comparison', None),
+                ('Judged by both', 'Blocks both have judged (an observer may not have finished)'),
+                ('Both', 'Both read a velocity'),
+                ('Only the first', 'Only the first named read a velocity'),
+                ('Only the second', 'Only the second named read a velocity'),
+                ('Neither', 'Neither read a velocity'),
+                ('Agreement', 'Share of blocks judged the same'),
+                ('Kappa', 'Cohen\'s kappa: agreement beyond chance, with its 95% confidence interval below')))
         notes = []
         row = 0
         for comparison in comparisons:
@@ -1150,7 +1237,7 @@ class ValidationPage(ttk.Frame):
                        _between(comparison.get('icc_agreement_ci_low'), comparison.get('icc_agreement_ci_high'), 2)
                        .replace('+', ''))
             self._cell(velocity, row, 6, _percent(comparison.get('same_direction')))
-            if _finite(judged):
+            if readable is not None and _finite(judged):
                 self._cell(readable, row, 0, name, bold=True)
                 for column, key in enumerate(('judged_by_both', 'readable_both', 'readable_first_only',
                                               'readable_second_only', 'readable_neither'), start=1):
@@ -1221,17 +1308,12 @@ class ValidationPage(ttk.Frame):
     def ask_reading(self):
         if self.current is None:
             return
-        observer = self.app.settings.extra.get('observer', '')
-        answer = StartReadingDialog(self, self.current, observer).show()
+        answer = StartReadingDialog(self, self.current, validation.normalize_observer(
+            self.app.observer_var.get())).show()
         if answer is None:
             return
         observer, session = answer
-        if self.app.settings.extra.get('observer') != observer:
-            self.app.settings.extra['observer'] = observer
-            try:
-                self.app.settings.save()
-            except OSError:
-                pass
+        self.app.remember_observer(observer)
         self.start_reading(observer, session)
 
     def start_reading(self, observer, session):
@@ -1277,6 +1359,27 @@ class ValidationPage(ttk.Frame):
         self._agreement_job = self.app.jobs.submit(
             f'Agreement · {name}', partial(tasks.agreement_report, folder=self.app.folder, name=name),
             lane='analysis', key=('agreement', name), on_done=done, on_error=failed,
+            on_cancel=lambda: setattr(self, '_agreement_job', None))
+        self._jobs_changed()
+
+    def compute_placement(self):
+        def done(result):
+            self._agreement_job = None
+            count = result['capillaries']
+            self.app.set_status(f'Line placement: {count} capillar{"ies" if count != 1 else "y"} measured more than '
+                                f'once, among {result["measurements"]} centre-line data sets.')
+            if self.selected == PLACEMENT and not self.reading_mode:
+                self._rebuild()
+
+        def failed(exc):
+            self._agreement_job = None
+            self._jobs_changed()
+            show_error(self, 'The comparison could not be computed', str(exc) or type(exc).__name__,
+                       'The details are in capillaroscopy.log.')
+
+        self._agreement_job = self.app.jobs.submit(
+            'Line placement', partial(tasks.placement_report, folder=self.app.folder, sources=self._line_sources()),
+            lane='analysis', key=('placement',), on_done=done, on_error=failed,
             on_cancel=lambda: setattr(self, '_agreement_job', None))
         self._jobs_changed()
 
