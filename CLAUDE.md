@@ -65,7 +65,8 @@ If the user reports the app froze or crashed, check the task output file and
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
 recording list, keyboard routing) → one module per page (`gui/line_page.py` "Centre
 line", `analyze_page.py` "Two boxes", `capture_page.py`, `results_page.py`,
-`validation_page.py`; the two measure pages build on `gui/measure_page.py`). Long work runs as background jobs:
+`validation_page.py` with its reading mode in `reading_view.py`; the two measure
+pages build on `gui/measure_page.py`). Long work runs as background jobs:
 `gui/jobs.py` runs them, `gui/tasks.py` holds the work and has no Tk in it.
 Stabilization and the report plots of both methods are in `Caper.py`.
 

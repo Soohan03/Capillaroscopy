@@ -130,6 +130,7 @@ settings can be changed later with the gear button. Inside the folder it uses:
 | `gui/app.py` | The main window: header, recording list, pages, status bar, keyboard routing, application-wide actions |
 | `gui/line_page.py`, `gui/analyze_page.py`, `gui/capture_page.py`, `gui/results_page.py`, `gui/validation_page.py` | The five pages (Centre line, Two boxes, Capture, Results, Validation) |
 | `gui/measure_page.py` | What both measure pages build on: video, timeline, frame range, time points, the Measure footer, the last result |
+| `gui/reading_view.py` | The Validation page's reading mode: one block at a time, lines drawn along its streaks |
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
 | `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
 | `gui/library.py`, `gui/settings.py`, `gui/media.py`, `gui/camera.py` | Finding recordings, settings, frames for display, camera capture |

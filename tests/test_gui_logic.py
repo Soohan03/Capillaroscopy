@@ -16,7 +16,7 @@ from gui import library, tasks
 from gui.jobs import JobManager
 from gui.media import format_time
 from gui.settings import DataFolder, Settings
-from gui.validation_page import BlockGeometry, block_image
+from gui.reading_view import BlockGeometry, block_image
 
 
 def touch(path, content=b''):
