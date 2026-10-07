@@ -6,6 +6,112 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-07 — Official occlusion and release times added; the "slow flow" was the occlusion
+
+**Branch:** `data/occlusion-times`, from `main` at `bb597e2`.
+
+**Commits:**
+
+- `3fbfd6d` Add the official occlusion and release times of the ESMOKE and ISMOKE recordings
+
+The user shared the study progress report of the degree project, which the
+repository's `Thesis/report_draft.tex` (July) predates. The report covers:
+
+- **Data:** a retrospective archive of two crossover trials, stored in DynCap.
+  - ESMOKE: W = e-cigarette with nicotine, Q = without nicotine.
+  - ISMOKE: S = heated tobacco, C = no exposure.
+- **Recordings:** each visit has one before (före) and one after (efter) the
+  exposure.
+- **Aims:** aim 1 is the inter-day reproducibility of resting capillary blood cell
+  velocity from the two före recordings; aim 2 is the acute effect.
+- **Protocol:** every recording holds about 1 min of rest, 1 min of occlusion at
+  200 mmHg, and about 1 min after release.
+
+The user then provided the "official times" of occlusion and release, exported
+from DynCap.
+
+### The data (`metadata/`)
+
+`ESMOKE_timestamps.csv` and `ISMOKE_timestamps.csv` are kept exactly as
+provided: semicolon-separated, UTF-8, columns `subject`, `occlusion`,
+`release` (seconds from the start of the video) and `source_file` (the
+recording's stem). A check with pandas:
+
+- 74 + 50 recordings, 17 + 13 participants, no duplicate file names;
+- 16 recordings without a release time;
+- occlusion at a median 60.3 s, lasting a median 61.2 s (47.5–93.8 s);
+- all 8 recordings in the local `StabilizedVideos/` are covered.
+
+`metadata/README.md` lists the rows that differ from the pattern. Two of them:
+
+- **`FP01_Wefter_14-Oct-2019_10-07-49`:** occlusion at 158.5 s and release at
+  230.1 s, but the local video has 3435 frames: 114.5 s at the stamped 30 fps,
+  and 229 s at 15 fps. Either the times use another origin, or this
+  recording's true frame rate is 15 fps. A crude measure of blood movement in
+  the vessels, frame to frame, was too noisy to decide. Check in DynCap.
+- `FP21Wföre_…` has no underscore after the code.
+
+### Correction: the "slow flow" of 2026-10-06 was the occlusion
+
+The centre line along the FP01_Qföre limb (145 px) was measured over the
+whole recording instead of 63–94 s. Resolved 3-s blocks per 10-s window, and
+the official times:
+
+| Window (s) | Resolved | Median (mm/s) | Phase (official 68.3 / 130.5 s) |
+| --- | --- | --- | --- |
+| 0–70 | 0 of 105 | – | rest |
+| 70–80 | 6 of 15 | +0.017 | occlusion |
+| 80–90 | 14 of 15 | +0.012 | occlusion |
+| 90–100 | 15 of 15 | +0.005 | occlusion |
+| 100–130 | 16 of 45 | +0.009 to −0.007 | occlusion |
+| 130–190 | 3 of 90 | – (one block at +0.247) | after release |
+
+Space-time pictures of 5-s stretches show what happens in each phase:
+
+- **Occlusion:** the steep, curving streaks of slow, decelerating flow.
+- **Rest:** faint, almost horizontal streaks; the pattern crosses the line in a
+  few frames, roughly 0.5–1 mm/s.
+- **After release:** crisp, almost horizontal streaks, faster still.
+
+A crude measure of blood movement in the vessels jumps at 130 s, at the
+official release. Comparing each row with the next found no pattern moving
+within ±60 px at rest: the best match was always at zero shift, with weak
+correlation (r = 0.06–0.19).
+
+So the "slow flow, 0.01–0.04 mm/s" reported on 2026-10-06, and its reading
+that "slow flow is expected with this protocol", describe the occlusion. That
+holds for the 63–94-s stretch of the before limb, and the after-loop stretch
+(47.8–77.8 s) straddles rest and occlusion. At rest and after release the
+flow is faster than the centre line can measure at 30 fps: about 0.26 mm/s
+for this line, from the Fourier limit |ω| ≤ 0.45 cycles/frame.
+
+**Aim 1 needs resting CBV, so a fast-flow estimator is now the main open
+item.** The streaks at rest are motion-blurred and continuous, so fitting their
+slope in the image itself (Radon or Hough in the time domain) should work
+while a streak still spans about 3 frames. Longer lines would help further.
+
+### Correction: who recorded the videos
+
+The Capture-removal entry (below) said the 2019 recordings were "most likely"
+made with this app's recorder, because of their names. That evidence was
+circular: the rebuilt recorder had been written to reproduce the archive's
+names. The recordings were archived in DynCap, so its format (green-weighted
+grey, MP4V, 30-fps stamp) need not describe them. Their frame rate remains
+unverified (see `FP01_Wefter…10-07-49` above).
+
+**Documentation:**
+
+- `CLAUDE.md` gains a short "The study" section and the `metadata/` folder,
+  and puts "resting flow is beyond the centre line's range" first among the
+  known issues. Its frame-rate note no longer mentions the recorder, and it
+  marks `Thesis/` as outdated.
+- `README.md` lists `metadata/`.
+
+**Verification:** both files parse as described above. The check scripts are
+not in the repository. No code changed.
+
+---
+
 ## 2026-10-07 — Capture page removed: the app no longer records
 
 **Branch:** `refactor/remove-capture`, from `main` at `a6b367c` (after pull

@@ -140,6 +140,7 @@ changed later with the gear button. Inside the folder it uses:
 | `Utilities.py` | Small shared helpers |
 | `capillary/` | The GUI-free measurement engine, simulator, benchmark and batch CLI (see below), and the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`) |
 | `tests/` | Unit tests |
+| `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README) |
 
 ## Setup
 

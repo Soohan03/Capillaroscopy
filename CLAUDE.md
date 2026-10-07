@@ -3,6 +3,26 @@
 GUI tool (Tkinter + OpenCV) for analyzing capillaroscopy videos, built for a medical
 master's thesis on standardized capillary function analysis.
 
+## The study
+
+KI degree project, fall 2026: "Nailfold capillary blood cell velocity in healthy
+individuals: inter-day reproducibility and response to e-cigarettes and heated tobacco
+products".
+
+- **Archive:** a retrospective archive of two crossover trials, stored in DynCap.
+  - ESMOKE (2019–2020): W = e-cigarette with nicotine, Q = nicotine-free.
+  - ISMOKE (2020, names start `ISMOKE_`): S = heated tobacco, C = no exposure.
+- **Recordings:** each visit has a recording före (before) and efter (after) the
+  exposure. The FP codes restart per study.
+- **Every recording is rest → occlusion → release:** about 1 min rest, then 1 min
+  occlusion at 200 mmHg, then about 1 min after release. The official times are in
+  `metadata/` (see its README).
+- **Aim 1 (primary):** inter-day reproducibility of resting CBV from the two före
+  recordings. Reported as the within-subject CV (typical error/mean), the smallest
+  detectable change (2.77 × typical error), Bland–Altman and ICC(A,1).
+- **Aim 2:** the difference in before→after change, active minus control.
+- **Resting CBV must come from the rest window before occlusion.**
+
 ## Change diary (mandatory)
 
 Every session that changes code MUST append a dated entry to `DEVLOG.md` (newest
@@ -60,6 +80,9 @@ If the user reports the app froze or crashed, check the task output file and
   user's first try (6 blocks, observer "1")
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
   kept); emptied only by hand
+- `metadata/` (in the repository, tracked, unlike the data folders above) — the official
+  occlusion and release times of every ESMOKE and ISMOKE recording, exported from
+  DynCap, with notes on odd rows in its README
 
 ## Code layout
 
@@ -116,6 +139,14 @@ the 2026-10-05 GUI rebuild entry.
 
 ## Known issues
 
+- **Resting flow is beyond the centre line's range** (found 2026-10-07). On the
+  FP01_Qföre limb (145 px) only the occlusion phase resolves: slow, slowing flow from 70
+  to 130 s (official occlusion 68.3–130.5 s).
+  - At rest the space-time picture shows faint, almost horizontal streaks (roughly
+    0.5–1 mm/s); after release they are crisp and even faster. Both are above the line's
+    0.26 mm/s limit at 30 fps.
+  - The "slow flow, 0.01–0.04 mm/s" of 2026-10-06 was the occlusion.
+  - Aim 1 (resting CBV) needs a fast-flow estimator.
 - **The two-box method is not valid on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box
@@ -132,14 +163,18 @@ the 2026-10-05 GUI rebuild entry.
 - **Stabilization needs the whole video in memory twice, as float64**: about 21 GB for
   one of the existing 2–3 minute clips. The app refuses to start a stabilization that
   would need more than 85% of the available memory, instead of crashing.
-- **Frame rate unverified:** the 2019 recordings were made with this app's old
-  recorder (removed 2026-10-07), which stamped every file 30 fps whatever the camera
-  delivered (and wrote lossy MP4V). Every velocity scales with the true rate, which
-  was never measured.
+- **Frame rate unverified:** the recordings come from the DynCap archive, and the local
+  copies are stamped 30 fps. Every velocity scales with the true rate.
+  - FP01_Qföre agrees with its official times at 30 fps.
+  - `FP01_Wefter_14-Oct-2019_10-07-49` does not: its release at 230.1 s fits its 3435
+    frames only at 15 fps (see `metadata/README.md`).
+  - Earlier notes that these videos were made by this app's old recorder (MP4V, 30-fps
+    stamp) rested on circular evidence and do not hold.
 
 ## Repo state notes
 
 - Work happens in the private repo `Soohan03/Capillaroscopy` (`origin`);
   `Widaeus/capillaroscopy` is `upstream`, used only to pull updates. `main` is protected:
-  make changes on a branch and open a pull request. `Thesis/` (LaTeX draft + bibliography)
-  and `.claude/` are untracked by choice. Ask before committing either.
+  make changes on a branch and open a pull request. `Thesis/` (LaTeX draft + bibliography,
+  from July and outdated; the user keeps the current report elsewhere) and `.claude/` are
+  untracked by choice. Ask before committing either.
