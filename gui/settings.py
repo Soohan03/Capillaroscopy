@@ -8,7 +8,9 @@
     mm_per_pixel,0.001328903654
     box_size,12
 
-Rows this version does not know about are kept when the file is saved.
+Rows this version does not know about are kept when the file is saved. Each
+computer has its own file (git ignores it); without one, the app asks for the
+data folder on first start.
 """
 
 from __future__ import annotations
