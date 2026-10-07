@@ -8,7 +8,7 @@ on the vessel or between two boxes.
 ## Using the app
 
 The window has a list of recordings on the left (everything that shares one
-video's name: raw capture, stabilized copy, data sets) and four pages:
+video's name: raw capture, stabilized copy, data sets) and five pages:
 
 | Page | What you do there |
 | --- | --- |
@@ -16,13 +16,15 @@ video's name: raw capture, stabilized copy, data sets) and four pages:
 | **Two boxes** | The original method: place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary; the velocity comes from the delay between their brightness signals. Kept for comparison and for the data sets made with it (see below). |
 | **Capture** | Camera preview, recording into `RecordedVideos/`, marking time points (e.g. cuff release) while recording. |
 | **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the line or boxes of a data set restored on its page. |
+| **Validation** | Checks the centre-line velocity on real recordings, where there is no ground truth. A *reading set* draws 3-s blocks from centre-line data sets; observers read them by hand, blinded, by drawing lines along the streaks; the agreement with the estimator, between observers and between two sessions of one observer is computed with Bland–Altman limits, intraclass correlation and kappa. *Line placement* compares data sets of the same capillary measured by different observers (or twice by one). |
 
 A measurement reads the chosen frame range straight from the video file with
 the line (or boxes) held fixed, so it takes seconds rather than the length of
 the clip, and it is fully described by its parameters. Each data set gets a
 small `…_provenance.json` file beside it that records the line or box
 positions, frame range, calibration, estimator settings, video and code
-version it was made with.
+version it was made with, and the observer (initials) entered next to its
+name.
 
 Stabilizing runs in the background (right-click a recording, or the **⋯** menu
 above the list for all at once); you can keep working meanwhile. Press **F1**
@@ -61,21 +63,47 @@ whole vessel at once (probably small movements or focus), which both boxes see
 simultaneously, so the delay comes out as zero ("too fast to resolve") even
 where the flow is slow. See the 2026-10-06 entries in `DEVLOG.md`.
 
-**Validation.** `python3 -m capillary.benchmark` renders synthetic capillary
-loops with a known red-cell speed and the disturbances measured in the 2019
-recordings (`capillary/simulate.py`), measures them with both methods, and
-writes a table of errors (about 6 minutes; `--quick` for a short run). On it
-the centre line measures within ±2% in its range and reports flow it cannot
-measure as unresolved; the two boxes are off by up to ±10%, and much more under
-stronger disturbances.
+**Validation on synthetic recordings.** `python3 -m capillary.benchmark`
+renders synthetic capillary loops with a known red-cell speed and the
+disturbances measured in the 2019 recordings (`capillary/simulate.py`),
+measures them with both methods, and writes a table of errors (about 6
+minutes; `--quick` for a short run). On it the centre line measures within ±2%
+in its range and reports flow it cannot measure as unresolved; the two boxes
+are off by up to ±10%, and much more under stronger disturbances.
+
+**Validation on real recordings (Validation page).** A recording has no ground
+truth, so the estimator is compared with people:
+
+1. *Blinded reading.* A reading set draws a few non-overlapping 3-s blocks at
+   random from each chosen centre-line data set (by default half of them
+   from blocks the estimator resolved) and copies them, with a recorded seed,
+   into `Validation/<set>/`. Each observer reads every block in an order of
+   their own, without seeing its recording or the estimator's result: they
+   draw lines along the streaks (the block's slope is the mean of their
+   slopes) or mark it as having no clear streaks. A second session by the same
+   observer gives the repeatability. The agreement report measures every block
+   again with the current estimator and compares it with every reading, with
+   the mean of the observers, observers with each other and sessions with each
+   other (`capillary/validation.py`).
+2. *Line placement.* Centre-line data sets of the same capillary over the same
+   frames (lines running along each other, frame ranges overlapping by at
+   least 80%) are matched automatically, and their median velocities compared
+   between observers and between two measurements by one observer
+   (`capillary/placement.py`).
+
+Velocities are compared with Bland–Altman bias and 95% limits of agreement
+(with confidence intervals, a test for a difference that grows with the
+velocity, and the same on a log scale as ratios) and the intraclass
+correlation ICC(A,1); whether a block can be read at all with Cohen's kappa
+(`capillary/agreement.py`).
 
 ## Data folder
 
 `settings.csv` stores `Application_path`, the folder that holds the research
-data, `mm_per_pixel`, the spatial calibration of the microscope, and
-`box_size`, the default box size. On first start (or if the file is missing)
-the app asks for the folder; the settings can be changed later with the gear
-button. Inside the folder it uses:
+data, `mm_per_pixel`, the spatial calibration of the microscope,
+`box_size`, the default box size, and `observer`, the initials last entered.
+On first start (or if the file is missing) the app asks for the folder; the
+settings can be changed later with the gear button. Inside the folder it uses:
 
 - `RecordedVideos/`: raw captures from the microscope.
 - `StabilizedVideos/`: stabilized copies, used for measuring.
@@ -84,6 +112,10 @@ button. Inside the folder it uses:
   keeps its space-time diagram (`___space_time.npy`), so its report can be
   written again without the video.
 - `Reports/`: the plots and summary tables written from the data sets.
+- `Validation/`: reading sets, one folder each (`set.json`, the blocks in
+  `blocks.npz`, `readings/<observer>_s<session>.json`, the agreement tables
+  and plots in `report/`), and the line-placement comparison in
+  `line_placement/`. Created when the first reading set is drawn.
 - `.trash/`: what was moved to the trash, one dated folder per action.
 - `Flows/`: optical-flow videos from versions before 2026-10-06, when the
   optical-flow measurement was removed. The app no longer creates or reads
@@ -96,15 +128,15 @@ button. Inside the folder it uses:
 | --- | --- |
 | `Application.py` | Entry point: logging, then the window from `gui/` |
 | `gui/app.py` | The main window: header, recording list, pages, status bar, keyboard routing, application-wide actions |
-| `gui/line_page.py`, `gui/analyze_page.py`, `gui/capture_page.py`, `gui/results_page.py` | The four pages (Centre line, Two boxes, Capture, Results) |
+| `gui/line_page.py`, `gui/analyze_page.py`, `gui/capture_page.py`, `gui/results_page.py`, `gui/validation_page.py` | The five pages (Centre line, Two boxes, Capture, Results, Validation) |
 | `gui/measure_page.py` | What both measure pages build on: video, timeline, frame range, time points, the Measure footer, the last result |
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
-| `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports) |
+| `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
 | `gui/library.py`, `gui/settings.py`, `gui/media.py`, `gui/camera.py` | Finding recordings, settings, frames for display, camera capture |
-| `Caper.py` | Stabilization and the report plots of both methods |
+| `Caper.py` | Stabilization, the report plots of both methods, and the agreement plots of the Validation page |
 | `SingleStepDFT.py` | Sub-pixel image registration used by stabilization (vendored, see its docstring) |
 | `Utilities.py` | Small shared helpers |
-| `capillary/` | The GUI-free measurement engine, simulator, benchmark and batch CLI (see below) |
+| `capillary/` | The GUI-free measurement engine, simulator, benchmark and batch CLI (see below), and the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`) |
 | `tests/` | Unit tests |
 
 ## Setup
@@ -164,6 +196,8 @@ velocity — a real clip has no ground truth, so it cannot tell you whether the
 estimator is right. `tests/synthetic.py` generates a pattern sliding at a
 chosen pixels-per-frame rate; `capillary/simulate.py` renders capillary loops
 with the disturbances of the real recordings. Further tests cover both
-measurements as the pages run them, the saved file formats, and the GUI's
-non-visual logic (settings, the recording list, the trash, background jobs).
-None of them needs a display.
+measurements as the pages run them, the saved file formats, the agreement
+statistics (against the published example of Shrout & Fleiss 1979 and values
+worked by hand), reading sets with simulated observers, the matching of line
+placements, and the GUI's non-visual logic (settings, the recording list, the
+trash, background jobs, the reading canvas). None of them needs a display.
