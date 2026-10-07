@@ -106,6 +106,11 @@ class DataFolder:
         return os.path.join(self.root, 'Reports')
 
     @property
+    def validation(self) -> str:
+        """Reading sets: blocks read by observers to validate the centre-line velocity (created when needed)."""
+        return os.path.join(self.root, 'Validation')
+
+    @property
     def trash(self) -> str:
         """Where deleted videos and data sets are moved; empty it by hand."""
         return os.path.join(self.root, '.trash')

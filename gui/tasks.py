@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 import Caper
-from capillary import datasets, spacetime
+from capillary import datasets, spacetime, validation
 from capillary.intensity import extract_traces
 from capillary.measure import measure_velocity
 from capillary.roi import ROI
@@ -453,6 +453,34 @@ def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps
                       report_regenerated=datetime.datetime.now().isoformat(timespec='seconds'))
         datasets.write_provenance(files['provenance'], record)
     return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks)}
+
+
+# ------------------------------------------------------------ validation (reading sets)
+
+def create_reading_set(job, *, folder: DataFolder, name: str, sources, blocks_per_dataset: int, balanced: bool,
+                       seed: Optional[int], mm_per_pixel: float) -> str:
+    """Draw a reading set from centre-line data sets (`capillary.validation`); returns its name."""
+    job.report(0.0, 'Drawing blocks')
+    reading_set = validation.create_reading_set(
+        folder.validation, folder.statistics, name, sources, blocks_per_dataset=blocks_per_dataset,
+        balanced=balanced, seed=seed, fallback_mm_per_pixel=mm_per_pixel,
+        progress=lambda p: job.report(0.95 * p, 'Drawing blocks'))
+    return reading_set.name
+
+
+def agreement_report(job, *, folder: DataFolder, name: str) -> dict:
+    """Measure every block of a reading set again, compare it with the readings, write tables and plots."""
+    job.report(0.0, 'Measuring the blocks')
+    reading_set = validation.load_reading_set(folder.validation, name)
+    readings = reading_set.readings()
+    estimates = validation.estimate_items(reading_set, progress=lambda p: job.report(0.8 * p, 'Measuring the blocks'))
+    table = validation.agreement_table(reading_set, readings, estimates)
+    comparisons = validation.compare(table, readings)
+    job.report(0.82, 'Writing the tables')
+    files = validation.write_report_tables(reading_set, table, comparisons, readings)
+    job.report(0.86, 'Drawing the plots')
+    files.update(Caper.generate_validation_report(reading_set.report_dir, table, comparisons))
+    return {'name': name, 'comparisons': comparisons, 'files': files, 'readings': len(readings)}
 
 
 # ------------------------------------------------------------------ results browsing

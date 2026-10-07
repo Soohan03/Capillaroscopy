@@ -280,8 +280,18 @@ SHORTCUTS = (
         ('M', 'Mark a time point at the current frame'),
         ('Right-click a marker', 'Remove it'),
     )),
+    ('Reading blocks (Validation)', (
+        ('Drag on the block', 'Draw a line along a streak'),
+        ('Drag a line end', 'Move it'),
+        ('Right-click a line', 'Remove it'),
+        ('Backspace', 'Remove the last line'),
+        ('N', 'No clear streaks in this block'),
+        ('Enter or →', 'Next block'),
+        ('←', 'Previous block'),
+        ('Esc', 'Finish later (everything is saved)'),
+    )),
     ('Window', (
-        ('Ctrl + 1 … 4', 'Centre line, Two boxes, Capture, Results'),
+        ('Ctrl + 1 … 5', 'Centre line, Two boxes, Capture, Results, Validation'),
         ('Ctrl + R', 'Look for new videos and data sets'),
         ('Ctrl + ,', 'Settings'),
         ('F1 or ?', 'This list'),
@@ -298,7 +308,7 @@ class ShortcutsDialog(Dialog):
                                                                                       pady=(0, px(10)))
         columns = ttk.Frame(self.body, style='Panel.TFrame')
         columns.pack(fill='both')
-        halves = (SHORTCUTS[:2], SHORTCUTS[2:])
+        halves = (SHORTCUTS[:3], SHORTCUTS[3:])
         for column, groups in enumerate(halves):
             frame = ttk.Frame(columns, style='Panel.TFrame')
             frame.grid(row=0, column=column, sticky='nw', padx=(0 if column == 0 else px(28), 0))
