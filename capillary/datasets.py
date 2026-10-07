@@ -6,7 +6,7 @@ without extension and ``<name>`` is what the user typed. The report code reads
 them back from there. Data sets written by earlier versions of the app use the
 same names and formats, so they stay readable.
 
-Velocity data set (Analyze page)
+Velocity data set (Two boxes page)
     ``___cross_correlation.csv``  mean intensity of box 1 (row 0) and box 2
                                   (row 1), one column per frame
     ``___distance_vector.csv``    box separation in pixels, one row per frame
@@ -17,6 +17,18 @@ Frames outside the measured range are NaN. Since the 2026-10 GUI rebuild each
 data set also gets ``___velocity_provenance.json`` recording the video, boxes,
 frame range, calibration and software version behind it, so the numbers can be
 traced back and reproduced.
+
+Centre-line data set (Centre line page, since 2026-10-06; `capillary.spacetime`)
+    ``___space_time.npy``         the space-time diagram of the measured frames:
+                                  float32, one row per frame, one column per
+                                  pixel along the line
+    ``___line_velocity.csv``      one row per block: its centre frame, time,
+                                  speed along the line, velocity, signal-to-noise
+                                  ratio, coherence and whether it was resolved
+    ``___line_provenance.json``   the video, the line's points, the frames,
+                                  calibration, estimator settings and summary
+plus ``___line_velocity.png``, ``___space_time.png`` and ``___line_summary.csv``
+in ``Reports/``.
 
 Versions before 2026-10-06 also had an optical-flow measurement, saved as
 ``___flow.pickle`` and ``___mask.pickle`` (plus ``___flow_provenance.json``)
@@ -54,6 +66,16 @@ VELOCITY_REPORT_FILES = {
     'summary': '___report_summary.csv',
 }
 
+#: Plot and summary files the centre-line report writes to ``Reports/``, by role.
+LINE_REPORT_FILES = {
+    'line_velocity': '___line_velocity.png',
+    'space_time': '___space_time.png',
+    'summary': '___line_summary.csv',
+}
+
+#: The kinds of data set, as `dataset_paths` and the provenance files name them.
+KINDS = ('velocity', 'line')
+
 #: Files of an optical-flow data set from before 2026-10-06, after ``<stem>___<name>___``:
 #: the first marks the data set; the plots are in ``Reports/``, the rest in ``Statistics/``.
 LEGACY_FLOW_STATISTICS = ('flow.pickle', 'mask.pickle', 'flow_provenance.json')
@@ -87,6 +109,19 @@ def velocity_report_files(reports_dir: str, stem: str, name: str) -> dict:
     return {role: prefix + suffix for role, suffix in VELOCITY_REPORT_FILES.items()}
 
 
+def line_dataset_files(statistics_dir: str, stem: str, name: str) -> dict:
+    """Paths of a centre-line data set's files, keyed by part."""
+    prefix = dataset_prefix(statistics_dir, stem, name) + SEPARATOR
+    return {'space_time': prefix + 'space_time.npy', 'velocity': prefix + 'line_velocity.csv',
+            'provenance': prefix + 'line_provenance.json'}
+
+
+def line_report_files(reports_dir: str, stem: str, name: str) -> dict:
+    """Paths of the files the centre-line report writes to ``Reports/``."""
+    prefix = dataset_prefix(reports_dir, stem, name)
+    return {role: prefix + suffix for role, suffix in LINE_REPORT_FILES.items()}
+
+
 def time_points_file(statistics_dir: str, stem: str) -> str:
     return os.path.join(statistics_dir, f'{stem}_registered_time_points.csv')
 
@@ -104,6 +139,11 @@ def _names_with_suffix(directory: str, stem: str, suffix: str) -> list[str]:
 def list_velocity_datasets(statistics_dir: str, stem: str) -> list[str]:
     """Names of the velocity data sets saved for `stem`, sorted."""
     return _names_with_suffix(statistics_dir, stem, f'{SEPARATOR}cross_correlation.csv')
+
+
+def list_line_datasets(statistics_dir: str, stem: str) -> list[str]:
+    """Names of the centre-line data sets saved for `stem`, sorted."""
+    return _names_with_suffix(statistics_dir, stem, f'{SEPARATOR}line_velocity.csv')
 
 
 def validate_dataset_name(name: str) -> Optional[str]:
@@ -197,6 +237,22 @@ def write_velocity_dataset(
     return {part: files[part] for part in VELOCITY_INPUTS}
 
 
+def write_line_dataset(statistics_dir: str, stem: str, name: str, diagram, blocks: pd.DataFrame) -> dict:
+    """Save a centre-line measurement: its space-time diagram and its per-block velocities."""
+    files = line_dataset_files(statistics_dir, stem, name)
+    np.save(files['space_time'], np.asarray(diagram, dtype=np.float32), allow_pickle=False)
+    blocks.to_csv(files['velocity'])
+    return {part: files[part] for part in ('space_time', 'velocity')}
+
+
+def load_line_dataset(statistics_dir: str, stem: str, name: str) -> tuple[np.ndarray, pd.DataFrame]:
+    """The ``(diagram, blocks)`` of a centre-line data set (`blocks` indexed by centre frame)."""
+    files = line_dataset_files(statistics_dir, stem, name)
+    diagram = np.load(files['space_time'], allow_pickle=False)
+    blocks = pd.read_csv(files['velocity'], index_col=0)
+    return diagram, blocks
+
+
 # --------------------------------------------------------------------- provenance
 
 def software_version(repository: Optional[str] = None) -> dict:
@@ -258,14 +314,21 @@ def read_provenance(path: str) -> Optional[dict]:
 
 # -------------------------------------------------------------------- whole data set
 
-def dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str) -> list[str]:
-    """Every file belonging to one velocity data set that exists on disk.
+def dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str, kind: str = 'velocity') -> list[str]:
+    """Every file belonging to one data set that exists on disk.
 
-    Used to move a data set to the trash as a unit; names are matched exactly,
-    so ``Test`` never picks up the files of ``Test2``.
+    `kind` is ``'velocity'`` (two boxes) or ``'line'`` (centre line). Used to
+    move a data set to the trash as a unit; names are matched exactly, so
+    ``Test`` never picks up the files of ``Test2``.
     """
-    candidates = list(velocity_dataset_files(statistics_dir, stem, name).values())
-    candidates += list(velocity_report_files(reports_dir, stem, name).values())
+    if kind == 'velocity':
+        candidates = list(velocity_dataset_files(statistics_dir, stem, name).values())
+        candidates += list(velocity_report_files(reports_dir, stem, name).values())
+    elif kind == 'line':
+        candidates = list(line_dataset_files(statistics_dir, stem, name).values())
+        candidates += list(line_report_files(reports_dir, stem, name).values())
+    else:
+        raise ValueError(f'kind must be one of {KINDS}, got {kind!r}')
     return [path for path in candidates if os.path.exists(path)]
 
 

@@ -256,7 +256,15 @@ SHORTCUTS = (
         ('Middle-drag on the video', 'Pan when zoomed in'),
         ('F', 'Fit the video to the window'),
     )),
-    ('Boxes (Analyze)', (
+    ('Centre line', (
+        ('Click', 'Add a point (start where the blood comes from)'),
+        ('Click on the line', 'Add a point there'),
+        ('Drag a point', 'Move it'),
+        ('Right-click a point', 'Remove it'),
+        ('Backspace', 'Remove the last point'),
+        ('X', 'Reverse the line'),
+    )),
+    ('Boxes (Two boxes)', (
         ('Click', 'Place the selected box (Box 1 first, then Box 2)'),
         ('Right-click or Ctrl + click', 'Place Box 2'),
         ('Drag a box', 'Move it'),
@@ -273,7 +281,7 @@ SHORTCUTS = (
         ('Right-click a marker', 'Remove it'),
     )),
     ('Window', (
-        ('Ctrl + 1 … 3', 'Analyze, Capture, Results'),
+        ('Ctrl + 1 … 4', 'Centre line, Two boxes, Capture, Results'),
         ('Ctrl + R', 'Look for new videos and data sets'),
         ('Ctrl + ,', 'Settings'),
         ('F1 or ?', 'This list'),

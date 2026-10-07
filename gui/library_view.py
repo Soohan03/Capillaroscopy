@@ -290,7 +290,7 @@ class LibraryPanel(ttk.Frame):
         body = ttk.Frame(self, style='Panel.TFrame')
         body.pack(fill='both', expand=True)
         self.list = RecordingList(body, on_select=self._select, on_context=self._context,
-                                  on_activate=lambda item: app.show_page('analyze'))
+                                  on_activate=lambda item: app.show_page('line'))
         scrollbar = ttk.Scrollbar(body, orient='vertical', command=self.list.yview, style='Slim.Vertical.TScrollbar')
         self.list.configure(yscrollcommand=scrollbar.set)
         self.list.pack(side='left', fill='both', expand=True)
@@ -336,7 +336,8 @@ class LibraryPanel(ttk.Frame):
     def _context(self, recording, event):
         menu = tk.Menu(self, tearoff=False)
         app = self.app
-        menu.add_command(label='Measure velocity', command=lambda: app.show_page('analyze'))
+        menu.add_command(label='Measure velocity along a centre line', command=lambda: app.show_page('line'))
+        menu.add_command(label='Measure velocity with two boxes', command=lambda: app.show_page('analyze'))
         menu.add_command(label='Results', command=lambda: app.show_page('results'))
         menu.add_separator()
         menu.add_command(label='Re-stabilize…' if recording.is_stabilized else 'Stabilize',

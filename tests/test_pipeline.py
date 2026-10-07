@@ -158,6 +158,35 @@ def test_cli_writes_a_report(video_file, tmp_path, capsys):
     assert 'velocity' in capsys.readouterr().out
 
 
+def test_cli_measures_along_a_line(video_file, tmp_path, capsys):
+    import pandas as pd
+
+    out = tmp_path / 'blocks.csv'
+    exit_code = main([
+        str(video_file),
+        '--line', f'60,{UPSTREAM_Y - 20}; 60,{DOWNSTREAM_Y + 30}',
+        '--mm-per-pixel', str(MM_PER_PIXEL),
+        '--start', '20',
+        '--out', str(out),
+    ])
+
+    assert exit_code == 0
+    blocks = pd.read_csv(out, index_col=0)
+    assert blocks.index.min() == 20 + 45                      # the first 90-frame block starts at frame 20
+    resolved = blocks[blocks['resolved']]
+    expected = expected_velocity_mm_s(VELOCITY_PX_PER_FRAME, FPS, MM_PER_PIXEL)
+    assert len(resolved) == len(blocks)
+    assert resolved['velocity_mm_s'].median() == pytest.approx(expected, rel=0.03)
+    assert 'centre line' in capsys.readouterr().out
+
+
+def test_cli_wants_a_line_or_two_boxes(video_file):
+    for argv in ([], ['--roi1', '10,10'], ['--line', '1,1;9,9', '--roi1', '1,1', '--roi2', '2,2'],
+                 ['--line', 'nonsense']):
+        with pytest.raises(SystemExit):
+            main([str(video_file), *argv])
+
+
 def test_cli_reports_a_missing_file_without_a_traceback(tmp_path, capsys):
     exit_code = main([str(tmp_path / 'missing.mp4'), '--roi1', '10,10', '--roi2', '10,20'])
 

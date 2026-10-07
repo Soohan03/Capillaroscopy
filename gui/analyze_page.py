@@ -1,4 +1,9 @@
-"""Analyze page: red-cell velocity from two boxes on one capillary.
+"""Two boxes page: red-cell velocity from two boxes on one capillary.
+
+The original method of this tool, kept for comparison and for the data sets
+made with it. On the 2019 recordings it is dominated by brightness changes
+that reach both boxes at once (see the 2026-10-06 entries in DEVLOG.md); the
+Centre line page (`line_page.py`) measures the same flow without that problem.
 
 Box 1 sits downstream (the blood reaches it last), box 2 upstream on the same
 capillary. A plug passing darkens box 2 first and box 1 a few frames later; the
@@ -71,7 +76,7 @@ class BoxTool(Tool):
 
 class AnalyzePage(MeasurePage):
     key = 'analyze'
-    title = 'Analyze'
+    title = 'Two boxes'
     measure_label = 'Measure velocity and save'
     min_frames = datasets.MIN_VELOCITY_FRAMES
 

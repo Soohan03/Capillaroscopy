@@ -30,6 +30,13 @@ ROLE_TITLES = {
     'velocity_above_zero': 'Velocity, negative set to 0',
     'correlation': 'Correlation',
     'velocity_above_zero_with_correlation': 'Velocity with correlation bands',
+    'line_velocity': 'Velocity along the line',
+    'space_time': 'Space-time diagram',
+}
+#: Chip text and colours of each kind of data set, and the page that measures it.
+KIND_LOOK = {
+    'line': ('CENTRE LINE', 'success', 'success_soft', 'line'),
+    'velocity': ('TWO BOXES', 'accent', 'accent_soft', 'analyze'),
 }
 
 
@@ -39,6 +46,12 @@ def _report_thumbnail(path, width):
     image = Image.alpha_composite(background, image).convert('RGB')
     image.thumbnail((width, width), Image.Resampling.LANCZOS)
     return image
+
+
+def _velocity_text(value):
+    if value is None or not math.isfinite(value):
+        return '–'
+    return f'{value:.4f}' if abs(value) < 0.1 else f'{value:.3f}'
 
 
 class ResultsPage(ttk.Frame):
@@ -74,8 +87,8 @@ class ResultsPage(ttk.Frame):
     def handle_key(self, event):
         return False
 
-    def focus_dataset(self, name):
-        self._focus = name
+    def focus_dataset(self, kind, name):
+        self._focus = (kind, name)
         self._highlight()
 
     def _rebuild(self):
@@ -98,13 +111,15 @@ class ResultsPage(ttk.Frame):
         ttk.Label(header, text=recording.stem, style='Title.TLabel').pack(side='left')
         ttk.Button(header, text='Show in folder', image=icon('folder', 14, COLORS['muted']), compound='left',
                    command=lambda: self.app.open_folder(recording.video)).pack(side='right')
-        ttk.Button(header, text='Measure velocity', command=lambda: self.app.show_page('analyze')).pack(
+        ttk.Button(header, text='Two boxes', command=lambda: self.app.show_page('analyze')).pack(
+            side='right', padx=(0, px(8)))
+        ttk.Button(header, text='Measure along a line', command=lambda: self.app.show_page('line')).pack(
             side='right', padx=(0, px(8)))
 
         self._files_card(body, recording)
         self._time_points_card(body, recording)
 
-        names = list(recording.velocity_sets)
+        names = [(kind, name) for kind in ('line', 'velocity') for name in recording.datasets_of(kind)]
         title = ttk.Frame(body, style='TFrame')
         title.pack(fill='x', pady=(px(22), px(8)))
         ttk.Label(title, text='Data sets', style='Subtitle.TLabel').pack(side='left')
@@ -113,12 +128,12 @@ class ResultsPage(ttk.Frame):
         if not names:
             empty = tk.Frame(body, bg=COLORS['panel'], highlightthickness=1, highlightbackground=COLORS['border'])
             empty.pack(fill='x')
-            ttk.Label(empty, text='No data sets yet. Measure velocity on the Analyze page; each measurement is '
-                                  'saved here with its report.', style='Muted.Panel.TLabel',
+            ttk.Label(empty, text='No data sets yet. Measure velocity on the Centre line page (or with two boxes); '
+                                  'each measurement is saved here with its report.', style='Muted.Panel.TLabel',
                       padding=(px(16), px(16))).pack(anchor='w')
             return
-        for name in names:
-            self._cards[name] = self._dataset_card(body, name)
+        for kind, name in names:
+            self._cards[(kind, name)] = self._dataset_card(body, kind, name)
         self._loader = threading.Thread(target=self._load, args=(token, recording, names), name='results', daemon=True)
         self._loader.start()
         self.after(60, self._poll, token)
@@ -179,15 +194,16 @@ class ResultsPage(ttk.Frame):
         card = self._card(parent)
         ttk.Label(card, text='TIME POINTS', style='Section.Panel.TLabel').pack(anchor='w', pady=(0, px(6)))
         text = ('   '.join(format_time(p) for p in points) if points
-                else 'None marked. Mark events on the Analyze page (M) or while recording.')
+                else 'None marked. Mark events while measuring (M) or while recording.')
         ttk.Label(card, text=text, style='Mono.Panel.TLabel' if points else 'Muted.Panel.TLabel',
                   wraplength=px(900), justify='left').pack(anchor='w')
 
-    def _dataset_card(self, parent, name):
+    def _dataset_card(self, parent, kind, name):
         card = self._card(parent)
         head = ttk.Frame(card, style='Panel.TFrame')
         head.pack(fill='x')
-        tk.Label(head, text='VELOCITY', font=FONTS['section'], fg=COLORS['accent'], bg=COLORS['accent_soft'],
+        chip, foreground, background, _ = KIND_LOOK[kind]
+        tk.Label(head, text=chip, font=FONTS['section'], fg=COLORS[foreground], bg=COLORS[background],
                  padx=px(7), pady=px(2)).pack(side='left')
         ttk.Label(head, text=name if name else '(no name)', style='Subtitle.Panel.TLabel').pack(side='left',
                                                                                               padx=(px(10), 0))
@@ -200,28 +216,31 @@ class ResultsPage(ttk.Frame):
         card.images.pack(fill='x', pady=(px(10), 0))
         actions = ttk.Frame(card, style='Panel.TFrame')
         actions.pack(fill='x', pady=(px(12), 0))
-        regenerate = ttk.Button(actions, text='Regenerate report', command=partial(self._regenerate, name))
+        regenerate = ttk.Button(actions, text='Regenerate report', command=partial(self._regenerate, kind, name))
         regenerate.pack(side='left')
         Tooltip(regenerate, 'Write the report of this data set again, e.g. after adding time points. The '
-                            'measured data is not changed.')
-        card.restore = ttk.Button(actions, text='Restore positions', command=partial(self._restore, name))
+                            'measured data is not changed.' if kind == 'velocity' else
+                            'Measure the saved space-time diagram again and write its report, e.g. after adding '
+                            'time points. The video is not needed.')
+        card.restore = ttk.Button(actions, text='Restore positions', command=partial(self._restore, kind, name))
         card.restore.pack(side='left', padx=(px(8), 0))
         card.restore.state(['disabled'])
-        Tooltip(card.restore, 'Open the recording with the boxes and range this data set was measured with.')
+        Tooltip(card.restore, 'Open the recording with the line (or boxes) and range this data set was measured '
+                              'with.')
         ttk.Button(actions, text='Show files', style='Ghost.TButton',
-                   command=partial(self._show_files, name)).pack(side='left', padx=(px(8), 0))
+                   command=partial(self._show_files, kind, name)).pack(side='left', padx=(px(8), 0))
         ttk.Button(actions, text='Move to trash', image=icon('trash', 13, COLORS['danger']), compound='left',
-                   style='Ghost.TButton', command=partial(self._delete, name)).pack(side='right')
+                   style='Ghost.TButton', command=partial(self._delete, kind, name)).pack(side='right')
         card.record = None
         return card
 
     # ----------------------------------------------------------------------- loading
     def _load(self, token, recording, names):
-        for name in names:
+        for kind, name in names:
             if token != self._token:
                 return
             try:
-                info = tasks.dataset_info(self.app.folder, recording.stem, name)
+                info = tasks.dataset_info(self.app.folder, recording.stem, name, kind)
                 thumbs = []
                 for role, path in info['images']:
                     try:
@@ -230,9 +249,9 @@ class ResultsPage(ttk.Frame):
                         log.warning('Could not read %s', path, exc_info=True)
                 info['thumbs'] = thumbs
             except Exception as exc:  # noqa: BLE001 - shown on the card
-                log.warning('Could not load data set %s', name, exc_info=True)
+                log.warning('Could not load data set %s %s', kind, name, exc_info=True)
                 info = {'error': str(exc)}
-            self._results.put((token, name, info))
+            self._results.put((token, kind, name, info))
 
     def _poll(self, token):
         if token != self._token:
@@ -240,19 +259,19 @@ class ResultsPage(ttk.Frame):
         done = False
         while True:
             try:
-                result_token, name, info = self._results.get_nowait()
+                result_token, kind, name, info = self._results.get_nowait()
             except queue.Empty:
                 break
             if result_token == self._token:
-                self._fill(name, info)
-                done = name == list(self._cards)[-1]
+                self._fill(kind, name, info)
+                done = (kind, name) == list(self._cards)[-1]
         if not done:
             self.after(80, self._poll, token)
         else:
             self._highlight()
 
-    def _fill(self, name, info):
-        card = self._cards.get(name)
+    def _fill(self, kind, name, info):
+        card = self._cards.get((kind, name))
         if card is None:
             return
         for child in card.summary.winfo_children():
@@ -269,18 +288,29 @@ class ResultsPage(ttk.Frame):
         if summary:
             median = summary.get('median', float('nan'))
             if median is not None and math.isfinite(median):
-                lines.append((f'Median velocity {median:.3f} mm/s   (middle 50 %: {summary["q25"]:.3f} – '
-                              f'{summary["q75"]:.3f})', 'Bold.Panel.TLabel'))
+                lines.append((f'Median velocity {_velocity_text(median)} mm/s   (middle 50 %: '
+                              f'{_velocity_text(summary.get("q25"))} – {_velocity_text(summary.get("q75"))})',
+                              'Bold.Panel.TLabel'))
             else:
                 lines.append(('No velocity could be resolved', 'Bold.Panel.TLabel'))
-            zero = summary.get('zero_lag_fraction')
-            parts = [f'{100 * summary.get("resolved_fraction", 0):.0f} % of windows resolved']
-            if zero is not None and math.isfinite(zero):
-                parts.append(f'{100 * zero:.0f} % too fast to resolve')
-            r = summary.get('median_correlation')
-            if r is not None and math.isfinite(r):
-                parts.append(f'median correlation {r:.2f}')
-            lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
+            resolved = summary.get('resolved_fraction', 0) or 0
+            if kind == 'line':
+                parts = [f'{100 * resolved:.0f} % of 3-s blocks resolved']
+                snr = summary.get('median_snr')
+                if snr is not None and math.isfinite(snr):
+                    parts.append(f'median signal-to-noise {snr:.0f}')
+                lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
+                if resolved < 0.25:
+                    lines.append(('Few blocks were resolved, so the median is uncertain.', 'Warning.Panel.TLabel'))
+            else:
+                zero = summary.get('zero_lag_fraction')
+                parts = [f'{100 * resolved:.0f} % of windows resolved']
+                if zero is not None and math.isfinite(zero):
+                    parts.append(f'{100 * zero:.0f} % lag 0 (too fast, or a change both boxes saw at once)')
+                r = summary.get('median_correlation')
+                if r is not None and math.isfinite(r):
+                    parts.append(f'median correlation {r:.2f}')
+                lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
         if record:
             lines.append((_describe_record(record), 'Muted.Panel.TLabel'))
             card.restore.state(['!disabled'])
@@ -330,23 +360,25 @@ class ResultsPage(ttk.Frame):
         ImageViewer(self, path, title=f'{ROLE_TITLES.get(role, role)}  ·  {os.path.basename(path)}',
                     on_open_folder=lambda: self.app.open_folder(path))
 
-    def _show_files(self, name):
+    def _show_files(self, kind, name):
         folder = self.app.folder
-        files = datasets.velocity_dataset_files(folder.statistics, self.recording.stem, name)
+        files = (datasets.line_dataset_files if kind == 'line' else datasets.velocity_dataset_files)(
+            folder.statistics, self.recording.stem, name)
         first = next((path for path in files.values() if os.path.exists(path)), None)
         self.app.open_folder(first or folder.statistics)
 
-    def _restore(self, name):
-        card = self._cards.get(name)
+    def _restore(self, kind, name):
+        card = self._cards.get((kind, name))
         if card is None or not card.record:
             return
-        self.app.show_page('analyze')
-        if self.app.pages['analyze'].apply_record(card.record):
+        page = KIND_LOOK[kind][3]
+        self.app.show_page(page)
+        if self.app.pages[page].apply_record(card.record):
             self.app.set_status(f'Positions and range of "{name}" restored.')
 
-    def _regenerate(self, name):
+    def _regenerate(self, kind, name):
         recording = self.recording
-        card = self._cards.get(name)
+        card = self._cards.get((kind, name))
         record = card.record if card is not None else None
         settings = self.app.settings
         mm_per_pixel = (record or {}).get('mm_per_pixel') or settings.mm_per_pixel
@@ -359,14 +391,15 @@ class ResultsPage(ttk.Frame):
         fps = fps or 30.0
         stem = recording.stem
         points = datasets.load_time_points(datasets.time_points_file(self.app.folder.statistics, stem))
-        work = partial(tasks.regenerate_velocity_report, folder=self.app.folder, stem=stem, name=name, fps=fps,
+        regenerate = tasks.regenerate_line_report if kind == 'line' else tasks.regenerate_velocity_report
+        work = partial(regenerate, folder=self.app.folder, stem=stem, name=name, fps=fps,
                        mm_per_pixel=mm_per_pixel, time_points=points)
         source = 'recorded with the data set' if record and record.get('mm_per_pixel') else 'from the settings'
 
         def done(_result):
             self.app.set_status(f'Report of "{name}" written again ({mm_per_pixel:g} mm per pixel, {source}).')
             if self.recording is not None and self.recording.stem == stem:
-                self._focus = name
+                self._focus = (kind, name)
                 self._rebuild()
 
         def failed(exc):
@@ -374,14 +407,14 @@ class ResultsPage(ttk.Frame):
                        'The details are in capillaroscopy.log.')
 
         job = self.app.jobs.submit(f'Report · {stem} · {name}', work, lane='analysis', on_done=done, on_error=failed,
-                                   key=('report', stem, name))
+                                   key=('report', stem, kind, name))
         if job is None:
             self.app.set_status('That report is already being written.')
 
-    def _delete(self, name):
+    def _delete(self, kind, name):
         recording = self.recording
         folder = self.app.folder
-        paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
+        paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, kind)
         if not paths:
             return
         if any(job.key and recording.stem in job.key for job in self.app.jobs.active()):
@@ -390,7 +423,8 @@ class ResultsPage(ttk.Frame):
         listing = '\n'.join(tasks.relative_path(folder, path) for path in paths[:12])
         if len(paths) > 12:
             listing += f'\n… and {len(paths) - 12} more'
-        if not confirm(self, 'Move data set to trash?', f'The data set "{name}" of {recording.stem} and its '
+        what = 'centre-line' if kind == 'line' else 'two-box'
+        if not confirm(self, 'Move data set to trash?', f'The {what} data set "{name}" of {recording.stem} and its '
                        f'report ({len(paths)} files) are moved to the .trash folder in the data folder.',
                        listing, ok='Move to trash', danger=True):
             return
@@ -433,6 +467,11 @@ def _describe_record(record):
                      f'{boxes["box2"]["y"]}), {boxes["width_px"]}×{boxes["height_px"]} px')
         if record.get('distance_px') is not None:
             parts.append(f'{record["distance_px"]:.1f} px apart')
+    line = record.get('line')
+    if line:
+        length = line.get('length_px')
+        parts.append(f'line of {len(line.get("points", []))} points, '
+                     + (f'{length:.0f} px ({line.get("length_um", 0):.0f} µm)' if length else 'length unknown'))
     if record.get('mm_per_pixel'):
         parts.append(f'{record["mm_per_pixel"]:g} mm/px')
     if video.get('folder'):

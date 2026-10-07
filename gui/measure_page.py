@@ -1,11 +1,12 @@
-"""The frame of the Analyze page: video with timeline, a frame range, time
-points, naming a data set, running the measurement and showing its result.
+"""What the Centre line and Two boxes pages share: video with timeline, a
+frame range, time points, naming a data set, running the measurement and
+showing its result.
 
-The workflow: position the boxes on the video, choose the range of frames,
-name the data set, press Measure. The frames of the range are read straight
-from the file in a background job, the data set is saved and its report
-written, and the result appears in the panel. `AnalyzePage` adds the boxes and
-the live signal preview.
+The workflow on both: draw the line (or place the boxes) on the video, choose
+the range of frames, name the data set, press Measure. The frames of the range
+are read straight from the file in a background job, the data set is saved and
+its report written, and the result appears in the panel. `LinePage` and
+`AnalyzePage` add their own tool and live preview.
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ INSPECTOR_WIDTH = 380
 class MeasurePage(ttk.Frame):
     key = ''
     title = ''
+    kind = 'velocity'           # which data sets this page makes: 'velocity' (two boxes) or 'line'
     uses_library = True
     measure_label = 'Measure and save'
     min_frames = 1
@@ -247,7 +249,7 @@ class MeasurePage(ttk.Frame):
     def existing_names(self):
         if self.recording is None:
             return []
-        return self.recording.velocity_sets
+        return self.recording.datasets_of(self.kind)
 
     def _open_video(self, path):
         self.player.close()
@@ -467,7 +469,7 @@ class MeasurePage(ttk.Frame):
                            'where you can restore them by hand.', ok='Replace', danger=True):
                 return
             folder = self.app.folder
-            paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
+            paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, self.kind)
             try:
                 tasks.move_to_trash(folder, paths, f'{recording.stem} {name}')
             except OSError as exc:
@@ -544,7 +546,7 @@ class MeasurePage(ttk.Frame):
         result = self.results.get(self.recording.stem) if self.recording else None
         self.app.show_page('results')
         if result is not None:
-            self.app.pages['results'].focus_dataset(result['name'])
+            self.app.pages['results'].focus_dataset(result['kind'], result['name'])
 
     # ----------------------------------------------------------------------- keyboard
     def handle_key(self, event) -> bool:

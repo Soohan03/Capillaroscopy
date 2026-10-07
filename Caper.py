@@ -1,10 +1,11 @@
-"""Stabilization and the velocity report behind the GUI.
+"""Stabilization and the velocity reports behind the GUI.
 
-The measurement itself — ROI geometry, intensity sampling, the lag estimator —
-lives in the GUI-free `capillary` package. The classes here write the
-stabilized videos and turn a saved data set (see `capillary.datasets`) into the
-report CSVs and plots. None of this imports tkinter; the GUI runs it in worker
-threads.
+The measurement itself — ROI geometry, intensity sampling, the lag estimator,
+the space-time diagram — lives in the GUI-free `capillary` package. The code
+here writes the stabilized videos and turns a saved data set (see
+`capillary.datasets`) into the report CSVs and plots: `CrossCorrelation` for
+two boxes, `generate_line_report` for a centre line. None of this imports
+tkinter; the GUI runs it in worker threads.
 """
 import cv2
 import matplotlib.pyplot as plt
@@ -388,3 +389,71 @@ class CrossCorrelation:
         report_data = report_data.set_index(np.array(list(report_data.index)) * (1.0 / self.fps))
 
         return report_data
+
+
+def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, first_frame, time_points=(),
+                         summary=None):
+    """Plot a centre-line data set and write its summary row (see capillary.datasets).
+
+    `diagram` is the space-time diagram (frames x positions along the line),
+    `blocks` the per-block table from capillary.spacetime.analyze_space_time,
+    `first_frame` the video frame of the diagram's first row and
+    `report_prefix` is ``Reports/<stem>___<name>``. Writes
+    ``___line_velocity.png`` (velocity over time), ``___space_time.png`` (the
+    diagram with the measured slopes) and ``___line_summary.csv``.
+    """
+    fps = fps or 30.0
+    resolved_mask = blocks['resolved'].astype(bool)
+    resolved = blocks[resolved_mask]
+    unresolved = blocks[~resolved_mask]
+
+    # velocity over time
+    f, ax = plt.subplots(figsize=(10, 5), dpi=300)
+    ax.axhline(0, color='#9AA3AF', linewidth=0.6)
+    if len(resolved):
+        ax.plot(resolved['time_s'], resolved['velocity_mm_s'], 'o', markersize=3, color='#2F6FDE',
+                label='3-s blocks')
+        median = float(resolved['velocity_mm_s'].median())
+        ax.axhline(median, color='#2F6FDE', linestyle='--', linewidth=1, label=f'median {median:.4f} mm/s')
+    if len(unresolved):
+        low = ax.get_ylim()[0] if len(resolved) else 0.0
+        ax.plot(unresolved['time_s'], [low] * len(unresolved), '|', color='#9AA3AF', markersize=8,
+                label='unresolved blocks')
+    for point in time_points:
+        ax.axvline(x=float(point), c='r', linewidth=1)
+    ax.set_title('Velocity along the centre line')
+    ax.set_ylabel('mm/s (positive: from the first point towards the last)')
+    ax.set_xlabel('Seconds')
+    ax.legend(loc='best', fontsize=8)
+    f.savefig(report_prefix + '___line_velocity.png', dpi=f.dpi, transparent=True, bbox_inches='tight')
+    plt.close(f)
+
+    # the space-time diagram, without still structure and same-moment changes, with the measured slopes
+    cleaned = np.asarray(diagram, dtype=float)
+    cleaned = cleaned - cleaned.mean(axis=0, keepdims=True)
+    cleaned = cleaned - cleaned.mean(axis=1, keepdims=True)
+    low, high = np.percentile(cleaned, [1, 99]) if cleaned.size else (0, 1)
+    length_um = (cleaned.shape[1] - 1) * mm_per_pixel * 1000.0
+    start_s, stop_s = first_frame / fps, (first_frame + cleaned.shape[0]) / fps
+    f, ax = plt.subplots(figsize=(12, 4), dpi=200)
+    ax.imshow(cleaned.T, cmap='gray', vmin=low, vmax=high, aspect='auto', interpolation='nearest',
+              extent=[start_s, stop_s, length_um, 0])
+    step = max(1, len(resolved) // 40)
+    for frame, row in resolved.iloc[::step].iterrows():
+        centre = frame / fps
+        slope = float(row['velocity_mm_s']) * 1000.0               # um per second along the line
+        ax.plot([centre - 1.0, centre + 1.0], [length_um / 2 - slope, length_um / 2 + slope], color='#FF9F1C',
+                linewidth=1)
+    for point in time_points:
+        ax.axvline(x=float(point), c='r', linewidth=1)
+    ax.set_xlim(start_s, stop_s)
+    ax.set_ylim(length_um, 0)
+    ax.set_xlabel('Seconds')
+    ax.set_ylabel('um along the line')
+    ax.set_title('Space-time diagram along the centre line (orange: measured slope of the streaks)')
+    f.savefig(report_prefix + '___space_time.png', dpi=f.dpi, bbox_inches='tight')
+    plt.close(f)
+
+    row = dict(summary or {})
+    row['line_length_um'] = length_um
+    pd.DataFrame([row]).to_csv(report_prefix + '___line_summary.csv', index=False)

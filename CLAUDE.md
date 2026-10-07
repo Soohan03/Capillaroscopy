@@ -26,11 +26,15 @@ without asking:
 3. Tell the user the app window should now be visible via WSLg, and remind them:
    - The list on the left shows the recordings (the 8 videos in `StabilizedVideos/`);
      right-click one to stabilize it or move it to the trash.
-   - Analyze page: click places box 1 (orange, downstream), the next click box 2 (blue,
-     upstream); right-click or Ctrl+click places box 2, dragging moves a box, WASD
-     nudges the selected box (Shift: both). Space plays/pauses, ←/→ step a frame, Q/E
-     jump ±500 frames, I/O set the measured range. The signal preview fills in once
-     both boxes are placed; "Measure velocity and save" is at the bottom right.
+   - Centre line page (opens first): click points along the middle of one capillary,
+     starting where the blood comes from; drag a point to move it, click on the line to
+     add one, right-click a point to remove it, Backspace removes the last, X reverses.
+     The space-time preview (with the slope found, velocity and signal-to-noise ratio)
+     fills in once there are two points; the panel shows what the line can measure.
+   - Two boxes page (the original method, kept for comparison): click places box 1
+     (orange, downstream), the next click box 2 (blue, upstream); WASD nudges a box.
+   - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
+     measured range; "Measure velocity and save" is at the bottom right.
    - F1 shows every keyboard and mouse control.
    - The Capture page has no camera under WSL unless a USB camera is attached to Linux.
 
@@ -43,7 +47,8 @@ If the user reports the app froze or crashed, check the task output file and
 - `StabilizedVideos/` — stabilized videos ready for analysis (8 videos as of 2026-06)
 - `Flows/` — optical-flow video of one recording, from before the flow feature was
   removed (2026-10-06); kept on disk, not shown, trashed along with its recording
-- `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time points
+- `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time
+  points; centre-line data sets keep their space-time diagram (`___space_time.npy`)
 - `Reports/` — plots and summary tables written from the data sets
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
   kept); emptied only by hand
@@ -51,10 +56,11 @@ If the user reports the app froze or crashed, check the task output file and
 ## Code layout
 
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
-recording list, keyboard routing) → one module per page (`gui/analyze_page.py`,
-`capture_page.py`, `results_page.py`; Analyze builds on `gui/measure_page.py`).
-Long work runs as background jobs: `gui/jobs.py` runs them, `gui/tasks.py` holds the
-work and has no Tk in it. Stabilization and the report plots are in `Caper.py`.
+recording list, keyboard routing) → one module per page (`gui/line_page.py` "Centre
+line", `analyze_page.py` "Two boxes", `capture_page.py`, `results_page.py`; the two
+measure pages build on `gui/measure_page.py`). Long work runs as background jobs:
+`gui/jobs.py` runs them, `gui/tasks.py` holds the work and has no Tk in it.
+Stabilization and the report plots of both methods are in `Caper.py`.
 
 The app measures velocity only. The optical-flow measurement (Flow page, flow
 videos, flow data sets) was removed on 2026-10-06 because it was not a valid measure
@@ -63,15 +69,26 @@ on a recording only so that moving it to the trash takes them along.
 
 ## Analysis engine (`capillary/`)
 
-The measurement — ROI geometry, per-frame intensity sampling, cross-correlation lag,
-velocity — lives in the GUI-free `capillary` package. The Analyze page, the batch CLI
-and the tests all run the same arithmetic; put new measurement code there, not in the
-Tkinter classes. The Measure buttons run `capillary.measure` (fixed boxes, an explicit
-frame range read straight from the file) and save through `capillary.datasets` in the
-file formats the report has always read.
+The measurement lives in the GUI-free `capillary` package; the pages, the batch CLI and
+the tests all run the same arithmetic. Put new measurement code there, not in the
+Tkinter classes.
 
-- Batch: `python3 -m capillary.cli <video> --roi1 x,y --roi2 x,y --out report.csv`
-- Tests: `python3 -m pytest` (141 tests, ~14 s; synthetic videos with known velocity,
+- **Centre line (the primary method since 2026-10-06):** `capillary/spacetime.py`. The
+  space-time diagram along a drawn line; the streak slope per 3-s block by a
+  direction-contrast Radon method in the Fourier domain, with a signal-to-noise ratio,
+  coherence and measurable range per block. Its module docstring explains the method;
+  the 2026-10-06 DEVLOG entry how it was chosen and calibrated. The measurable range at
+  30 fps is about 0.045 × line length (px) px/frame; faster flow is reported unresolved.
+- **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
+  (fixed boxes, an explicit frame range read straight from the file), saved in the
+  file formats the report has always read.
+- Both save through `capillary.datasets`.
+- Validation: `capillary/simulate.py` renders capillary loops with a known speed and the
+  disturbances measured in the 2019 recordings; `python3 -m capillary.benchmark`
+  compares both methods on them (~6 min; `--quick` ~12 s).
+- Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
+  or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
+- Tests: `python3 -m pytest` (184 tests, ~20 s; synthetic videos with known velocity,
   plus the GUI's non-visual logic; no display needed)
 
 Velocities computed before 2026-09-17 are biased — the lag was one frame too large on
@@ -82,6 +99,15 @@ the 2026-10-05 GUI rebuild entry.
 
 ## Known issues
 
+- **The two-box method is not valid on the 2019 recordings** (found 2026-10-06): about
+  70% of a box's signal changes along the whole vessel at once, so the delay comes out
+  as zero ("too fast to resolve") even where the flow is slow, and the existing two-box
+  data sets are unreliable. `set1` of `FP01_Wefter_14-Oct-2019_10-13-03` has its boxes
+  in still tissue next to a capillary and measured noise.
+- **Centre-line limits:** at 30 fps a line follows flow up to about 0.0018 × its length
+  in px, in mm/s (0.18 mm/s for 100 px); normal resting velocities need long lines or a
+  faster camera. With no flow but strong jitter, the benchmark still resolves ~7–11% of
+  blocks at about 0.2 px/frame, so a near-stasis vessel shows as "few blocks resolved".
 - **Stabilization is off by one frame** (found in the 2026-10-05 clean-up): frame 0 of
   a video stabilized by the app is black, frame k holds recorded frame k-1, and the last
   recorded frame is dropped. The 8 existing videos in `StabilizedVideos/` do not show

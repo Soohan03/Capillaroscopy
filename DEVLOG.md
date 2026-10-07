@@ -6,6 +6,293 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-06 — Velocity along a centre line (space-time diagram), validated on calibrated synthetic recordings
+
+**Branch:** `feat/centreline-velocity`, from `main` at `bbec82a` (after the
+optical-flow removal was merged as pull request #4).
+
+**Commits:**
+
+- `43cc549` Add the centre-line velocity estimator, a calibrated simulator and a benchmark
+- `0cef0c3` Centre line page: draw a line along a capillary and measure its velocity
+- `5c4e5b3` Update README and CLAUDE.md for the centre-line method
+
+The user asked to work on the velocity estimator. Before changing anything,
+the existing method was measured on the real recordings. The findings changed
+the plan from "refine the two-box method" to "measure along the vessel", and
+the user chose: first a benchmark, then a centre-line method.
+
+### What the two-box method measures on real capillaries
+
+All of this was read-only analysis with scripts outside the repository.
+
+1. **`set1` measured tissue, not blood.** The only data set with recorded box
+   positions (`FP01_Wefter_14-Oct-2019_10-13-03___set1`, made while trying out
+   the new GUI on 2026-10-05) has its boxes at (433, 316) and (463, 290), about
+   25 px to the right of the nearest capillary, in still tissue. A map of
+   frame-to-frame variation and a space-time diagram between the boxes show
+   no movement there. Its result (median −0.02 mm/s, 37% lag 0, 36% positive)
+   is noise and should not be used.
+2. **On a real capillary the flow is visible and slow.** The centre line of
+   the tall loop in `FP01_Qefter_22-Oct-2019_09-46-17` ("after", frames
+   1435–2334) and `FP01_Qföre_22-Oct-2019_08-16-35` ("before", frames
+   1909–2808) was extracted from the mean image (vessel darker than the local
+   background, thinned to a skeleton). Space-time diagrams along it show red
+   cells and plasma gaps as slanted streaks of about 0.2–1 px/frame, roughly
+   0.01–0.04 mm/s. The user confirmed that slow flow is expected with this
+   protocol.
+3. **Brightness changes along the whole vessel at once dominate.** Along the
+   limbs, the part of the signal that is the same at every position at the
+   same moment has a standard deviation of 3.1–6.3 grey levels, nearly the same
+   all along the vessel (gain 1.00 ± 0.14 after, ± 0.41 before). It makes up
+   71–73% (median) of the variance of a 12-px stretch, the size of a box, in
+   both recordings. The likely cause is small movements of the vessel or
+   focus; the per-pixel sensor noise is 3.05 grey levels.
+4. **That is why the boxes find a lag of 0.** Two boxes 30 px apart on the
+   after loop's left limb gave lag 0 in 44 of 70 windows, which the report
+   calls "too fast to resolve", although the flow is slow. Subtracting the
+   limb's mean brightness removed the lag-0 peak; lags of −19/−20 frames
+   appeared (consistent with the streaks), but the estimates stayed scattered.
+5. **Consequences for the earlier plan.** Rounding the lag to whole frames
+   costs only 2–5% here, since the true lags are 20–70 frames. Treating lag 0
+   as "faster than measurable" (an item on the plan) would have turned the
+   same-moment changes into high velocities. "Too fast to resolve" in existing
+   two-box reports should not be read as fast flow.
+
+### The method (`capillary/spacetime.py`)
+
+The user clicks points along the middle of one capillary, from where the blood
+comes from to where it goes. The line is the uniform Catmull-Rom curve through
+the points, sampled every pixel of arc length. In every frame the brightness
+at 5 points across the line (±2 px along the normal, bilinear) is averaged;
+the rows stacked over time form the space-time diagram. A pattern moving
+along the vessel at `v` px/frame draws streaks of slope `v` and puts all its
+power on the line `ω = −v·k` of the diagram's 2-D power spectrum (`k` in
+cycles/px, `ω` in cycles/frame). Velocity = `v` × fps × mm/px, positive from
+the first point towards the last.
+
+The slope is estimated in blocks of 90 frames (3 s), every 15 frames:
+
+1. Remove the time mean of every position (still structure) and the position
+   mean of every frame (a same-moment change of the whole line).
+2. Difference the block along the line (whitening, see below), apply Hann
+   windows in space and time, and Fourier-transform along the line; keep
+   patterns from 3 cycles per line length up to 0.3 cycles/px.
+3. For candidate speeds ±0.05 to 30 px/frame (400 log-spaced, then 41 around
+   the best), evaluate exactly (a direct transform in time at arbitrary
+   frequency) the power at `ω = −v·k` and at the mirror `ω = +v·k`. Each
+   pattern counts with weight 1 up to |ω| = 0.3 cycles/frame, fading (cos²) to
+   0 at 0.45 (the unaliased part of its line). The score is the weighted mean
+   of forward minus mirror power; the speed is the best score.
+4. Quality: the signal-to-noise ratio is the weighted forward-minus-mirror
+   power over its spread under "no flow", from a noise floor estimated locally
+   (median power within ±5 temporal-frequency bins of both signs, ÷ ln 2). The
+   coherence is the share of the block's energy (in the patterns used) on the
+   chosen line, 1 for a clean pattern at one speed.
+5. A block is resolved if the signal-to-noise ratio is at least 8, the
+   coherence at least 0.03, and the speed lies in the measurable range. The
+   slowest speed is 1.5 cycles of the finest pattern per block. The fastest is
+   0.65 × the speed at which the unaliased patterns weigh three full patterns;
+   at 30 fps that is about 0.045 × line length px/frame. Finally, if any speed
+   beyond that range, scored on whatever unaliased patterns it has, beats the
+   chosen one, the block is flagged "faster than measurable".
+
+The core is the Radon-transform velocity method for space-time images (Drew
+et al., J Comput Neurosci 2010;29:5–11), evaluated through the Fourier slice
+theorem. The space-time ("line-shift") diagram itself is established in
+capillaroscopy: Cap-Image (Klyscz et al., Biomed Tech 1997) has the user read
+the slope. Both references need checking before they go into the thesis. The
+direction contrast is the addition that matters for these recordings: noise,
+still structure and any change that is a shape along the line times a time
+course (the same-moment change, unevenly strong) have a spectrum symmetric in
+`ω`, so they cancel in forward-minus-mirror, while flow does not.
+
+### How the design was arrived at
+
+Each choice was tested on synthetic space-time diagrams first (a moving
+pattern plus the same-moment change, its unevenness, jitter along the line and
+noise, at the measured levels), then on the video-level simulator below.
+
+- **Direction contrast works where the boxes fail.** On the same synthetic
+  diagrams two boxes 30 px apart gave lag 0 in 61–100% of windows at
+  0.25–4 px/frame; the centre line measured them within 3%.
+- **Bias −2 to −3%.** Reading the spectrum by interpolation was ruled out (an
+  exact transform kept the bias). The cause is the spatial window: cell
+  patterns have more power at coarse scales, and leakage into finer patterns
+  reads as slower. Differencing along the line flattens the spectrum: bias
+  within ±1.7%.
+- **Quality score.** A first z-score was capped by the number of patterns
+  (flow 3–5, no flow up to 3.6) and was dropped. The signal-to-noise ratio
+  against a noise floor separates them (no flow at most 6.1, flow 9 to several
+  hundred), hence the threshold of 8.
+- **Aliased lines** (letting fast speeds use patterns past the Nyquist limit,
+  wrapped) were tested and dropped: worse with motion blur and weak cells.
+- **Speed limit.** With a hard cut-off, wrong estimates clustered at the
+  speeds where one more pattern became unaliased (5.0, 6.0, 6.75, 7.7 px/frame
+  on a 120-px line); the cos² fade removed that. Single blocks stay within 10%
+  of the truth in all but 0–7% of cases up to about 0.6 of the limit (5 px/frame
+  on a 120-px line), but 19–25% at 7–8 px/frame, hence reporting only up to
+  0.65 of the limit.
+- **Flow faster than the line can follow** (15 px/frame on a 120-px line)
+  came back as −4.4 px/frame with a signal-to-noise ratio of 10 and was
+  counted as resolved; the "faster than measurable" check fixes that. Raising
+  the coherence threshold to 0.05 would also have caught it, but would also
+  have dropped real flow (before limb: 57% → 49% of blocks resolved).
+- **Jitter.** With a global noise floor, blocks without flow but with jitter
+  were resolved as slow flow (about 0.2 px/frame) in 29% (measured
+  disturbances) and 74% (strong) of cases. Jitter crowds the slow temporal
+  frequencies; the local floor brought this to 7% and 11%.
+- **Coherence threshold.** 0.03 and 0.05 gave identical results on the
+  simulations; 0.05 dropped real resolved blocks, so 0.03 (no-flow coherence
+  is about 0.015–0.02).
+
+### Synthetic recordings (`capillary/simulate.py`)
+
+A capillary loop (limbs 150 px, 26 px apart, 10 px wide, the limbs leaning a
+little) on a textured background, with red cells of about 6 px following each
+other closely and a plasma gap of 6–30 px after 10% of them. The pattern moves
+along the loop at a set speed (optionally pulsing with a 1.1 Hz heart beat) and
+is averaged over the distance it moves while the shutter is open (motion
+blur). On top: a same-moment darkening of the whole vessel (Ornstein-Uhlenbeck,
+τ = 8 frames, plus a 1.1 Hz component), uneven along the vessel; whole-image
+jitter (τ = 4 frames, SD 0.3 px); optical blur (σ 1.2 px); noise. Calibrated
+against the two real limbs:
+
+| Measure (same method for both) | Real | Simulated |
+| --- | ---: | ---: |
+| sensor noise per pixel (grey levels) | 3.05 | 3.03 |
+| same-moment change, SD along the line | 3.1–6.3 | 5.2 |
+| its unevenness along the line (gain SD) | 0.14–0.41 | 0.13 |
+| everything else, SD | 2.8–5.0 | 4.0 |
+| same-moment share of a 12-px stretch | 71% | 70% |
+| vessel darker than local background | ~10 | 13 |
+
+The simulator reproduces the box failure: two boxes 30 px apart see lag 0 in
+at least half the windows where the true lag is 30 frames (pinned by a test).
+
+### Benchmark (`python -m capillary.benchmark`)
+
+Each case renders a loop and measures it twice, as the app would: two 12-px
+boxes 30 px apart through the two-box report arithmetic (`analyze_trace`,
+windows 201–301 frames), and a 120-px line clicked every 15 px up to 1 px off
+the centre through `capillary.spacetime`. Medians over 3 seeds of 30-s clips
+(30 fps, 1.329 µm/px; the line can measure 0.002–0.212 mm/s; 6.5 min):
+
+| Disturbances | True speed | Centre line: error, blocks resolved | Two boxes: error, windows resolved (lag 0) |
+| --- | --- | --- | --- |
+| clean | no flow | none resolved | **0.039 mm/s** reported, 100% |
+| as measured | no flow | 7% falsely resolved | none (100% lag 0) |
+| as measured | 0.25 px/frame (0.010 mm/s) | −0.0%, 100% | +8.1%, 64% (47%) |
+| as measured | 1 (0.040) | +0.1%, 100% | +3.7%, 100% (1%) |
+| as measured | 2 (0.080) | +0.4%, 100% | −9.7%, 50% (54%) |
+| as measured | 4 (0.159) | +0.1%, 100% | +7.4%, 100% (0%) |
+| as measured | 5 (0.199) | −2.1%, 85% | +0.2%, 100% (0%) |
+| as measured | 8 / 12 (0.32 / 0.48) | unresolved (beyond range) | −6.0% / +25.3% |
+| strong | no flow | 7% falsely resolved | none (100% lag 0) |
+| strong | 0.25 (0.010) | −0.2%, 98% | −93%, 45%, half the wrong sign |
+| strong | 2 (0.080) | +0.4%, 100% | −118%, 21% (89%), half the wrong sign |
+| strong | 5 (0.199) | −1.9%, 82% | +3.6%, 100% (2%) |
+
+Within its range the centre line's median is within −2.1% to +0.4% in every
+condition, with 0–4% of resolved blocks pointing the wrong way; beyond its
+range it reports nothing rather than a wrong number. The two boxes are off by
+up to ±10% under the measured disturbances, fail outright under strong ones,
+report velocity where there is no flow, and are coarse at high speed (−6% to
++25% at 8–12 px/frame). A shorter run (one seed, 10-s clips) once showed 20%
+false resolution without flow under strong jitter, so that number varies.
+
+### On the real recordings
+
+Lines from the extracted centre lines, clicked every 15 px; two 30-s stretches
+each; nothing to compare with except each other and lines through tissue:
+
+- **Before limb** (145 px): 57% of blocks resolved, median 0.23 px/frame
+  (0.0091 mm/s), 92% pointing down the limb. In the GUI session the first
+  stretch alone (frames 1909–2808) gave 0.0138 mm/s (middle half
+  0.0095–0.0173), 60% resolved, median signal-to-noise 10.
+- **After loop:** weak; 12% resolved on the left limb (+0.20 px/frame, 92%
+  down the limb), 15% on the other limb (−0.23, all upwards, consistent with
+  flow round the loop), 17% on the whole arch with mixed directions.
+- **Still tissue,** lines 25 px from the vessel: 0 of 110 blocks resolved in
+  both recordings (median signal-to-noise 3.3–3.6). Two lines first
+  thought to be tissue resolved some blocks; on inspection one crossed the
+  apex and one ran along the other limb.
+
+These numbers are not validated (there is no ground truth in a recording); the
+benchmark is what says the method is accurate.
+
+### The app (`0cef0c3`)
+
+- **Centre line page** (first page, Ctrl+1): click points along the vessel
+  (start where the blood comes from); click on the line inserts a point, drag
+  moves one, right-click removes one, Backspace removes the last, X reverses.
+  The panel shows the line's length and measurable range, and a live
+  space-time diagram of the 120 frames around the playhead with the slope
+  found in orange, its velocity and signal-to-noise ratio, and a message when
+  the flow is unresolved, seems too fast or too slow for the line, or runs
+  against it (with a Reverse button).
+- **Data set** (`capillary.datasets`): `___space_time.npy` (the diagram,
+  float32, loaded without pickle), `___line_velocity.csv` (one row per block:
+  centre frame, time, speed, velocity, signal-to-noise, coherence, resolved),
+  `___line_provenance.json` (video, the points, frames, calibration, measurable
+  range, all estimator settings, summary, git commit). Reports:
+  `___line_velocity.png` (velocity over time, unresolved blocks marked, median,
+  time points), `___space_time.png` (the diagram with the measured slopes) and
+  a one-row `___line_summary.csv` for collecting results across recordings.
+- **Results page** shows both kinds (CENTRE LINE / TWO BOXES), warns when
+  fewer than 25% of blocks were resolved, restores the line on its page, and
+  regenerates a centre-line report from the saved diagram without the video.
+- **Two boxes page** is the old Analyze page, renamed, unchanged otherwise.
+- **CLI**: `python -m capillary.cli <video> --line "x1,y1;x2,y2;..."` measures
+  along a line; `--start` picks the first frame for both methods.
+
+### Verification
+
+- **Unit tests:** 184 pass (141 this morning): `test_spacetime.py` 24 (the
+  estimator on diagrams with known speed, both directions, no flow, a tenfold
+  same-moment change, flow beyond the range, the line geometry, the sampler,
+  block analysis, a simulated recording end to end), `test_simulate.py` 9,
+  `test_line_tasks.py` 7 (the page's measurement, saving, report, results
+  info, regeneration without the video, preview, clean-up after a failure),
+  and new cases in `test_pipeline.py` (CLI `--line`), `test_datasets.py` and
+  `test_gui_logic.py`. Each code commit passes on its own (176 and 184).
+- **Lint:** pyflakes reports only the two earlier notes; the CI flake8
+  selection is clean.
+- **Benchmark:** the full run above (6.5 min) and `--quick` (12 s).
+- **Scripted GUI session** on a scratch data folder, screenshots reviewed, no
+  Tk errors: four pages and Ctrl+1–4; 11 clicks along the before limb (145 px,
+  measurable 0.0022–0.256 mm/s); preview resolved at 0.0169 mm/s,
+  signal-to-noise 19; inserting, dragging, right-click removal, Backspace,
+  and X (velocity −0.0169 with the "against the line" message); measuring
+  frames 1909–2808 (3.1 s); the Results card, restoring the line and range,
+  regenerating, moving to the trash; the Two boxes page, F1, the right-click
+  menu. The direction arrow, first drawn at the line's end where the last
+  point hid it, was moved to the middle.
+
+### Limitations and next steps
+
+- **Speed limit at 30 fps.** A line follows flow up to about 0.0018 × its
+  length in px, in mm/s; normal resting velocities (0.3–1 mm/s) need lines of
+  170–560 px or a faster camera. Worth stating in the thesis; it also makes
+  checking the real frame rate (still open) more important.
+- **Jitter near stasis.** Without flow, 7–11% of blocks (up to 20% in a short
+  clip) are resolved as about 0.2 px/frame under jitter, which is the speed of
+  the slow real flows here. A near-stasis vessel shows as "few blocks
+  resolved"; the Results page warns below 25%. A per-recording control (the
+  same measurement on a parallel line through tissue) or local stabilization
+  would make this stronger.
+- **Real-data validation is still to do:** two observers reading the slopes
+  of the same diagrams, repeated measurements, Bland–Altman against manual
+  reading.
+- The existing two-box data sets (`Test`, `Test2` of `FP01_Qefter`, `set1` of
+  `FP01_Wefter`) are unreliable for the reasons above.
+- The two-box report still sets negative velocities to 0 in
+  `___report_summary.csv`; left as it was, since that method is now
+  secondary.
+- Frame rate and spatial calibration are still unverified.
+
+---
+
 ## 2026-10-06 — Optical-flow measurement removed
 
 **Branch:** `refactor/remove-optical-flow`, from `main` at `95472ee` (the GUI
