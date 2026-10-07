@@ -474,6 +474,8 @@ def _describe_record(record):
                      + (f'{length:.0f} px ({line.get("length_um", 0):.0f} µm)' if length else 'length unknown'))
     if record.get('mm_per_pixel'):
         parts.append(f'{record["mm_per_pixel"]:g} mm/px')
+    if record.get('observer'):
+        parts.append(f'by {record["observer"]}')
     if video.get('folder'):
         parts.append(f'from {video["folder"]}')
     commit = (record.get('software') or {}).get('git_commit')

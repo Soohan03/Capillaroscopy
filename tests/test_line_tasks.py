@@ -50,7 +50,8 @@ def measured(recording):
     folder, path, clip, points = recording
     job = FakeJob()
     result = tasks.measure_line_dataset(job, folder=folder, stem=STEM, name='line1', video_path=path, points=points,
-                                        start=10, end=229, mm_per_pixel=MM_PER_PIXEL, time_points=[3.0])
+                                        start=10, end=229, mm_per_pixel=MM_PER_PIXEL, time_points=[3.0],
+                                        observer='SJ')
     return result, job
 
 
@@ -78,6 +79,7 @@ def test_measurement_saves_the_data_set_and_its_report(recording, measured):
     assert [tuple(p) for p in record['line']['points']] == [tuple(round(v, 2) for v in p) for p in points]
     assert record['estimator']['min_snr'] == pytest.approx(8.0)
     assert record['time_points_s'] == [3.0]
+    assert record['observer'] == 'SJ'
     for path in datasets.line_report_files(folder.reports, STEM, 'line1').values():
         assert os.path.isfile(path)
     summary_row = pd.read_csv(datasets.line_report_files(folder.reports, STEM, 'line1')['summary'])

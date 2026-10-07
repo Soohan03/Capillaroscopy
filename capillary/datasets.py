@@ -294,13 +294,20 @@ def _clean(value):
     return value
 
 
+def write_json(path: str, record: dict) -> None:
+    """Write `record` as strict JSON (NaN becomes null), replacing the file only once it is complete."""
+    partial = path + '.partial'
+    with open(partial, 'w', encoding='utf-8') as handle:
+        json.dump(_clean(record), handle, indent=2, ensure_ascii=False, default=_json_default)
+        handle.write('\n')
+    os.replace(partial, path)
+
+
 def write_provenance(path: str, record: dict) -> None:
     """Write a provenance record, adding when it was written."""
     record = dict(record)
     record.setdefault('written', datetime.datetime.now().isoformat(timespec='seconds'))
-    with open(path, 'w', encoding='utf-8') as handle:
-        json.dump(_clean(record), handle, indent=2, ensure_ascii=False, default=_json_default)
-        handle.write('\n')
+    write_json(path, record)
 
 
 def read_provenance(path: str) -> Optional[dict]:

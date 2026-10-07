@@ -2,9 +2,10 @@
 
 Pages: Centre line (velocity from the space-time diagram along a capillary),
 Two boxes (velocity from the delay between two boxes), Capture (camera and
-recording) and Results (saved data sets and reports). The window owns the
-selected recording, the background jobs and the application-wide actions
-(stabilize, move to trash, settings).
+recording), Results (saved data sets and reports) and Validation (observers
+reading blocks by hand, and their agreement with the estimator). The window
+owns the selected recording, the background jobs and the application-wide
+actions (stabilize, move to trash, settings).
 """
 
 from __future__ import annotations
@@ -30,11 +31,13 @@ from .line_page import LinePage
 from .results_page import ResultsPage
 from .settings import APP_DIR, DataFolder, Settings
 from .theme import COLORS, icon, px
+from .validation_page import ValidationPage
 from .widgets import Tooltip, install_wheel_router
 
 log = logging.getLogger(__name__)
 
-PAGES = (('line', LinePage), ('analyze', AnalyzePage), ('capture', CapturePage), ('results', ResultsPage))
+PAGES = (('line', LinePage), ('analyze', AnalyzePage), ('capture', CapturePage), ('results', ResultsPage),
+         ('validation', ValidationPage))
 START_PAGE = 'line'
 TEXT_INPUT_CLASSES = ('Entry', 'TEntry', 'Spinbox', 'TSpinbox', 'TCombobox', 'Text', 'Listbox')
 
@@ -80,6 +83,8 @@ class App:
         self.selected_stem: Optional[str] = None
         self.current_key: Optional[str] = None
         self._status_after = None
+        #: who is measuring or reading (initials), shared by the pages and remembered in settings.csv
+        self.observer_var = tk.StringVar(value=settings.extra.get('observer', ''))
 
         self._place_window()
         self._build()
@@ -118,7 +123,9 @@ class App:
             Tooltip(button, {'line': 'Velocity along a line drawn on a capillary (Ctrl + 1)',
                              'analyze': 'Velocity between two boxes on a capillary: the original method (Ctrl + 2)',
                              'capture': 'Camera preview and recording (Ctrl + 3)',
-                             'results': 'Saved data sets and their reports (Ctrl + 4)'}[key])
+                             'results': 'Saved data sets and their reports (Ctrl + 4)',
+                             'validation': 'Observers read blocks by hand, blinded; their agreement with the '
+                                           'estimator (Ctrl + 5)'}[key])
         help_button = ttk.Button(header, text='?', style='Header.TButton', command=self.show_shortcuts, width=2)
         help_button.pack(side='right')
         Tooltip(help_button, 'Keyboard and mouse (F1)')
@@ -361,6 +368,21 @@ class App:
 
     def show_shortcuts(self):
         ShortcutsDialog(self.root).show()
+
+    def remember_observer(self, code: str):
+        """Keep the observer's code for the next start (settings.csv); '' forgets it."""
+        if self.observer_var.get() != code:
+            self.observer_var.set(code)
+        if self.settings.extra.get('observer', '') == code:
+            return
+        if code:
+            self.settings.extra['observer'] = code
+        else:
+            self.settings.extra.pop('observer', None)
+        try:
+            self.settings.save()
+        except OSError:
+            log.warning('Could not save the observer in the settings', exc_info=True)
 
     # -------------------------------------------------------------------- status bar
     def set_status(self, text, timeout_ms=10000):

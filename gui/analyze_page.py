@@ -578,7 +578,7 @@ class AnalyzePage(MeasurePage):
         work = partial(tasks.measure_velocity_dataset, folder=self.app.folder, stem=recording.stem, name=name,
                        video_path=path, box1=self._roi(0), box2=self._roi(1), start=start, end=end,
                        mm_per_pixel=self.app.settings.mm_per_pixel, time_points=list(self.markers),
-                       blur_cache=cache)
+                       blur_cache=cache, observer=self.observer())
         return self.app.jobs.submit(f'Velocity · {recording.stem} · {name}', work, lane='analysis', on_done=done,
                                     on_error=failed, on_cancel=cancelled, key=('velocity', recording.stem))
 

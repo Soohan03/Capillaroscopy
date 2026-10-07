@@ -34,7 +34,12 @@ without asking:
    - Two boxes page (the original method, kept for comparison): click places box 1
      (orange, downstream), the next click box 2 (blue, upstream); WASD nudges a box.
    - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
-     measured range; "Measure velocity and save" is at the bottom right.
+     measured range; "Measure velocity and save" is at the bottom right, next to the
+     data set name and the Observer initials (saved with the data set).
+   - Validation page (Ctrl+5): draw a reading set of 3-s blocks from centre-line data
+     sets, read them blinded (drag along the streaks, N for "no clear streaks", Enter
+     next), then compute the agreement; "Line placement" compares the same capillary
+     measured by different observers.
    - F1 shows every keyboard and mouse control.
    - The Capture page has no camera under WSL unless a USB camera is attached to Linux.
 
@@ -50,6 +55,8 @@ If the user reports the app froze or crashed, check the task output file and
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time
   points; centre-line data sets keep their space-time diagram (`___space_time.npy`)
 - `Reports/` — plots and summary tables written from the data sets
+- `Validation/` — reading sets (`<set>/set.json`, `blocks.npz`, `readings/`, `report/`)
+  and the line-placement comparison (`line_placement/`); none made on the real data yet
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
   kept); emptied only by hand
 
@@ -57,8 +64,9 @@ If the user reports the app froze or crashed, check the task output file and
 
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
 recording list, keyboard routing) → one module per page (`gui/line_page.py` "Centre
-line", `analyze_page.py` "Two boxes", `capture_page.py`, `results_page.py`; the two
-measure pages build on `gui/measure_page.py`). Long work runs as background jobs:
+line", `analyze_page.py` "Two boxes", `capture_page.py`, `results_page.py`,
+`validation_page.py` with its reading mode in `reading_view.py`; the two measure
+pages build on `gui/measure_page.py`). Long work runs as background jobs:
 `gui/jobs.py` runs them, `gui/tasks.py` holds the work and has no Tk in it.
 Stabilization and the report plots of both methods are in `Caper.py`.
 
@@ -83,13 +91,19 @@ Tkinter classes.
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
 - Both save through `capillary.datasets`.
-- Validation: `capillary/simulate.py` renders capillary loops with a known speed and the
-  disturbances measured in the 2019 recordings; `python3 -m capillary.benchmark`
-  compares both methods on them (~6 min; `--quick` ~12 s).
+- Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
+  known speed and the disturbances measured in the 2019 recordings;
+  `python3 -m capillary.benchmark` compares both methods on them (~6 min; `--quick` ~12 s).
+- Validation on real data (since 2026-10-07): `capillary/validation.py` (reading sets,
+  blinded readings, the comparisons), `capillary/placement.py` (the same capillary
+  measured by different observers, matched by line geometry and frames),
+  `capillary/agreement.py` (Bland–Altman, ICC(A,1)/(C,1), kappa; checked against
+  Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (184 tests, ~20 s; synthetic videos with known velocity,
-  plus the GUI's non-visual logic; no display needed)
+- Tests: `python3 -m pytest` (215 tests, ~25 s; synthetic videos with known velocity,
+  the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
+  display needed)
 
 Velocities computed before 2026-09-17 are biased — the lag was one frame too large on
 every (odd) report window. See the 2026-09-17 DEVLOG entry; `--legacy-lag` reproduces

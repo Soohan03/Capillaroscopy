@@ -18,7 +18,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Optional
 
-from capillary import datasets
+from capillary import datasets, validation
 
 from . import tasks
 from .dialogs import confirm, show_error
@@ -184,11 +184,23 @@ class MeasurePage(ttk.Frame):
         separator(body)
 
     def _build_footer(self, footer):
-        ttk.Label(footer, text='Data set name', style='Muted.Panel.TLabel').pack(anchor='w', pady=(0, px(3)))
+        names = ttk.Frame(footer, style='Panel.TFrame')
+        names.pack(fill='x')
+        names.columnconfigure(0, weight=1)
+        ttk.Label(names, text='Data set name', style='Muted.Panel.TLabel').grid(row=0, column=0, sticky='w',
+                                                                              pady=(0, px(3)))
+        observer_label = ttk.Label(names, text='Observer', style='Muted.Panel.TLabel')
+        observer_label.grid(row=0, column=1, sticky='w', padx=(px(8), 0), pady=(0, px(3)))
         self.name_var = tk.StringVar()
-        self.name_entry = ttk.Entry(footer, textvariable=self.name_var)
-        self.name_entry.pack(fill='x')
+        self.name_entry = ttk.Entry(names, textvariable=self.name_var)
+        self.name_entry.grid(row=1, column=0, sticky='ew')
         self.name_var.trace_add('write', lambda *_: self.update_measure_state())
+        self.observer_entry = ttk.Entry(names, textvariable=self.app.observer_var, width=7)
+        self.observer_entry.grid(row=1, column=1, sticky='w', padx=(px(8), 0))
+        self.app.observer_var.trace_add('write', lambda *_: self.update_measure_state())
+        for widget in (observer_label, self.observer_entry):
+            Tooltip(widget, 'Initials of who measures (optional). They are saved with the data set, so that the '
+                            'same capillary measured by different people can be compared on the Validation page.')
         self.name_message = ttk.Label(footer, text='', style='Faint.Panel.TLabel',
                                       wraplength=px(INSPECTOR_WIDTH - 40), justify='left')
         self.name_message.pack(anchor='w', pady=(px(3), 0))
@@ -428,7 +440,15 @@ class MeasurePage(ttk.Frame):
         message = datasets.validate_dataset_name(self.name_var.get())
         if message:
             reasons.append(message)
+        if self.app.observer_var.get().strip():
+            message = validation.validate_observer(self.app.observer_var.get())
+            if message:
+                reasons.append(f'Observer: {message}')
         return reasons
+
+    def observer(self) -> str:
+        """The observer's code as saved with a data set ('' if none was entered)."""
+        return validation.normalize_observer(self.app.observer_var.get())
 
     def update_measure_state(self):
         name = self.name_var.get()
@@ -477,6 +497,7 @@ class MeasurePage(ttk.Frame):
                 return
         start, end = self.current_range()
         stem = recording.stem
+        self.app.remember_observer(self.observer())
 
         def done(result):
             self.results[stem] = dict(result, saved=datetime.datetime.now())

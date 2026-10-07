@@ -6,6 +6,271 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-07 — Validation on real recordings: blinded reading by observers, and line placement
+
+**Branch:** `feat/observer-validation`, from `feat/centreline-velocity` at
+`c56d495`. That branch's pull request was not merged yet; once it is, the pull
+request of this branch shows only the commits below.
+
+**Commits:**
+
+- `1a3c78b` Validation page: observers read space-time blocks blinded; agreement with the estimator
+- `42a99b6` Line placement: the same capillary measured by different observers
+- `cc4e66c` Update README and CLAUDE.md for the Validation page
+- `67d4e56` Move the Validation page's reading mode into gui/reading_view.py
+
+The user asked to keep building. Of the open items (validation on real data,
+a null control for jitter near stasis, pairing before/after recordings,
+calibration and frame rate) they chose validation on real data. The benchmark
+of 2026-10-06 shows the centre line is accurate on synthetic recordings, but a
+real recording has no ground truth. The thesis needs evidence on real data for
+two questions:
+
+1. Does the estimator read the slope a person reads from the same space-time
+   diagram? Reading the slope of the streaks by hand is how line-shift
+   diagrams have been read in capillaroscopy (Cap-Image), so it is the natural
+   reference.
+2. How much does a velocity depend on who measures it, that is on where the
+   line is drawn (inter- and intra-observer reproducibility of the whole
+   measurement)?
+
+The Validation page (Ctrl+5) does both. Nothing has been read on the real
+data yet; everything below was tested with simulated observers.
+
+### Blinded reading (`capillary/validation.py`)
+
+- **What is read.** Exactly the 3-s blocks (90 frames) the estimator
+  measures: rows `start … start + 89` of a saved space-time diagram, `start`
+  one of the estimator's block starts (every 15 frames). Blocks drawn from one
+  data set never overlap (starts at least 90 frames apart), so no two items
+  share frames.
+- **How blocks are drawn.** From each chosen centre-line data set, *k* blocks
+  (default 6) at random. By default balanced: ⌈k/2⌉ from the blocks the
+  estimator resolved and the rest from unresolved ones, either kind making up
+  a shortage of the other. Agreement on velocity needs resolved blocks;
+  agreement on whether a block can be read at all needs both kinds. The seed
+  is recorded (default from the system's random source); the same seed and
+  data sets draw the same set (tested).
+- **Frozen.** The blocks are copied (float32) into
+  `Validation/<set>/blocks.npz`; `set.json` records for each its recording,
+  data set, rows, video frames, fps, calibration and the estimate when drawn.
+  Measuring a data set again or deleting it does not change the set. Item
+  numbers are given in a random order, so they say nothing about the source.
+- **Blinding.** An observer sees "Block 12 of 60", the block and their own
+  lines: not the recording, the data set or the estimate. Every observer and
+  session gets its own order (a shuffle seeded by the set's seed, the
+  observer's code and the session; reproducible, different for each).
+- **Display.** The block with the mean of every position over time and the
+  mean of every frame along the line removed (still structure and changes of
+  the whole line at once, as in the preview and the report), contrast from the
+  1st to the 99th percentile, position along the line across (first point on
+  the left), time downwards. One pixel along the line is drawn as wide as one
+  frame is tall, so a streak at 45° is 1 px/frame. The scale depends only on
+  the block's size, never on the estimate.
+- **Reading.** The observer drags lines along streaks (the instructions say
+  two or three); the block's slope is the mean of the lines' slopes,
+  Δposition/Δframe. A line spanning fewer than 4 frames is refused (too flat in
+  time to give a slope; on a 120-px line that is over 30 px/frame, far beyond
+  what can be measured). Or "No clear streaks" (N). Lines are stored in block
+  coordinates, with the time spent on each block (time away from the page not
+  counted). Everything is saved after every change (the JSON is written to a
+  temporary file and moved into place), so a session can stop and continue.
+- **Sessions.** A second session by the same observer, some days later and in
+  a new order, gives the repeatability of one person's reading.
+
+### Statistics (`capillary/agreement.py`)
+
+Velocities in mm/s (slope × fps × mm/px of the source data set); differences
+are first minus second.
+
+- **Bland–Altman** (Bland & Altman, Lancet 1986; Stat Methods Med Res 1999):
+  bias with its 95% confidence interval (t, SE s/√n); 95% limits of agreement,
+  bias ± 1.96 SD, each with an approximate 95% interval (SE √(3s²/n));
+  proportional bias as the slope of the differences on the means, with its
+  95% interval. The same on a log scale, as ratios (pairs of the same sign,
+  magnitudes compared): geometric-mean ratio and ratio limits. Velocities span
+  an order of magnitude, so differences are likely to grow with velocity; the
+  page then says to read the ratio limits.
+- **ICC** (McGraw & Wong, Psychol Methods 1996): two-way model, single
+  measurement, absolute agreement ICC(A,1) (= Shrout & Fleiss ICC(2,1)) and
+  consistency ICC(C,1) (= ICC(3,1)), with their F-distribution intervals.
+- **Same direction**: share of pairs with the same sign.
+- **Readability**: Cohen's kappa (yes = a velocity: the estimator resolved
+  the block, or the observer drew lines), large-sample interval cut at ±1, and
+  the 2×2 counts.
+- **Within an observer**: repeatability coefficient 1.96 × SD of the
+  differences (= 2.77 × the within-subject SD).
+
+Checks of the arithmetic:
+
+- Shrout & Fleiss (Psychol Bull 1979) table 2, six targets by four judges:
+  ICC(2,1) = 0.290 and ICC(3,1) = 0.715, the paper's 0.29 and 0.71. The
+  intervals, 0.019–0.761 and 0.342–0.946, match the values I remember R's
+  psych::ICC reporting for this table; confirm with R before citing them.
+- Bland–Altman and kappa against values worked by hand (in the tests).
+- Coverage of the 95% intervals in 2000 simulations each (scratch script, not
+  in the repository): ICC(C,1) 94–95%. ICC(A,1) 93% (n = 20) and 96% (n = 40)
+  with two raters, but 90% with three raters and a large rater effect. That is
+  a known weakness of this approximate interval when there are few raters, not
+  a bug: the point values and the published example match. Bland–Altman bias
+  95%; upper limit 93.5% (n = 20), 95% (n = 50), the approximate limit
+  interval being slightly narrow for small n. Kappa 94%.
+
+### The comparisons
+
+The agreement report measures every block again with the current estimator,
+from the frozen blocks, so it always reflects the code that runs (the
+estimate when drawn is kept in `set.json`). It compares:
+
+- the estimator against every reading;
+- the estimator against the mean of the observers' first sessions, on blocks
+  where all of them drew lines (for readability: yes where all drew lines, no
+  where none did, left out where they disagree);
+- the observers' first sessions pairwise and, with three or more observers,
+  the ICC of all of them;
+- each observer's first session against each later one.
+
+Written to `Validation/<set>/report/`: `agreement_items.csv` (one row per
+block: source, the estimate, every reading), `agreement_summary.csv` (one row
+per comparison, every statistic above), `readings.csv` (per reading: blocks
+read, with streaks, no clear streaks, median seconds per block),
+`bland_altman.png` and `scatter.png`.
+
+Caution for reading the results: the Bland–Altman comparison of estimator and
+observer uses only blocks the estimator resolved and the observer read, a
+sample selected by both. The readability counts and kappa describe the rest.
+
+### Line placement (`capillary/placement.py`)
+
+- **Observer.** The measure pages have an Observer field (initials) next to
+  the data set name, shared with the reading dialog and remembered in
+  `settings.csv` (`observer`). It is saved in every new data set's provenance
+  (`observer`), and the Results page shows it ("by SJ"). Older data sets have
+  none.
+- **Matching.** Two centre-line data sets measure the same capillary if they
+  are on the same recording, at least half of one line lies within 5 px of
+  the other (lines sampled every pixel), and their frame ranges share at least
+  80% of the frames either covers. A line drawn the other way round is
+  compared with its sign reversed (the tangents where the lines meet decide).
+  Connected matches form one capillary.
+- **Comparison.** Per capillary, each observer's first data set and their
+  second, if any. The median velocities are compared between every two
+  observers (and all of them with three or more) and between an observer's
+  first and second measurement, with the same statistics. Data sets without
+  an observer are listed but take part in no comparison. Written to
+  `Validation/line_placement/` (`measurements.csv`, `capillaries.csv`,
+  `summary.csv`, the plots); the name `line_placement` is reserved and cannot
+  be used for a reading set.
+
+### The app
+
+- **Validation page.** The left column holds "Line placement" and the reading
+  sets (**New…** draws one). A reading set shows its readings (observer,
+  session, blocks read, no clear streaks, last saved; Continue / Look
+  through), **Start reading…** (observer and session, with the next session
+  suggested), the agreement (two tables: velocity, then readability; Bland–
+  Altman and scatter plots, which open full size on click) and the data sets
+  it was drawn from.
+- **Reading mode** fills the page: the block on the left; on the right the
+  observer and session, block *n* of *N*, progress, instructions, **No clear
+  streaks**, **Remove lines**, **Next block** (Enter or →), **Previous** (←),
+  **Finish later** (Esc). Backspace removes the last line. F1 lists the keys.
+  Leaving the page keeps the reading open.
+- `Caper.generate_validation_report` draws the plots; `gui/tasks.py` has the
+  background jobs; the reading mode is `gui/reading_view.py`.
+
+### Verification
+
+- **Unit tests:** 215 pass (184 before). `test_agreement.py` 10 (Shrout &
+  Fleiss, hand-worked Bland–Altman and kappa, proportional bias found and
+  removed on the ratio scale, missing values, too few pairs).
+  `test_validation.py` 13: synthetic centre-line data sets with flow at 1.0
+  and 0.4 px/frame and without flow; blocks identical to the data set's rows;
+  the saved estimate equal to the one computed again; seeding; name rules;
+  orders per observer and session; saving and resuming; simulated observers
+  (5% scatter, no streaks without flow) giving bias near 0, ICC > 0.8 and
+  kappa 1; three observers; report files. `test_placement.py` 6: overlap and
+  direction of lines, frame overlap, grouping with reversed lines, the
+  comparisons (an observer reading 10% higher gives ratio limits of exactly
+  1.1), the report from saved provenance. Two in `test_gui_logic.py`: the
+  reading canvas's coordinates both ways; the image observers see (no still
+  structure or same-moment change left). `test_line_tasks.py` checks that the
+  observer is saved.
+- **Lint and imports:** pyflakes reports only the two old notes; the CI
+  flake8 selection is clean; the venv was not touched.
+- **Scripted GUI sessions** on a scratch data folder (links to the real
+  videos, copies of the data sets), the windows never taking keyboard focus.
+  Three centre-line data sets on real capillaries were measured first:
+  - the before limb (`FP01_Qföre`, 145 px, frames 1909–2808): 33 of 55
+    blocks resolved, median 0.0138 mm/s;
+  - a line through tissue 25 px beside it: 0 of 55;
+  - the after loop's left limb (`FP01_Qefter`, 126 px, frames 1435–2334): 5 of
+    55, 0.0081 mm/s.
+
+  These match 2026-10-06. Then:
+  - a reading set of 18 blocks drawn through the dialog;
+  - reading with every control: Next with nothing drawn (refused), too flat a
+    line (refused), three lines, right-click removal, Backspace, Previous,
+    switching pages and back (the reading stays open), Esc and Continue;
+  - three complete readings (SJ ×2, AB) by a simulated observer that draws
+    the estimator's own slope with 8% scatter;
+  - the agreement report and its plots, F1;
+  - the Observer field (lower case saved as upper case, an invalid code
+    blocks Measure, both pages share it), "by SJ" on the Results page;
+  - Line placement on seven more data sets by two pretend observers. All
+    groups were found correctly: three capillaries, the reversed line, the
+    tissue line kept apart, data sets without an observer listed but not
+    compared.
+
+  Screenshots were reviewed; no Tk errors. The agreement table was first
+  wider than the page (kappa cut off) and was split in two, with intervals on
+  a second line.
+
+### What the real blocks look like (pilot, not a study)
+
+A contact sheet of the 18 pilot blocks, as observers see them, with the
+estimate overlaid (scratch only):
+
+- **Before limb.** The resolved blocks show clear diagonal streaks, and the
+  estimated slope runs parallel to them by eye. Some unresolved blocks also
+  show faint streaks; this is the disagreement the study will measure.
+- **After limb.** Blotches and sudden jumps (whole-line shifts between frames)
+  and hardly any visible streak, consistent with 9% resolved. Observers will
+  mostly answer "no clear streaks" there.
+- **Tissue line.** Noise, plus the edge of a vessel it crosses; usable as
+  negative controls if wanted.
+- **Line placement on the before limb.** Two lines with different click
+  spacing and up to 1.5 px off the middle gave 0.0137 and 0.0138 mm/s; a third
+  drawn the other way gave −0.0140 (matched, sign reversed). These lines came
+  from the same extracted skeleton, so this says little about real observers.
+
+### Limitations and next steps
+
+- **No real reading yet.** The readings in the checks were simulated from the
+  estimator's own slopes; they test the mechanics, not the method.
+- **Suggested protocol (to agree with the supervisors):**
+  1. Choose capillaries with visible flow, about 2 per recording, and measure
+     each over the whole recording with the Observer field filled.
+  2. Draw a reading set (6 blocks per data set, balanced).
+  3. Two observers read session 1 independently; one reads session 2 at
+     least a week later.
+  4. For line placement, a second observer measures the same capillaries
+     over the same frames without seeing the first observer's line. They
+     identify the capillary from a frame with an arrow, not from the line.
+  5. Compute the agreement.
+- **Sample size.** Bland & Altman suggest about 100 pairs for precise limits;
+  15–30 capillaries give wide ICC intervals.
+- **Display.** Fixed (cleaned, percentile contrast); observers cannot change
+  the contrast. A control could be added if blocks are too faint, but it would
+  have to be recorded.
+- **Slow flow.** At 0.2 px/frame a 3-s block shows streaks moving only about
+  18 px over its 90 frames: readable, but shallow.
+- **References.** Bland & Altman 1986 and 1999, McGraw & Wong 1996, Shrout &
+  Fleiss 1979 and Cohen 1960 need checking before they go into the thesis, as
+  do Drew 2010 and Klyscz 1997 from 2026-10-06.
+
+---
+
 ## 2026-10-06 — Velocity along a centre line (space-time diagram), validated on calibrated synthetic recordings
 
 **Branch:** `feat/centreline-velocity`, from `main` at `bbec82a` (after the

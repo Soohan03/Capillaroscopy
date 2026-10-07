@@ -4,9 +4,14 @@ The measurement itself — ROI geometry, intensity sampling, the lag estimator,
 the space-time diagram — lives in the GUI-free `capillary` package. The code
 here writes the stabilized videos and turns a saved data set (see
 `capillary.datasets`) into the report CSVs and plots: `CrossCorrelation` for
-two boxes, `generate_line_report` for a centre line. None of this imports
-tkinter; the GUI runs it in worker threads.
+two boxes, `generate_line_report` for a centre line, and
+`generate_validation_report` for the agreement of observers and the estimator
+on a reading set (`capillary.validation`). None of this imports tkinter; the
+GUI runs it in worker threads.
 """
+import math
+import os
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -457,3 +462,67 @@ def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, firs
     row = dict(summary or {})
     row['line_length_um'] = length_um
     pd.DataFrame([row]).to_csv(report_prefix + '___line_summary.csv', index=False)
+
+
+def generate_validation_report(report_dir, table, comparisons, unit='blocks'):
+    """Plot agreement comparisons (capillary.validation, capillary.placement); returns the paths written.
+
+    One panel per comparison with at least two pairs of velocities:
+    ``bland_altman.png`` (difference against mean, with the bias and the 95%
+    limits of agreement) and ``scatter.png`` (first measurement against
+    second, with the line of identity). `unit` names what a pair is (blocks of
+    a reading set, capillaries). A plot with no panel left is removed, so an
+    old one is never shown as if it were current.
+    """
+    os.makedirs(report_dir, exist_ok=True)
+    panels = [c for c in comparisons if c.get('first_column') and (c.get('pairs') or 0) >= 2]
+    written = {}
+    for kind in ('bland_altman', 'scatter'):
+        path = os.path.join(report_dir, kind + '.png')
+        if not panels:
+            if os.path.exists(path):
+                os.remove(path)
+            continue
+        columns = min(3, len(panels))
+        rows = int(math.ceil(len(panels) / columns))
+        f, axes = plt.subplots(rows, columns, figsize=(4.8 * columns, 4.1 * rows), dpi=150, squeeze=False)
+        for ax, comparison in zip(axes.flat, panels):
+            a = table[comparison['first_column']].to_numpy(dtype=float)
+            b = table[comparison['second_column']].to_numpy(dtype=float)
+            keep = np.isfinite(a) & np.isfinite(b)
+            a, b = a[keep], b[keep]
+            first, second = comparison['first'], comparison['second']
+            if kind == 'bland_altman':
+                ax.axhline(0, color='#9AA3AF', linewidth=0.6)
+                ax.plot((a + b) / 2, a - b, 'o', markersize=3.5, color='#2F6FDE', alpha=0.8)
+                bias, low, high = comparison['bias'], comparison['loa_low'], comparison['loa_high']
+                ax.axhline(bias, color='#2F6FDE', linewidth=1.2, label=f'bias {bias:+.4f}')
+                ax.axhline(low, color='#E5484D', linestyle='--', linewidth=1,
+                           label=f'95% limits {low:+.4f} to {high:+.4f}')
+                ax.axhline(high, color='#E5484D', linestyle='--', linewidth=1)
+                ax.set_xlabel('mean of both (mm/s)')
+                ax.set_ylabel(f'{first} − {second} (mm/s)', fontsize=8)
+                ax.legend(loc='best', fontsize=7)
+            else:
+                ax.plot(b, a, 'o', markersize=3.5, color='#2F6FDE', alpha=0.8)
+                low = min(0.0, float(np.min(a)), float(np.min(b)))
+                high = max(0.0, float(np.max(a)), float(np.max(b)))
+                pad = 0.05 * (high - low or 1.0)
+                ax.plot([low - pad, high + pad], [low - pad, high + pad], color='#9AA3AF', linewidth=0.8,
+                        label='identity')
+                ax.set_xlim(low - pad, high + pad)
+                ax.set_ylim(low - pad, high + pad)
+                ax.set_aspect('equal')
+                ax.set_xlabel(f'{second} (mm/s)', fontsize=8)
+                ax.set_ylabel(f'{first} (mm/s)', fontsize=8)
+                ax.legend(loc='upper left', fontsize=7)
+            ax.set_title(f'{comparison["comparison"]}\n{len(a)} {unit} with a velocity from both', fontsize=8)
+            ax.tick_params(labelsize=7)
+            ax.locator_params(axis='both', nbins=5)
+        for ax in list(axes.flat)[len(panels):]:
+            ax.axis('off')
+        f.tight_layout()
+        f.savefig(path, dpi=f.dpi, bbox_inches='tight')
+        plt.close(f)
+        written[kind] = path
+    return written

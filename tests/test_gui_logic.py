@@ -8,13 +8,15 @@ import os
 import threading
 import time
 
+import numpy as np
 import pytest
 
-from capillary import datasets
+from capillary import datasets, validation
 from gui import library, tasks
 from gui.jobs import JobManager
 from gui.media import format_time
 from gui.settings import DataFolder, Settings
+from gui.reading_view import BlockGeometry, block_image
 
 
 def touch(path, content=b''):
@@ -232,6 +234,33 @@ def test_jobs_report_results_errors_and_cancellation():
     assert outcome['cancelled'] and running.state == 'cancelled'
     assert manager.active() == [] and tk.errors == []
     assert manager.close(timeout=5)
+
+
+def test_the_reading_canvas_maps_block_coordinates_both_ways():
+    geometry = BlockGeometry(frames=90, positions=121, width=1000, height=600, margin=20)
+    assert geometry.scale == pytest.approx(min(960 / 121, 560 / 90))
+    assert geometry.left + geometry.width / 2 == pytest.approx(500)
+    assert geometry.top + geometry.height / 2 == pytest.approx(300)
+    x, y = geometry.to_canvas(30.0, 60.0)
+    assert geometry.to_block(x, y) == pytest.approx((30.0, 60.0))
+    assert geometry.to_block(-50, 10_000) == (89.0, 0.0)             # kept inside the block
+    # one pixel along the line is drawn as wide as one frame is tall: 45 degrees is 1 px/frame
+    (x0, y0), (x1, y1) = geometry.to_canvas(0, 0), geometry.to_canvas(40, 20)
+    frame0, position0 = geometry.to_block(x0, y0)
+    frame1, position1 = geometry.to_block(x1, y1)
+    assert validation.line_speed([(frame0, position0, frame1, position1)]) == pytest.approx(0.5)
+    assert (x1 - x0) / (y1 - y0) == pytest.approx(0.5)
+
+
+def test_observers_see_the_block_without_still_structure_or_same_moment_changes():
+    rng = np.random.default_rng(0)
+    still = rng.normal(100, 10, 120)
+    same = rng.normal(0, 5, 90)
+    image = block_image(still[None, :] + same[:, None])
+    assert image.shape == (90, 120) and image.dtype == np.uint8 and image.max() == 0
+    moving = np.array([np.roll(np.sin(np.arange(120) / 4.0), t) for t in range(90)]) + still[None, :]
+    shown = block_image(moving)
+    assert shown.min() == 0 and shown.max() == 255
 
 
 def test_lanes_run_side_by_side_and_close_waits_for_the_workers():

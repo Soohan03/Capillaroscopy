@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 import Caper
-from capillary import datasets, spacetime
+from capillary import datasets, placement, spacetime, validation
 from capillary.intensity import extract_traces
 from capillary.measure import measure_velocity
 from capillary.roi import ROI
@@ -247,7 +247,7 @@ def _video_record(path: str, info) -> dict:
 
 def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str,
                              box1: ROI, box2: ROI, start: int, end: int, mm_per_pixel: float,
-                             time_points=(), blur_cache=None) -> dict:
+                             time_points=(), blur_cache=None, observer: str = '') -> dict:
     """Measure frames ``start..end`` (inclusive), save the data set, and write its report."""
     job.report(0.0, 'Reading frames')
     measurement = measure_velocity(video_path, box1, box2, start, end + 1,
@@ -274,6 +274,7 @@ def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, v
             'dataset': name,
             'recording': stem,
             'created': datetime.datetime.now().isoformat(timespec='seconds'),
+            'observer': observer or None,
             'video': _video_record(video_path, measurement),
             'frames': {'first': measurement.start_frame,
                        'last': measurement.start_frame + measurement.frames_read - 1,
@@ -374,7 +375,7 @@ def _estimator_record() -> dict:
 
 
 def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str, points,
-                         start: int, end: int, mm_per_pixel: float, time_points=()) -> dict:
+                         start: int, end: int, mm_per_pixel: float, time_points=(), observer: str = '') -> dict:
     """Measure frames ``start..end`` (inclusive) along the centre line, save the data set, write its report."""
     info = probe_video(video_path)
     line = spacetime.Centreline.from_points(points)
@@ -404,6 +405,7 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
             'dataset': name,
             'recording': stem,
             'created': datetime.datetime.now().isoformat(timespec='seconds'),
+            'observer': observer or None,
             'video': _video_record(video_path, info),
             'frames': {'first': start, 'last': start + len(rows) - 1, 'count': len(rows)},
             'line': {'points': [[round(x, 2), round(y, 2)] for x, y in line.points],
@@ -453,6 +455,51 @@ def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps
                       report_regenerated=datetime.datetime.now().isoformat(timespec='seconds'))
         datasets.write_provenance(files['provenance'], record)
     return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks)}
+
+
+# ------------------------------------------------------------ validation (reading sets)
+
+def create_reading_set(job, *, folder: DataFolder, name: str, sources, blocks_per_dataset: int, balanced: bool,
+                       seed: Optional[int], mm_per_pixel: float) -> str:
+    """Draw a reading set from centre-line data sets (`capillary.validation`); returns its name."""
+    job.report(0.0, 'Drawing blocks')
+    reading_set = validation.create_reading_set(
+        folder.validation, folder.statistics, name, sources, blocks_per_dataset=blocks_per_dataset,
+        balanced=balanced, seed=seed, fallback_mm_per_pixel=mm_per_pixel,
+        progress=lambda p: job.report(0.95 * p, 'Drawing blocks'))
+    return reading_set.name
+
+
+def agreement_report(job, *, folder: DataFolder, name: str) -> dict:
+    """Measure every block of a reading set again, compare it with the readings, write tables and plots."""
+    job.report(0.0, 'Measuring the blocks')
+    reading_set = validation.load_reading_set(folder.validation, name)
+    readings = reading_set.readings()
+    estimates = validation.estimate_items(reading_set, progress=lambda p: job.report(0.8 * p, 'Measuring the blocks'))
+    table = validation.agreement_table(reading_set, readings, estimates)
+    comparisons = validation.compare(table, readings)
+    job.report(0.82, 'Writing the tables')
+    files = validation.write_report_tables(reading_set, table, comparisons, readings)
+    job.report(0.86, 'Drawing the plots')
+    files.update(Caper.generate_validation_report(reading_set.report_dir, table, comparisons))
+    return {'name': name, 'comparisons': comparisons, 'files': files, 'readings': len(readings)}
+
+
+def placement_report(job, *, folder: DataFolder, sources) -> dict:
+    """Find the capillaries measured more than once and compare their velocities (`capillary.placement`)."""
+    job.report(0.0, 'Reading the data sets')
+    measurements = placement.load_measurements(folder.statistics, sources)
+    job.report(0.2, 'Matching the lines')
+    groups = placement.group_measurements(measurements)
+    per_dataset, capillaries = placement.placement_tables(groups)
+    comparisons = placement.compare_placements(capillaries)
+    job.report(0.6, 'Writing the tables')
+    report_dir = os.path.join(folder.validation, placement.REPORT_DIR)
+    files = placement.write_report_tables(report_dir, per_dataset, capillaries, comparisons)
+    job.report(0.7, 'Drawing the plots')
+    files.update(Caper.generate_validation_report(report_dir, capillaries, comparisons, unit='capillaries'))
+    return {'measurements': len(measurements), 'capillaries': len(groups), 'comparisons': comparisons,
+            'files': files}
 
 
 # ------------------------------------------------------------------ results browsing
