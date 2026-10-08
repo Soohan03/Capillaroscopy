@@ -189,7 +189,7 @@ class RecordingList(tk.Canvas):
         self.configure(scrollregion=(0, 0, width, max(total, self.winfo_height())))
         if not self.items:
             self.create_text(width / 2, px(60), text=self._empty_text, fill=COLORS['faint'], font=FONTS['small'],
-                             width=width - px(40), justify='center')
+                             width=max(1, width - px(40)), justify='center')
             return
         name_font = FONTS['bold']
         for row, item in enumerate(self.items):
