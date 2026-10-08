@@ -37,14 +37,29 @@ by hand.
 ## How a recording is stabilized
 
 The skin moves under the microscope, so before measuring every frame is moved
-back into place (`capillary/stabilize.py`). The three sharpest frames of the
-recording are the references. Each frame is registered against them to 1/100
-pixel, on a contrast-enhanced copy used only for the registration, and moved
-by the mean of the three shifts; only translation is corrected. The stabilized
-video is written frame for frame and uncompressed (8-bit grey, like the
-recordings from DynCap), with the shift of every frame next to it
-(`<recording>___stabilization.csv`). The video is read from disk twice and
-never held in memory, so recordings of any length can be stabilized.
+back into place (`capillary/stabilize.py`); only translation is corrected.
+
+1. The registration works on a band-passed copy of each frame (difference of
+   Gaussians, σ 2 and 15 px). It removes pixel noise and the uneven lighting,
+   which stays with the camera while the skin moves.
+2. The sharpest frame and the 12 frames on each side of it are aligned onto it
+   and averaged, alternately, into two references. Averaging smooths out the
+   moving blood, which makes a single frame a noisy reference.
+3. Each frame is found in both references, to a fraction of a pixel. A coarse
+   search on reduced frames reaches a third of the frame. The previous frame's
+   position is a second starting point, so the search can follow a recording
+   that moves further than that: FP03_Wföre swings by about 200 px with
+   breathing.
+4. Each frame is moved by the mean of the two results, re-centred on the
+   recording's median position, with bicubic interpolation.
+
+The stabilized video is written frame for frame and uncompressed (8-bit grey,
+like the recordings from DynCap). Next to it, `<recording>___stabilization.csv`
+holds the shift of every frame and how sure it is: how well the frame matched
+the references, how far apart the two references' results were, and whether
+the match lay at the edge of the search. The video is read from disk three
+times and never held in memory, so recordings of any length can be
+stabilized; a 3-minute recording takes about 2–3 minutes.
 
 ## How velocity is measured
 

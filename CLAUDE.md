@@ -122,11 +122,19 @@ Tkinter classes.
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
 - Both save through `capillary.datasets`.
-- **Stabilization:** `capillary/stabilize.py` (since 2026-10-08), the method of the original
-  `Caper.VideoStabilization`: translation only, the three sharpest frames as references,
-  registration to 1/100 px (`registration.py`, vendored). It reads the video from disk twice
-  (memory stays small), writes it uncompressed 8-bit grey frame for frame, and saves every
-  frame's shift. `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
+- **Stabilization:** `capillary/stabilize.py` (rewritten 2026-10-08; its docstring has the
+  method and history). Translation only. The registration works on a band-passed copy of
+  each frame (difference of Gaussians, σ 2 and 15 px) against two references, each averaged
+  from alternate frames of the sharpest frame's 25-frame neighbourhood.
+  - A coarse search on 4× reduced frames (±160 px), then a fine normalized
+    cross-correlation within 12 px of the coarse result and of the previous frame's
+    position, so it follows large movement.
+  - Shifts are re-centred on their median. The video is read from disk three times
+    (memory stays small) and written uncompressed 8-bit grey, frame for frame, with bicubic
+    interpolation.
+  - Every frame's shift, match, disagreement and search-limit flag go to
+    `___stabilization.csv`.
+  - `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
 - Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
   known speed and the disturbances measured in the 2019 recordings;
   `python3 -m capillary.benchmark` compares both methods on them (~6 min; `--quick` ~12 s).
@@ -137,7 +145,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (225 tests, ~25 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (228 tests, ~25 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -166,17 +174,22 @@ the 2026-10-05 GUI rebuild entry.
   in px, in mm/s (0.18 mm/s for 100 px); normal resting velocities need long lines or a
   faster camera. With no flow but strong jitter, the benchmark still resolves ~7–11% of
   blocks at about 0.2 px/frame, so a near-stasis vessel shows as "few blocks resolved".
-- **Stabilization accuracy** (found 2026-10-08): the registration is biased when the image
-  has moved far from the reference frames.
-  - On FP01_Qföre the image moves 15–20 px, mostly vertically, during occlusion and after
-    release. There the shift falls 3–5.6 px short vertically, judged by an independent
-    estimate (high-pass template matching) and by edge similarity.
-  - At rest it is within about 1 px (1.3 px at worst on the frames checked).
-  - The likely cause is the contrast enhancement before the registration (CLAHE on a fixed
-    3 × 3 grid of tiles, which changes as the image moves): on shifted real frames it costs
-    0.2–0.5 px, against 0.08 px without it.
-  - The `disagreement_px` column of the shift file flags such frames.
-  - Fixing it changes the results, so it is the next, separate step.
+- **Stabilization** (2026-10-08): the registration is new.
+  - Checked on synthetic moves of up to 25 px (error under 0.08 px) and on two recordings
+    (DEVLOG):
+    - FP01_Qföre moves about 28 px. Edge similarity is better than the old registration's
+      in occlusion and after release.
+    - FP03_Wföre is dark, with low contrast, and swings by about 200 px with breathing.
+      It stays aligned throughout, with a median match of about 0.6.
+  - Any video stabilized before the new registration is off by up to 5.6 px where the
+    image had moved far; re-stabilize it.
+  - Translation only: local deformation is not corrected. The match falls during the
+    occlusion on FP01_Qföre (0.92 at rest with the earlier references, 0.75 in occlusion);
+    changed content or deformation, not told apart.
+  - The settings were chosen on these two recordings. Check each recording's summary in
+    the shift file: match, disagreement, frames at the search limit.
+  - FP03_Wföre's first frame is offset by about 42 px from the second, probably a
+    camera start-up artefact.
 - **The 8 videos in `StabilizedVideos/` on the desktop were not made by the current
   stabilizer.** If they are MPEG-4 like the old stabilizer's output, they are lossy: on
   FP01_Qföre that kept only about 14% of the frame-to-frame change, where the moving cells

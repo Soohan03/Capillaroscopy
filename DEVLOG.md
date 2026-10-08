@@ -6,6 +6,238 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-08 — A new registration for the stabilizer
+
+**Branch:** `fix/stabilizer-registration`, from `feature/streaming-stabilizer` at
+`dde2fd7` (the entry below); merge `fix/macos-tk9` and that branch first.
+
+**Commits:**
+
+- `98f74ba` Stabilizer registration: band-pass, averaged references, template matching
+- `af1dce6` Stabilizer: follow large movements, references from the sharpest frame's neighbours, re-centre
+- this entry, with README and CLAUDE.md
+
+The entry below found that the stabilizer's registration falls short by
+several pixels where the image has moved far. The user asked for it to be
+fixed. The method changed in two steps: first against FP01_Qföre, then again
+after a second recording, FP03_Wföre, broke the first version. All scratch
+scripts are outside the repository; the numbers here are what they printed.
+
+### Choosing the method on known shifts
+
+**The synthetic test.** One real frame of FP01_Qföre was used as the scene.
+Its own lighting was divided out (by its 40-px blur), it was moved by known
+sub-pixel amounts and cropped to 560 × 400. It was then multiplied by lighting
+that stays with the camera (darker to the corners, a left-right gradient), and
+smooth changing content and noise were added. Each method registered every
+frame against an unmoved one. Error against the truth (mean |x|, mean |y|,
+largest), and the time per registration:
+
+| Method | Moves up to ±6 px | x ±10, y ±25 px | ms |
+| --- | --- | --- | ---: |
+| Old: CLAHE + median, circular upsampled | 0.19, 0.32, 0.66 | 0.32, 0.73, 1.98 (mean y error +0.46: too short) | 18 |
+| DoG + window, circular upsampled | 0.05, 0.05, 0.18 | 0.04, 0.06, 0.15 | 23 |
+| DoG + template match, parabola | 0.06, 0.06, 0.20 | 0.05, 0.06, 0.17 | 8 |
+| DoG + template match, Gaussian peak fit | 0.06, 0.06, 0.20 | 0.04, 0.06, 0.16 | 8 |
+| DoG + template match, ECC refinement | 0.06, 0.06, 0.20 | 0.05, 0.06, 0.14 | 16 |
+| DoG + template match, upsampled refinement | 0.05, 0.06, 0.23 | 0.05, 0.06, 0.16 | 23 |
+
+DoG is a difference of Gaussians with σ 1 and 10 px; the band-pass removes the
+lighting without depending on position.
+
+**On real frames.** Every 30th frame of FP01_Qföre was registered against its
+three sharpest single frames. The references disagree (median px, rest /
+occlusion / after release), and the edge similarity to frame 63 (mean, same
+order):
+
+| Method | Disagreement | Edge similarity | Closure 63→210→463 |
+| --- | --- | --- | ---: |
+| Old | 2.19 / 3.55 / 3.32 | 0.548 / 0.345 / 0.354 | 1.47 px |
+| DoG + window, upsampled | 0.60 / 0.83 / 0.78 | 0.560 / 0.393 / 0.419 | 0.27 px |
+| DoG + match, parabola | 0.56 / 0.79 / 0.71 | 0.559 / 0.393 / 0.418 | 0.28 px |
+| DoG + match, ECC | 0.68 / 1.01 / 0.92 | 0.559 / 0.392 / 0.419 | 0.26 px |
+
+Template matching with a parabola was as good as any other method and the
+fastest, so it was chosen.
+
+**Averaged references.** The remaining ~0.6 px came from the references:
+single frames differ by the blood moving in them. Noise of one estimate was
+measured split-half. Each frame was registered against two references made
+from different frames, and the spread of the difference (robust, divided
+by √2) was taken. This measures only the reference's share of the noise.
+Results (x/y px, rest / occlusion / after release):
+
+| Band-pass σ (px) | Single sharp frames | Mean of 12 aligned sharp frames each |
+| --- | --- | --- |
+| 1 and 10 | 0.20/0.18, 0.26/0.44, 0.31/0.32 | 0.08/0.05, 0.04/0.07, 0.10/0.05 |
+| 1.5 and 6 | 0.20/0.21, 0.29/0.30, 0.34/0.43 | 0.05/0.05, 0.04/0.07, 0.06/0.06 |
+| **2 and 15** | 0.12/0.19, 0.12/0.32, 0.15/0.16 | **0.02/0.02, 0.02/0.02, 0.03/0.02** |
+| 1 and 5 | 0.25/0.37, 0.63/0.79, 0.61/0.51 | 0.13/0.08, 0.11/0.16, 0.15/0.14 |
+
+**Interpolation.** Moving a frame by a fraction of a pixel with bilinear
+interpolation blurs it by an amount that depends on the fraction. The share of
+detail kept on a real frame, for shifts of 0, 0.25 and 0.5 px:
+
+| Scale | Bilinear | Bicubic |
+| --- | --- | --- |
+| Finest, 0.5–1.5 px | 1.00, 0.72, 0.62 | 1.00, 0.94, 0.88 |
+| Fine, 1–3 px | 1.00, 0.92, 0.89 | 1.00, 1.01, 1.02 |
+| Cell scale, 2–6 px | 1.00, 0.99, 0.98 | 1.00, 1.00, 1.01 |
+
+So the output now uses bicubic interpolation.
+
+### First version (`98f74ba`) and what FP03_Wföre showed
+
+The first version used:
+- the band-pass with σ 2 and 15 px;
+- two references, each the mean of every other one of the 24 sharpest frames,
+  moved onto the sharpest;
+- template matching of the frame's centre over ±64 px;
+- a parabola for the fraction of a pixel;
+- bicubic output.
+
+It also wrote three new columns: a match score, the disagreement between the
+two references, and a flag when the best offset lies at the edge of the
+search. The edge flag alone caught only 2 of 17 synthetic frames moved beyond
+the search; a frame far beyond lands on a false peak inside it, with a low
+match. On FP01_Qföre it was good: the references disagreed by a median of
+0.03 px, and there were no flags. It took 136 s.
+
+Stabilizing a second recording as a check, FP03_Wföre, failed on most frames:
+- median match 0.23;
+- 3366 of 5819 frames at the search limit;
+- shifts over the whole ±64 px.
+
+The recording is dark (grey level about 53, SD about 4). A coarse wide search
+on quarter-size frames showed the image moving 72 px up and 104 px down at
+rest and during occlusion. The montage confirmed this. The movement swings
+regularly, about every 3 s (a breath), by around 200 px. Its sharpest frames
+all lay around 100 s, during the occlusion, at one extreme; the sharpness
+hardly varies in this recording (0.0082–0.0084), so they were close to an
+arbitrary choice.
+
+### Second version (`af1dce6`)
+
+- **Coarse then fine.** A coarse search on frames reduced 4 times reaches a
+  third of the frame (±160 px). The fine search then looks within 12 px of two
+  candidates, the coarse result and the previous frame's position, and keeps
+  the better match; a match inside its search beats one at its edge.
+  - The previous frame lets the search follow movement beyond the coarse
+    reach. Each frame is still registered against the fixed references, so
+    errors do not add up.
+  - The fine search compares the largest part of the frame that stays inside
+    the reference.
+- **The references** are now built from the sharpest frame and the 12 frames
+  on each side of it, aligned outwards from it with the previous position as a
+  guide.
+  - A frame is kept only if aligning it onto the sharpest frame and back gives
+    opposite shifts, to within 1 px.
+  - Without that check, a synthetic test with random jumps beyond the coarse
+    reach put falsely aligned frames into the reference. The reference then
+    held the scene twice, 35 and 47 px apart, and half the frames were
+    silently 47 px off with a believable match of 0.65–0.70.
+- **Re-centring.** The shifts are re-centred on their median before writing,
+  so the picture sits where the recording usually is. This needs a third
+  reading.
+- **The edge preference.** The first run of the tests caught one frame found
+  correctly (match 0.98) and still flagged. The search around the previous
+  position had reached the same peak at its edge, with a match higher in the
+  fourth decimal.
+
+### Verification
+
+- **Tests:** `tests/test_stabilize.py` now has 16 tests (228 in the suite).
+  The new and rewritten ones check:
+  - the band-pass moves with the image and drops a lighting field;
+  - the shifts undo moves of ±5 px to within 0.15 px (largest error 0.06–0.08
+    px over 4 seeds, against 0.31–0.39 for the old registration);
+  - moves of x ±10, y ±25 px under camera-fixed lighting are undone to within
+    0.15 px (0.05–0.07);
+  - following the previous frame tracks a 130-px drift where the coarse search
+    reaches 80 px, which fails without it;
+  - with random jumps beyond the reach, every frame is either right (under
+    0.15 px) or marked (low match or at the limit), and none within reach is
+    marked;
+  - the references are the sharpest frame and its neighbours;
+  - memory does not grow from 60 to 180 frames.
+
+  Each of five planted bugs fails at least one test: CLAHE tiles back in front
+  of the band-pass, whole pixels only, a wrong direction, no edge flag, and no
+  following of the previous frame. flake8 is clean.
+- **FP01_Qföre** (5729 frames), with the final version:
+  - 135 s, at most 194 MB of memory;
+  - the image moved over 18.7 × 27.6 px; the references disagree by a median of
+    0.03 px (0 frames over 1 px); median match 0.74 (lowest 0.66);
+  - every frame equals its recorded frame moved by its saved shift.
+
+  Edge similarity to frame 63, mean (worst):
+
+  | Phase | Unaligned | Old registration | New registration | New better on |
+  | --- | --- | --- | --- | --- |
+  | Rest | 0.406 (0.219) | 0.565 (0.418) | 0.560 (0.420) | 43 of 137 |
+  | Occlusion | 0.304 (0.221) | 0.366 (0.323) | 0.384 (0.346) | 118 of 124 |
+  | After release | 0.325 (0.210) | 0.386 (0.322) | 0.411 (0.347) | 121 of 121 |
+
+  - At rest the two registrations differ by a median of 0.9 px vertically. On
+    the two rest frames where they differ most (2.2 and 3.7 px), the new one
+    matches better (0.537 vs 0.521, 0.415 vs 0.403). Overlays show the old
+    alignment offset and the new one overlapping.
+  - The small average preference for the old one at rest is unexplained. A
+    measure that favours small shifts, through anything fixed to the camera,
+    is a guess.
+  - Movement left between consecutive output frames, by phase correlation
+    (robust SD, x/y px):
+
+    | Phase | Unstabilized | Old | New |
+    | --- | --- | --- | --- |
+    | Rest | 0.077/0.064 | 0.069/0.067 | 0.072/0.070 |
+    | Occlusion | 0.082/0.074 | 0.090/0.107 | 0.092/0.102 |
+    | After release | 0.085/0.073 | 0.082/0.096 | 0.088/0.088 |
+
+    The recordings drift rather than shake: both registrations leave about the
+    raw video's own frame-to-frame movement, well below the 0.2–0.3 px that
+    troubled the centre line.
+- **FP03_Wföre** (5819 frames), stabilized into the scratch folder (not the
+  data folder):
+  - 135 s, at most 181 MB;
+  - the image moved over 139 × 265 px;
+  - by phase:
+
+    | Phase | Match median (lowest) | Disagreement median | Frames over 1 px |
+    | --- | --- | --- | --- |
+    | Rest | 0.60 (0.53) | 0.14 px | 0 |
+    | Occlusion | 0.66 (0.49) | 0.10 px | 0 |
+    | After release | 0.59 (0.36) | 0.13 px | 6 |
+
+  - 1 frame at the search limit (frame 3224);
+  - frame-to-frame jumps: median 1.5 px, 99th percentile 8.0 px.
+  - The 12–16 px jumps (70.5 s just before the cuff, 107, 158, 178, 192 s) keep
+    normal match and low disagreement.
+  - The largest, 42 px from frame 0 to frame 1, is real: frame 0 shows the
+    capillaries clearly lower and to the right. It is probably a camera
+    start-up artefact.
+  - A montage of the stabilized output at 0–180 s shows the same capillary
+    loop in the same place throughout.
+- `FP01_Qföre` in `StabilizedVideos/` was stabilized again with the final
+  version (provenance at `af1dce6`).
+
+### Open
+
+- Checked on two recordings only. The settings (σ 2 and 15 px, 25 reference
+  frames, a coarse reach of a third of the frame, a fine reach of 12 px) were
+  chosen on them. Check each recording's summary in its shift file: match,
+  disagreement, frames at the search limit.
+- Translation only. FP03_Wföre's movement is so large that up to about half of
+  some frames is lost at the edges; a capillary near the top or bottom may be
+  out of view for part of each breath.
+- A recording that starts more than a third of the frame away from its
+  sharpest frame loses its first frames until the movement comes within reach;
+  those frames are marked by a low match.
+- On the desktop: run the tests, since the uncompressed grey writer was checked
+  only with OpenCV 5.0 on macOS. Check the codec of the 8 old stabilized videos.
+
+---
+
 ## 2026-10-08 — The stabilizer reworked: read from disk, lossless, in step
 
 **Branch:** `feature/streaming-stabilizer`, from `fix/macos-tk9` at `55f201e` (the
