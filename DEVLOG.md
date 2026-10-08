@@ -6,6 +6,257 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-08 — The stabilizer reworked: read from disk, lossless, in step
+
+**Branch:** `feature/streaming-stabilizer`, from `fix/macos-tk9` at `55f201e` (the
+entry below); merge that branch first.
+
+**Commits:**
+
+- `0a1988b` Stabilizer read from disk, lossless and in step (capillary.stabilize)
+- this entry
+
+The user asked whether the stabilizer needed work before stabilizing the
+downloaded recordings, and then to make it use less memory. The method stays
+the same; how it runs, what it writes and how fast it is changed.
+
+### What a review and tests found
+
+Tests on FP01_Qföre (scratch scripts, not in the repository) showed:
+
+- **Memory.** `Caper.VideoStabilization` held two float64 copies of the whole
+  video: 22–37 GB for the 9 downloaded recordings (4528–7524 frames). That was
+  impossible on the 8 GB Mac and probably on the desktop too, since WSL gets
+  half of the PC's memory by default.
+- **Lossy output.** It wrote MP4V into an `.avi`; FFmpeg falls back to the
+  FMP4 tag, which is the same MPEG-4 Part 2 codec. On the first 15 s of
+  FP01_Qföre:
+  - 207 MB became 3.0 MB;
+  - the error against the same shifts written uncompressed was 4.6 grey levels
+    RMS (PSNR 34.9 dB), larger than the raw video's own frame-to-frame change
+    (3.05);
+  - the frame-to-frame change correlated only r = 0.38 with the uncompressed
+    one (r² ≈ 0.14), and the moving cells show up in that change.
+- **One frame late** (known since 2026-10-05): frame 0 black, frame k holding
+  recorded frame k−1, the last frame dropped. This was confirmed again.
+- The writer was fixed at 30 fps and 640 × 480; a video of another size would
+  have been written empty without an error.
+- **Slow:** 239 ms a frame, two-thirds of it in `scipy.signal.medfilt`.
+- **The registration itself works.**
+  - On a synthetic clip (one real frame moved by known shifts) the direction
+    is right: the correction correlates −0.999 with the movement, leaving
+    about 0.3 px.
+  - On the real clip its alignment matches a reference frame better than plain
+    phase correlation (similarity 0.980 against 0.964, and 0.959 unaligned).
+    It is never worse by more than 0.02 and better on 120 of 450 frames.
+  - FP01_Qföre drifts by up to about 11 px at rest within those 15 s. A
+    capillary limb is about 8–15 px wide here, so the recordings need
+    stabilizing before a centre line is drawn.
+  - A first check by phase correlation had suggested the stabilizer added
+    motion, and the interim report to the user said so. That check was the
+    one failing: its peak response fell to about 0.01 on the frames in
+    question.
+
+Also found, and **not changed** here because it changes the results: the
+contrast enhancement before the registration (CLAHE on a fixed 3 × 3 grid of
+tiles) changes as the image moves. On known shifts of one real frame the error
+was 0.21 px (x) and 0.50 px (y) on average, up to 0.87 px, against 0.08 px
+without the enhancement. That is close to the slowest speeds the centre line
+measures (about 0.2 px/frame). It needs its own change and verification
+(CLAUDE.md, known issues).
+
+Side finding: the DynCap downloads are uncompressed 8-bit grey AVI, so the
+archive is stored losslessly. That answers an open point in the entry on the
+Capture page's removal (the thesis draft says the recordings were stored
+losslessly).
+
+### What changed
+
+- **`capillary/stabilize.py`** (new) runs the same method in two readings of
+  the file:
+  1. Every frame's sharpness (`quality.calculate_blur`) is computed, and the
+     three sharpest frames are kept as they come along.
+  2. Each frame is enhanced (CLAHE 7.65, 3 × 3 tiles; 7 × 7 median), registered
+     against the three enhanced references to 1/100 px, moved by the mean of
+     the three shifts (bilinear) and written.
+
+  Only a few frames are in memory at a time. Differences from the old code:
+  - **Median filter:** OpenCV's median on a zero-padded copy, equal to
+    `scipy.signal.medfilt` (checked on real frames and in a test) and much
+    faster.
+  - **Rounding:** the moved frame is rounded to whole grey levels; the old
+    code truncated, which darkened every frame by half a grey level on
+    average.
+  - **Output:** uncompressed 8-bit grey AVI at the source's frame rate and
+    size. Output frame k is recorded frame k.
+  - **Record:** next to the video, `<stem>___stabilization.csv` holds every
+    frame's shift, how far the three references disagree once their fixed
+    offsets are removed, its sharpness, and whether it is a reference.
+    `<stem>___stabilization_provenance.json` holds the settings, the
+    reference frames, a summary (how far the image moved, the largest jump
+    between frames, the disagreement) and the git commit.
+  - **Robustness:** progress and cancel work as in the measurements, and a
+    failed or cancelled run removes its partial output.
+  - **Command line:** `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
+- **`capillary/registration.py`** is `SingleStepDFT.py`, moved into the package
+  (`git mv`) with only its docstring changed.
+- **`Caper.py`** loses `Video` and `VideoStabilization`, and the imports only
+  they used.
+- **`Utilities.py`** is removed: `clahe` and `median_filter` are replaced in
+  `stabilize.py`, and nothing used its re-export of `calculate_blur` (its test
+  in `test_velocity.py` goes too).
+- **`gui/tasks.py`:**
+  - `stabilize` runs the new module and always writes `<stem>.avi`.
+  - Stabilizing again moves the previous video and its two files to the trash.
+  - `recording_files` includes the two files, so moving a recording to the
+    trash takes them along.
+  - A disk-space check replaces the memory check. The memory check's macOS
+    fallback from `a71f270` goes with it; there is nothing left to check.
+- **Docs:** the README gains "How a recording is stabilized", the command
+  line, the new files and the code layout. CLAUDE.md gets the data layout, the
+  engine, the test count and the known issues, and docstrings in `quality.py`
+  and `video.py` were updated.
+
+### Verification
+
+- **Same shifts as before.** A lossless 450-frame clip of FP01_Qföre (frames
+  0–449) was run through the old `VideoStabilization` (before any change, at
+  `55f201e`) and through the new code:
+  - the same reference frames (63, 210, 27);
+  - shifts bit-identical for recorded frames 0–448 (the old code's frames
+    1–449);
+  - enhancement identical to scipy's on 20 real frames;
+  - every output frame equal to its recorded frame moved by its shift, 450
+    frames, frame 0 no longer black;
+  - 105 s for the old code, 40 s (88 ms a frame) for the new.
+- **Tests:** 13 new tests in `tests/test_stabilize.py`. A textured scene moved
+  by known sub-pixel amounts (±5 px), written losslessly, then:
+  - the shifts undo the movement to within 0.5 px (largest error 0.31–0.39 px
+    over 4 seeds);
+  - every frame is written in its place and losslessly, at the source's frame
+    rate and size;
+  - the stabilized frames line up;
+  - the references are the sharpest frames;
+  - traced memory does not grow with the length (+0.01 MB from 30 to 150
+    frames, against 2.3 MB if the frames were kept);
+  - the record files; cancelling; `.avi` only; the command line;
+  - the GUI job: where it files the video and its record, the trash on a
+    second run, cancelling, too little disk space.
+
+  Three bugs were planted to check that the tests catch them:
+  - a wrong shift direction was caught by the line-up test;
+  - keeping every frame in memory was caught by the memory test;
+  - the old one-frame lag was caught by three tests.
+
+  Suite: 225 passed (215 before, minus the 2 memory tests and the
+  `Utilities` test, plus the 13 new tests). The CI's flake8 selection is
+  clean, and so are the new and changed files under a full flake8 run.
+- **A full recording.** FP01_Qföre (5729 frames, 191 s) was stabilized through
+  the GUI's job (`gui.tasks.stabilize`) into the data folder on the Mac:
+  - 537 s (94 ms a frame), with at most **278 MB** of memory (macOS
+    `time -l`), against about 28 GB for the old code;
+  - 5729 frames at 30 fps, 1.76 GB like the raw file, and every frame equal to
+    its recorded frame moved by the shift saved in the CSV (0 of 5729 differ);
+  - similarity to the frame at 30 s improved in every phase (mean, and worst
+    frame in brackets):
+
+    | Phase | Unaligned | Stabilized |
+    | --- | ---: | ---: |
+    | Rest | 0.972 (0.912) | 0.981 (0.955) |
+    | Occlusion | 0.891 (0.851) | 0.940 (0.930) |
+    | After release | 0.902 (0.836) | 0.953 (0.934) |
+
+  - the image moved up to 11.4 px from its resting position at rest, and up to
+    about 20 px during occlusion and after release, mostly vertically; the
+    largest jump between two frames was 4.5 px.
+
+### The registration's accuracy on the full recording
+
+The CSV's first definition of `disagreement_px` removed the references'
+offsets as their median over all frames. It came out above 1 px on 4069 of
+5729 frames: 4.9 px (median) close to the references and about 1 px far
+from them, changing smoothly from frame to frame. That pointed to a
+registration bias that depends on where the image is, so 12 frames were
+checked against an independent estimate:
+
+- **The independent estimate:** a template match of the frame's centre
+  (580 × 420 px) after a high-pass filter (frame minus its 10-px Gaussian
+  blur), which removes the uneven lighting and does not depend on position.
+- **Self-consistency.** Across the three references, the independent
+  estimates agree with the references' own offsets to within about 0.8 px.
+  The stabilizer's contradict each other by up to 3 px.
+- **During occlusion and after release** (80–187 s) the two differ by
+  2.8–5.6 px vertically: the stabilizer's correction is too small.
+- **At rest** they differ by 1.3 px at most (0.4–0.9 px on most frames).
+- **A third measure decided between them:** the correlation of edge strength
+  (Sobel magnitude) with the reference frame, used by neither method.
+  - It favours the independent alignment on all 9 frames compared:
+    slightly at rest (0.558 against 0.554, for example) and clearly during
+    occlusion (0.403 against 0.343 at 100 s, with 0.328 unaligned).
+  - An overlay of the 100-s frame on the reference shows the capillary loop
+    offset with the stabilizer's correction and overlapping with the
+    independent one.
+
+So the method, old and new alike, falls short by several pixels when the
+image has moved 15–20 px from the references, and is good to about a pixel at
+rest. The likely cause is the enhancement before the registration (fixed CLAHE
+tiles, see above), possibly together with the circular cross-correlation of
+unwindowed frames. Resting CBV (aim 1) is measured at rest, where the error is
+smallest. Lines drawn for the occlusion phase would drift off a vessel by up
+to 5 px.
+
+`disagreement_px` was redefined to remove the offsets between the references
+as measured on the sharpest reference, where the registration is reliable.
+
+FP01_Qföre was then stabilized again from the command line with the committed
+code (`0a1988b`), replacing the first output:
+- 555 s, 275 MB at most;
+- the video is unchanged, and the CSV has the new column;
+- its provenance says `git_uncommitted_changes: true` only because this
+  DEVLOG entry was being edited during the run.
+
+The column now reads, as a median (90th percentile in brackets):
+
+| Phase | Disagreement |
+| --- | ---: |
+| Rest | 2.1 px (3.2) |
+| Occlusion | 3.5 px (4.3) |
+| After release | 3.3 px (4.0) |
+
+It is highest where the shift falls shortest. It is also well above 1 px at
+rest: there the estimate against the reference that lies 9 px from the other
+two (frame 463) is off by up to about 1.8 px. That is still about 1 px in the
+mean shift, as found above. Until the registration is fixed, the column shows
+how unreliable it is rather than singling out a few bad frames.
+
+### Also found: a video stabilized with the old code
+
+At 10:50 the app, started at 10:27 and still running, stabilized
+`FP01_Qefter_försök2_22-Oct-2019_09-50-15` with the old code. That output is
+FMP4 (lossy), 33 MB, with a black frame 0. The app was started before the
+memory check got its macOS fallback, so nothing stopped the run (about 25 GB
+asked of an 8 GB Mac). It is still in `StabilizedVideos/`: stabilizing it
+again in a restarted app moves it to the trash.
+
+### Open
+
+- **The registration's accuracy (above):** the next step. Use a translation-
+  invariant enhancement (such as a high-pass filter instead of fixed CLAHE
+  tiles) and a windowed or non-circular correlation. Check it with the three
+  measures used here: an independent estimate, self-consistency across the
+  references, and edge similarity. Add synthetic tests with moves of 15–20 px.
+- Speed: about 88 ms a frame (about 8 minutes for a 3-minute recording),
+  mostly the three registrations per frame with their 2 × upsampled
+  cross-correlation. Computing the references' FFTs once would save part of
+  it.
+- On the desktop: run the tests there, since the uncompressed grey writer was
+  checked only with OpenCV 5.0 on macOS. Check the codec of the 8 old
+  stabilized videos.
+- Lines drawn on an old stabilized video may not fit a newly stabilized one
+  (different reference frames, and the one-frame shift is gone).
+
+---
+
 ## 2026-10-08 — First run on macOS with the downloaded study recordings
 
 **Branch:** `fix/macos-tk9`, from `main` at `f9e0917`.
