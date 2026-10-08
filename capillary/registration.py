@@ -1,5 +1,6 @@
-"""Sub-pixel image registration used by VideoStabilization.
+"""Sub-pixel image registration used by the stabilizer (`capillary.stabilize`).
 
+It was ``SingleStepDFT.py`` at the top of the repository until 2026-10-08.
 Vendored from image_registration.register_images (image-registration 0.2.x,
 after Guizar-Sicairos, Thurman & Fienup, Opt. Lett. 33, 156-158, 2008) with
 local changes: different defaults (usfac=100, zeromean=False,

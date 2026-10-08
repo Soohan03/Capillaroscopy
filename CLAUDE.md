@@ -70,8 +70,11 @@ If the user reports the app froze or crashed, check the task output file and
 
 ## Data layout
 
-- `RecordedVideos/` — raw recordings copied in to be stabilized (currently empty)
-- `StabilizedVideos/` — stabilized videos ready for analysis (8 videos as of 2026-06)
+- `RecordedVideos/` — raw recordings copied in to be stabilized. On the Mac: links to the 9
+  ESMOKE recordings downloaded from DynCap into `Video_inventory/` (untracked, 2026-10-08)
+- `StabilizedVideos/` — stabilized videos ready for analysis (8 on the desktop as of 2026-06).
+  Each video stabilized since 2026-10-08 has `<stem>___stabilization.csv` (the shift of every
+  frame) and `___stabilization_provenance.json` next to it
 - `Flows/` — optical-flow video of one recording, from before the flow feature was
   removed (2026-10-06); kept on disk, not shown, trashed along with its recording
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time
@@ -93,8 +96,8 @@ recording list, keyboard routing) → one module per page (`gui/line_page.py` "C
 line", `analyze_page.py` "Two boxes", `results_page.py`, `validation_page.py` with its
 reading mode in `reading_view.py`; the two measure pages build on
 `gui/measure_page.py`). Long work runs as background jobs: `gui/jobs.py` runs them,
-`gui/tasks.py` holds the work and has no Tk in it. Stabilization and the report plots
-of both methods are in `Caper.py`.
+`gui/tasks.py` holds the work and has no Tk in it. The report plots of both methods
+are in `Caper.py`; stabilization is in `capillary/stabilize.py`.
 
 The app measures velocity only. The optical-flow measurement (Flow page, flow
 videos, flow data sets) was removed on 2026-10-06 because it was not a valid measure
@@ -119,6 +122,11 @@ Tkinter classes.
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
 - Both save through `capillary.datasets`.
+- **Stabilization:** `capillary/stabilize.py` (since 2026-10-08), the method of the original
+  `Caper.VideoStabilization`: translation only, the three sharpest frames as references,
+  registration to 1/100 px (`registration.py`, vendored). It reads the video from disk twice
+  (memory stays small), writes it uncompressed 8-bit grey frame for frame, and saves every
+  frame's shift. `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
 - Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
   known speed and the disturbances measured in the 2019 recordings;
   `python3 -m capillary.benchmark` compares both methods on them (~6 min; `--quick` ~12 s).
@@ -129,7 +137,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (215 tests, ~25 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (225 tests, ~25 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -158,13 +166,21 @@ the 2026-10-05 GUI rebuild entry.
   in px, in mm/s (0.18 mm/s for 100 px); normal resting velocities need long lines or a
   faster camera. With no flow but strong jitter, the benchmark still resolves ~7–11% of
   blocks at about 0.2 px/frame, so a near-stasis vessel shows as "few blocks resolved".
-- **Stabilization is off by one frame** (found in the 2026-10-05 clean-up): frame 0 of
-  a video stabilized by the app is black, frame k holds recorded frame k-1, and the last
-  recorded frame is dropped. The 8 existing videos in `StabilizedVideos/` do not show
-  this, so they were not made by the current stabilizer.
-- **Stabilization needs the whole video in memory twice, as float64**: about 21 GB for
-  one of the existing 2–3 minute clips. The app refuses to start a stabilization that
-  would need more than 85% of the available memory, instead of crashing.
+- **Stabilization accuracy** (found 2026-10-08): the registration is biased when the image
+  has moved far from the reference frames.
+  - On FP01_Qföre the image moves 15–20 px, mostly vertically, during occlusion and after
+    release. There the shift falls 3–5.6 px short vertically, judged by an independent
+    estimate (high-pass template matching) and by edge similarity.
+  - At rest it is within about 1 px (1.3 px at worst on the frames checked).
+  - The likely cause is the contrast enhancement before the registration (CLAHE on a fixed
+    3 × 3 grid of tiles, which changes as the image moves): on shifted real frames it costs
+    0.2–0.5 px, against 0.08 px without it.
+  - The `disagreement_px` column of the shift file flags such frames.
+  - Fixing it changes the results, so it is the next, separate step.
+- **The 8 videos in `StabilizedVideos/` on the desktop were not made by the current
+  stabilizer.** If they are MPEG-4 like the old stabilizer's output, they are lossy: on
+  FP01_Qföre that kept only about 14% of the frame-to-frame change, where the moving cells
+  show. Check their codec, and stabilize again from the raw recordings.
 - **Frame rate unverified:** the recordings come from the DynCap archive, and the local
   copies are stamped 30 fps. Every velocity scales with the true rate.
   - FP01_Qföre agrees with its official times at 30 fps.

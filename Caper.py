@@ -1,200 +1,25 @@
-"""Stabilization and the velocity reports behind the GUI.
+"""The velocity reports behind the GUI.
 
 The measurement itself — ROI geometry, intensity sampling, the lag estimator,
-the space-time diagram — lives in the GUI-free `capillary` package. The code
-here writes the stabilized videos and turns a saved data set (see
-`capillary.datasets`) into the report CSVs and plots: `CrossCorrelation` for
-two boxes, `generate_line_report` for a centre line, and
-`generate_validation_report` for the agreement of observers and the estimator
-on a reading set (`capillary.validation`). None of this imports tkinter; the
-GUI runs it in worker threads.
+the space-time diagram, and since 2026-10-08 the stabilization
+(`capillary.stabilize`) — lives in the GUI-free `capillary` package. The code
+here turns a saved data set (see `capillary.datasets`) into the report CSVs
+and plots: `CrossCorrelation` for two boxes, `generate_line_report` for a
+centre line, and `generate_validation_report` for the agreement of observers
+and the estimator on a reading set (`capillary.validation`). None of this
+imports tkinter; the GUI runs it in worker threads.
 """
 import math
 import os
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import SingleStepDFT as DFT
-from Utilities import calculate_blur,clahe,median_filter
 
 # The measurement itself lives in the GUI-free `capillary` package so that the
 # GUI, the batch CLI and the unit tests all run the same arithmetic.
 from capillary.velocity import lag_and_correlation
-
-
-class Video:
-    """Frame-by-frame reader for a grayscale video (channel 0 of the file)."""
-    def __init__(self,path=''):
-        # path can arrive as None when no video is selected; keep it a string
-        # so path manipulation below doesn't crash.
-        self.path = path if path is not None else ''
-        self.number_of_frames_ = 0
-        self.fps_ = 30
-        self.height_ = None
-        self.width_ = None
-        self.frames_ = []
-        self.frames_processed_ = []
-        self.blur_vector = []
-        self.cap = cv2.VideoCapture()
-        self.cap_open=False
-        self.writer = None
-        self.pause=0
-        self.finished = False
-        self.frame = None
-
-        self.output_path = self.path.replace('RecordedVideos','StabilizedVideos')
-
-    def destroy_writer(self):
-        self.writer.release()
-
-    def save_frame(self,frame):
-        if self.writer is None:
-            self.writer = cv2.VideoWriter(self.output_path,cv2.VideoWriter_fourcc(*'MP4V'),30.0,(640,480))
-
-        self.writer.write(cv2.merge((frame,frame,frame)).astype(np.uint8))
-
-    def get_frame(self):
-        if self.cap_open == False:
-            self.cap.open(self.path)
-            self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
-            self.width_ = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            self.height_ = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            self.aspect_ratio_ = self.height_/self.width_
-            self.blur_vector = np.zeros([self.number_of_frames_])
-            self.pause = 0
-            self.cap_open=True
-
-            self.frame_number = self.get_frame_number()
-            current_frame = self.cap.read()[1][:,:,0]
-            return current_frame
-        else:
-            # at the last frame, keep returning it (and flag the video as finished)
-            if self.get_frame_number() < self.number_of_frames_-1:
-                self.frame_number = self.get_frame_number()
-                try:
-                    current_frame = self.cap.read()[1][:,:,0]
-                except:
-                    current_frame = self.cap.read()[1][:,:,0]
-                self.frame = current_frame
-                return current_frame
-            else:
-                self.finished = True
-                return self.frame
-
-    def set_frame(self,frame_number):
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES,frame_number)
-        self.finished = False
-
-    def get_frame_number(self):
-        return int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))-1
-
-
-class VideoStabilization(Video):
-    """Translation-only stabilization, one frame per update() call.
-
-    Stages: load (read frames, score sharpness) -> transform (CLAHE + median
-    filter) -> stabilize (sub-pixel registration of every frame against the
-    sharpest frames) -> write (shift each raw frame by the mean offset) ->
-    finished. The output goes to StabilizedVideos/ under the same name.
-    """
-    def __init__(self,path):
-        Video.__init__(self,path=path)
-        self.raw_stabilization_vector = None
-        self.reference_frames = None
-        self.number_of_reference_frames = 3
-        self.usfac = 100
-        self.current_stage = 'load'
-
-        self.translation_vector = None
-
-        self.get_frame()
-        self.set_frame(0)
-
-        self.index = 0
-
-    def load_stabilization(self,index=0):
-        #only for BW right now
-        if index > 0:
-            self.frames_[index,:,:] = self.cap.read()[1][:,:,0]
-            self.blur_vector[index] = calculate_blur(self.frames_[index,:,:])
-
-        else:
-            self.cap.open(self.path)
-            self.number_of_frames_ = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-            self.fps_ = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30 #fall back to the recorder's rate when the file reports none
-            self.width_=int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            self.height_=int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            self.aspect_ratio_ = self.height_/self.width_
-            self.frames_ = np.zeros([self.number_of_frames_,self.height_,self.width_])
-            self.frames_processed_ = np.zeros([self.number_of_frames_,self.height_,self.width_])
-            self.blur_vector = np.zeros([self.number_of_frames_])
-            self.pause = 0
-
-    def generate_reference_frames(self):
-        self.reference_frames =self.frames_processed_[pd.Series(self.blur_vector).sort_values(ascending=False).index[:self.number_of_reference_frames].values] #returns sharpest images
-
-    def stabilize_frame(self,frame,frame_number):
-        for index,reference_image in enumerate(self.reference_frames):
-            self.raw_stabilization_vector[frame_number,index,:] = DFT.register_images(frame,reference_image,usfac=self.usfac)
-
-    def stabilize_video(self,index):
-        if self.raw_stabilization_vector is None:
-            temp = np.empty([self.number_of_frames_,self.number_of_reference_frames,2])
-            temp[:] = np.nan
-            self.raw_stabilization_vector = temp #now we can know that all non nan values are calculated
-
-        self.stabilize_frame(self.frames_processed_[index,:,:],index)
-
-    def transform(self,index):
-        current_frame = self.frames_[index,:,:]
-        clahe_filter_current_frame =clahe(current_frame)
-        processed_frame = median_filter(clahe_filter_current_frame)
-        self.frames_processed_[index,:,:] =processed_frame
-
-    def update(self):
-
-        if self.current_stage == 'load':
-            self.load_stabilization(index=self.index)
-            self.index+=1
-            if self.index==self.number_of_frames_:
-                self.index=0
-                self.current_stage = 'transform'
-
-        if self.current_stage == 'transform':
-            self.transform(index=self.index)
-            self.index+=1
-            if self.index==self.number_of_frames_:
-                self.index=0
-                self.current_stage = 'stabilize'
-                self.generate_reference_frames()
-
-        if self.current_stage == 'stabilize':
-            self.stabilize_video(index=self.index)
-            self.index += 1
-            if self.index == self.number_of_frames_:
-                self.current_stage = 'write'
-                self.index=0
-
-        if self.current_stage == 'write':
-            if self.translation_vector is None:
-                self.translation_vector = np.mean(self.raw_stabilization_vector,axis=1)
-                self.path = self.path.replace('RecordedVideos','StabilizedVideos')
-
-
-            T = np.float32([[1,0,self.translation_vector[self.index,0]],[0,1,self.translation_vector[self.index,1]]])
-            img_translation = cv2.warpAffine(self.frames_[self.index,:,:],T,(self.width_,self.height_))
-            self.save_frame(img_translation)
-
-            self.index += 1
-            if self.index == self.number_of_frames_:
-                self.destroy_writer()
-                self.index=0
-                self.current_stage = 'finished'
 
 
 class CrossCorrelation:
