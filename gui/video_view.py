@@ -227,7 +227,7 @@ class VideoView(tk.Frame):
             return
         width, _ = self._canvas_size()
         text = canvas.create_text(width / 2, px(22), text=self._hint, fill=COLORS['overlay_text'],
-                                  font=FONTS['base'], tags=('hint',), width=min(width - px(60), px(640)),
+                                  font=FONTS['base'], tags=('hint',), width=max(1, min(width - px(60), px(640))),
                                   justify='center', anchor='n')
         x0, y0, x1, y1 = canvas.bbox(text)
         rounded_rect(canvas, x0 - px(14), y0 - px(8), x1 + px(14), y1 + px(8), px(10),

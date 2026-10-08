@@ -132,7 +132,7 @@ class BlockCanvas(tk.Canvas):
         if self.image is None:
             self.geometry = None
             self.create_text(width / 2, height / 2, text=self.message, fill=COLORS['header_muted'],
-                             font=FONTS['subtitle'], width=width - px(80), justify='center')
+                             font=FONTS['subtitle'], width=max(1, width - px(80)), justify='center')
             return
         frames, positions = self.image.shape
         self.geometry = geometry = BlockGeometry(frames, positions, width, height, margin=px(34))

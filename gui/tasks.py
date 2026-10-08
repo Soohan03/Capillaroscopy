@@ -57,7 +57,11 @@ def _release(process) -> None:
 
 
 def available_memory_bytes() -> Optional[int]:
-    """Memory available to new allocations (Linux), or None if unknown."""
+    """Memory available to new allocations, or None if unknown.
+
+    Linux reports what is available; elsewhere (macOS) the total physical memory
+    is the upper bound.
+    """
     try:
         with open('/proc/meminfo') as handle:
             for line in handle:
@@ -65,7 +69,10 @@ def available_memory_bytes() -> Optional[int]:
                     return int(line.split()[1]) * 1024
     except (OSError, ValueError, IndexError):
         pass
-    return None
+    try:
+        return os.sysconf('SC_PHYS_PAGES') * os.sysconf('SC_PAGE_SIZE')
+    except (AttributeError, OSError, ValueError):
+        return None
 
 
 def stabilization_memory_bytes(frame_count: int, width: int, height: int) -> int:
