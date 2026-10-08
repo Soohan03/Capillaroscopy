@@ -109,14 +109,36 @@ def test_large_movements_under_uneven_lighting(tmp_path):
     assert not result.frames['at_search_limit'].any()
 
 
-def test_a_frame_beyond_the_search_is_marked(tmp_path):
-    frames, movement = jittered_frames(40, seed=9, amplitude=(5, 45))      # in 160 x 120 the search reaches 30 px
+def test_no_frame_is_silently_wrong(tmp_path):
+    # jumps of up to 60 px, at random, in a 160 x 120 frame where the coarse search reaches 40 px
+    frames, movement = jittered_frames(40, seed=9, amplitude=(5, 60))
     write_grey(tmp_path / 'source.avi', frames)
     result = stabilize.stabilize_video(str(tmp_path / 'source.avi'), str(tmp_path / 'stabilized.avi'))
-    away = np.abs(movement - movement[result.references[0]]).max(axis=1)
+    error = result.frames[['shift_x_px', 'shift_y_px']].to_numpy() + movement
+    error = np.abs(error - error[result.sharpest]).max(axis=1)
     marked = (result.frames['at_search_limit'] | (result.frames['match'] < 0.6)).to_numpy()
-    assert (away > 31).sum() >= 5 and marked[away > 31].all()
-    assert not marked[away < 28].any()
+    away = np.abs(movement - movement[result.sharpest]).max(axis=1)
+    assert (away > 44).sum() >= 5
+    assert ((error < 0.15) | marked).all()                       # right, or marked as doubtful
+    assert (error[away < 36] < 0.15).all() and not marked[away < 36].any()
+
+
+def test_following_the_previous_frame_reaches_beyond_the_coarse_search():
+    # in 240 x 320 the coarse search reaches 80 px; the image drifts 130 px down, as FP03_Wföre swings with breathing
+    texture = scene(240, 320, margin=140, seed=6)
+
+    def at(dy):
+        matrix = np.float32([[1, 0, -140], [0, 1, dy - 140]])
+        return stabilize.enhance(cv2.warpAffine(texture, matrix, (320, 240), flags=cv2.INTER_CUBIC))
+    reference = at(0.0)
+    references = (reference, reference, np.zeros(2))
+    previous = None
+    for dy in np.linspace(0, 130, 66):
+        shift, match, _, at_limit = stabilize.register(at(dy), references, previous)
+        assert abs(shift[1] + dy) < 0.15 and abs(shift[0]) < 0.15 and not at_limit and match > 0.9
+        previous = shift
+    lost, match, _, _ = stabilize.register(at(130.0), references)          # without the previous frame
+    assert abs(lost[1] + 130) > 10 or match < 0.6
 
 
 def test_every_frame_is_written_in_place_and_losslessly(jittered):
@@ -144,24 +166,28 @@ def test_the_stabilized_frames_line_up(jittered):
 def test_the_references_are_the_sharpest_frames(jittered):
     _, _, result = jittered
     frames = result.frames
-    sharpest = frames['sharpness'].sort_values(ascending=False, kind='stable').index
-    assert result.references == list(sharpest[:stabilize.REFERENCE_FRAMES])
-    assert frames.loc[frames['reference'], 'frame'].tolist() == sorted(result.references)
+    sharpest = int(frames['sharpness'].idxmax())
+    reach = stabilize.REFERENCE_NEIGHBOURS
+    assert result.sharpest == sharpest
+    assert result.references == list(range(max(0, sharpest - reach), min(len(frames), sharpest + reach + 1)))
+    assert frames.loc[frames['reference'], 'frame'].tolist() == result.references
     assert frames['disagreement_px'].median() < 0.05
     assert frames['match'].min() > 0.9
 
 
 def test_memory_does_not_grow_with_the_length(tmp_path):
     peaks = {}
-    for n in (30, 150):
+    for n in (60, 180):
         frames, _ = jittered_frames(n, seed=5)
+        noise = np.random.default_rng(1).normal(0, 6, frames[30].shape)
+        frames[30] = np.clip(frames[30] + noise, 0, 255).astype(np.uint8)     # the sharpest, in both videos
         write_grey(tmp_path / f'{n}.avi', frames)
         tracemalloc.start()
         stabilize.stabilize_video(str(tmp_path / f'{n}.avi'), str(tmp_path / f'{n}_stabilized.avi'))
         peaks[n] = tracemalloc.get_traced_memory()[1]
         tracemalloc.stop()
     # holding the 120 extra frames would add 2.3 MB as uint8, 18 MB as float64 (as before 2026-10-08)
-    assert peaks[150] - peaks[30] < 1_000_000
+    assert peaks[180] - peaks[60] < 500_000
 
 
 def test_the_record_is_saved_next_to_the_video(jittered):
@@ -171,7 +197,7 @@ def test_the_record_is_saved_next_to_the_video(jittered):
     shifts = pd.read_csv(paths['shifts'])
     assert list(shifts.columns) == ['frame', 'time_s', 'shift_x_px', 'shift_y_px', 'match', 'disagreement_px',
                                     'at_search_limit', 'sharpness', 'reference']
-    assert len(shifts) == 60 and shifts['reference'].sum() == stabilize.REFERENCE_FRAMES
+    assert len(shifts) == 60 and shifts['reference'].sum() == len(result.references)
     assert shifts['time_s'].iloc[25] == pytest.approx(1.0)
     np.testing.assert_allclose(shifts['shift_x_px'], result.frames['shift_x_px'])
     with open(paths['provenance'], encoding='utf-8') as handle:
@@ -246,7 +272,7 @@ def test_the_stabilize_job_files_the_video_and_its_record(data_folder):
     job = FakeJob()
     final = tasks.stabilize(job, folder=data_folder, raw_path=raw)
     assert final == os.path.join(data_folder.stabilized, f'{STEM}.avi')
-    assert [message for _, message in job.reports][-1] == 'Aligning and writing frames'
+    assert [message for _, message in job.reports][-1] == 'Writing the stabilized video'
     record = stabilize.record_paths(final)
     assert all(os.path.exists(path) for path in record.values())
     assert _files_under(data_folder.partial(data_folder.stabilized)) == []
