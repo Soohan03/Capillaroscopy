@@ -1,4 +1,4 @@
-"""Benchmark: both velocity estimators on synthetic recordings with a known speed.
+"""Benchmark: the velocity estimators on synthetic recordings with a known speed.
 
     python3 -m capillary.benchmark --out benchmark            (about 10 minutes)
     python3 -m capillary.benchmark --out benchmark --quick    (a minute; fewer cases)
@@ -12,7 +12,9 @@ and measures it twice, the way the app would:
   windows of 201-301 frames, sliding by one frame);
 - **centre line**, a 120-px line along the same limb drawn the way a person
   clicks it (a point every 15 px, up to 1 px off the centre), through
-  `capillary.spacetime` (3-s blocks every 0.5 s).
+  `capillary.spacetime` (3-s blocks every 0.5 s);
+- **pattern shift**, the same line's diagram through `capillary.pattern_shift`,
+  one estimate pooled over the whole clip.
 
 For each case it records the median velocity against the truth, how many
 estimates were resolved, how many pointed the wrong way and, for the boxes,
@@ -33,6 +35,7 @@ import pandas as pd
 
 from . import simulate
 from .intensity import extract_traces
+from .pattern_shift import pattern_shift
 from .spacetime import analyze_space_time, resolvable_speeds, space_time_diagram
 from .velocity import analyze_trace
 
@@ -40,7 +43,7 @@ FPS = 30.0
 MM_PER_PIXEL = 0.001328903654           # the app's default calibration
 LINE = (20.0, 140.0)                    # arc positions along the loop (px): the arterial limb
 BOXES = (50.0, 30.0)                    # upstream box at 50 px along the loop, the other 30 px further
-SPEEDS = (0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 8.0, 12.0)
+SPEEDS = (0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 8.0, 12.0, 16.0, 25.0)
 CONDITIONS = {
     'clean': simulate.Disturbances.clean(),
     'as measured': simulate.Disturbances(),
@@ -90,6 +93,13 @@ def run_case(condition: str, speed: float, seed: int, n_frames: int) -> list[dic
     rows.append({**common, 'method': 'centre line', **_stats(blocks['velocity_mm_s'].to_numpy(dtype=float), truth),
                  'zero_lag_fraction': float('nan'), 'median_snr': float(np.nanmedian(blocks['snr'])),
                  'seconds': time.perf_counter() - started})
+
+    started = time.perf_counter()
+    pooled = pattern_shift(diagram)
+    velocity = pooled.velocity_mm_s(FPS, MM_PER_PIXEL) if pooled.resolved else float('nan')
+    rows.append({**common, 'method': 'pattern shift', **_stats(np.array([velocity]), truth),
+                 'zero_lag_fraction': float('nan'), 'median_snr': pooled.snr,
+                 'seconds': time.perf_counter() - started})
     return rows
 
 
@@ -128,7 +138,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--frames', type=int, default=900, help='frames per clip (default 900 = 30 s)')
     args = parser.parse_args(argv)
 
-    speeds = (0.0, 0.5, 2.0, 6.0, 12.0) if args.quick else SPEEDS
+    speeds = (0.0, 0.5, 2.0, 6.0, 12.0, 25.0) if args.quick else SPEEDS
     seeds = 1 if args.quick else args.seeds
     n_frames = 300 if args.quick else args.frames
     os.makedirs(args.out, exist_ok=True)

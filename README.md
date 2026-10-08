@@ -82,6 +82,21 @@ frame (at 1.33 µm per pixel: 0.18 mm/s for a 100-px line, 0.35 mm/s for
 200 px); faster flow is reported as unresolved, not as a wrong number. The
 page shows the range for the line drawn.
 
+**Pattern shift (since 2026-10-08).** The same diagram, read another way: how
+far the pattern along the line moves between a frame and the next few (1–8
+frames later). Rows are correlated at every shift, forward minus backward, and
+pooled over all 3-s blocks of a stretch such as the minute of rest
+(`capillary/pattern_shift.py`). Pooling is what makes faint patterns
+measurable. On FP01_Qföre the resting flow of a capillary limb, about
+0.08 mm/s, was too faint for single 3-s blocks of the centre line (8 of 123
+resolved) but clear over the minute of rest: signal-to-noise 13.7, with each
+half of the minute agreeing. The estimate comes with a signal-to-noise ratio
+(8 to count) and a 95% interval. On synthetic recordings it is within 1–2% from
+1 to about 12 px/frame (0.04–0.48 mm/s at 30 fps), beyond the centre line's
+range on lines of this length. Faster flow, smeared by the shutter, is
+reported as unresolved. It is not on the app's pages yet; the batch command
+prints it for a line (below).
+
 **Two boxes (the original method).** The delay between the brightness signals
 of two boxes on the vessel, found by cross-correlation in windows of
 201–301 frames, gives the velocity as distance ÷ delay. In the 2019
@@ -93,7 +108,7 @@ where the flow is slow. See the 2026-10-06 entries in `DEVLOG.md`.
 **Validation on synthetic recordings.** `python3 -m capillary.benchmark`
 renders synthetic capillary loops with a known red-cell speed and the
 disturbances measured in the 2019 recordings (`capillary/simulate.py`),
-measures them with both methods, and writes a table of errors (about 6
+measures them with all three methods, and writes a table of errors (about 8
 minutes; `--quick` for a short run). On it the centre line measures within ±2%
 in its range and reports flow it cannot measure as unresolved; the two boxes
 are off by up to ±10%, and much more under stronger disturbances.
@@ -206,7 +221,8 @@ python3 -m capillary.cli StabilizedVideos/clip.avi \
 ```
 
 `--line` lists the points of a centre line in pixel coordinates, from where
-the blood comes from; `--roi1` is box 1 (downstream) and `--roi2` box 2
+the blood comes from; for a line it also prints the pattern-shift velocity
+pooled over all the frames measured; `--roi1` is box 1 (downstream) and `--roi2` box 2
 (upstream), `--size` the box size for boxes given as just `x,y`. The points or
 box centres and the frames of a data set made in the app are in its
 `…_provenance.json`. The spatial calibration comes from `settings.csv`

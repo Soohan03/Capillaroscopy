@@ -118,6 +118,12 @@ Tkinter classes.
   coherence and measurable range per block. Its module docstring explains the method;
   the 2026-10-06 DEVLOG entry how it was chosen and calibrated. The measurable range at
   30 fps is about 0.045 × line length (px) px/frame; faster flow is reported unresolved.
+- **Pattern shift (since 2026-10-08):** `capillary/pattern_shift.py`. The same diagram: the
+  shift of the pattern between a frame and the next 1–8, by correlation pooled over all 3-s
+  blocks of a stretch (forward minus backward), with a signal-to-noise ratio (8 to count) and a
+  jackknife 95% interval. It measures faint flow that single blocks miss (FP01_Qföre's limb at
+  rest) and, on synthetic recordings, 1–12 px/frame within 1–2%. The batch CLI prints it for a
+  line; the app does not show it yet.
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
@@ -145,7 +151,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (228 tests, ~25 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (246 tests, ~25 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -157,14 +163,18 @@ the 2026-10-05 GUI rebuild entry.
 
 ## Known issues
 
-- **Resting flow is beyond the centre line's range** (found 2026-10-07). On the
-  FP01_Qföre limb (145 px) only the occlusion phase resolves: slow, slowing flow from 70
-  to 130 s (official occlusion 68.3–130.5 s).
-  - At rest the space-time picture shows faint, almost horizontal streaks (roughly
-    0.5–1 mm/s); after release they are crisp and even faster. Both are above the line's
-    0.26 mm/s limit at 30 fps.
-  - The "slow flow, 0.01–0.04 mm/s" of 2026-10-06 was the occlusion.
-  - Aim 1 (resting CBV) needs a fast-flow estimator.
+- **Resting flow** (revised 2026-10-08). The earlier note said resting flow was beyond the
+  centre line's range (0.5–1 mm/s, from near-horizontal streaks). That rested on the old,
+  MPEG-4-compressed stabilized video and on how the diagram looked.
+  - On the lossless re-stabilized FP01_Qföre, the left limb of the tall loop (112 px) moves at
+    about 0.08 mm/s at rest: pattern shift pooled over the minute of rest, signal-to-noise 13.7,
+    each half agreeing (0.084 / 0.080 mm/s).
+  - The right limb runs the opposite way at about 0.12 mm/s (signal-to-noise 5.8, a 76-px
+    line); tissue beside the loop shows nothing.
+  - So on this capillary resting flow lies within the centre line's range, but it is too faint
+    for single 3-s blocks (signal-to-noise about 4).
+  - The near-horizontal streaks were probably the change of the whole vessel at once.
+  - Still to check on more capillaries and recordings.
 - **The two-box method is not valid on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box
