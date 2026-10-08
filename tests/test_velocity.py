@@ -223,10 +223,3 @@ def test_velocity_summary():
 
     empty = velocity_summary([np.nan, np.nan])
     assert empty['resolved'] == 0 and np.isnan(empty['median'])
-
-
-def test_sharpness_score_is_shared_with_utilities():
-    import Utilities
-    from capillary.quality import calculate_blur
-
-    assert Utilities.calculate_blur is calculate_blur

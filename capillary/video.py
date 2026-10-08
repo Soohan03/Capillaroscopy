@@ -1,10 +1,10 @@
 """Streaming video access for the analysis engine.
 
-`Caper.Video.load` reads a whole clip into two float64 arrays of shape
-(frames, height, width) — about 26 GB for a 60 s 640x480 clip — which is fine
-for the GUI's one-frame-per-tick use but unusable for batch analysis. The
-helpers here keep a single capture open and yield one frame at a time, so
-memory stays flat regardless of clip length.
+The original code read a whole clip into two float64 arrays of shape
+(frames, height, width), about 26 GB for a 60 s 640x480 clip. The helpers here
+keep a single capture open and yield one frame at a time, so memory stays flat
+regardless of clip length; the measurements and, since 2026-10-08, the
+stabilizer (`capillary.stabilize`) read videos this way.
 """
 
 from __future__ import annotations

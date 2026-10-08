@@ -17,7 +17,8 @@ See `capillary.cli` for the batch entry point (`python -m capillary.cli`).
 `capillary.datasets` the file layout of saved measurements,
 `capillary.simulate` synthetic recordings with a known velocity, and
 `capillary.benchmark` the comparison of both estimators on them
-(`python -m capillary.benchmark`). On real recordings, which have no ground
+(`python -m capillary.benchmark`). `capillary.stabilize` stabilizes a raw recording
+(`python -m capillary.stabilize`). On real recordings, which have no ground
 truth, `capillary.validation` compares the estimator with observers reading
 the same blocks blinded, `capillary.placement` the same capillary measured by
 different observers, both with the statistics of `capillary.agreement`.

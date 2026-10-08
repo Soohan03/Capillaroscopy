@@ -34,6 +34,33 @@ Nothing is deleted outright: replaced or removed videos and data sets go to
 `.trash/` in the data folder, keeping their subfolders, so they can be put back
 by hand.
 
+## How a recording is stabilized
+
+The skin moves under the microscope, so before measuring every frame is moved
+back into place (`capillary/stabilize.py`); only translation is corrected.
+
+1. The registration works on a band-passed copy of each frame (difference of
+   Gaussians, σ 2 and 15 px). It removes pixel noise and the uneven lighting,
+   which stays with the camera while the skin moves.
+2. The sharpest frame and the 12 frames on each side of it are aligned onto it
+   and averaged, alternately, into two references. Averaging smooths out the
+   moving blood, which makes a single frame a noisy reference.
+3. Each frame is found in both references, to a fraction of a pixel. A coarse
+   search on reduced frames reaches a third of the frame. The previous frame's
+   position is a second starting point, so the search can follow a recording
+   that moves further than that: FP03_Wföre swings by about 200 px with
+   breathing.
+4. Each frame is moved by the mean of the two results, re-centred on the
+   recording's median position, with bicubic interpolation.
+
+The stabilized video is written frame for frame and uncompressed (8-bit grey,
+like the recordings from DynCap). Next to it, `<recording>___stabilization.csv`
+holds the shift of every frame and how sure it is: how well the frame matched
+the references, how far apart the two references' results were, and whether
+the match lay at the edge of the search. The video is read from disk three
+times and never held in memory, so recordings of any length can be
+stabilized; a 3-minute recording takes about 2–3 minutes.
+
 ## How velocity is measured
 
 **Centre line (since 2026-10-06).** Along the drawn line the brightness is
@@ -107,7 +134,9 @@ if the file is missing) the app asks for the folder; the settings can be
 changed later with the gear button. Inside the folder it uses:
 
 - `RecordedVideos/`: raw recordings, copied in to be stabilized.
-- `StabilizedVideos/`: stabilized copies, used for measuring.
+- `StabilizedVideos/`: stabilized copies, used for measuring, each with the
+  shift of every frame (`<recording>___stabilization.csv`) and how it was made
+  (`<recording>___stabilization_provenance.json`).
 - `Statistics/`: the saved data sets (`<recording>___<data set>___…`), their
   provenance files, and each recording's time points. A centre-line data set
   keeps its space-time diagram (`___space_time.npy`), so its report can be
@@ -135,10 +164,8 @@ changed later with the gear button. Inside the folder it uses:
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
 | `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
 | `gui/library.py`, `gui/settings.py`, `gui/media.py` | Finding recordings, settings, frames for display |
-| `Caper.py` | Stabilization, the report plots of both methods, and the agreement plots of the Validation page |
-| `SingleStepDFT.py` | Sub-pixel image registration used by stabilization (vendored, see its docstring) |
-| `Utilities.py` | Small shared helpers |
-| `capillary/` | The GUI-free measurement engine, simulator, benchmark and batch CLI (see below), and the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`) |
+| `Caper.py` | The report plots of both methods, and the agreement plots of the Validation page |
+| `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), and the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`) |
 | `tests/` | Unit tests |
 | `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README) |
 
@@ -185,6 +212,13 @@ box centres and the frames of a data set made in the app are in its
 `…_provenance.json`. The spatial calibration comes from `settings.csv`
 (`mm_per_pixel`) unless `--mm-per-pixel` overrides it.
 `python3 -m capillary.cli --help` lists the rest.
+
+Recordings can be stabilized the same way, for example one after another on
+a computer without a display:
+
+```bash
+python3 -m capillary.stabilize RecordedVideos/clip.avi --out StabilizedVideos/clip.avi
+```
 
 ## Tests
 

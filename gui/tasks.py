@@ -22,6 +22,7 @@ import pandas as pd
 
 import Caper
 from capillary import datasets, placement, spacetime, validation
+from capillary import stabilize as stabilizer
 from capillary.intensity import extract_traces
 from capillary.measure import measure_velocity
 from capillary.roi import ROI
@@ -29,7 +30,7 @@ from capillary.velocity import (DEFAULT_WINDOWS, lag_and_correlation, resolvable
                                 velocity_summary)
 from capillary.video import iter_frames, probe_video
 
-from .library import Recording
+from .library import Recording, stem_of, video_files
 from .settings import DataFolder
 
 log = logging.getLogger(__name__)
@@ -45,51 +46,13 @@ def _remove(path: Optional[str]) -> None:
             log.warning('Could not remove %s', path, exc_info=True)
 
 
-def _release(process) -> None:
-    """Close the capture and writer a Caper processing object holds."""
-    for attribute in ('cap', 'writer'):
-        handle = getattr(process, attribute, None)
-        if handle is not None:
-            try:
-                handle.release()
-            except Exception:  # noqa: BLE001 - best effort while cleaning up
-                pass
-
-
-def available_memory_bytes() -> Optional[int]:
-    """Memory available to new allocations, or None if unknown.
-
-    Linux reports what is available; elsewhere (macOS) the total physical memory
-    is the upper bound.
-    """
-    try:
-        with open('/proc/meminfo') as handle:
-            for line in handle:
-                if line.startswith('MemAvailable:'):
-                    return int(line.split()[1]) * 1024
-    except (OSError, ValueError, IndexError):
-        pass
-    try:
-        return os.sysconf('SC_PHYS_PAGES') * os.sysconf('SC_PAGE_SIZE')
-    except (AttributeError, OSError, ValueError):
-        return None
-
-
-def stabilization_memory_bytes(frame_count: int, width: int, height: int) -> int:
-    """`Caper.VideoStabilization` holds the raw and the filtered video as float64 arrays."""
-    return 2 * frame_count * width * height * 8
-
-
-def check_stabilization_memory(path: str) -> None:
-    """Refuse to start a stabilization that would exhaust memory and take the app down."""
-    info = probe_video(path)
-    needed = stabilization_memory_bytes(info.frame_count, info.width, info.height)
-    available = available_memory_bytes()
-    if available is not None and needed > 0.85 * available:
-        raise MemoryError(
-            f'Stabilizing this video needs about {needed / 1e9:.1f} GB of memory, but only '
-            f'{available / 1e9:.1f} GB is available. The stabilizer keeps the whole video in memory '
-            f'({info.frame_count} frames); a shorter recording or more memory is needed.')
+def check_disk_space(path: str, needed: int) -> None:
+    """Refuse to start writing about `needed` bytes into the folder `path` when its disk has less free."""
+    free = shutil.disk_usage(path).free
+    if needed > free:
+        raise OSError(f'Stabilizing this video needs about {needed / 1e9:.1f} GB of free disk space, but only '
+                      f'{free / 1e9:.1f} GB is free. The stabilized video is stored uncompressed, about as '
+                      'large as the raw recording.')
 
 
 def relative_path(folder: DataFolder, path: str) -> str:
@@ -127,9 +90,23 @@ def move_to_trash(folder: DataFolder, paths: Iterable[str], label: str) -> str:
     return unique
 
 
+def stabilized_files(folder: DataFolder, stem: str) -> list[str]:
+    """The stabilized video of `stem` and the shift and provenance files kept next to it."""
+    videos = [path for path in video_files(folder.stabilized) if stem_of(path) == stem]
+    records = [path for video in videos + [os.path.join(folder.stabilized, f'{stem}.avi')]
+               for path in stabilizer.record_paths(video).values()]
+    seen, result = set(), []
+    for path in videos + records:
+        if path not in seen and os.path.exists(path):
+            seen.add(path)
+            result.append(path)
+    return result
+
+
 def recording_files(folder: DataFolder, recording: Recording) -> list[str]:
-    """Every file that belongs to `recording`: videos, data sets, reports, time points, old flow files."""
-    paths = [recording.raw, recording.stabilized]
+    """Every file that belongs to `recording`: videos and their stabilization records, data sets, reports,
+    time points, old flow files."""
+    paths = [recording.raw, recording.stabilized, *stabilized_files(folder, recording.stem)]
     for kind in datasets.KINDS:
         for name in recording.datasets_of(kind):
             paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, kind)
@@ -146,33 +123,31 @@ def recording_files(folder: DataFolder, recording: Recording) -> list[str]:
 # ---------------------------------------------------------------- video processing
 
 def stabilize(job, folder: DataFolder, raw_path: str) -> str:
-    """Stabilize a raw recording into StabilizedVideos/ (Caper.VideoStabilization)."""
-    check_stabilization_memory(raw_path)
-    name = os.path.basename(raw_path)
-    final = os.path.join(folder.stabilized, name)
+    """Stabilize a raw recording into ``StabilizedVideos/<stem>.avi`` (`capillary.stabilize`).
+
+    The shift of every frame and the provenance are saved next to the video. A
+    previous stabilized video of the recording goes to the trash with its files.
+    """
+    stem = stem_of(raw_path)
+    final = os.path.join(folder.stabilized, f'{stem}.avi')
     partial_dir = folder.partial(folder.stabilized)
     os.makedirs(partial_dir, exist_ok=True)
-    partial = os.path.join(partial_dir, name)
-
-    stages = ('load', 'transform', 'stabilize', 'write')
-    labels = {'load': 'Loading frames', 'transform': 'Enhancing contrast',
-              'stabilize': 'Registering frames', 'write': 'Writing the stabilized video'}
-    job.report(0.0, labels['load'])
-    process = Caper.VideoStabilization(path=raw_path)
-    process.output_path = partial
+    check_disk_space(partial_dir, stabilizer.output_bytes(probe_video(raw_path)))
+    partial = os.path.join(partial_dir, f'{stem}.avi')
+    partial_records = stabilizer.record_paths(partial)
+    job.report(0.0, 'Scoring sharpness')
     try:
-        while process.current_stage != 'finished':
-            stage = process.current_stage
-            fraction = (stages.index(stage) + process.index / max(1, process.number_of_frames_)) / len(stages)
-            job.report(fraction, labels[stage])
-            process.update()
-        _release(process)
-        if os.path.exists(final):
-            move_to_trash(folder, [final], f'{os.path.splitext(name)[0]} previous stabilized video')
+        result = stabilizer.stabilize_video(raw_path, partial, progress=job.report, should_cancel=job.cancelled)
+        stabilizer.save_record(result)
+        previous = stabilized_files(folder, stem)
+        if previous:
+            move_to_trash(folder, previous, f'{stem} previous stabilized video')
         os.replace(partial, final)
+        for key, path in stabilizer.record_paths(final).items():
+            os.replace(partial_records[key], path)
     finally:
-        _release(process)
-        _remove(partial)
+        for path in (partial, *partial_records.values()):
+            _remove(path)
     return final
 
 
