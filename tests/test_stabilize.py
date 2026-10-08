@@ -14,7 +14,6 @@ import cv2
 import numpy as np
 import pandas as pd
 import pytest
-from scipy import signal
 
 from capillary import stabilize
 from capillary.measure import Cancelled
@@ -24,25 +23,34 @@ from gui.settings import DataFolder
 
 STEM = 'FP99_stab_08-Oct-2026_12-00-00'
 HEIGHT, WIDTH = 120, 160
-MARGIN = 20
 
 
-def scene(seed: int = 0) -> np.ndarray:
-    """A smooth random texture, larger than a frame so that a moved frame never shows its edge."""
+def scene(height: int, width: int, margin: int, seed: int = 0) -> np.ndarray:
+    """A smooth random texture, `margin` larger than a frame on every side, so a moved frame never shows its edge."""
     rng = np.random.default_rng(seed)
-    texture = cv2.GaussianBlur(rng.normal(size=(HEIGHT + 2 * MARGIN, WIDTH + 2 * MARGIN)), (0, 0), 2.5)
+    texture = cv2.GaussianBlur(rng.normal(size=(height + 2 * margin, width + 2 * margin)), (0, 0), 2.5)
     return 40 + 175 * (texture - texture.min()) / np.ptp(texture)
 
 
-def jittered_frames(n: int, seed: int = 0, amplitude: float = 5.0):
-    """`n` frames of the scene, each moved by a known (x, y); returns the frames and the movement."""
+def lighting(height: int, width: int) -> np.ndarray:
+    """Uneven lighting that stays with the camera: darker towards the corners and to the left."""
+    y, x = np.mgrid[0:height, 0:width].astype(float)
+    corners = ((x - width / 2) / (width / 2)) ** 2 + ((y - height / 2) / (height / 2)) ** 2
+    return (1 - 0.15 * corners) * (1 + 0.25 * (x / width - 0.5))
+
+
+def jittered_frames(n: int, seed: int = 0, amplitude=(5.0, 5.0), size=(HEIGHT, WIDTH), uneven_light: bool = False):
+    """`n` frames of the scene, each moved by a known (x, y) up to `amplitude`; returns the frames and the movement."""
     rng = np.random.default_rng(seed + 1)
-    texture = scene(seed)
-    movement = rng.uniform(-amplitude, amplitude, size=(n, 2))
+    height, width = size
+    margin = int(np.ceil(max(amplitude))) + 8
+    texture = scene(height, width, margin, seed)
+    light = lighting(height, width) if uneven_light else 1.0
+    movement = rng.uniform(-1, 1, size=(n, 2)) * np.asarray(amplitude, dtype=float)
     frames = []
     for dx, dy in movement:
-        matrix = np.float32([[1, 0, dx - MARGIN], [0, 1, dy - MARGIN]])
-        frame = cv2.warpAffine(texture, matrix, (WIDTH, HEIGHT), flags=cv2.INTER_CUBIC)
+        matrix = np.float32([[1, 0, dx - margin], [0, 1, dy - margin]])
+        frame = cv2.warpAffine(texture, matrix, (width, height), flags=cv2.INTER_CUBIC) * light
         frames.append(np.clip(np.rint(frame + rng.normal(0, 1.5, frame.shape)), 0, 255).astype(np.uint8))
     return frames, movement
 
@@ -65,12 +73,19 @@ def jittered(tmp_path_factory):
     return frames, movement, result
 
 
-def test_the_enhancement_equals_the_original_filters():
-    # scipy's median filter (zero-padded edges) was used until 2026-10-08; OpenCV's is much faster
-    rng = np.random.default_rng(3)
-    for frame in (rng.integers(0, 256, (HEIGHT, WIDTH), dtype=np.uint8), jittered_frames(1)[0][0]):
-        contrast = cv2.createCLAHE(clipLimit=7.65, tileGridSize=(3, 3)).apply(frame)
-        assert np.array_equal(stabilize.enhance(frame), signal.medfilt(contrast, [7, 7]))
+def test_the_enhancement_moves_with_the_image_and_drops_the_lighting():
+    # the CLAHE used until 2026-10-08 worked on a fixed grid of tiles, so it changed as the image moved
+    texture = scene(240, 320, margin=10, seed=4)
+    frame = texture[10:250, 10:330]
+    moved = texture[17:257, 5:325]                      # the same scene moved 7 px up and 5 px right
+    a, b = stabilize.enhance(frame), stabilize.enhance(moved)
+    np.testing.assert_allclose(b[70:-70, 70:-70], a[77:-63, 65:-75], atol=0.01)
+
+    light = lighting(240, 320)
+    lit = stabilize.enhance(frame * light)
+    assert np.corrcoef(lit[70:-70, 70:-70].ravel(), a[70:-70, 70:-70].ravel())[0, 1] > 0.95
+    flat = stabilize.enhance(np.full((240, 320), 120.0) * light)
+    assert np.abs(flat[70:-70, 70:-70]).max() < 0.1 * a.std()
 
 
 def test_the_shifts_undo_the_movement(jittered):
@@ -79,7 +94,29 @@ def test_the_shifts_undo_the_movement(jittered):
     error = shifts + movement                 # one offset for the whole video is allowed
     error -= np.median(error, axis=0)
     assert movement.std(axis=0).min() > 2.5
-    assert np.abs(error).max() < 0.5
+    assert np.abs(error).max() < 0.15
+
+
+def test_large_movements_under_uneven_lighting(tmp_path):
+    # the registration used until 2026-10-08 fell 3-5.6 px short on FP01_Qföre where the image had moved 15-20 px
+    frames, movement = jittered_frames(40, seed=2, amplitude=(10, 25), size=(240, 320), uneven_light=True)
+    write_grey(tmp_path / 'source.avi', frames)
+    result = stabilize.stabilize_video(str(tmp_path / 'source.avi'), str(tmp_path / 'stabilized.avi'))
+    error = result.frames[['shift_x_px', 'shift_y_px']].to_numpy() + movement
+    error -= np.median(error, axis=0)
+    assert np.ptp(movement[:, 1]) > 40
+    assert np.abs(error).max() < 0.15
+    assert not result.frames['at_search_limit'].any()
+
+
+def test_a_frame_beyond_the_search_is_marked(tmp_path):
+    frames, movement = jittered_frames(40, seed=9, amplitude=(5, 45))      # in 160 x 120 the search reaches 30 px
+    write_grey(tmp_path / 'source.avi', frames)
+    result = stabilize.stabilize_video(str(tmp_path / 'source.avi'), str(tmp_path / 'stabilized.avi'))
+    away = np.abs(movement - movement[result.references[0]]).max(axis=1)
+    marked = (result.frames['at_search_limit'] | (result.frames['match'] < 0.6)).to_numpy()
+    assert (away > 31).sum() >= 5 and marked[away > 31].all()
+    assert not marked[away < 28].any()
 
 
 def test_every_frame_is_written_in_place_and_losslessly(jittered):
@@ -107,9 +144,11 @@ def test_the_stabilized_frames_line_up(jittered):
 def test_the_references_are_the_sharpest_frames(jittered):
     _, _, result = jittered
     frames = result.frames
-    assert result.references == list(frames['sharpness'].sort_values(ascending=False).index[:3])
+    sharpest = frames['sharpness'].sort_values(ascending=False, kind='stable').index
+    assert result.references == list(sharpest[:stabilize.REFERENCE_FRAMES])
     assert frames.loc[frames['reference'], 'frame'].tolist() == sorted(result.references)
-    assert frames['disagreement_px'].median() < 0.5
+    assert frames['disagreement_px'].median() < 0.05
+    assert frames['match'].min() > 0.9
 
 
 def test_memory_does_not_grow_with_the_length(tmp_path):
@@ -130,9 +169,9 @@ def test_the_record_is_saved_next_to_the_video(jittered):
     paths = stabilize.save_record(result)
     assert paths == stabilize.record_paths(result.output)
     shifts = pd.read_csv(paths['shifts'])
-    assert list(shifts.columns) == ['frame', 'time_s', 'shift_x_px', 'shift_y_px', 'disagreement_px',
-                                    'sharpness', 'reference']
-    assert len(shifts) == 60 and shifts['reference'].sum() == 3
+    assert list(shifts.columns) == ['frame', 'time_s', 'shift_x_px', 'shift_y_px', 'match', 'disagreement_px',
+                                    'at_search_limit', 'sharpness', 'reference']
+    assert len(shifts) == 60 and shifts['reference'].sum() == stabilize.REFERENCE_FRAMES
     assert shifts['time_s'].iloc[25] == pytest.approx(1.0)
     np.testing.assert_allclose(shifts['shift_x_px'], result.frames['shift_x_px'])
     with open(paths['provenance'], encoding='utf-8') as handle:
