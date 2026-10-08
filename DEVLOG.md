@@ -6,6 +6,80 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-08 — First run on macOS with the downloaded study recordings
+
+**Branch:** `fix/macos-tk9`, from `main` at `f9e0917`.
+
+**Commits:**
+
+- `a71f270` Run on macOS with Tk 9: clamp canvas text widths, memory guard without /proc
+
+The user downloaded 9 raw ESMOKE recordings from DynCap into
+`Video_inventory/` (untracked) on a new computer, a MacBook with an Apple M2
+and 8 GB of memory, and asked whether the program works with them. Until now
+the app had only run under WSL on Windows.
+
+### The recordings
+
+All 9 open with OpenCV 5.0: 640 × 480, 8-bit grey stored uncompressed (no
+FourCC, 307 200 bytes a frame), stamped 30 fps, 4528–7524 frames (151–251 s).
+They are raw, not stabilized. All 9 are in `metadata/ESMOKE_timestamps.csv`,
+and each official release falls well inside the video at 30 fps, so the
+frame-rate mismatch of `FP01_Wefter_14-Oct-2019_10-07-49` does not show here.
+`FP03_Wefter_21-Oct-2019_10-21-58` has no release time.
+
+| Recording | Frames | Length at 30 fps (s) | Occlusion (s) | Release (s) |
+| --- | ---: | ---: | ---: | ---: |
+| `FP01_Qefter_försök2_22-Oct-2019_09-50-15` | 5102 | 170.1 | 65.9 | 125.7 |
+| `FP01_Qföre_22-Oct-2019_08-16-35` | 5729 | 191.0 | 68.3 | 130.5 |
+| `FP01_W_14-Oct-2019_08-36-26` | 4528 | 150.9 | 37.6 | 102.3 |
+| `FP01_Wefter_14-Oct-2019_10-13-03` | 7524 | 250.8 | 62.5 | 147.4 |
+| `FP02_Wföre_15-Oct-2019_08-29-10` | 5765 | 192.2 | 72.9 | 130.1 |
+| `FP03_Qefter_försök2_15-Oct-2019_11-06-33` | 5746 | 191.5 | 60.0 | 134.9 |
+| `FP03_Qföre_15-Oct-2019_09-15-49` | 5220 | 174.0 | 60.5 | 123.3 |
+| `FP03_Wefter_21-Oct-2019_10-21-58` | 6102 | 203.4 | 74.7 | — |
+| `FP03_Wföre_21-Oct-2019_08-58-40` | 5819 | 194.0 | 72.0 | 133.0 |
+
+To avoid copying 16 GB, `RecordedVideos/` holds symbolic links to the files in
+`Video_inventory/`; the library follows them. A raw recording without a
+stabilized copy is analysed as it is (`Recording.video`).
+
+### Setup on macOS
+
+Homebrew's Python had no Tk. `brew install python-tk@3.12`, then a `venv/`
+from Python 3.12 with `requirements.txt` and pytest (numpy 2.5, OpenCV 5.0,
+SciPy 1.18, Tk 9.1). `settings.csv` points the data folder at the repository.
+
+### Fixes
+
+- **Crash on start under Tk 9.** The overlay hint on the video is drawn
+  before the canvas is laid out, when its width is 1 px, so its wrap width
+  `width - 60 px` was negative. Tk 8.6 (WSL) accepted that; Tk 9.1 raises
+  `TclError: expected screen distance but got "-59"`. The same arithmetic was
+  in the empty recording list and the reading view's message. All three are
+  now at least 1 (`gui/video_view.py`, `gui/library_view.py`,
+  `gui/reading_view.py`).
+- **The stabilization memory guard was off on macOS.** It read only
+  `/proc/meminfo`, which macOS does not have, and treated memory as unknown.
+  Stabilizing one of these recordings needs about 28 GB (two float64 copies),
+  more than three times this computer's memory. `available_memory_bytes` now
+  falls back to the total physical memory (`os.sysconf`), so the app refuses
+  instead of swapping or crashing. These recordings cannot be stabilized on
+  this computer with the current stabilizer.
+
+### Verification
+
+- `python -m pytest`: 215 passed (213 before, plus the 2 new tests in
+  `tests/test_stabilization_memory.py`: the memory is known on this platform,
+  and a 5729-frame recording is refused at 8 GB with "28.2 GB").
+- The app starts and stays up with the 9 recordings listed (it crashed on
+  start before the fix).
+- The batch CLI read 450 frames of the raw `FP01_Qföre` with an arbitrary
+  3-point line (126.5 px) without errors; 0 of 25 blocks resolved, as expected
+  for resting flow on a line that does not follow a capillary.
+
+---
+
 ## 2026-10-07 — Official occlusion and release times added; the "slow flow" was the occlusion
 
 **Branch:** `data/occlusion-times`, from `main` at `bb597e2`.

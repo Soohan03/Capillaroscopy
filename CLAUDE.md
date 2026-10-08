@@ -41,6 +41,8 @@ without asking:
    ```
    wsl -d Ubuntu -- bash run_app.sh
    ```
+   On the Mac (since 2026-10-08), from the repository: `venv/bin/python Application.py`
+   (venv from Homebrew Python 3.12 with `python-tk@3.12`).
 2. Check the task output briefly to confirm it started without an immediate traceback.
 3. Tell the user the app window should now be visible via WSLg, and remind them:
    - The list on the left shows the recordings (the 8 videos in `StabilizedVideos/`);
