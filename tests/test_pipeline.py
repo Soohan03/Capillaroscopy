@@ -177,7 +177,8 @@ def test_cli_measures_along_a_line(video_file, tmp_path, capsys):
     expected = expected_velocity_mm_s(VELOCITY_PX_PER_FRAME, FPS, MM_PER_PIXEL)
     assert len(resolved) == len(blocks)
     assert resolved['velocity_mm_s'].median() == pytest.approx(expected, rel=0.03)
-    assert 'centre line' in capsys.readouterr().out
+    printed = capsys.readouterr().out
+    assert 'centre line' in printed and 'pattern shift' in printed
 
 
 def test_cli_wants_a_line_or_two_boxes(video_file):

@@ -6,6 +6,337 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-08 — Resting CBV: a first feasibility check (interrupted)
+
+**Branch:** `feature/fast-flow-estimator`, after `bbf3089` (the entry below).
+
+**Commits:**
+
+- this entry, with two fixes to `capillary/pattern_shift.py`, their tests, and
+  `analysis/resting_flow_feasibility/`
+
+The user asked to confirm the finding below on more data: in how many
+capillaries can resting flow be measured? The session stopped part-way
+because the laptop overheated. It continues on the desktop;
+`analysis/resting_flow_feasibility/README.md` says how.
+
+### Two fixes to the pattern-shift estimator
+
+- **The estimate snapped to 2 px/frame.**
+  - On FP03_Qefter_försök2, both limbs of loop P came out at exactly
+    ±0.080 mm/s (2.00 px/frame), with 95% intervals of zero width.
+  - Cause: the rule "count a frame distance only from a 2-px shift" switched
+    the consecutive-frame comparison on at exactly 2 px/frame, so the score
+    jumped there and the maximum stuck to it. Without the rule, loop P's left
+    limb also peaks at about 2.0 px/frame, so the speed was right but the
+    interval was false.
+  - Each frame distance now fades in between 1 and 2 px of shift and out over
+    the last 10% of the largest shift. The score is divided by the root of
+    the summed squared weights, so it stays in noise units. Loop P's left limb
+    now reads 1.996 px/frame (95% CI 1.951–2.041).
+- **A meaningless speed at the edge.** When the best score lay at the slowest
+  speed searched (−1.00 px/frame), the parabola that refines the peak used the
+  next grid point across the gap, at +1.00, and reported −1.99. The peak is
+  now refined only from neighbours on the same side of the grid; such an
+  estimate reports the edge, flagged out of range, as before.
+- **Tests:** two new ones:
+  - speeds of 1.85 and 2.15 px/frame are recovered within 5% (single 30-s
+    clips of the test pattern scatter by 2–4% there), with an interval wider
+    than zero;
+  - flow below the range reports exactly the edge.
+  - Suite: 248 passed.
+- **Not yet rerun:** the synthetic validation of the fixed version
+  (`validate_pattern_shift.py`); it was stopped when the laptop overheated.
+  The table in the entry below is for the version before these fixes.
+
+### Stabilizing the other 8 recordings
+
+All were stabilized with the stabilizer of `af1dce6`:
+
+| Recording | Moved (px) | Median match | Result |
+| --- | --- | --- | --- |
+| FP01_Qföre (from before) | 18.7 × 27.6 | 0.74 | good |
+| FP01_Qefter_försök2 | 25.8 × 24.7 | 0.70 | good |
+| FP01_W_14-Oct-2019_08-36-26 | 341 × 338 | 0.08 | **failed throughout** |
+| FP01_Wefter_14-Oct-2019_10-13-03 | 47.9 × 90.8 | 0.85 | good |
+| FP02_Wföre | 148 × 167 | 0.47 | aligned; the recording itself is blurry |
+| FP03_Qefter_försök2 | 106 × 162 | 0.64 | good |
+| FP03_Qföre | 446 × 361 | 0.15 | rest good (0.68); occlusion and after release failed |
+| FP03_Wefter | 343 × 380 | 0.26 | rest mostly failed (0.24) |
+| FP03_Wföre | 139 × 265 | 0.61 | good (the breathing-swing recording) |
+
+The three failures are large movements of the finger:
+
+- **FP01_W** drifts steadily by about 200 px over the recording. Its reference
+  frame is near the end (141 s), and the early frames are beyond the coarse
+  search, so following the previous frame never locks on. It is also the only
+  file named without före or efter.
+- **FP03_Qföre** jumps when the cuff goes on.
+- **FP03_Wefter's** capillaries jump 100–200 px around the frame at rest.
+
+The fix planned: follow the movement outwards from the reference frame in
+both directions in time, so no frame is ever searched far from its
+neighbour's position.
+
+### The feasibility check
+
+- **Line placement:** on each recording's resting image (the band-passed
+  mean between 2 s and 2 s before the official occlusion), points were placed
+  by eye along clearly visible capillary limbs. They were moved onto the
+  vessel's ridge (within 4 px across) and smoothed. One tissue control line
+  per recording runs beside the loops. Lines were chosen from the image alone.
+- **Measurements:** each line was measured with the pattern shift over the
+  rest window and its two halves, in occlusion and after release, and with
+  the centre-line method in 3-s blocks at rest.
+- **Files:** `analysis/resting_flow_feasibility/lines.json` and
+  `results.csv`. FP03_Qefter_försök2's rows there predate the fixes above.
+
+Six recordings were measured (FP01_W and FP03_Wefter could not be, and
+FP03_Wföre is not done yet): 24 limbs and 6 tissue lines.
+
+| Recording | Limbs | Resolved at rest (pattern shift) | Other signs |
+| --- | ---: | --- | --- |
+| FP01_Qföre | 4 | tall loop: left limb +0.083 mm/s (signal-to-noise 11.6, halves 0.085 / 0.080), right limb −0.116 (9.0) | the 44- and 30-px limbs: none |
+| FP01_Qefter_försök2 | 5 | none | loop A: centre line resolved 40% of rest blocks (+0.014 mm/s) on the left limb and 20% (−0.007) on the right: very slow flow, opposite directions |
+| FP01_Wefter | 3 | none | right loop at the method's lower edge (slower than 0.04 mm/s) |
+| FP02_Wföre | 4 | none | blurry recording |
+| FP03_Qefter_försök2 | 7 | loop P left limb: about +0.08 mm/s (9.5) | loop P right limb at the lower edge (score 9.7); loop S +0.068 at 5.7 |
+| FP03_Qföre | 6 | none | none, though the limbs are long (up to 139 px) and the rest is well stabilized |
+
+- **Tissue lines** reached at most signal-to-noise 5.3 (FP03_Qefter_försök2);
+  none was resolved.
+- **Where resting flow was measured,** it was 0.08–0.12 mm/s, on limbs of
+  63–122 px. No limb shorter than 50 px was resolved.
+- **Why most limbs show nothing.** 5-s space-time pictures at rest show it:
+  - where flow was measured, diagonal streaks of plasma gaps run across the
+    diagram;
+  - on FP03_Qföre's limbs there is only noise. Their brightness changes over
+    time with an SD of 1.1–1.2 grey levels, against 1.3 on the tissue line and
+    1.5–1.6 on the limbs with flow.
+
+  So at rest these capillaries show no moving pattern in the video. The blood
+  column may be too uniform, or the flow fast enough to smear within a frame.
+  No image method can measure them at 30 fps.
+- **For aim 1:** resting CBV can be measured only in capillaries that show
+  plasma gaps, which so far is a minority (3 of 24 limbs resolved, a few more
+  near the threshold). Aim 1 needs a rule for choosing capillaries and enough
+  of them per recording, and the measurement needs a rule for combining the
+  two methods (the pattern shift from about 0.04 mm/s, the centre line below).
+
+### Open (to continue on the desktop)
+
+- Fix the stabilizer for large movements (above), then stabilize FP01_W and
+  FP03_Wefter again.
+- Measure FP03_Wföre, and remeasure FP03_Qefter_försök2.
+- Rerun the synthetic validation of the fixed estimator.
+- Decide the measurement protocol: a rule for choosing capillaries (length,
+  visible plasma gaps), and a rule for combining the two methods.
+- The frame rate (unverified) and the camera's exposure time decide whether
+  fast resting flow is invisible or absent.
+
+---
+
+## 2026-10-08 — Resting flow is faint, not fast: the pattern-shift estimator
+
+**Branch:** `feature/fast-flow-estimator`, from `main` at `c2ac5dd`.
+
+**Commits:**
+
+- this entry, with the estimator, its tests, the benchmark and the CLI
+
+Aim 1 (resting CBV) was blocked by the known issue "resting flow is beyond
+the centre line's range". The plan was a fast-flow estimator: measure how far
+the pattern along a centre line moves between consecutive frames. Testing the
+idea on real data first changed the diagnosis.
+
+### Otsu thresholding, considered and not used
+
+The user asked about Otsu thresholding. Otsu was tried on the stabilized
+FP01_Qföre in three ways:
+
+- **Raw frame:** it split the picture by the uneven lighting, marking 56% of
+  it, half of that background.
+- **Band-passed image:** the vessels are too small a share of the picture for
+  Otsu to find a split.
+- **Temporal SD over 10 s at rest:** rings fixed to the camera optics dominate
+  it. They move once the video is stabilized, and Otsu marked 38%, mostly
+  rings.
+
+Binarizing the space-time diagram would throw away what the estimators use. So
+Otsu was not implemented. Finding vessels automatically (for line placement)
+would need a vessel filter and a local threshold, and its own validation.
+
+### Real data first
+
+On 2026-10-07 a crude row-to-row comparison found no moving pattern at rest
+(best match always at zero shift, r = 0.06–0.19). That was on the old
+stabilized video, which was probably MPEG-4: such compression kept only about
+14% of the frame-to-frame change (entry below). It was repeated on the
+lossless video from the new stabilizer.
+
+**The first line**, placed by eye (6 points, 119 px), ran partly between the
+two limbs of the tall loop. Per-block results were noise, though the
+centre-line method still found the occlusion flow on it (12 of 20 blocks at
+80–90 s, median 0.011 mm/s).
+
+**A line traced along the left limb's centre** in the resting mean image (10
+points, 112 px) showed a forward shift once the correlation was pooled over
+2–66 s, rest only:
+
+| Frames apart (k) | 1 | 2 | 3 |
+| --- | --- | --- | --- |
+| Rest: shift (strength) | +2 px (13.7× noise) | +4 px (7.7×) | +6 px (5.6×) |
+| After release | +4 px | +7 px | lost |
+
+So about 2 px/frame (0.08 mm/s) at rest, and about 3.5 px/frame after release.
+During occlusion the peak sat near 2 px at every k, so the flow there is under
+a pixel per frame.
+
+**The centre-line method on the same line** agreed:
+- in 3-s blocks, 8 of 123 rest blocks were resolved, median 0.082 mm/s
+  (2.07 px/frame);
+- the median slope over all rest blocks was +1.77 px/frame, at signal-to-noise
+  4.2, below the threshold of 8;
+- with 10-s and 30-s blocks it found +2.15 and +2.77 px/frame, at 3.8 and 5.7.
+
+**Controls**, pooled over the rest, for k = 1, 2, 3:
+- the right limb, also drawn top to bottom: −2, −7, −9 px (6.9×, 3.5×, 3.5×),
+  the opposite direction;
+- tissue 22 px beside the limb: −33, −1, +16 px (2.5×, 4.0×, 2.0×), no
+  pattern.
+
+So on this capillary the blood goes down one limb at about 0.08 mm/s and up the
+other at about 0.12 mm/s, within the centre line's range (up to 0.2 mm/s on
+112 px). It is too faint for single 3-s blocks. The 2026-10-07 reading of
+"faint, almost horizontal streaks, roughly 0.5–1 mm/s" was probably the change
+of the whole vessel at once, which draws horizontal lines, seen in the
+compressed video. The known issue in CLAUDE.md is revised accordingly. This is
+one capillary of one recording.
+
+### The estimator (`capillary/pattern_shift.py`)
+
+On the same space-time diagram:
+
+1. In each 3-s block, the still structure and the same-moment change are
+   removed and the rows differenced, as in `capillary.spacetime`.
+2. For frame distances k = 1–8, row t is correlated with row t + k at every
+   shift up to half the line. Numerators and energies are pooled over every row
+   of every block (an FFT per row, checked against a direct sum in a test).
+3. Forward minus backward correlation (direction contrast), in units of each
+   k's own spread over shifts.
+4. A speed's score is the sum over the k where it needs a shift of 2 px to half
+   the line, divided by the square root of their number. The best speed (step
+   0.01 px/frame, refined by a parabola) is the estimate, and its score the
+   signal-to-noise ratio.
+5. A 95% interval comes from leaving out one block at a time (jackknife).
+
+Settings, each checked on data:
+
+- **Signal-to-noise of 8 to count:** without flow it reached at most 3.9 on 30
+  synthetic recordings (5.2 before the minimum-shift rule below), and at most
+  4.3 on two tissue lines of FP01_Qföre in any phase.
+- **Slowest speed 1 px/frame:** at 0.5 px/frame it read 4–8% high, where the
+  centre-line method is exact.
+- **Minimum shift of 2 px per frame distance:** on synthetic recordings 2 and
+  3 px both lowered the error near 1 px/frame slightly (worst 0.8–0.9% against
+  1.3% with none). On the real limb, 3 px dropped the comparison of
+  consecutive frames at 2 px/frame. That one is the strongest there, because
+  the blood rearranges within a few frames, and dropping it lowered the
+  signal-to-noise from 13.7 to 9.7 and left both 30-s halves unresolved. With
+  2 px the real results are unchanged.
+- **The intervals cover the statistical scatter only.** In the synthetic runs
+  they often missed the truth by about 1%, a systematic error probably from
+  the drawn line's geometry. This is said in the docstring.
+
+**Validation on synthetic recordings** (final settings): 138 clips of the
+simulated loop, 30 s each, a 120-px hand-drawn line, motion blur for the whole
+frame interval, 3 seeds per speed. The conditions are "as measured", "strong",
+and "faint" (a third of the cells' contrast). Each cell shows the median error
+with the worst in brackets, then the lowest signal-to-noise:
+
+| Speed px/frame (mm/s) | As measured | Strong | Faint | Centre line, blocks resolved (as measured) |
+| --- | --- | --- | --- | --- |
+| 0.5 (0.020) | not reported, 2.1 | not reported, 2.0 | not reported, 2.2 | 100%, +0.1% |
+| 1 (0.040) | +0.5% (0.5), 14.2 | +0.5% (0.5), 15.7 | +0.5% (0.5), 12.0 | 100%, +0.1% |
+| 2 (0.080) | +0.2% (0.6), 13.9 | +0.2% (0.3), 14.6 | +0.8% (2.2), 12.8 | 100%, +0.5% |
+| 3 (0.120) | −1.1% (1.2), 25.7 | −1.3% (1.5), 24.0 | −0.6% (1.3), 20.6 | 100%, +0.5% |
+| 5 (0.199) | +0.2% (0.6), 25.8 | +0.6% (1.3), 21.3 | 0.0% (2.1), 18.1 | 80%, −1.5% |
+| 8 (0.319) | +0.4% (0.7), 15.9 | +0.3% (0.7), 14.9 | +0.4% (3.5), 10.7 | 0% |
+| 12 (0.478) | −0.1% (0.1), 9.5 | −0.1% (0.1), 9.1 | −3.1% (6.5), 5.8 | 0% |
+| 16 (0.638) | −6.3% (6.3), 5.5 | −6.3% (6.3), 5.0 | −9.4% (9.6), 4.0 | 0% |
+| 20–40 (0.80–1.60) | signal-to-noise 2.7–5.2 | 2.5–4.7 | 2.8–4.1 | 0% |
+
+- **No flow** (10 clips per condition): the signal-to-noise reached at most 3.4,
+  3.9 and 3.7.
+- **Resolved in every seed:** from 1 to 12 px/frame as measured and strong,
+  and up to 8 px/frame when faint.
+- **Truth inside the 95% interval:** in 1 to 3 of the 3 seeds, mostly missed by
+  about 1%. The intervals are statistical only (above).
+
+### On FP01_Qföre with the final version
+
+- **Left limb:**
+  - rest: 0.0819 mm/s (95% CI 0.0747–0.0891), signal-to-noise 13.7;
+  - first 30 s: 0.084 mm/s (8.5); second 30 s: 0.080 mm/s (9.1);
+  - one 3-s block: 3.8, not resolved;
+  - occlusion: below the method's range, which is right; the centre line
+    measures it;
+  - after release: 0.145 mm/s at 4.5, not resolved.
+- **Right limb:** −0.116 mm/s at rest (5.8, not resolved; a 76-px line).
+- **Tissue lines:** at most 4.3, with random speeds.
+
+### What changed
+
+- `capillary/pattern_shift.py` (new): `pattern_shift` for one stretch,
+  `shift_time_course` for successive windows.
+- `tests/test_pattern_shift.py` (new, 18 tests), checking:
+  - the FFT sums against a direct computation;
+  - known speeds from 1.5 to 14 px/frame despite same-moment changes;
+  - reversed flow;
+  - no flow, and a much stronger same-moment change, not resolved;
+  - a pattern flickering in place not read as flow;
+  - flow slower than the method not reported;
+  - pooling making a faint pattern measurable;
+  - the interval holding the estimate and narrowing;
+  - unusable input; the time course;
+  - a synthetic recording with motion blur, where fast flow is either right or
+    unreported.
+- `capillary/benchmark.py`: a third method, and speeds 16 and 25 px/frame
+  added.
+- `capillary/cli.py`: for a line, it also prints the pooled pattern-shift
+  velocity, its interval and signal-to-noise.
+- README ("Pattern shift"), CLAUDE.md (the engine, and the resting-flow known
+  issue revised).
+
+### Verification
+
+- 246 tests pass. flake8's CI selection is clean, as is a full run on the new
+  and changed files.
+- Planted bugs:
+  - a flipped sign fails 7 tests;
+  - no conversion to noise units fails the faint-pattern test;
+  - no direction contrast fails the reversed-flow test. Without it the
+    flickering pattern did read as 10.0 px/frame, but at signal-to-noise 2.6,
+    so that test passes either way.
+- `python -m capillary.benchmark --quick` runs with the new method. In 10-s
+  clips it resolves 2 and 6 px/frame within 1%. At 6 px/frame the centre line
+  resolves at most 13% of blocks, 16% low.
+
+### Open
+
+- **The app:** show the pooled velocity on the Centre line page (the rest
+  window as default stretch), and save it with the data set.
+- **More recordings:** more capillaries and recordings. Stabilize the other 8
+  downloaded recordings and repeat the left-limb check on several capillaries
+  each.
+- **Frame rate:** still unverified. Every velocity scales with it.
+- **Above about 16 px/frame** the synthetic signal-to-noise falls below the
+  threshold, probably from motion blur. The real exposure time is unknown.
+- **The camera-fixed rings** drift through the stabilized picture. They look
+  like near-zero flow and could bias slow-flow measurements; worth checking.
+
+---
+
 ## 2026-10-08 — A new registration for the stabilizer
 
 **Branch:** `fix/stabilizer-registration`, from `feature/streaming-stabilizer` at
