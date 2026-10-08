@@ -21,10 +21,14 @@ How it works
    noise, still structure, the same-moment change and jitter are symmetric and
    cancel, as in `capillary.spacetime`.
 4. Each frame distance's contrast is put into units of its own noise (its
-   spread over all shifts), and a speed's score is the sum of the frame
+   spread over all shifts). A speed's score is the weighted sum of the frame
    distances' contrasts at shift = speed x k, divided by the square root of
-   their number. Frame distances that would need a shift beyond half the line,
-   or of less than `MIN_SHIFT_PX`, are left out. The best speed, to a hundredth of a pixel per frame, is the
+   the sum of the squared weights, so it stays in noise units. A frame
+   distance counts fully between `MIN_SHIFT_PX` and half the line and fades
+   in and out smoothly at both ends. A frame distance switched on or off at a
+   fixed speed made the score jump there, and the estimate snapped to it,
+   with an interval of zero width (seen on FP03_Qefter_försök2 at exactly
+   2 px/frame). The best speed, to a hundredth of a pixel per frame, is the
    estimate, and its score the signal-to-noise ratio.
 5. The uncertainty comes from leaving out one block at a time (jackknife): a
    95% interval of the speed. It covers the statistical scatter only. A
@@ -66,12 +70,14 @@ MAX_LAG = 8
 #: Slowest speed this method reports (px/frame). At 0.5 px/frame it read 4-8% high on synthetic
 #: recordings; the centre-line method measures slower flow exactly.
 MIN_SPEED = 1.0
-#: A frame distance counts for a speed only if the pattern moves at least this far over it (px).
-#: Close to zero shift, the backward correlation subtracted holds part of the peak's own tail; on
-#: synthetic recordings this lowered the error near 1 px/frame slightly. 3 px would drop the
-#: comparison of consecutive frames at 2 px/frame, the strongest on real recordings, where the blood
-#: rearranges within a few frames (FP01_Qföre's limb at rest: signal-to-noise 13.7 -> 9.7).
+#: A frame distance counts fully for a speed once the pattern moves at least this far over it (px),
+#: fading in from 1 px less. Close to zero shift, the backward correlation subtracted holds part of the
+#: peak's own tail; on synthetic recordings this lowered the error near 1 px/frame slightly. 3 px would
+#: drop the comparison of consecutive frames at 2 px/frame, the strongest on real recordings, where
+#: the blood rearranges within a few frames (FP01_Qföre's limb at rest: signal-to-noise 13.7 -> 9.7).
 MIN_SHIFT_PX = 2.0
+#: Near half the line a frame distance fades out over this share of the largest shift.
+FADE_SHARE = 0.1
 #: Speeds are searched in steps of this many px/frame.
 SPEED_STEP = 0.01
 #: Estimates with a lower signal-to-noise ratio count as unresolved. On 30 synthetic recordings
@@ -149,6 +155,14 @@ def _block_sums(block: np.ndarray, lags: np.ndarray, max_shift: int) -> np.ndarr
     return out
 
 
+def _lag_weight(reach: np.ndarray, max_shift: int) -> np.ndarray:
+    """How much a frame distance counts at a shift of `reach` px: fading in up to `MIN_SHIFT_PX`, out near `max_shift`."""
+    rise = np.clip(reach - (MIN_SHIFT_PX - 1.0), 0.0, 1.0)
+    fade = max(2.0, FADE_SHARE * max_shift)
+    fall = np.clip((max_shift - reach) / fade, 0.0, 1.0)
+    return rise * fall
+
+
 def _speed_scores(sums: np.ndarray, lags: np.ndarray, max_shift: int, speeds: np.ndarray) -> np.ndarray:
     """Score of every speed (signed), in noise units, from pooled sums (lags, 3, shifts)."""
     with np.errstate(invalid='ignore', divide='ignore'):
@@ -158,7 +172,7 @@ def _speed_scores(sums: np.ndarray, lags: np.ndarray, max_shift: int, speeds: np
     contrast = corr[:, centre:] - corr[:, centre::-1]                  # (lags, 0..max_shift)
     d = np.arange(max_shift + 1)
     total = np.zeros(speeds.size)
-    count = np.zeros(speeds.size)
+    weights = np.zeros(speeds.size)
     for i, k in enumerate(lags):
         c = contrast[i, 1:]
         noise = 1.4826 * np.median(np.abs(c - np.median(c)))
@@ -166,11 +180,12 @@ def _speed_scores(sums: np.ndarray, lags: np.ndarray, max_shift: int, speeds: np
             continue
         spline = CubicSpline(d, contrast[i] / noise)
         reach = k * np.abs(speeds)
-        valid = (reach <= max_shift) & (reach >= MIN_SHIFT_PX)
-        total[valid] += np.sign(speeds[valid]) * spline(reach[valid])
-        count[valid] += 1
+        weight = _lag_weight(reach, max_shift)
+        used = weight > 0
+        total[used] += weight[used] * np.sign(speeds[used]) * spline(reach[used])
+        weights[used] += weight[used] ** 2
     with np.errstate(invalid='ignore', divide='ignore'):
-        return np.where(count > 0, total / np.sqrt(count), np.nan)
+        return np.where(weights > 0, total / np.sqrt(weights), np.nan)
 
 
 def _best(scores: np.ndarray, speeds: np.ndarray) -> tuple:
@@ -178,7 +193,8 @@ def _best(scores: np.ndarray, speeds: np.ndarray) -> tuple:
         return float('nan'), float('nan'), False
     i = int(np.nanargmax(scores))
     speed = float(speeds[i])
-    if 0 < i < speeds.size - 1 and np.isfinite(scores[i - 1]) and np.isfinite(scores[i + 1]):
+    neighbours = 0 < i < speeds.size - 1 and np.allclose(np.diff(speeds[i - 1:i + 2]), SPEED_STEP)
+    if neighbours and np.isfinite(scores[i - 1]) and np.isfinite(scores[i + 1]):
         left, centre, right = scores[i - 1], scores[i], scores[i + 1]
         curvature = left - 2 * centre + right
         if curvature < 0:

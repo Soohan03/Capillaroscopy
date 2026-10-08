@@ -40,6 +40,16 @@ def test_known_speed_is_recovered_despite_same_moment_changes(speed, tolerance):
     assert estimate.speed_px_per_frame == pytest.approx(speed, rel=tolerance)
 
 
+@pytest.mark.parametrize('speed', [1.85, 2.15])
+def test_no_speed_attracts_the_estimate(speed):
+    # a frame distance switched on at a fixed speed (k = 1 at 2 px/frame) made the score jump there and the
+    # estimate snap to exactly 2.00 px/frame, with an interval of zero width (FP03_Qefter_försök2)
+    # (single 30-s clips of this coarse pattern scatter by 2-4% here; snapping to 2.00 would be 7-8% off)
+    estimate = pattern_shift(diagram(speed, frames=900, seed=12))
+    assert estimate.resolved and estimate.speed_px_per_frame == pytest.approx(speed, rel=0.05)
+    assert estimate.ci95[1] - estimate.ci95[0] > 0.001
+
+
 def test_flow_the_other_way_reads_negative():
     estimate = pattern_shift(diagram(5.0, frames=900, seed=3)[:, ::-1])
     assert estimate.resolved and estimate.speed_px_per_frame == pytest.approx(-5.0, rel=0.02)
@@ -71,6 +81,7 @@ def test_flow_slower_than_the_method_measures_is_not_reported():
     # the centre-line method measures this; the search starts at MIN_SPEED
     estimate = pattern_shift(diagram(0.3, frames=900, seed=6))
     assert MIN_SPEED > 0.3 and not estimate.resolved
+    assert abs(estimate.speed_px_per_frame) == pytest.approx(MIN_SPEED, abs=0.02)     # the edge, nothing beyond it
 
 
 def test_pooling_makes_a_faint_pattern_measurable():

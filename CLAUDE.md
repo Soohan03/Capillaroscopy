@@ -91,6 +91,9 @@ If the user reports the app froze or crashed, check the task output file and
 
 ## Code layout
 
+Exploratory analyses with their inputs and results live in `analysis/` (for example
+`analysis/resting_flow_feasibility/`, with a README on how to rerun it).
+
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
 recording list, keyboard routing) → one module per page (`gui/line_page.py` "Centre
 line", `analyze_page.py` "Two boxes", `results_page.py`, `validation_page.py` with its
@@ -151,7 +154,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (246 tests, ~25 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (248 tests, ~25 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -174,7 +177,15 @@ the 2026-10-05 GUI rebuild entry.
   - So on this capillary resting flow lies within the centre line's range, but it is too faint
     for single 3-s blocks (signal-to-noise about 4).
   - The near-horizontal streaks were probably the change of the whole vessel at once.
-  - Still to check on more capillaries and recordings.
+  - A first feasibility check (6 recordings, 24 limbs, `analysis/resting_flow_feasibility/`,
+    interrupted): resting flow was resolved in 3 limbs (0.08–0.12 mm/s), with a few more near
+    the threshold. Most capillaries show no moving pattern at rest at all (their space-time
+    pictures are noise), so they cannot be measured from these videos at 30 fps. Aim 1 needs a
+    rule for choosing capillaries with visible plasma gaps.
+- **Large movements defeat the stabilizer** (found 2026-10-08). On FP01_W (a steady drift of about
+  200 px), FP03_Qföre (after the cuff) and FP03_Wefter (jumps of 100–200 px at rest) the match
+  falls to 0.1–0.3. Planned fix: follow the movement outwards from the reference frame in both
+  directions in time.
 - **The two-box method is not valid on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box

@@ -6,6 +6,136 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-08 — Resting CBV: a first feasibility check (interrupted)
+
+**Branch:** `feature/fast-flow-estimator`, after `bbf3089` (the entry below).
+
+**Commits:**
+
+- this entry, with two fixes to `capillary/pattern_shift.py`, their tests, and
+  `analysis/resting_flow_feasibility/`
+
+The user asked to confirm the finding below on more data: in how many
+capillaries can resting flow be measured? The session stopped part-way
+because the laptop overheated. It continues on the desktop;
+`analysis/resting_flow_feasibility/README.md` says how.
+
+### Two fixes to the pattern-shift estimator
+
+- **The estimate snapped to 2 px/frame.**
+  - On FP03_Qefter_försök2, both limbs of loop P came out at exactly
+    ±0.080 mm/s (2.00 px/frame), with 95% intervals of zero width.
+  - Cause: the rule "count a frame distance only from a 2-px shift" switched
+    the consecutive-frame comparison on at exactly 2 px/frame, so the score
+    jumped there and the maximum stuck to it. Without the rule, loop P's left
+    limb also peaks at about 2.0 px/frame, so the speed was right but the
+    interval was false.
+  - Each frame distance now fades in between 1 and 2 px of shift and out over
+    the last 10% of the largest shift. The score is divided by the root of
+    the summed squared weights, so it stays in noise units. Loop P's left limb
+    now reads 1.996 px/frame (95% CI 1.951–2.041).
+- **A meaningless speed at the edge.** When the best score lay at the slowest
+  speed searched (−1.00 px/frame), the parabola that refines the peak used the
+  next grid point across the gap, at +1.00, and reported −1.99. The peak is
+  now refined only from neighbours on the same side of the grid; such an
+  estimate reports the edge, flagged out of range, as before.
+- **Tests:** two new ones:
+  - speeds of 1.85 and 2.15 px/frame are recovered within 5% (single 30-s
+    clips of the test pattern scatter by 2–4% there), with an interval wider
+    than zero;
+  - flow below the range reports exactly the edge.
+  - Suite: 248 passed.
+- **Not yet rerun:** the synthetic validation of the fixed version
+  (`validate_pattern_shift.py`); it was stopped when the laptop overheated.
+  The table in the entry below is for the version before these fixes.
+
+### Stabilizing the other 8 recordings
+
+All were stabilized with the stabilizer of `af1dce6`:
+
+| Recording | Moved (px) | Median match | Result |
+| --- | --- | --- | --- |
+| FP01_Qföre (from before) | 18.7 × 27.6 | 0.74 | good |
+| FP01_Qefter_försök2 | 25.8 × 24.7 | 0.70 | good |
+| FP01_W_14-Oct-2019_08-36-26 | 341 × 338 | 0.08 | **failed throughout** |
+| FP01_Wefter_14-Oct-2019_10-13-03 | 47.9 × 90.8 | 0.85 | good |
+| FP02_Wföre | 148 × 167 | 0.47 | aligned; the recording itself is blurry |
+| FP03_Qefter_försök2 | 106 × 162 | 0.64 | good |
+| FP03_Qföre | 446 × 361 | 0.15 | rest good (0.68); occlusion and after release failed |
+| FP03_Wefter | 343 × 380 | 0.26 | rest mostly failed (0.24) |
+| FP03_Wföre | 139 × 265 | 0.61 | good (the breathing-swing recording) |
+
+The three failures are large movements of the finger:
+
+- **FP01_W** drifts steadily by about 200 px over the recording. Its reference
+  frame is near the end (141 s), and the early frames are beyond the coarse
+  search, so following the previous frame never locks on. It is also the only
+  file named without före or efter.
+- **FP03_Qföre** jumps when the cuff goes on.
+- **FP03_Wefter's** capillaries jump 100–200 px around the frame at rest.
+
+The fix planned: follow the movement outwards from the reference frame in
+both directions in time, so no frame is ever searched far from its
+neighbour's position.
+
+### The feasibility check
+
+- **Line placement:** on each recording's resting image (the band-passed
+  mean between 2 s and 2 s before the official occlusion), points were placed
+  by eye along clearly visible capillary limbs. They were moved onto the
+  vessel's ridge (within 4 px across) and smoothed. One tissue control line
+  per recording runs beside the loops. Lines were chosen from the image alone.
+- **Measurements:** each line was measured with the pattern shift over the
+  rest window and its two halves, in occlusion and after release, and with
+  the centre-line method in 3-s blocks at rest.
+- **Files:** `analysis/resting_flow_feasibility/lines.json` and
+  `results.csv`. FP03_Qefter_försök2's rows there predate the fixes above.
+
+Six recordings were measured (FP01_W and FP03_Wefter could not be, and
+FP03_Wföre is not done yet): 24 limbs and 6 tissue lines.
+
+| Recording | Limbs | Resolved at rest (pattern shift) | Other signs |
+| --- | ---: | --- | --- |
+| FP01_Qföre | 4 | tall loop: left limb +0.083 mm/s (signal-to-noise 11.6, halves 0.085 / 0.080), right limb −0.116 (9.0) | the 44- and 30-px limbs: none |
+| FP01_Qefter_försök2 | 5 | none | loop A: centre line resolved 40% of rest blocks (+0.014 mm/s) on the left limb and 20% (−0.007) on the right: very slow flow, opposite directions |
+| FP01_Wefter | 3 | none | right loop at the method's lower edge (slower than 0.04 mm/s) |
+| FP02_Wföre | 4 | none | blurry recording |
+| FP03_Qefter_försök2 | 7 | loop P left limb: about +0.08 mm/s (9.5) | loop P right limb at the lower edge (score 9.7); loop S +0.068 at 5.7 |
+| FP03_Qföre | 6 | none | none, though the limbs are long (up to 139 px) and the rest is well stabilized |
+
+- **Tissue lines** reached at most signal-to-noise 5.3 (FP03_Qefter_försök2);
+  none was resolved.
+- **Where resting flow was measured,** it was 0.08–0.12 mm/s, on limbs of
+  63–122 px. No limb shorter than 50 px was resolved.
+- **Why most limbs show nothing.** 5-s space-time pictures at rest show it:
+  - where flow was measured, diagonal streaks of plasma gaps run across the
+    diagram;
+  - on FP03_Qföre's limbs there is only noise. Their brightness changes over
+    time with an SD of 1.1–1.2 grey levels, against 1.3 on the tissue line and
+    1.5–1.6 on the limbs with flow.
+
+  So at rest these capillaries show no moving pattern in the video. The blood
+  column may be too uniform, or the flow fast enough to smear within a frame.
+  No image method can measure them at 30 fps.
+- **For aim 1:** resting CBV can be measured only in capillaries that show
+  plasma gaps, which so far is a minority (3 of 24 limbs resolved, a few more
+  near the threshold). Aim 1 needs a rule for choosing capillaries and enough
+  of them per recording, and the measurement needs a rule for combining the
+  two methods (the pattern shift from about 0.04 mm/s, the centre line below).
+
+### Open (to continue on the desktop)
+
+- Fix the stabilizer for large movements (above), then stabilize FP01_W and
+  FP03_Wefter again.
+- Measure FP03_Wföre, and remeasure FP03_Qefter_försök2.
+- Rerun the synthetic validation of the fixed estimator.
+- Decide the measurement protocol: a rule for choosing capillaries (length,
+  visible plasma gaps), and a rule for combining the two methods.
+- The frame rate (unverified) and the camera's exposure time decide whether
+  fast resting flow is invisible or absent.
+
+---
+
 ## 2026-10-08 — Resting flow is faint, not fast: the pattern-shift estimator
 
 **Branch:** `feature/fast-flow-estimator`, from `main` at `c2ac5dd`.
