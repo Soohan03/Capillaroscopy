@@ -21,6 +21,9 @@ products".
   recordings. Reported as the within-subject CV (typical error/mean), the smallest
   detectable change (2.77 × typical error), Bland–Altman and ICC(A,1).
 - **Aim 2:** the difference in before→after change, active minus control.
+- **Who can be used** (`metadata/README.md`, from `capillary.inventory`): aim 1 has 14 ESMOKE and
+  10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 8 ISMOKE. The
+  aims use 90 recordings; 8 of them had been downloaded by 2026-10-09.
 - **Resting CBV must come from the rest window before occlusion.**
 
 ## Change diary (mandatory)
@@ -131,6 +134,10 @@ Tkinter classes.
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
 - Both save through `capillary.datasets`.
+- **Recordings:** `capillary/inventory.py` parses the recording names and the official times,
+  flags names and visits that do not fit, and chooses each aim's recordings (the last attempt
+  with 30 s of rest). Run `python3 -m capillary.inventory [--have <video folder>] [--out <folder>]`;
+  the tables are in `metadata/derived/`.
 - **Stabilization:** `capillary/stabilize.py` (rewritten 2026-10-08; its docstring has the
   method and history). Translation only. The registration works on a band-passed copy of
   each frame (difference of Gaussians, σ 2 and 15 px) against two references, each averaged
@@ -154,7 +161,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (248 tests, ~25 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (257 tests, ~25 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 

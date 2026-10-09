@@ -6,6 +6,88 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-09 — Recording inventory: which recordings the aims use
+
+**Branch:** `feature/recording-inventory`, from `main` at `70b9b12`.
+
+**Commits:**
+
+- this entry, with `capillary/inventory.py`, its tests and `metadata/derived/`
+
+The laptop was overheating, so the user asked for work that does not process
+videos. They chose an inventory of the study's recordings, built from the
+official times in `metadata/`. It answers how many participants each aim can
+use, and which videos to download from DynCap next.
+
+### How (`capillary/inventory.py`)
+
+- **Names.**
+  - Each name is parsed: study, subject, condition (W/Q, S/C), role (active
+    or control), före or efter, attempt (`_försökN`, or a trailing digit in
+    ISMOKE), and start date and time.
+  - `FP21Wföre` (no underscore) and `FP01_W_…` (neither före nor efter) are
+    understood.
+  - Names are compared in Unicode NFC. macOS spells the ö in file names as o
+    plus a combining mark, so the first run matched only 1 of the 8 needed
+    videos already downloaded.
+- **Usable means enough rest.** Both aims use resting CBV, from the rest
+  before the occlusion, so a recording needs 30 s of rest (2 s after the start
+  to 2 s before the occlusion). A missing release time does not matter.
+- **Flags**, not corrections:
+  - a name without före or efter (the phase is taken from the time of day);
+  - a day with two conditions;
+  - a före more than 45 min after the day's first recording (probably an
+    efter);
+  - a condition recorded on more than one day;
+  - too little rest.
+- **The choice.** For each participant, the active and the control day each
+  get a före and an efter: the last attempt with enough rest, on the
+  assumption that a recording was repeated because the earlier attempt failed.
+  The other attempts are listed.
+  - **Aim 1** needs both före recordings, aim 2 all four.
+  - Each aim is "yes", "check" (a chosen recording has an issue) or "no".
+
+### Result
+
+The table and the five recordings to check are in `metadata/README.md`:
+
+- **Aim 1:** 13 + 1 (check) ESMOKE and 9 + 1 (check) ISMOKE participants.
+  Visits are a median of 20 days apart in ESMOKE (6–68) and 7 in ISMOKE
+  (7–16), and the order of the conditions is balanced.
+- **Aim 2:** 12 + 1 ESMOKE and 8 ISMOKE participants.
+- **Recordings:** the aims use 90 recordings, 48 for aim 1. Of the 9
+  downloaded so far, 8 are among them; FP02_Wföre belongs to a participant
+  with one visit only.
+- **The checks most likely to change the numbers:**
+  - ISMOKE FP02 (an `Sföre` and a `Cefter` on one day) would join both aims
+    if the före is a C recording;
+  - ISMOKE FP08 (two `Cföre` 107 min apart) would drop out of aim 1 if the
+    second is the efter.
+
+### Verification
+
+- `tests/test_inventory.py`, 9 tests on the real metadata:
+  - parsing, including the odd names and a decomposed ö;
+  - all 124 recordings understood;
+  - each kind of flag;
+  - the last usable attempt chosen (FP05's fourth before-recording, FP01's
+    third after-recording, none for ISMOKE FP04's 6-s rest);
+  - the counts per aim and study;
+  - the `used_for` marks;
+  - matching downloaded videos;
+  - the command line.
+- Suite: 257 tests. flake8 is clean on the new files.
+
+### Open
+
+- Check the five flagged recordings in DynCap, and correct the choice if the
+  labels are wrong.
+- Download the 82 recordings still needed (44 for aim 1).
+  `python -m capillary.inventory --have <video folder> --out <folder>` writes
+  the list (`to_download.csv`).
+
+---
+
 ## 2026-10-08 — Resting CBV: a first feasibility check (interrupted)
 
 **Branch:** `feature/fast-flow-estimator`, after `bbf3089` (the entry below).
