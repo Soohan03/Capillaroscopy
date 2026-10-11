@@ -5,10 +5,12 @@ import pytest
 
 from capillary import simulate
 from capillary.pattern_shift import (
+    BANDPASS_PX,
     BLOCK_FRAMES,
     MIN_SNR,
     MIN_SPEED,
     _block_sums,
+    _prepared,
     pattern_shift,
     shift_time_course,
 )
@@ -19,17 +21,35 @@ from .test_spacetime import diagram, smooth
 FPS, MM_PER_PIXEL = 30.0, 0.002
 
 
-def test_the_correlation_sums_equal_a_direct_computation():
+@pytest.mark.parametrize('bandpass_px', [BANDPASS_PX, None])
+def test_the_correlation_sums_equal_a_direct_computation(bandpass_px):
     block = np.random.default_rng(1).normal(size=(40, 30))
     lags, max_shift = np.array([1, 3]), 6
-    sums = _block_sums(block, lags, max_shift)
-    b = block - block.mean(axis=0) - (block - block.mean(axis=0)).mean(axis=1, keepdims=True)
-    b = np.diff(b, axis=1)
+    sums = _block_sums(block, lags, max_shift, bandpass_px)
+    b = _prepared(block, bandpass_px)
     n = b.shape[1]
     for i, k in enumerate(lags):
         for j, d in enumerate(range(-max_shift, max_shift + 1)):
             x, y = (b[:-k, :n - d], b[k:, d:]) if d >= 0 else (b[:-k, -d:], b[k:, :n + d])
             np.testing.assert_allclose(sums[i, :, j], [(x * y).sum(), (x * x).sum(), (y * y).sum()], rtol=1e-9)
+
+
+def test_rows_are_prepared_without_still_structure_and_band_passed():
+    rng = np.random.default_rng(0)
+    still, same = rng.normal(size=200), rng.normal(size=6)
+    x = np.arange(200)
+
+    def gain(wavelength):
+        wave = np.cos(2 * np.pi * x / wavelength)
+        sign = np.array([1, -1, 1, -1, 1, -1])[:, None]          # changes over time, so it is not still
+        out = _prepared(still[None, :] + same[:, None] + sign * wave[None, :])
+        return np.abs(out[:, 50:150]).max()                       # away from the ends of the line
+
+    assert gain(10) > 0.7               # cells, plasma gaps and groups of cells pass
+    assert gain(2) < 0.02               # pixel-to-pixel noise does not
+    assert gain(200) < 0.05             # nor the line's coarse shading
+    assert np.allclose(_prepared(still[None, :] + same[:, None] + 0 * x), 0)       # still and same-moment: gone
+    assert _prepared(np.zeros((6, 200)), None).shape == (6, 199)                     # the old method differences
 
 
 @pytest.mark.parametrize('speed, tolerance', [(1.5, 0.06), (4.0, 0.02), (9.0, 0.02), (14.0, 0.02)])
@@ -85,7 +105,8 @@ def test_flow_slower_than_the_method_measures_is_not_reported():
 
 
 def test_pooling_makes_a_faint_pattern_measurable():
-    faint = diagram(6.0, frames=1800, seed=7, cells_sd=1.3, noise_sd=1.5)
+    # (the differenced rows used before 2026-10-11 needed about three times this contrast to resolve it pooled)
+    faint = diagram(6.0, frames=1800, seed=7, cells_sd=0.4, noise_sd=1.5)
     one_block = pattern_shift(faint[:BLOCK_FRAMES])
     pooled = pattern_shift(faint)
     assert not one_block.resolved
@@ -94,11 +115,15 @@ def test_pooling_makes_a_faint_pattern_measurable():
 
 
 def test_the_interval_holds_the_estimate_and_narrows_with_more_blocks():
-    data = diagram(4.0, frames=2700, seed=8)
-    short, long = pattern_shift(data[:900]), pattern_shift(data)
-    for estimate in (short, long):
-        assert estimate.resolved and estimate.ci95[0] < estimate.speed_px_per_frame < estimate.ci95[1]
-    assert np.diff(long.ci95)[0] < np.diff(short.ci95)[0]
+    widths = []
+    for seed in range(8, 12):
+        data = diagram(4.0, frames=2700, seed=seed)
+        short, long = pattern_shift(data[:900]), pattern_shift(data)
+        for estimate in (short, long):
+            assert estimate.resolved and estimate.ci95[0] < estimate.speed_px_per_frame < estimate.ci95[1]
+        widths.append((np.diff(short.ci95)[0], np.diff(long.ci95)[0]))
+    short_width, long_width = np.median(widths, axis=0)
+    assert long_width < short_width
     assert np.isnan(pattern_shift(data[:2 * BLOCK_FRAMES]).ci95[0])          # too few blocks to leave one out
 
 
