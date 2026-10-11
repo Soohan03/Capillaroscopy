@@ -6,6 +6,265 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-11 — Pattern shift on band-passed rows; no hidden fast flow at rest
+
+**Branch:** `feature/pattern-shift-bandpass`, from `main` at `a6f9b4a`.
+
+**Commits:**
+
+- this entry, with the estimator change, its tests and `analysis/pattern_shift_bandpass/`
+
+The user and their PI agreed on how resting CBV should be measured:
+
+- on the arterial limb only, since the velocity changes towards the venous side;
+- if that is not feasible, over a longer distance.
+
+The user asked to work on measuring faster velocities. A look at what limits them came first. The
+user then chose step 1 of three proposed steps, a more sensitive estimator. The user will check the
+camera's exposure time, which decides how much fast flow is blurred.
+
+### What limits faster velocities
+
+- **Not the search.** Pattern shift (2026-10-08) searches up to half the line's length per frame:
+  60 px/frame (2.4 mm/s) on a 120-px line.
+- **Blur and line length.** The simulated loops had the shutter open for the whole frame interval
+  (the simulator's default and its worst case).
+  - A 120-px line on the arterial limb measured up to about 12 px/frame (0.48 mm/s).
+  - A 300-px line round the loop measured 12–40 px/frame (0.48–1.6 mm/s) within about 1%
+    (`validate_long_line.py`, below).
+  - A longer line lets the pattern be followed over more frame distances (at 25 px/frame, six
+    instead of one or two), with more positions overlapping.
+- **The recordings hide no fast flow.**
+  - All 35 lines of the feasibility check were scored at rest and after release, and so were
+    lines round 7 whole loops (173–328 px).
+  - Everything resolved was slow, 0.04–0.15 mm/s. Nothing faster appeared on any line, though
+    the loop lines would reach 1.6 mm/s in simulation.
+  - Most capillaries show no moving pattern at all, so at rest the limit is visibility rather
+    than speed.
+  - The capillaries that can be measured may be the slower ones, whose plasma gaps show. The
+    thesis should state this selection.
+- **Which limb is arterial.** In every loop with clear flow, blood goes up one limb towards the
+  apex (arterial) and down the other. On FP01_Qföre's tall loop the arterial limb is the faster:
+  −0.116 mm/s on a 64-px line, against +0.083 on the venous limb (differenced rows).
+- **Space-time diagrams** (scratch plots):
+  - FP01_Qföre's tall loop shows clear streaks.
+  - FP03_Qföre's curly loop shows them only faintly. Coarse filters suggested 0.2–0.3 mm/s
+    there; the loop line found nothing, so this is not confirmed.
+
+### Why band-pass
+
+Differencing a row along the line weights each spatial frequency k by (2 sin πk)², most at the
+finest scale (2-px patterns). In the recordings that scale is mostly noise, and motion blur erases
+it first.
+
+A first comparison (scratch scripts, pattern shift's scores only) found the following:
+
+- **On the recordings,** band-passed rows gave 2–3 times the signal-to-noise on limbs with flow
+  (FP01_Qföre's left limb 11.4 → 21.2; FP03_Qefter's loop P 9.6 → 23.9). Lines through tissue
+  stayed lower.
+- **On the simulator,** the opposite: its cells are crisp 6-px blobs, sharper than the real
+  pattern.
+
+### The change (`capillary/pattern_shift.py`)
+
+- **The filter.** `_prepared` band-passes each row along the line with a difference of Gaussians,
+  σ 1 and 4 px (`BANDPASS_PX`, `scipy.ndimage.gaussian_filter1d`, reflected at the ends). The
+  still structure and the same-moment change are removed first, as before.
+  - It passes patterns of about 4–30 px, most strongly near 10 px (gain 0.78).
+  - It passes almost nothing at 2 px or 200 px (0.007).
+- **The old method stays available.** `bandpass_px=None` differences the rows as before
+  (`_block_sums`, `pattern_shift`, `shift_time_course`), to reproduce earlier results.
+- **Unchanged:** `MIN_SNR` (8), `MIN_SHIFT_PX` (2 px), `MIN_SPEED` (1 px/frame).
+- **Docstrings:** how it works, the range, and the threshold's levels without flow.
+
+### Choosing the band (`analysis/pattern_shift_bandpass/`)
+
+Five bands were compared with the differenced rows: 1–4, 1–6 (the first candidate, from the
+scratch comparison), 1–8, 1.5–6 and 2–8 px.
+
+**Synthetic** (`validate_synthetic.py`). 234 clips of 30 s, with a 120-px line drawn on the
+simulated arterial limb:
+
+- 12 speeds from 0.5 to 30 px/frame;
+- 3 conditions: as measured, strong, and faint (a third of the contrast);
+- 3 seeds each;
+- the shutter open the whole frame, and at 8–30 px/frame also half the frame;
+- 30 clips without flow per condition.
+
+Columns, for the 108 clips with flow and the shutter open the whole frame:
+
+- **Resolved:** clips resolved, out of the 108.
+- **Error of those:** median and worst error of the resolved clips.
+- **At 1–1.5 px/frame:** median error at the two slowest speeds reported.
+- **No flow:** the highest score inside the searched range, with the highest at its slow edge in
+  brackets.
+
+| Filter | Resolved | Error of those | At 1–1.5 px/frame | No flow |
+| --- | ---: | --- | --- | --- |
+| difference | 49 | 0.6% / 4.8% | −1.0 to 0.0% | 4.4 (4.4) |
+| band 1–4 | 60 | 0.4% / 5.6% | 0.0 to +0.2% | 5.4 (7.3) |
+| band 1–6 | 55 | 0.4% / 6.2% | +0.8 to +1.4% | 6.2 (9.7) |
+| band 1–8 | 54 | 0.7% / 12.4% | +2.8 to +6.9% | 6.5 (8.2) |
+| band 1.5–6 | 57 | 0.5% / 7.0% | +1.1 to +2.4% | 6.3 (10.5) |
+| band 2–8 | 54 | 0.9% / 23.2% | +6.4 to +19.3% | 7.2 (7.6) |
+
+The highest no-flow scores of the band-passes all lie at 1.0–1.5 px/frame, mostly in the strong
+condition (three times the measured image jitter). Whole-image jitter moves the still background,
+and a band-pass keeps more of it than differencing does. None reached 8 inside the searched range;
+the edge itself is never reported.
+
+**Real** (`validate_real.py`). The 35 feasibility lines (29 limbs, 6 through tissue) in 6
+recordings, scored over five windows. Columns:
+
+- **Tissue:** the highest score on the tissue lines, over 30 estimates.
+- **Limbs resolved:** out of 29, at rest, in the rest's first and second halves, and after release.
+  In occlusion, none for any filter.
+
+| Filter | Tissue | Limbs resolved: rest, 1st half, 2nd half, after release |
+| --- | ---: | --- |
+| difference | 5.6 | 3, 0, 0, 1 |
+| band 1–4 | 3.6 | 5, 4, 7, 1 |
+| band 1–6 | 4.0 | 5, 5, 7, 4 |
+| band 1–8 | 4.7 | 6, 5, 7, 5 |
+| band 1.5–6 | 4.7 | 5, 5, 7, 5 |
+| band 2–8 | 5.1 | 5, 5, 6, 5 |
+
+**Band 1–4 was chosen, after the validation:**
+
+- **It is the only band that keeps every limb resolved before,** namely FP01_Qföre's 64-px
+  arterial limb: differenced 8.7, band 1–4 8.8, the wider bands 5.6–6.6. Arterial limbs are
+  short, and they are what the PI asked for.
+- **It did best on the synthetic recordings:** the most clips resolved, the smallest error at
+  the slow end, and the lowest scores on tissue.
+- **The wider bands' extra limbs after release are not faster flow.** All lie at 1.0–1.4
+  px/frame (0.040–0.055 mm/s). That is the slow edge, where those bands read 3–19% high on
+  synthetic recordings and where no-flow clips scored highest. Band 1–4 put the same limbs at the
+  edge, which is not reported.
+- **It was chosen on the same data it is validated on;** check it on new recordings.
+
+### Results with the chosen band
+
+**Synthetic, shutter open the whole frame.** Each cell gives the clips resolved (of 3) and the
+median error. The two filters are each shown at the measured disturbances and at a third of the
+contrast (faint).
+
+| px/frame (mm/s) | Difference, as measured | Band 1–4, as measured | Difference, faint | Band 1–4, faint |
+| --- | --- | --- | --- | --- |
+| 1.0 (0.040) | 2, 0.0% | 1, 0.0% | 1, 0.0% | 1, 0.0% |
+| 1.5 (0.060) | 3, −1.0% | 3, +0.1% | 3, −0.6% | 3, +0.2% |
+| 2 (0.080) | 3, +0.2% | 3, +0.1% | 3, +0.3% | 3, +0.1% |
+| 3 (0.120) | 3, −0.7% | 3, −0.5% | 3, −1.3% | 3, −0.5% |
+| 5 (0.199) | 3, +0.2% | 3, −0.1% | 3, +0.2% | 3, 0.0% |
+| 8 (0.319) | 3, +0.4% | 3, −0.4% | 3, +0.8% | 3, −0.4% |
+| 12 (0.478) | 2, −3.6% | 3, −4.8% | 0 | 2, −3.9% |
+| 16–25 (0.64–1.0) | 0 | 0 | 0 | 0 |
+| 30 (1.20) | 0 | 2, −2.9% | 0 | 0 |
+
+- **Faint pattern:** the lowest scores at 1.5–8 px/frame were 14–23 with band 1–4, against 10–18
+  for differenced rows.
+- **Shutter open half the frame:** both resolve 16 px/frame (band 1–4 in all six clips,
+  differenced rows in five). At 20 px/frame, band 1–4 resolves two of six and differenced rows
+  one.
+- **Intervals:** the truth lay inside the 95% interval for 63% of resolved estimates (differenced
+  rows: 69%). The intervals cover the scatter of the blocks only (docstring); systematic errors of
+  0.5–5% are not in them.
+
+**Long line** (`validate_long_line.py`). 60-s clips, shutter open the whole frame, 3 seeds; the
+lowest score in brackets.
+
+| px/frame (mm/s) | Limb 120 px: differenced | Limb: band 1–4 | Loop 300 px: differenced | Loop: band 1–4 |
+| --- | --- | --- | --- | --- |
+| 12 (0.48) | 2, −4.2% | 2, −3.6% | 3, −0.6% (35) | 3, −0.3% (36) |
+| 16 (0.64) | 0 | 0 | 3, −0.1% (37) | 3, −0.2% (31) |
+| 20 (0.80) | 0 | 0 | 3, −0.1% (29) | 3, −0.4% (27) |
+| 25 (1.00) | 0 | 0 | 3, −0.8% (18) | 3, −1.1% (15) |
+| 30 (1.20) | 0 | 2, −3.5% | 3, −1.7% (14) | 3, −1.2% (14) |
+| 40 (1.59) | 0 | 0 | 3, +0.7% (9) | 3, −0.3% (12) |
+
+- **No flow** (8 clips): at most 5.4 (limb, band 1–4) and 4.4 (loop, differenced); none resolved.
+- **The simulated loop has one speed all round.** In a real loop the venous limb is slower.
+
+**Real limbs at rest, band 1–4.** In mm/s, with the score in brackets and the differenced rows'
+result after "differenced":
+
+- **FP01_Qföre, tall loop, left limb (venous):** +0.084 (18.6); differenced +0.083 (11.4).
+  Halves +0.086 and +0.081.
+- **FP01_Qföre, tall loop, right limb (arterial, 64 px):** −0.107 (8.8); differenced −0.116 (8.7).
+- **FP03_Qefter, loop P, left limb:** +0.058 (15.7); differenced +0.079 (9.6). Halves +0.067 and
+  +0.051.
+- **FP03_Qefter, loop P, right limb:** −0.042 (18.9); differenced −0.040, at the edge (9.4).
+  Halves −0.043 and −0.040.
+- **FP03_Qefter, loop S:** +0.051 (10.8); differenced +0.068 (6.2), unresolved. Halves +0.055
+  and +0.054.
+
+Notes:
+
+- Three of the five lie at 1.05–1.45 px/frame, near the slowest speed reported.
+- On loop P's left limb the two filters disagree, 0.058 against 0.079 mm/s.
+  - Its halves differ by 24%, so the flow changes within the minute, and the two filters weight
+    the blocks differently.
+  - Which is closer is unresolved.
+
+**Loops** (`real_loops.py`):
+
+- **FP01_Qföre's tall loop:** +0.087 mm/s at rest (32.4; differenced 15.7) and +0.145 after
+  release (9.5; differenced 4.8, unresolved). The faster flow after the cuff is now measured.
+- **FP03_Qefter's loop P:** +0.044 at rest (43.6).
+- **The others:** at the slow edge (1 px/frame, scores 8–23: slow flow or drift), or nothing
+  (FP03_Qföre's curly loop).
+- No loop showed faster flow.
+
+**Benchmark** (`python -m capillary.benchmark`, before and after the change):
+
+- The centre line and the two boxes are identical (216 rows).
+- Pattern shift resolved 57 of the 99 cases with flow (56 before) and none without.
+- Its errors stay within 1% at 2–8 px/frame, and are −3.1 to −3.6% at 12 (−2.8 to −3.6% before).
+- Its scores are higher at 2–3 px/frame (25.7–39.6, against 14.9–31.2) and lower at 5–8
+  (14.9–24.1, against 18.5–30.9).
+
+### Tests
+
+- **`test_the_correlation_sums_equal_a_direct_computation`:** now runs for both filters, through
+  `_prepared`.
+- **New, `test_rows_are_prepared_without_still_structure_and_band_passed`:**
+  - a 10-px pattern passes (gain over 0.7);
+  - 2-px and 200-px patterns do not;
+  - still structure and the same-moment change vanish;
+  - `None` differences.
+- **`test_pooling_makes_a_faint_pattern_measurable`:** the pattern's contrast went from 1.3 to
+  0.4. With band-passed rows, a single 3-s block resolved the old pattern (13.8). Differenced rows
+  need about three times this contrast, even pooled.
+- **`test_the_interval_holds_the_estimate_and_narrows_with_more_blocks`:** now uses the median
+  width over 4 seeds.
+  - With band-passed rows the intervals are 5–10 times narrower: 0.013–0.036 px/frame at
+    4 px/frame.
+  - They narrow less with more blocks: the median ratio of 90-s to 30-s width is 0.83, against
+    0.61 for differenced rows, and one seed of eight came out wider.
+- **Planted bug:** with the band-pass switched off, 2 tests fail.
+- **Totals:** 259 tests pass (257 + 2).
+- **flake8:** the CI's error selection is clean on the whole repository, and the full set is
+  clean on the changed and new files.
+
+### Open
+
+- **Step 2:** pattern shift on the Centre line page for the arterial limb.
+  - the rest window taken from the official times;
+  - a direction check;
+  - saved as "arterial limb".
+- **Step 3:** the arterial limb's speed from a line that continues over the apex. This needs a
+  simulator with different speeds in the two limbs.
+- **The exposure time,** which the user is checking, decides how much fast flow is blurred.
+- **The band on new recordings.** It was chosen and validated on the same 6 recordings. Check it
+  on FP03_Wföre, FP04 and FP05 when lines are drawn there.
+- **Near the slow edge** (1–1.5 px/frame), band-passed rows are pulled by slow drift; without
+  flow, synthetic clips reached 5.4 there. The centre-line method measures that range better.
+- **The centre-line method** also differences its rows ("whitening"). Band-passing may help it
+  too; not done.
+- **Intervals:** the truth lay inside them for 63% of synthetic estimates, so systematic errors
+  dominate. Consider an interval that includes them before reporting intervals in the thesis.
+
+---
+
 ## 2026-10-11 — The desktop's "stabilized" videos were raw; recordings copied in and stabilized
 
 **Branch:** `docs/unstabilized-desktop-videos`, from `main` at `fc2fc7e`.

@@ -84,18 +84,23 @@ page shows the range for the line drawn.
 
 **Pattern shift (since 2026-10-08).** The same diagram, read another way: how
 far the pattern along the line moves between a frame and the next few (1–8
-frames later). Rows are correlated at every shift, forward minus backward, and
+frames later). Rows are band-passed along the line (patterns of about 4–30 px:
+cells and plasma gaps), correlated at every shift, forward minus backward, and
 pooled over all 3-s blocks of a stretch such as the minute of rest
 (`capillary/pattern_shift.py`). Pooling is what makes faint patterns
 measurable. On FP01_Qföre the resting flow of a capillary limb, about
 0.08 mm/s, was too faint for single 3-s blocks of the centre line (8 of 123
-resolved) but clear over the minute of rest: signal-to-noise 13.7, with each
-half of the minute agreeing. The estimate comes with a signal-to-noise ratio
-(8 to count) and a 95% interval. On synthetic recordings it is within 1–2% from
-1 to about 12 px/frame (0.04–0.48 mm/s at 30 fps), beyond the centre line's
-range on lines of this length. Faster flow, smeared by the shutter, is
-reported as unresolved. It is not on the app's pages yet; the batch command
-prints it for a line (below).
+resolved) but clear over the minute of rest, with each half of the minute
+agreeing. The estimate comes with a signal-to-noise ratio (8 to count) and a
+95% interval. On synthetic recordings it is within about 1% from 1.5 to
+8 px/frame (0.06–0.32 mm/s at 30 fps) on a 120-px line and reads about 5% low
+at 12 px/frame (0.48 mm/s); faster flow, smeared by the shutter, is reported
+as unresolved. A longer line reaches further: round a whole simulated loop
+(300 px), 0.48–1.6 mm/s were measured within about 1%. Until 2026-10-11 the
+rows were differenced instead; on the recordings band-passing resolved more
+limbs (5 against 3 of 29 at rest) and stayed lower on lines through tissue
+(`analysis/pattern_shift_bandpass/`). It is not on the app's pages yet; the
+batch command prints it for a line (below).
 
 **Two boxes (the original method).** The delay between the brightness signals
 of two boxes on the vessel, found by cross-correlation in windows of

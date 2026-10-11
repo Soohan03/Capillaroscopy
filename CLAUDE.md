@@ -133,8 +133,14 @@ Tkinter classes.
   shift of the pattern between a frame and the next 1–8, by correlation pooled over all 3-s
   blocks of a stretch (forward minus backward), with a signal-to-noise ratio (8 to count) and a
   jackknife 95% interval. It measures faint flow that single blocks miss (FP01_Qföre's limb at
-  rest) and, on synthetic recordings, 1–12 px/frame within 1–2%. The batch CLI prints it for a
-  line; the app does not show it yet.
+  rest). The batch CLI prints it for a line; the app does not show it yet.
+  - Since 2026-10-11 rows are band-passed along the line (difference of Gaussians, σ 1 and
+    4 px) instead of differenced (`bandpass_px=None` reproduces the old method). On the
+    recordings it resolved 5 of 29 limbs at rest instead of 3; tissue lines stayed at or below
+    3.6. Validation: `analysis/pattern_shift_bandpass/`.
+  - On synthetic recordings (120-px line, shutter open the whole frame): within about 1% from
+    1.5 to 8 px/frame, about 5% low at 12, unresolved above. On a 300-px line round the loop:
+    12–40 px/frame (0.48–1.6 mm/s) within about 1%.
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
