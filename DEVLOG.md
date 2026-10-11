@@ -6,6 +6,213 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-11 — The desktop's "stabilized" videos were raw; recordings copied in and stabilized
+
+**Branch:** `docs/unstabilized-desktop-videos`, from `main` at `fc2fc7e`.
+
+**Commits:**
+
+- this entry, with corrections to `CLAUDE.md` and `metadata/README.md` (no code changed)
+
+The user had worked on the Mac and asked to bring the desktop up to date.
+
+- `main` was fast-forwarded from `bb597e2` to `fc2fc7e` (pull requests #9–#13), and the
+  merged local branch `data/occlusion-times` was deleted.
+- The 257 tests pass under WSL: Python 3.12.3, OpenCV 4.13.0, NumPy 2.4.6, SciPy 1.17.1
+  (the Mac has OpenCV 5.0).
+- No package was added; `image-registration` is no longer needed.
+
+The user then said the videos in the desktop's `StabilizedVideos/` were probably not
+stabilized.
+
+### What the 8 videos were
+
+The 8 files in `StabilizedVideos/` were copied in on 2026-06-11. The app calls every
+video in that folder stabilized, and every desktop analysis of 2026-10-06 and 2026-10-07
+used them. The 2026-10-08 entries guessed they were the old stabilizer's MPEG-4 output.
+They were the raw DynCap recordings, never stabilized:
+
+- **Format** (ffprobe): `rawvideo` without a FourCC, 8-bit palettized grey (`pal8`),
+  640 × 480, stamped 30 fps.
+  - That is 307 200 bytes a frame plus about 40 bytes of AVI overhead, 0.75–2.3 GB a
+    file, the format of the raw downloads on the Mac.
+  - The old stabilizer wrote MPEG-4 (FMP4), about 33 MB for a recording.
+- **Frame counts** equal those of the Mac's raw downloads for the 5 recordings on both
+  computers: FP01_Qföre 5729, FP01_Qefter_försök2 5102, FP01_W 4528, FP01_Wefter 10-13-03
+  7524, FP02_Wföre 5765.
+- **Movement.** The registration of `capillary.stabilize` was run on each, with the video
+  writer replaced by one that writes nothing (scratch script).
+  - It gives the movement and median match that the Mac measured on its raw downloads
+    (2026-10-08), to 0.1 px and 0.01, despite the different OpenCV.
+  - FP01_Qföre: 18.7 × 27.6 px, 0.74. FP01_Qefter_försök2: 25.8 × 24.7, 0.70. FP01_W:
+    340.6 × 338.3, 0.08. FP01_Wefter 10-13-03: 47.9 × 90.8, 0.85. FP02_Wföre:
+    148.3 × 166.7, 0.47.
+  - A stabilized video would hardly move.
+- **No trace of a stabilizer.**
+  - Frame 0 is not black (the old stabilizer wrote every frame one late).
+  - Frames have no black edges where a move would uncover them (13 of FP01_W's 4528
+    frames have a dark edge strip).
+  - There are no shift files.
+
+### How far they move at rest
+
+Rest is 2 s after the start to 2 s before the official occlusion; registration as above.
+
+| Recording | Used for | Range at rest, x × y (px) | Furthest from the median position (px) | Rest frames > 4 px off | Most within 15 s (px) |
+| --- | --- | --- | ---: | ---: | ---: |
+| FP01_Qföre | aims 1, 2 | 15.9 × 14.7 | 12.2 | 19% | 18.4 |
+| FP01_Qefter_försök2 | aim 2 | 10.3 × 9.1 | 6.5 | 6% | 12.1 |
+| FP01_Wefter 10-13-03 | aim 2 | 28.9 × 24.5 | 22.1 | 76% | 30.2 |
+| FP01_W 08-36-26 | aims 1, 2 | registration fails (match 0.08) | | | |
+| FP02_Wföre | – | 115.3 × 143.0 | 94.4 | 89% | 100.5 |
+| FP01_Qefter 09-46-17 | – | 24.3 × 10.7 | 17.3 | 36% | 25.1 |
+| FP01_Wefter 10-04-19 | – | 24.4 × 14.5 | 14.1 | 72% | 22.7 |
+| FP01_Wefter 10-07-49 | – | registration fails (match 0.09) | | | |
+
+A capillary limb here is 8–15 px wide. So on every recording, a line or box placed on one
+frame leaves the vessel during the rest.
+
+### What it changes
+
+- **Measured on a moving picture:**
+  - the two-box data sets `Test` and `Test2` of FP01_Qefter 09-46-17 and `set1` of
+    FP01_Wefter 10-13-03;
+  - the centre-line data sets `set1` and `set2` of FP01_Qefter 09-46-17;
+  - the reading set `Validation/reading1` (drawn from `set1`).
+
+  They stay where they are.
+- **The two-box verdict** (2026-10-06).
+  - About 70% of a box's signal changed along the whole vessel at once. That entry named
+    "small movements of the vessel or focus" as the likely cause.
+  - A vessel drifting under fixed boxes does exactly that. Test the method again on
+    stabilized video before ruling it out.
+- **The simulator** was calibrated on the same measurements: the same-moment share, its
+  size and its unevenness along the line. The synthetic benchmark may be harder than
+  stabilized recordings are; measure these again on stabilized video.
+- **Resting flow.**
+  - The 2026-10-07 observations were on unstabilized video: near-horizontal streaks at
+    rest, and no moving pattern in a row-to-row comparison.
+  - The 2026-10-08 entries explained the difference from the re-stabilized video by
+    MPEG-4 compression. The files were lossless, so the movement is the likelier
+    explanation.
+  - The occlusion result on FP01_Qföre (slow, slowing flow from 70 to 130 s) was measured
+    on unstabilized video too; measure it again.
+- **The app** knows a video is stabilized only by its folder. These showed as stabilized,
+  the measure pages gave no warning, and "Stabilize" was greyed out, since it needs a raw
+  video.
+
+### The recordings on the desktop now
+
+- **The 8 old files.** The user moved them to `RecordedVideos/` and removed
+  `StabilizedVideos/`.
+  - FP01_Qefter 09-46-17, FP01_Wefter 10-04-19 and FP01_Wefter 10-07-49 are no longer in
+    the data folder. They are earlier attempts that no aim uses.
+  - The data sets of FP01_Qefter 09-46-17 are still in `Statistics/`, but the app lists
+    only recordings that have a video.
+- **Seven new recordings** came from OneDrive (`OneDrive_1_2026-10-11.zip`): the four FP03
+  ones downloaded on the Mac, both of FP04's, and FP05_Qefter. The user added "the best",
+  the one with the most quality. More are on the way.
+- **Each was checked** (scratch script):
+  - the name is in NFC and in the official times;
+  - rawvideo, 640 × 480, 30 fps;
+  - every frame reads and none is black (a copy cut short can hold black frames);
+  - the FP03 recordings have the Mac's frame counts;
+  - every official occlusion and release falls inside the video at 30 fps.
+- **Clean-up.** The 15 `:Zone.Identifier` files Windows had added were deleted.
+- **Coverage.** `python -m capillary.inventory --have RecordedVideos`:
+  - 9 of the 90 recordings the aims use are here: all of FP01 and FP03, and FP05's
+    control efter;
+  - 81 are still to come, 44 of them for aim 1;
+  - FP02_Wföre and FP04's two recordings are used by no aim. FP02 has one visit, and FP04
+    has no W visit.
+
+### Stabilized
+
+Ten recordings were stabilized with the command line, ten at a time, in about 5 minutes:
+`python -m capillary.stabilize RecordedVideos/<name>.avi --out StabilizedVideos/<name>.avi`.
+
+- `capillary/stabilize.py` is unchanged since `af1dce6`, the version the Mac used.
+- FP01_W and FP03_Wefter were left raw. The stabilizer fails on their large movements
+  (2026-10-08), and the app would call a failed output stabilized.
+
+| Recording | Used for | Moved (px) | Match at rest | In occlusion | After release | Notes |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| FP01_Qföre | aims 1, 2 | 18.7 × 27.6 | 0.88 | 0.70 | 0.74 | |
+| FP01_Qefter_försök2 | aim 2 | 25.8 × 24.7 | 0.70 | 0.84 | 0.65 | |
+| FP01_Wefter 10-13-03 | aim 2 | 47.9 × 90.8 | 0.93 | 0.64 | 0.86 | |
+| FP03_Qföre | aims 1, 2 | 446.1 × 360.5 | 0.68 | 0.14 | 0.11 | fails once the cuff is on: 419 frames at the search limit |
+| FP03_Wföre | aims 1, 2 | 138.8 × 265.4 | 0.60 | 0.66 | 0.59 | 1 frame at the search limit |
+| FP03_Qefter_försök2 | aim 2 | 105.7 × 162.1 | 0.63 | 0.66 | 0.61 | |
+| FP05_Qefter | aim 2 | 38.0 × 15.9 | 0.88 | 0.81 | 0.80 | |
+| FP02_Wföre | – | 148.3 × 166.7 | 0.51 | 0.41 | 0.48 | blurry; references disagree by more than 1 px on 38 frames |
+| FP04_Qefter | – | 69.8 × 58.4 | 0.89 | 0.67 | 0.84 | |
+| FP04_Qföre | – | 57.6 × 17.1 | 0.88 | 0.85 | 0.82 | |
+
+Match is the median normalized cross-correlation with the references in each phase:
+
+- rest: from 2 s after the start to 2 s before the occlusion;
+- occlusion: from 2 s after it to 2 s before the release;
+- after release: from 2 s after it.
+
+Results:
+
+- **At rest**, the window both aims use, no frame of the ten is at the search limit, and
+  none has references that disagree by more than 1 px.
+- **FP03_Qföre's** stabilized video is usable for its rest only.
+- **Same as on the Mac.** Where the Mac stabilized the same recording (FP01's three,
+  FP02_Wföre, FP03's three), the movement and median match agree to the precision of its
+  DEVLOG entry, despite the different OpenCV.
+- **The outputs** are rawvideo, 8-bit grey, 640 × 480, 30 fps, each with the raw video's
+  frame count, its shift file and its provenance. About 18 GB in all; 916 GB are left on
+  the WSL disk.
+- **The app.** `gui.library.scan` now lists the ten as "Stabilized" and FP01_W and
+  FP03_Wefter as "Raw only".
+  - The old two-box `set1` of FP01_Wefter 10-13-03 is now shown over the stabilized
+    video.
+  - Its boxes were placed on the moving one (and in still tissue, 2026-10-06), so they do
+    not fit.
+- **Provenance.** The files record commit `fc2fc7e` with uncommitted changes. While the
+  runs finished, the working tree held this entry's documentation edits; `capillary/` was
+  unchanged.
+
+### Documentation
+
+- `CLAUDE.md`:
+  - the data layout and the session start describe raw recordings in `RecordedVideos/`
+    and stabilized ones in `StabilizedVideos/`;
+  - the known issue about the 8 videos says what they were and what was measured on them;
+  - the notes on resting flow, the two-box method, the simulator and `reading1` say they
+    rest on unstabilized video.
+- `metadata/README.md`: the note on the 8 local recordings says they were raw.
+
+### Verification
+
+- `python -m pytest`: 257 passed after the update, before any change here.
+- The checks above, with scratch scripts in the session's scratchpad (not in the
+  repository):
+  - ffprobe;
+  - the registration without writing;
+  - a full read of every new recording;
+  - `gui.library.scan` on the data folder: before stabilizing, all 12 recordings were
+    "Raw only"; after, as above;
+  - ffprobe on the ten outputs: format and frame counts;
+  - the stabilizer's own summary of each run, read per phase from its shift file.
+
+### Open
+
+- Stabilize the recordings still arriving, after the same checks.
+- FP01_W and FP03_Wefter wait for the stabilizer to follow large movements, as do
+  FP03_Qföre's occlusion and release.
+- Redo the work done on unstabilized video:
+  - test the two-box method again;
+  - recalibrate the simulator's disturbances;
+  - measure FP01_Qföre's occlusion flow again.
+- **"The best" recording.** If it means choosing between a visit's attempts by image
+  quality, write the rule down before measuring. The inventory takes the last attempt
+  with 30 s of rest; so far every recording added agrees with it.
+
+---
+
 ## 2026-10-09 — Recording inventory: which recordings the aims use
 
 **Branch:** `feature/recording-inventory`, from `main` at `70b9b12`.

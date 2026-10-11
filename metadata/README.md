@@ -46,9 +46,10 @@ metadata, and added on 2026-10-07. The files are kept exactly as provided.
   another origin or this recording's true frame rate is 15 fps. Every velocity
   scales with the frame rate, so check the recording's length in DynCap.
 - `FP21Wföre_20-Nov-2019_09-08-03` has no underscore after `FP21`.
-- All 8 recordings in the local `StabilizedVideos/` have times here. For
-  `FP01_Qföre_22-Oct-2019_08-16-35` (occlusion 68.3 s, release 130.5 s) the
-  video agrees at 30 fps:
+- All 8 recordings in the desktop's `StabilizedVideos/` of 2026-10-07 have
+  times here (raw recordings, as found on 2026-10-11, not stabilized ones).
+  For `FP01_Qföre_22-Oct-2019_08-16-35` (occlusion 68.3 s, release 130.5 s)
+  the video agrees at 30 fps:
   - the centre line resolves slow, slowing flow from 70 to 130 s;
   - blood movement in the vessels jumps at 130 s.
 
