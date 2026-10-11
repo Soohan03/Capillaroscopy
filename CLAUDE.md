@@ -48,8 +48,9 @@ without asking:
    (venv from Homebrew Python 3.12 with `python-tk@3.12`).
 2. Check the task output briefly to confirm it started without an immediate traceback.
 3. Tell the user the app window should now be visible via WSLg, and remind them:
-   - The list on the left shows the recordings (the 8 videos in `StabilizedVideos/`);
-     right-click one to stabilize it or move it to the trash.
+   - The list on the left shows the recordings (raw ones in `RecordedVideos/`, with their
+     stabilized copies in `StabilizedVideos/`); right-click one to stabilize it or move it to
+     the trash.
    - Centre line page (opens first): click points along the middle of one capillary,
      starting where the blood comes from; drag a point to move it, click on the line to
      add one, right-click a point to remove it, Backspace removes the last, X reverses.
@@ -74,10 +75,14 @@ If the user reports the app froze or crashed, check the task output file and
 ## Data layout
 
 - `RecordedVideos/` — raw recordings copied in to be stabilized. On the Mac: links to the 9
-  ESMOKE recordings downloaded from DynCap into `Video_inventory/` (untracked, 2026-10-08)
-- `StabilizedVideos/` — stabilized videos ready for analysis (8 on the desktop as of 2026-06).
-  Each video stabilized since 2026-10-08 has `<stem>___stabilization.csv` (the shift of every
-  frame) and `___stabilization_provenance.json` next to it
+  ESMOKE recordings downloaded from DynCap into `Video_inventory/` (untracked, 2026-10-08).
+  On the desktop: the raw recordings themselves, copied in from OneDrive (since 2026-10-11)
+- `StabilizedVideos/` — stabilized videos ready for analysis, made by `capillary.stabilize`.
+  Each has `<stem>___stabilization.csv` (the shift of every frame) and
+  `___stabilization_provenance.json` next to it; a video without them was not made by the
+  current stabilizer. The app calls every video in this folder stabilized, so put nothing
+  else here. Until 2026-10-11 the desktop's folder held 8 raw recordings that had never
+  been stabilized (Known issues)
 - `Flows/` — optical-flow video of one recording, from before the flow feature was
   removed (2026-10-06); kept on disk, not shown, trashed along with its recording
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time
@@ -85,7 +90,7 @@ If the user reports the app froze or crashed, check the task output file and
 - `Reports/` — plots and summary tables written from the data sets
 - `Validation/` — reading sets (`<set>/set.json`, `blocks.npz`, `readings/`, `report/`)
   and the line-placement comparison (`line_placement/`); so far only `reading1`, the
-  user's first try (6 blocks, observer "1")
+  user's first try (6 blocks, observer "1"), drawn from video that had not been stabilized
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
   kept); emptied only by hand
 - `metadata/` (in the repository, tracked, unlike the data folders above) — the official
@@ -152,7 +157,8 @@ Tkinter classes.
     `___stabilization.csv`.
   - `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
 - Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
-  known speed and the disturbances measured in the 2019 recordings;
+  known speed and the disturbances measured in the 2019 recordings (measured on video that
+  had not been stabilized; see Known issues);
   `python3 -m capillary.benchmark` compares both methods on them (~6 min; `--quick` ~12 s).
 - Validation on real data (since 2026-10-07): `capillary/validation.py` (reading sets,
   blinded readings, the comparisons), `capillary/placement.py` (the same capillary
@@ -174,8 +180,9 @@ the 2026-10-05 GUI rebuild entry.
 ## Known issues
 
 - **Resting flow** (revised 2026-10-08). The earlier note said resting flow was beyond the
-  centre line's range (0.5–1 mm/s, from near-horizontal streaks). That rested on the old,
-  MPEG-4-compressed stabilized video and on how the diagram looked.
+  centre line's range (0.5–1 mm/s, from near-horizontal streaks). That rested on video that
+  had never been stabilized (thought on 2026-10-08 to be MPEG-4-compressed; found to be the
+  raw recording on 2026-10-11) and on how the diagram looked.
   - On the lossless re-stabilized FP01_Qföre, the left limb of the tall loop (112 px) moves at
     about 0.08 mm/s at rest: pattern shift pooled over the minute of rest, signal-to-noise 13.7,
     each half agreeing (0.084 / 0.080 mm/s).
@@ -183,7 +190,8 @@ the 2026-10-05 GUI rebuild entry.
     line); tissue beside the loop shows nothing.
   - So on this capillary resting flow lies within the centre line's range, but it is too faint
     for single 3-s blocks (signal-to-noise about 4).
-  - The near-horizontal streaks were probably the change of the whole vessel at once.
+  - The near-horizontal streaks were probably the change of the whole vessel at once, as the
+    unstabilized picture moved.
   - A first feasibility check (6 recordings, 24 limbs, `analysis/resting_flow_feasibility/`,
     interrupted): resting flow was resolved in 3 limbs (0.08–0.12 mm/s), with a few more near
     the threshold. Most capillaries show no moving pattern at rest at all (their space-time
@@ -193,11 +201,14 @@ the 2026-10-05 GUI rebuild entry.
   200 px), FP03_Qföre (after the cuff) and FP03_Wefter (jumps of 100–200 px at rest) the match
   falls to 0.1–0.3. Planned fix: follow the movement outwards from the reference frame in both
   directions in time.
-- **The two-box method is not valid on the 2019 recordings** (found 2026-10-06): about
+- **The two-box method failed on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box
   data sets are unreliable. `set1` of `FP01_Wefter_14-Oct-2019_10-13-03` has its boxes
   in still tissue next to a capillary and measured noise.
+  - This was found on video that had never been stabilized (2026-10-11). A vessel moving
+    under fixed boxes changes every position at once, so test the method again on
+    stabilized video before ruling it out.
 - **Centre-line limits:** at 30 fps a line follows flow up to about 0.0018 × its length
   in px, in mm/s (0.18 mm/s for 100 px); normal resting velocities need long lines or a
   faster camera. With no flow but strong jitter, the benchmark still resolves ~7–11% of
@@ -218,10 +229,16 @@ the 2026-10-05 GUI rebuild entry.
     the shift file: match, disagreement, frames at the search limit.
   - FP03_Wföre's first frame is offset by about 42 px from the second, probably a
     camera start-up artefact.
-- **The 8 videos in `StabilizedVideos/` on the desktop were not made by the current
-  stabilizer.** If they are MPEG-4 like the old stabilizer's output, they are lossy: on
-  FP01_Qföre that kept only about 14% of the frame-to-frame change, where the moving cells
-  show. Check their codec, and stabilize again from the raw recordings.
+- **The desktop's first "stabilized" videos had never been stabilized** (found 2026-10-11).
+  The 8 files in `StabilizedVideos/` (copied in June 2026) were the raw DynCap recordings:
+  uncompressed 8-bit grey, with the raw downloads' frame counts. The registration finds the
+  same movement in them as in the Mac's raw downloads, to 0.1 px. At rest they moved
+  10–143 px; a capillary limb is 8–15 px wide.
+  - Everything measured on the desktop before 2026-10-11 was measured on a moving picture:
+    the two-box data sets (`Test`, `Test2` of FP01_Qefter 09-46-17, `set1` of FP01_Wefter
+    10-13-03), the centre-line `set1` and `set2` of FP01_Qefter 09-46-17,
+    `Validation/reading1`, and the real-data numbers the simulator was calibrated on.
+  - The files were moved to `RecordedVideos/` and stabilized (DEVLOG 2026-10-11).
 - **Frame rate unverified:** the recordings come from the DynCap archive, and the local
   copies are stamped 30 fps. Every velocity scales with the true rate.
   - FP01_Qföre agrees with its official times at 30 fps.
