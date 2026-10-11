@@ -7,6 +7,12 @@ and plasma gaps moving along the vessel draw slanted streaks. Their slope is
 the speed (`capillary.spacetime`). The panel shows the diagram of the frames
 around the playhead with the slope found, so every estimate can be checked by
 eye, and the measurement repeats it block by block over the chosen frames.
+
+The measurement also pools the pattern shift over the whole range
+(`capillary.pattern_shift`), which measures flow too faint for single blocks,
+as at rest. A line can be marked as a capillary loop's arterial limb, drawn
+from its base to the apex: the direction of the pooled flow then shows
+whether it is the arterial limb (towards the apex) or the venous one.
 """
 
 from __future__ import annotations
@@ -19,7 +25,7 @@ from tkinter import ttk
 import numpy as np
 from PIL import Image, ImageDraw, ImageTk
 
-from capillary import spacetime
+from capillary import pattern_shift, spacetime
 
 from . import tasks
 from .jobs import LatestOnlyWorker
@@ -29,6 +35,15 @@ from .video_view import Tool
 from .widgets import InfoRow, Tooltip, section, separator
 
 PREVIEW_HEIGHT = 130
+#: What the direction check of an arterial limb found (`capillary.pattern_shift.limb_from_direction`):
+#: the status icon and the text shown with a result.
+LIMB_CHECKS = {
+    'arterial': ('ok', 'Arterial limb: the flow runs towards the apex.'),
+    'venous': ('warning', 'The flow runs towards the base: this is the venous limb, or the line was drawn from '
+                          'the apex. For the arterial velocity, measure the loop\'s other limb from its base.'),
+    'unknown': ('info', 'Arterial limb not confirmed: the pooled flow was not resolved, so its direction is '
+                        'unknown.'),
+}
 
 
 def format_velocity(value: float) -> str:
@@ -36,6 +51,14 @@ def format_velocity(value: float) -> str:
     if value is None or not math.isfinite(value):
         return '–'
     return f'{value:.4f}' if abs(value) < 0.1 else f'{value:.3f}'
+
+
+def _finite(value) -> bool:
+    """Whether `value` is a finite number (None and NaN, as in a summary read back from JSON, are not)."""
+    try:
+        return math.isfinite(value)
+    except TypeError:
+        return False
 
 
 class LineTool(Tool):
@@ -95,7 +118,8 @@ class LinePage(MeasurePage):
             'it to where it goes. Positive velocities mean flow from the first point towards the last. Every '
             'pixel along the line contributes, and a longer line can measure faster flow: the range it can '
             'measure is shown below. Drag a point to move it, click on the line to add a point there, '
-            'right-click a point to remove it.'))
+            'right-click a point to remove it. For the resting velocity of an arterial limb, tick Arterial limb, '
+            'draw the line from the base of the limb to the apex, and set the range to the official rest.'))
         self.points_row = InfoRow(frame, 'Points', tooltip='Clicked points; the line is a smooth curve through them.')
         self.points_row.pack(fill='x', pady=(0, px(2)))
         self.length_row = InfoRow(frame, 'Length', tooltip='Length of the curve through the points.')
@@ -104,7 +128,22 @@ class LinePage(MeasurePage):
             'Speeds this line can measure in 3-s blocks at this frame rate. Faster flow moves more than the '
             'patterns along the line can follow between two frames; draw a longer line to measure it. Slower '
             'flow hardly moves within a block.'))
-        self.range_row.pack(fill='x')
+        self.range_row.pack(fill='x', pady=(0, px(2)))
+        self.pooled_row = InfoRow(frame, 'Pooled', tooltip=(
+            'Measuring also pools the pattern shift over the whole range: how far the pattern along the line '
+            'moves between a frame and the next eight. It measures flow too faint for single 3-s blocks, as at '
+            'rest, from 1 px per frame upwards. Faster flow is limited by how far a cell moves while the shutter '
+            'is open: on simulated recordings with the shutter open the whole frame, a 120-px line measured up '
+            'to about 8 px per frame within 1%, and a 300-px line round a loop up to 40.'))
+        self.pooled_row.pack(fill='x')
+        self.arterial_var = tk.BooleanVar(master=frame, value=False)
+        arterial = ttk.Checkbutton(frame, text='Arterial limb, from its base to the apex', variable=self.arterial_var,
+                                   style='Panel.TCheckbutton', command=self._role_changed)
+        arterial.pack(anchor='w', pady=(px(10), 0))
+        Tooltip(arterial, 'The line follows the arterial limb of a capillary loop: click at the base of the limb and '
+                          'follow it to the apex, the tip of the loop. The measurement checks the direction of the '
+                          'flow pooled over the range: blood flows up the arterial limb towards the apex and down '
+                          'the venous limb. Saved with the data set.', wrap=340)
         actions = ttk.Frame(frame, style='Panel.TFrame')
         actions.pack(fill='x', pady=(px(10), 0))
         reverse = ttk.Button(actions, text='Reverse', image=icon('swap', 13, COLORS['text']), compound='left',
@@ -153,11 +192,14 @@ class LinePage(MeasurePage):
     def capture_state(self):
         state = super().capture_state()
         state['points'] = list(self.points)
+        state['arterial'] = self.arterial_var.get()
         return state
 
     def restore_state(self, state):
         super().restore_state(state)
         self.points = list((state or {}).get('points', []))
+        if state and 'arterial' in state:          # a recording seen before keeps its line's role; others keep the last
+            self.arterial_var.set(state['arterial'])
         self.preview = None
         self._preview_center = None
         self._update_line_ui()
@@ -165,7 +207,7 @@ class LinePage(MeasurePage):
         self.schedule_preview(50)
 
     def apply_record(self, record):
-        """Put the line and range of a saved data set's provenance back (Results page)."""
+        """Put the line, its role and the range of a saved data set's provenance back (Results page)."""
         try:
             points = [(float(x), float(y)) for x, y in record['line']['points']]
         except (KeyError, TypeError, ValueError):
@@ -173,6 +215,7 @@ class LinePage(MeasurePage):
         if len(points) < 2:
             return False
         self.points = points
+        self.arterial_var.set(record['line'].get('role') == pattern_shift.ARTERIAL_LIMB)
         frames = record.get('frames', {})
         first, last = frames.get('first'), frames.get('last')
         if first is not None and last is not None and self.player.source is not None:
@@ -267,6 +310,15 @@ class LinePage(MeasurePage):
             self.line_changed()
             self.app.set_status('Line reversed: positive velocity now runs the other way along it.')
 
+    def is_arterial(self) -> bool:
+        return bool(self.arterial_var.get())
+
+    def _role_changed(self):
+        self.draw_overlay()
+        self._update_line_ui()
+        self.app.set_status('The line is an arterial limb, from its base (first point) to the apex (last point).'
+                            if self.is_arterial() else 'The line is no longer marked as an arterial limb.')
+
     def _line_moved(self, preview=True):
         self.draw_overlay()
         self._update_line_ui()
@@ -294,15 +346,19 @@ class LinePage(MeasurePage):
         count = len(self.points)
         self.points_row.set(str(count) if count else '–')
         line = self.centreline()
+        mm_per_pixel = self.app.settings.mm_per_pixel
         if line is None:
             self.length_row.set('–')
             self.range_row.set('–')
+            self.pooled_row.set('–')
         else:
             length = line.length_px
-            self.length_row.set(f'{length:.0f} px  ·  {length * self.app.settings.mm_per_pixel * 1000:.0f} µm')
-            slowest, fastest = spacetime.resolvable_speeds(length, self.player.fps, self.app.settings.mm_per_pixel)
-            self.range_row.set(f'{format_velocity(slowest)} – {format_velocity(fastest)} mm/s'
+            self.length_row.set(f'{length:.0f} px  ·  {length * mm_per_pixel * 1000:.0f} µm')
+            slowest, fastest = spacetime.resolvable_speeds(length, self.player.fps, mm_per_pixel)
+            self.range_row.set(f'{format_velocity(slowest)} – {format_velocity(fastest)} mm/s in 3-s blocks'
                                if math.isfinite(fastest) else 'too short')
+            self.pooled_row.set(f'from {format_velocity(pattern_shift.MIN_SPEED * self.player.fps * mm_per_pixel)} '
+                                'mm/s over the range' if length >= pattern_shift.MIN_LENGTH_PX else 'too short')
         self.line_hint.configure(text=self._hint_text(long=True))
         self.view.set_hint(self._hint_text(long=False))
         self.update_measure_state()
@@ -310,14 +366,24 @@ class LinePage(MeasurePage):
     def _hint_text(self, long):
         if self.player.source is None:
             return None if not long else ''
+        arterial = self.is_arterial()
         if not self.points:
+            if arterial:
+                return ('Click at the base of the arterial limb, the end away from the loop\'s tip, then follow the '
+                        'middle of the limb up to the apex.' if long else 'Click at the base of the arterial limb')
             return ('Click on the video where the blood enters a capillary segment, then follow the middle of the '
                     'vessel in the direction of flow.' if long else 'Click where the blood enters a capillary')
         if len(self.points) == 1:
+            if arterial:
+                return ('Now click further up the limb, towards the apex. Add more points to follow its bends.'
+                        if long else 'Click further up the limb, towards the apex')
             return ('Now click further along the same capillary, in the direction of flow. Add more points to '
                     'follow its bends.' if long else 'Click further along the capillary, in the direction of flow')
         if not long:
             return None
+        if arterial:
+            return ('End the line at the apex; drag points to keep it in the middle of the limb. Then set the range '
+                    'to the official rest and measure: the pooled flow should run towards the apex.')
         return ('Click beyond the end to extend the line, on the line to add a point there; drag points to keep '
                 'the line in the middle of the vessel. A longer straight-ish stretch measures faster flow.')
 
@@ -345,9 +411,12 @@ class LinePage(MeasurePage):
             radius = px(5) if index == 0 else px(3.5)
             canvas.create_oval(cx - radius, cy - radius, cx + radius, cy + radius, outline='#000000',
                                fill=color if index == 0 else '#FFFFFF', width=1, tags=('overlay',))
-        if self.points:
-            cx, cy = self.view.to_canvas(*self.points[0])
-            label = canvas.create_text(cx + px(9), cy - px(9), text='start', anchor='sw', font=FONTS['small_bold'],
+        tags = [(0, 'base' if self.is_arterial() else 'start')]
+        if self.is_arterial() and len(self.points) >= 2:
+            tags.append((len(self.points) - 1, 'apex'))
+        for index, text in tags:
+            cx, cy = self.view.to_canvas(*self.points[index])
+            label = canvas.create_text(cx + px(9), cy - px(9), text=text, anchor='sw', font=FONTS['small_bold'],
                                        fill='#111111', tags=('overlay',))
             x0, y0, x1, y1 = canvas.bbox(label)
             canvas.create_rectangle(x0 - px(3), y0, x1 + px(3), y1, fill=color, outline='', tags=('overlay',))
@@ -456,9 +525,9 @@ class LinePage(MeasurePage):
         else:
             self._set_status('warning', 'No clear streaks in these frames (signal-to-noise '
                                         f'{snr:.0f}, {spacetime.MIN_SNR:.0f} needed). Check that the line follows '
-                                        'the middle of a capillary with visible flow; very slow or paused flow '
-                                        'cannot be measured.' if math.isfinite(snr) else
-                             'No clear streaks in these frames.')
+                                        'the middle of a capillary. Faint flow, as at rest, can still be measured: '
+                                        'Measure pools the pattern shift over the whole range.'
+                             if math.isfinite(snr) else 'No clear streaks in these frames.')
 
     # -------------------------------------------------------------------- measuring
     def measure_blockers(self):
@@ -474,43 +543,106 @@ class LinePage(MeasurePage):
         work = partial(tasks.measure_line_dataset, folder=self.app.folder, stem=recording.stem, name=name,
                        video_path=self.player.source.path, points=list(self.points), start=start, end=end,
                        mm_per_pixel=self.app.settings.mm_per_pixel, time_points=list(self.markers),
-                       observer=self.observer())
+                       observer=self.observer(), role=pattern_shift.ARTERIAL_LIMB if self.is_arterial() else None)
         return self.app.jobs.submit(f'Centre line · {recording.stem} · {name}', work, lane='analysis', on_done=done,
                                     on_error=failed, on_cancel=cancelled, key=('line', recording.stem))
 
+    def empty_chart_message(self, result):
+        if _finite(result['summary'].get('pattern_shift_velocity_mm_s')):
+            return ('Fewer than two 3-s blocks were resolved, so there is no time course to plot; the velocity '
+                    'pooled over the range is above.')
+        return super().empty_chart_message(result)
+
     def result_status(self, result):
-        median = result['summary'].get('median')
-        return f' (median {format_velocity(median)} mm/s)' if median is not None and math.isfinite(median) else ''
+        summary = result['summary']
+        parts = []
+        pooled, median = summary.get('pattern_shift_velocity_mm_s'), summary.get('median')
+        if _finite(pooled):
+            parts.append(f'pattern shift {format_velocity(pooled)} mm/s')
+        if _finite(median):
+            parts.append(f'median of the 3-s blocks {format_velocity(median)} mm/s')
+        check = summary.get('limb_check')
+        if check:
+            parts.append({'arterial': 'arterial limb confirmed', 'venous': 'the flow shows the venous limb',
+                          'unknown': 'limb not confirmed'}[check])
+        return f' ({"; ".join(parts)})' if parts else ''
 
     def describe_result(self, frame, result):
         summary = result['summary']
-        median = summary.get('median', float('nan'))
+        nan = float('nan')
+        check = summary.get('limb_check')
+        if check in LIMB_CHECKS:
+            kind, text = LIMB_CHECKS[check]
+            row = tk.Frame(frame, bg=COLORS['panel'])
+            row.pack(fill='x', pady=(0, px(8)))
+            colors = {'ok': COLORS['success'], 'warning': COLORS['warning'], 'info': COLORS['muted']}
+            tk.Label(row, image=icon(kind, 13, colors[kind]), bg=COLORS['panel'], bd=0).pack(
+                side='left', anchor='n', padx=(0, px(6)), pady=(px(1), 0))
+            tk.Label(row, text=text, bg=COLORS['panel'], fg=COLORS['text'], font=FONTS['small'],
+                     wraplength=px(INSPECTOR_WIDTH - 60), justify='left', bd=0).pack(side='left', fill='x')
+
+        pooled = summary.get('pattern_shift_velocity_mm_s', nan)
+        median = summary.get('median', nan)
         big = ttk.Frame(frame, style='Panel.TFrame')
         big.pack(fill='x', pady=(0, px(6)))
-        if math.isfinite(median):
+        if _finite(pooled):
+            ttk.Label(big, text=format_velocity(pooled), style='Big.Panel.TLabel').pack(side='left')
+            ttk.Label(big, text=' mm/s pooled over the range', style='Muted.Panel.TLabel').pack(
+                side='left', anchor='s', pady=(0, px(4)))
+        elif _finite(median):
             ttk.Label(big, text=format_velocity(median), style='Big.Panel.TLabel').pack(side='left')
-            ttk.Label(big, text=' mm/s median', style='Muted.Panel.TLabel').pack(side='left', anchor='s',
-                                                                                 pady=(0, px(4)))
+            ttk.Label(big, text=' mm/s median of the 3-s blocks', style='Muted.Panel.TLabel').pack(
+                side='left', anchor='s', pady=(0, px(4)))
         else:
             ttk.Label(big, text='No velocity could be resolved', style='Bold.Panel.TLabel').pack(side='left')
-        q25, q75 = summary.get('q25', float('nan')), summary.get('q75', float('nan'))
-        stat(frame, 'Middle 50 %', f'{format_velocity(q25)} – {format_velocity(q75)} mm/s' if math.isfinite(q25)
+
+        _subheading(frame, 'Pattern shift, pooled over the range')
+        halves = [nan, nan]
+        if 'pattern_shift_snr' not in summary:
+            ttk.Label(frame, text='Not computed for this data set; regenerate its report on the Results page.',
+                      style='Faint.Panel.TLabel', wraplength=px(INSPECTOR_WIDTH - 40), justify='left').pack(anchor='w')
+        else:
+            shift_snr = summary.get('pattern_shift_snr', nan)
+            stat(frame, 'Velocity', f'{format_velocity(pooled)} mm/s' if _finite(pooled) else 'not resolved')
+            low, high = summary.get('pattern_shift_ci95_low_mm_s', nan), summary.get('pattern_shift_ci95_high_mm_s', nan)
+            if _finite(low) and _finite(high):
+                stat(frame, '95% interval', f'{format_velocity(low)} – {format_velocity(high)} mm/s',
+                     tooltip='From leaving out one 3-s block at a time. It covers the statistical scatter only, '
+                             'not a systematic error such as a line off the middle of the vessel.')
+            stat(frame, 'Signal-to-noise', f'{shift_snr:.1f}  ({pattern_shift.MIN_SNR:.0f} needed)'
+                 if _finite(shift_snr) else '–')
+            halves = [summary.get(f'pattern_shift_{half}_mm_s', nan) for half in ('first_half', 'second_half')]
+            half_snrs = [summary.get(f'pattern_shift_{half}_snr', nan) for half in ('first_half', 'second_half')]
+            if any(_finite(value) for value in half_snrs):
+                stat(frame, 'Halves', '  /  '.join(format_velocity(v) if _finite(v) else 'not resolved' for v in halves)
+                     + ' mm/s', tooltip='The first and the second half of the range in time, each pooled on its '
+                                        'own: whether the flow stayed the same.')
+        _subheading(frame, '3-s blocks')
+        q25, q75 = summary.get('q25', nan), summary.get('q75', nan)
+        stat(frame, 'Median', f'{format_velocity(median)} mm/s' if _finite(median) else 'none resolved')
+        stat(frame, 'Middle 50 %', f'{format_velocity(q25)} – {format_velocity(q75)} mm/s' if _finite(q25)
              else '–', tooltip='Interquartile range of the block estimates.')
-        resolved = summary.get('resolved_fraction', float('nan'))
+        resolved = summary.get('resolved_fraction', nan)
         stat(frame, 'Resolved blocks', _percent(resolved),
-             style='Warning.Panel.TLabel' if math.isfinite(resolved) and resolved < 0.25 else 'Mono.Panel.TLabel',
              tooltip='Share of the 3-s blocks with clear streaks. With few resolved blocks the median rests on '
                      'little data.')
-        snr = summary.get('median_snr', float('nan'))
-        stat(frame, 'Median signal-to-noise', f'{snr:.0f}' if math.isfinite(snr) else '–')
-        fastest = summary.get('fastest_mm_s', float('nan'))
-        stat(frame, 'Measurable up to', f'{format_velocity(fastest)} mm/s' if math.isfinite(fastest) else '–')
+        snr = summary.get('median_snr', nan)
+        stat(frame, 'Median signal-to-noise', f'{snr:.0f}' if _finite(snr) else '–')
+        fastest = summary.get('fastest_mm_s', nan)
+        stat(frame, 'Measurable up to', f'{format_velocity(fastest)} mm/s' if _finite(fastest) else '–')
+
         notes = []
-        if math.isfinite(resolved) and resolved < 0.25:
-            notes.append('Few blocks were resolved, so the median is uncertain.')
-        if math.isfinite(median) and math.isfinite(fastest) and abs(median) > 0.85 * fastest:
-            notes.append('Close to the fastest this line can measure; a longer line would be safer.')
-        if math.isfinite(median) and median < 0:
+        phase = summary.get('phase') or ''
+        if '+' in phase:
+            notes.append(f'The range covers {phase.replace(" + ", ", ")}: the pooled velocity mixes them. '
+                         'Set the range to one official phase.')
+        if _finite(halves[0]) and _finite(halves[1]) and halves[0] * halves[1] < 0:
+            notes.append('The halves run in opposite directions.')
+        if _finite(median) and _finite(resolved) and resolved < 0.25:
+            notes.append('Few 3-s blocks were resolved, so their median is uncertain.')
+        if _finite(median) and _finite(fastest) and abs(median) > 0.85 * fastest:
+            notes.append('The blocks are close to the fastest this line can measure; a longer line would be safer.')
+        if not check and ((_finite(pooled) and pooled < 0) or (not _finite(pooled) and _finite(median) and median < 0)):
             notes.append('Negative: the flow runs from the last point towards the first.')
         for note in notes:
             ttk.Label(frame, text=note, style='Warning.Panel.TLabel', wraplength=px(INSPECTOR_WIDTH - 40),
@@ -556,3 +688,7 @@ def render_space_time(result, current_frame, width, height):
 
 def _percent(value):
     return f'{100 * value:.0f} %' if value is not None and math.isfinite(value) else '–'
+
+
+def _subheading(parent, text):
+    ttk.Label(parent, text=text, style='Bold.Panel.TLabel').pack(anchor='w', pady=(px(8), px(2)))

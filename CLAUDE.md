@@ -56,11 +56,17 @@ without asking:
      add one, right-click a point to remove it, Backspace removes the last, X reverses.
      The space-time preview (with the slope found, velocity and signal-to-noise ratio)
      fills in once there are two points; the panel shows what the line can measure.
+     For the resting velocity of an arterial limb: tick Arterial limb, click from the base
+     of the limb to the apex, press Rest and measure. The result gives the velocity pooled
+     over the range (pattern shift) and whether the flow runs towards the apex (arterial)
+     or away from it (venous).
    - Two boxes page (the original method, kept for comparison): click places box 1
      (orange, downstream), the next click box 2 (blue, upstream); WASD nudges a box.
    - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
-     measured range; "Measure velocity and save" is at the bottom right, next to the
-     data set name and the Observer initials (saved with the data set).
+     measured range, and Rest / Occlusion / After release set it from the recording's
+     official times (the timeline marks the occlusion in orange); "Measure velocity and
+     save" is at the bottom right, next to the data set name and the Observer initials
+     (saved with the data set).
    - Validation page (Ctrl+4): draw a reading set of 3-s blocks from centre-line data
      sets, read them blinded (drag along the streaks, N for "no clear streaks", Enter
      next), then compute the agreement; "Line placement" compares the same capillary
@@ -133,7 +139,9 @@ Tkinter classes.
   shift of the pattern between a frame and the next 1–8, by correlation pooled over all 3-s
   blocks of a stretch (forward minus backward), with a signal-to-noise ratio (8 to count) and a
   jackknife 95% interval. It measures faint flow that single blocks miss (FP01_Qföre's limb at
-  rest). The batch CLI prints it for a line; the app does not show it yet.
+  rest). Since 2026-10-11 every centre-line data set keeps it, pooled over the range and over
+  each half (`pattern_shift.summarize`, keys `pattern_shift_...` in the summary); the Centre line
+  and Results pages show it and the batch CLI prints it.
   - Since 2026-10-11 rows are band-passed along the line (difference of Gaussians, σ 1 and
     4 px) instead of differenced (`bandpass_px=None` reproduces the old method). On the
     recordings it resolved 5 of 29 limbs at rest instead of 3; tissue lines stayed at or below
@@ -141,6 +149,14 @@ Tkinter classes.
   - On synthetic recordings (120-px line, shutter open the whole frame): within about 1% from
     1.5 to 8 px/frame, about 5% low at 12, unresolved above. On a 300-px line round the loop:
     12–40 px/frame (0.48–1.6 mm/s) within about 1%.
+- **Arterial limb (since 2026-10-11):** the user's PI wants resting CBV from the arterial limb
+  only, since velocity changes towards the venous side. A line marked as an arterial limb runs
+  from the limb's base to the apex. The sign of its pooled pattern shift tells the limb
+  (`pattern_shift.limb_from_direction`): towards the apex is arterial, away from it venous.
+  - Saved as `line.role` in the provenance and `limb_check` (arterial, venous, unknown) in the
+    summary.
+  - Every data set (both methods) also saves the official phase of its range as `phase`
+    (`inventory.recording_phases`: rest, occlusion, after release, or several joined by ' + ').
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
@@ -173,7 +189,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (257 tests, ~25 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (265 tests, ~30 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 

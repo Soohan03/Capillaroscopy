@@ -59,6 +59,13 @@ measured within about 1%; in a real loop the speed differs between the limbs.
 The centre-line method stops at about 5 px/frame on a 120-px line and is the
 better method for flow slower than `MIN_SPEED`.
 
+In the app (since 2026-10-11) every centre-line data set keeps the pattern
+shift of its whole range and of each half (`summarize`). A line can be marked
+as a capillary loop's arterial limb, drawn from its base to the apex; the
+direction of the pooled flow then tells which limb it is
+(`limb_from_direction`): blood flows up the arterial limb to the apex and
+down the venous limb.
+
 Nothing here imports a GUI toolkit.
 """
 
@@ -103,6 +110,10 @@ SPEED_STEP = 0.01
 MIN_SNR = 8.0
 #: Shortest line the method accepts (px).
 MIN_LENGTH_PX = 24
+#: Each half of a measured range is scored on its own when it holds at least this many blocks (9 s).
+MIN_HALF_BLOCKS = 3
+#: The role of a line drawn along a capillary loop's arterial limb, from its base to the apex.
+ARTERIAL_LIMB = 'arterial limb'
 
 
 @dataclass(frozen=True)
@@ -287,3 +298,49 @@ def shift_time_course(diagram: np.ndarray, fps: float, mm_per_pixel: float, wind
                      'ci95_low_mm_s': estimate.ci95[0] * to_mm_s, 'ci95_high_mm_s': estimate.ci95[1] * to_mm_s,
                      'snr': estimate.snr, 'resolved': resolved})
     return pd.DataFrame(rows).set_index('frame')
+
+
+def summarize(diagram: np.ndarray, fps: float, mm_per_pixel: float, spacing_px: float = 1.0) -> dict:
+    """The pattern shift of a measured range, pooled over all of it and over each half: what a data set keeps.
+
+    Keys, all starting with ``pattern_shift_``:
+
+    - ``velocity_mm_s`` (positive along the line; NaN unless resolved) and
+      ``speed_px_per_frame`` (the best speed, also when unresolved);
+    - ``snr``, ``resolved``, ``blocks`` (3-s blocks pooled);
+    - ``ci95_low_mm_s`` and ``ci95_high_mm_s``, the jackknife interval (NaN
+      unless resolved), which covers the statistical scatter only;
+    - ``first_half_mm_s``, ``first_half_snr``, ``second_half_mm_s`` and
+      ``second_half_snr``: the two halves of the range in time, each pooled on
+      its own (NaN velocity unless resolved; NaN when a half holds fewer than
+      `MIN_HALF_BLOCKS` blocks). They show whether the flow stayed the same.
+    """
+    diagram = np.asarray(diagram, dtype=float)
+    to_mm_s = spacing_px * fps * mm_per_pixel
+    whole = pattern_shift(diagram)
+    out = {'pattern_shift_velocity_mm_s': whole.speed_px_per_frame * to_mm_s if whole.resolved else float('nan'),
+           'pattern_shift_speed_px_per_frame': whole.speed_px_per_frame,
+           'pattern_shift_snr': whole.snr,
+           'pattern_shift_resolved': whole.resolved,
+           'pattern_shift_blocks': whole.blocks,
+           'pattern_shift_ci95_low_mm_s': whole.ci95[0] * to_mm_s if whole.resolved else float('nan'),
+           'pattern_shift_ci95_high_mm_s': whole.ci95[1] * to_mm_s if whole.resolved else float('nan')}
+    middle = diagram.shape[0] // 2 if diagram.ndim == 2 else 0
+    for label, half in (('first_half', diagram[:middle]), ('second_half', diagram[middle:])):
+        estimate = pattern_shift(half) if middle // BLOCK_FRAMES >= MIN_HALF_BLOCKS else _NO_ESTIMATE
+        out[f'pattern_shift_{label}_mm_s'] = (estimate.speed_px_per_frame * to_mm_s if estimate.resolved
+                                              else float('nan'))
+        out[f'pattern_shift_{label}_snr'] = estimate.snr
+    return out
+
+
+def limb_from_direction(velocity: float) -> str:
+    """Which limb a line drawn from a capillary loop's base to its apex follows, by the direction of its flow.
+
+    Blood flows up the arterial limb to the apex and down the venous limb, so
+    flow along the line (positive velocity) shows the arterial limb, and flow
+    against it the venous limb. 'unknown' when the flow is not resolved (NaN).
+    """
+    if velocity is None or not np.isfinite(velocity) or velocity == 0:
+        return 'unknown'
+    return 'arterial' if velocity > 0 else 'venous'

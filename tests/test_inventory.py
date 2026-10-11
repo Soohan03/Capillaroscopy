@@ -6,7 +6,7 @@ import unicodedata
 import pytest
 
 from capillary import inventory
-from capillary.inventory import mark_use, parse_name, participants, recordings, video_stems
+from capillary.inventory import mark_use, parse_name, participants, recording_phases, recordings, video_stems
 
 
 @pytest.fixture(scope='module')
@@ -87,6 +87,30 @@ def test_downloaded_videos_are_matched_whatever_the_spelling(tmp_path):
     (tmp_path / 'notes.txt').touch()
     assert video_stems(str(tmp_path)) == {'FP03_Qföre_15-Oct-2019_09-15-49'}
     assert video_stems(str(tmp_path / 'missing')) == set()
+
+
+def test_the_official_phases_as_frames_of_a_video():
+    # FP01_Qföre: occlusion at 68.3 s, release at 130.5 s; a 180-s video at 30 fps
+    phases = recording_phases('FP01_Qföre_22-Oct-2019_08-16-35', 30.0, 5400)
+    assert phases.windows == {'rest': (60, 1988), 'occlusion': (2109, 3854), 'after release': (3975, 5339)}
+    assert phases.notes == ()
+    assert phases.phase_of(60, 1988, 30.0) == 'rest'
+    assert phases.phase_of(2000, 2100, 30.0) == 'rest + occlusion'
+    assert phases.phase_of(0, 5399, 30.0) == 'rest + occlusion + after release'
+    decomposed = unicodedata.normalize('NFD', 'FP01_Qföre_22-Oct-2019_08-16-35')
+    assert recording_phases(decomposed, 30.0, 5400).windows == phases.windows
+
+
+def test_phases_without_a_release_or_that_do_not_fit_the_video():
+    no_release = recording_phases('FP01_Qefter_22-Oct-2019_09-46-17', 30.0, 5400)       # occlusion 66.5 s
+    assert list(no_release.windows) == ['rest'] and 'only the rest' in no_release.notes[0]
+    assert no_release.phase_of(2100, 2200, 30.0) == 'occlusion or later'
+    short = recording_phases('ISMOKE_FP04_Sefter_11-Nov-2020_10-27-46', 30.0, 5400)     # occlusion at 6.4 s
+    assert short.windows['rest'] == (60, 131) and 'Only 2 s of rest' in short.notes[0]
+    # occlusion at 158.5 s and release at 230.1 s, but the 3435 frames last 114.5 s at 30 fps
+    late = recording_phases('FP01_Wefter_14-Oct-2019_10-07-49', 30.0, 3435)
+    assert late.windows == {} and 'do not fit' in late.notes[0] and late.phase_of(0, 100, 30.0) == ''
+    assert recording_phases('FP99_Qföre_01-Jan-2020_10-00-00', 30.0, 5400) is None      # not in the metadata
 
 
 def test_the_command_line(tmp_path, capsys):

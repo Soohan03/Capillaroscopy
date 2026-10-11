@@ -13,7 +13,7 @@ from tkinter import ttk
 
 from PIL import Image, ImageTk
 
-from capillary import datasets
+from capillary import datasets, pattern_shift
 from capillary.video import probe_video
 
 from . import tasks
@@ -37,6 +37,13 @@ ROLE_TITLES = {
 KIND_LOOK = {
     'line': ('CENTRE LINE', 'success', 'success_soft', 'line'),
     'velocity': ('TWO BOXES', 'accent', 'accent_soft', 'analyze'),
+}
+#: What the direction check of an arterial limb found, as a card states it.
+LIMB_TEXT = {
+    'arterial': ('Arterial limb: the pooled flow runs towards the apex.', 'Success.Panel.TLabel'),
+    'venous': ('Drawn as the arterial limb, but the pooled flow runs towards the base: the venous limb.',
+               'Warning.Panel.TLabel'),
+    'unknown': ('Arterial limb not confirmed: the pooled flow was not resolved.', 'Muted.Panel.TLabel'),
 }
 
 
@@ -285,7 +292,9 @@ class ResultsPage(ttk.Frame):
         record, summary = info.get('record'), info.get('summary')
         card.record = record
         lines = []
-        if summary:
+        if summary and kind == 'line':
+            lines += _line_summary_lines(summary)
+        elif summary:
             median = summary.get('median', float('nan'))
             if median is not None and math.isfinite(median):
                 lines.append((f'Median velocity {_velocity_text(median)} mm/s   (middle 50 %: '
@@ -294,23 +303,14 @@ class ResultsPage(ttk.Frame):
             else:
                 lines.append(('No velocity could be resolved', 'Bold.Panel.TLabel'))
             resolved = summary.get('resolved_fraction', 0) or 0
-            if kind == 'line':
-                parts = [f'{100 * resolved:.0f} % of 3-s blocks resolved']
-                snr = summary.get('median_snr')
-                if snr is not None and math.isfinite(snr):
-                    parts.append(f'median signal-to-noise {snr:.0f}')
-                lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
-                if resolved < 0.25:
-                    lines.append(('Few blocks were resolved, so the median is uncertain.', 'Warning.Panel.TLabel'))
-            else:
-                zero = summary.get('zero_lag_fraction')
-                parts = [f'{100 * resolved:.0f} % of windows resolved']
-                if zero is not None and math.isfinite(zero):
-                    parts.append(f'{100 * zero:.0f} % lag 0 (too fast, or a change both boxes saw at once)')
-                r = summary.get('median_correlation')
-                if r is not None and math.isfinite(r):
-                    parts.append(f'median correlation {r:.2f}')
-                lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
+            zero = summary.get('zero_lag_fraction')
+            parts = [f'{100 * resolved:.0f} % of windows resolved']
+            if zero is not None and math.isfinite(zero):
+                parts.append(f'{100 * zero:.0f} % lag 0 (too fast, or a change both boxes saw at once)')
+            r = summary.get('median_correlation')
+            if r is not None and math.isfinite(r):
+                parts.append(f'median correlation {r:.2f}')
+            lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
         if record:
             lines.append((_describe_record(record), 'Muted.Panel.TLabel'))
             card.restore.state(['!disabled'])
@@ -453,6 +453,58 @@ def _reflow(container, cells, cell_width):
     container.after_idle(arrange)
 
 
+def _finite(value):
+    """Whether `value` is a finite number (a summary read back from JSON has None for NaN)."""
+    try:
+        return math.isfinite(value)
+    except TypeError:
+        return False
+
+
+def _line_summary_lines(summary):
+    """``(text, style)`` lines for a centre-line data set: its pattern shift, its 3-s blocks, the limb check."""
+    lines = []
+    if 'pattern_shift_snr' in summary:
+        pooled, snr = summary.get('pattern_shift_velocity_mm_s'), summary.get('pattern_shift_snr')
+        snr_text = f'signal-to-noise {snr:.1f}' if _finite(snr) else 'no estimate'
+        if _finite(pooled):
+            text = f'Pattern shift over the range {_velocity_text(pooled)} mm/s'
+            low, high = summary.get('pattern_shift_ci95_low_mm_s'), summary.get('pattern_shift_ci95_high_mm_s')
+            if _finite(low) and _finite(high):
+                text += f'   (95% interval {_velocity_text(low)} – {_velocity_text(high)})'
+            lines.append((text, 'Bold.Panel.TLabel'))
+            parts = [snr_text]
+            halves = ('first_half', 'second_half')
+            if any(_finite(summary.get(f'pattern_shift_{half}_snr')) for half in halves):
+                velocities = [summary.get(f'pattern_shift_{half}_mm_s') for half in halves]
+                parts.append('halves ' + ' / '.join(_velocity_text(v) if _finite(v) else 'not resolved'
+                                                    for v in velocities))
+            lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
+        else:
+            lines.append((f'Pattern shift over the range: not resolved ({snr_text}, {pattern_shift.MIN_SNR:.0f} '
+                          'needed)', 'Bold.Panel.TLabel'))
+    else:
+        lines.append(('Pattern shift: not computed for this data set; regenerate its report.', 'Faint.Panel.TLabel'))
+    median, resolved = summary.get('median'), summary.get('resolved_fraction') or 0
+    parts = [f'{100 * resolved:.0f} % of 3-s blocks resolved']
+    if _finite(median):
+        parts.insert(0, f'3-s blocks: median {_velocity_text(median)} mm/s (middle 50 %: '
+                        f'{_velocity_text(summary.get("q25"))} – {_velocity_text(summary.get("q75"))})')
+    snr = summary.get('median_snr')
+    if _finite(snr):
+        parts.append(f'median signal-to-noise {snr:.0f}')
+    lines.append(('   ·   '.join(parts), 'Muted.Panel.TLabel'))
+    if _finite(median) and resolved < 0.25:
+        lines.append(('Few 3-s blocks were resolved, so their median is uncertain.', 'Warning.Panel.TLabel'))
+    if summary.get('limb_check') in LIMB_TEXT:
+        lines.append(LIMB_TEXT[summary['limb_check']])
+    phase = summary.get('phase') or ''
+    if '+' in phase:
+        lines.append((f'The range covers {phase.replace(" + ", ", ")}: the pooled velocity mixes them.',
+                      'Warning.Panel.TLabel'))
+    return lines
+
+
 def _describe_record(record):
     parts = []
     frames = record.get('frames') or {}
@@ -461,6 +513,9 @@ def _describe_record(record):
     if 'first' in frames and 'last' in frames:
         parts.append(f'frames {frames["first"]}–{frames["last"]} ({format_time(frames["first"] / fps)} – '
                      f'{format_time(frames["last"] / fps)})')
+    phase = (record.get('summary') or {}).get('phase')
+    if phase:
+        parts.append(f'{phase} by the official times')
     boxes = record.get('boxes')
     if boxes:
         parts.append(f'Box 1 at ({boxes["box1"]["x"]}, {boxes["box1"]["y"]}), Box 2 at ({boxes["box2"]["x"]}, '
@@ -471,7 +526,8 @@ def _describe_record(record):
     if line:
         length = line.get('length_px')
         parts.append(f'line of {len(line.get("points", []))} points, '
-                     + (f'{length:.0f} px ({line.get("length_um", 0):.0f} µm)' if length else 'length unknown'))
+                     + (f'{length:.0f} px ({line.get("length_um", 0):.0f} µm)' if length else 'length unknown')
+                     + (f', {line["role"]}' if line.get('role') else ''))
     if record.get('mm_per_pixel'):
         parts.append(f'{record["mm_per_pixel"]:g} mm/px')
     if record.get('observer'):

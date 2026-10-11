@@ -6,6 +6,209 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-11 — The arterial limb on the Centre line page: pattern shift, official phases, direction check
+
+**Branch:** `feature/arterial-limb`, from `main` at `06700a0` (after PR #15, the band-pass of step 1,
+was merged).
+
+**Commits:**
+
+- this entry, with the change and its tests
+
+This is step 2 of the plan in the entry below: the user's PI wants resting CBV from the arterial limb
+only. After step 1 the user said "Lets start". Step 2 puts the pattern shift on the Centre line page,
+takes the rest from the official times, and checks whether a line lies on the arterial limb.
+
+### How the arterial limb is recognized
+
+- **Blood flows up the arterial limb to the apex and down the venous limb.** So the direction of
+  flow along a limb tells which limb it is, once the apex end of the line is known.
+- **The line runs from the limb's base to the apex.** That fixes the apex end independently of the
+  flow. If the user marks the line as an arterial limb, the page labels its first point "base" and
+  its last "apex", so a line drawn the wrong way shows at once. Flow along the line (positive) is
+  then the arterial limb, and flow against it the venous limb.
+- **The check uses the pattern shift pooled over the range.**
+  - At rest single 3-s blocks rarely resolve.
+  - A few resolved blocks give no reliable direction: with no flow but strong jitter, the benchmark
+    resolves 7–11% of blocks.
+  - Pooled scores without flow stayed at or below 5.4 (synthetic) and 3.6 (tissue lines). A
+    resolved pooled estimate (8 or more) gives a reliable sign.
+- **Outcomes:**
+  - *arterial:* resolved and towards the apex;
+  - *venous:* resolved and towards the base, so the venous limb, or a line drawn from the apex;
+  - *unknown:* not resolved.
+
+### The change
+
+- **`capillary/inventory.py`: the official phases as frames.**
+  - `recording_phases(name, fps, frame_count)` returns a `Phases`, with these windows:
+    - the rest, from 2 s after the start to 2 s before the occlusion;
+    - the occlusion, from 2 s after it to 2 s before the release;
+    - after release, from 2 s after the release to 2 s before the end of the video.
+  - The 2-s margins are `REST_MARGIN_S`, as in the inventory's rest and the earlier analyses.
+  - Without a release time, only the rest is given.
+  - If an official time lies after the end of the video, no window is given and a note says the
+    times do not fit. This is the case of `FP01_Wefter_14-Oct-2019_10-07-49` (metadata/README).
+  - Notes also flag a rest under 30 s and a missing release.
+  - `Phases.phase_of(first, last, fps)` labels a range by the official times themselves (no
+    margins): rest, occlusion, after release, several joined by " + ", or "occlusion or later"
+    without a release time.
+  - The times are read once per folder (`lru_cache`).
+- **`capillary/pattern_shift.py`:**
+  - `summarize(diagram, fps, mm_per_pixel)` returns what a data set keeps, all keys starting with
+    `pattern_shift_`:
+    - the pooled velocity (NaN unless resolved, as the blocks do, so nothing downstream averages
+      unresolved values in) and the best speed (also when unresolved);
+    - the signal-to-noise ratio, whether resolved, and the blocks pooled;
+    - the 95% interval (NaN unless resolved);
+    - each half of the range in time, pooled on its own, when a half holds at least
+      `MIN_HALF_BLOCKS` (3) blocks.
+  - Why the halves: the jackknife interval held the truth in only 63% of synthetic cases (step 1),
+    and the halves were the stability check of the validation. They also measure within-recording
+    repeatability, next to aim 1's between-day repeatability.
+  - `limb_from_direction(velocity)` returns arterial, venous or unknown.
+  - `ARTERIAL_LIMB = 'arterial limb'` is the role of such a line.
+- **`gui/tasks.py`:**
+  - `measure_line_dataset(..., role=None)` pools the pattern shift after the blocks
+    (`summarize_line`).
+  - The summary gains the `pattern_shift_...` keys, plus:
+    - `line_role` ("arterial limb" or empty);
+    - `limb_check` (arterial, venous or unknown, for an arterial limb);
+    - `phase` (the range's official phase; empty without usable times).
+  - The provenance gains `line.role` and the pattern-shift settings (`pattern_shift`).
+  - `regenerate_line_report` recomputes all of it from the saved diagram and keeps the role. Older
+    centre-line data sets get the pattern shift when their report is regenerated.
+  - Two-box data sets get `phase` too (`range_phase`).
+- **`Caper.generate_line_report`:**
+  - the velocity plot draws the pooled velocity and its 95% interval across the range;
+  - the title states the limb check;
+  - the summary CSV in `Reports/` carries all the new columns.
+- **Range section (`gui/measure_page.py`, both measure pages):**
+  - "Official phases" with the occlusion and release times, and buttons Rest, Occlusion and After
+    release that set the range. The buttons are disabled where a window is missing.
+  - A note when the recording has no official times, or when they do not fit.
+  - The range's detail names its phase ("rest", "rest + occlusion").
+  - The timeline (`gui/transport.py`) marks the occlusion with an orange bar under the track. Its
+    hover label adds the phase ("1:40.000 · frame 3000 · occlusion").
+- **Centre line page (`gui/line_page.py`):**
+  - **Option:** a checkbox "Arterial limb, from its base to the apex".
+    - It stays on for further recordings.
+    - It is kept with each recording's line, and restored with a data set's line.
+    - The overlay labels base and apex; the hints ask for the base first.
+  - **Pooled row:** a new row says the pooled method measures from 0.04 mm/s. Its tooltip gives
+    the validated range.
+  - **Result panel:**
+    - the check, with an icon;
+    - the pooled velocity as the headline (the blocks' median when the pooled one is not resolved);
+    - the pattern shift's velocity, 95% interval, signal-to-noise ratio and halves;
+    - the 3-s blocks as before;
+    - notes when the range mixes phases, the halves run opposite ways, or few blocks were resolved.
+    - When fewer than two blocks are resolved, the chart says the pooled velocity is above it.
+  - **Preview:** when 4 s show no clear streaks, the message now says that Measure pools the whole
+    range.
+- **Results page:** a centre-line card shows:
+  - the pooled velocity with its interval, signal-to-noise ratio and halves;
+  - the blocks;
+  - the limb check;
+  - the phase, and the role in the description.
+  - A data set without pattern shift says to regenerate its report.
+- **`capillary/cli.py`** prints the halves after the pooled estimate.
+- **Docs:** README (the page table, the pattern shift, a paragraph on the arterial limb), CLAUDE.md,
+  the data set formats (`capillary/datasets.py` docstring).
+
+### Verification
+
+**Tests:** 265 pass (259 + 6 new):
+
+- `test_the_official_phases_as_frames_of_a_video`: FP01_Qföre's windows (60–1988, 2109–3854,
+  3975–5339 for 5400 frames), the phase labels, the macOS spelling.
+- `test_phases_without_a_release_or_that_do_not_fit_the_video`: rest only; a 2-s rest
+  (ISMOKE_FP04_Sefter); FP01_Wefter 10-07-49's times after the video's end; an unknown name.
+- `test_a_data_set_keeps_the_pooled_speed_and_each_half`: flow slowing from 5 to 4 px/frame
+  halfway; each half finds its own speed within 3%.
+- `test_a_short_or_unresolved_range_keeps_no_velocity_it_cannot_support`.
+- `test_the_direction_of_flow_tells_the_limbs_of_a_loop_apart`: on a simulated loop, a line from
+  the base to the apex on the left limb reads arterial, on the right limb venous.
+- `test_an_arterial_limb_is_checked_by_the_direction_of_its_flow` (through `measure_line_dataset`):
+  - the role, check and phase in the provenance and the summary CSV;
+  - the same line reversed reads venous;
+  - regenerating keeps the check.
+- Existing tests check that a line without a role saves `role: null` and no check, and that
+  regenerating recomputes the pooled velocity.
+- **Planted bugs:** with arterial and venous swapped, 2 tests fail; with the rest windows without
+  margins, 2 tests fail.
+- **flake8:** the CI's error selection is clean on the whole repository. The full set reports
+  nothing on the lines this branch changed; older lines keep their earlier warnings.
+
+**On the recordings** (scratch script, not in the repository; written to a scratch data folder).
+All 35 feasibility lines were measured through `measure_line_dataset`:
+
+- each snapped to the vessel as in step 1;
+- each turned to run from its lower end (base) to its upper end (apex);
+- each marked as an arterial limb;
+- the range set to the official rest window.
+
+Results:
+
+- **The same 5 of 29 limbs resolved as in step 1.** Their pooled velocities agree with step 1's
+  within 0.0004 mm/s (the sign turned with the line).
+- **The check:** 2 arterial, 3 venous, 24 unknown. All 6 tissue lines were unknown.
+- **Time:** about 3.5 s per line (median), reading a minute of video.
+
+| Line | px | Pooled (mm/s) | 95% interval | Signal-to-noise | Halves | Check |
+| --- | ---: | ---: | --- | ---: | --- | --- |
+| FP01_Qföre, tall loop, right limb | 63 | +0.108 | 0.098–0.117 | 9.1 | – / +0.102 | arterial |
+| FP01_Qföre, tall loop, left limb | 104 | −0.083 | −0.091 to −0.075 | 19.9 | −0.085 / −0.081 | venous |
+| FP03_Qefter, loop P, right limb | 147 | +0.042 | 0.036–0.048 | 18.7 | +0.043 / +0.040 | arterial |
+| FP03_Qefter, loop P, left limb | 122 | −0.058 | −0.083 to −0.032 | 15.8 | −0.067 / −0.051 | venous |
+| FP03_Qefter, loop S | 120 | −0.051 | −0.059 to −0.044 | 10.8 | −0.055 / −0.054 | venous |
+
+- **Both loops with clear flow show one limb up and the other down,** as a loop must.
+- **The arterial limb is not always the faster one.**
+  - In FP01_Qföre's tall loop it is (0.108 against 0.083 mm/s).
+  - In loop P it is the slower (0.042 against 0.058). Its speed lies at 1.05 px/frame, near the
+    slowest speed reported, where step 1 found that slow drift can pull the estimate.
+- **Only 2 arterial resting velocities in 6 recordings.** At rest most limbs show no moving
+  pattern (step 1).
+
+**The window** (scripted under WSLg, no window taking focus, scratch data folder with links to the
+videos):
+
+- **FP01_Qföre:**
+  - occlusion 1:08.300 and release 2:10.500 shown;
+  - Rest set frames 60–1988, labelled "rest";
+  - the arterial-limb hints and labels appeared.
+- **The tall loop's right limb,** with the line as clicked (not snapped): 0.0986 mm/s
+  (0.078–0.119, signal-to-noise 9.6), arterial.
+  - The snapped line gave 0.108. The 8% difference comes from where the line lies across the
+    limb.
+- **The other limb:** venous, with the warning.
+- **Results page:** the cards and the report plot (pooled line and interval band, title with the
+  check) look right.
+- **A recording without official times** (a renamed link): disabled buttons, with a note.
+- **Two boxes page:** After release set frames 3975–5668.
+- No Tk errors; the app shut down cleanly.
+- Two fixes came from the screenshots:
+  - The theme's minimum button width pushed "After release" out of the panel; the three buttons now
+    share three equal columns with less padding.
+  - The chart said "no value could be resolved" when only the blocks were unresolved.
+- **The batch command** on the same arterial limb printed the same numbers.
+
+### Open
+
+- **Line placement** (Validation page, `capillary/placement.py`) compares the blocks' medians. At
+  rest those are mostly unresolved, so it should compare the pooled velocity. The placement
+  sensitivity seen above (8%) is what it should quantify.
+- **A table across data sets** for the aims: recording, limb, pooled velocity and interval,
+  halves, check, phase, observer.
+- **Blinding:** the page shows velocities while the line is placed. For aim 1, decide with the
+  supervisors whether the observer should be blind to the visit.
+- **Step 3:** the arterial limb's speed from a line over the apex (a simulator with different
+  speeds per limb).
+- **The exposure time,** which the user is checking.
+- **New recordings:** `RecordedVideos/` now holds 28 recordings, 16 more than when 10 were
+  stabilized earlier today. They are not stabilized yet; the user will say when all have arrived.
+
 ## 2026-10-11 — Pattern shift on band-passed rows; no hidden fast flow at rest
 
 **Branch:** `feature/pattern-shift-bandpass`, from `main` at `a6f9b4a`.

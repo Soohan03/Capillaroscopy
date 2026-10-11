@@ -133,7 +133,7 @@ class Player:
 
 
 class Timeline(tk.Canvas):
-    """Seek bar with the measurement range, time-point markers and the playhead."""
+    """Seek bar with the measurement range, time-point markers, the official occlusion and the playhead."""
 
     def __init__(self, parent, on_seek: Callable[[int], None], on_marker_menu: Optional[Callable] = None):
         super().__init__(parent, height=px(44), bg=COLORS['panel'], highlightthickness=0, bd=0, cursor='hand2')
@@ -144,6 +144,8 @@ class Timeline(tk.Canvas):
         self.position = 0
         self.range = None
         self.markers: list[float] = []
+        self.occlusion_s: Optional[float] = None
+        self.release_s: Optional[float] = None
         self._hover_x = None
         self._dragging = False
         self.bind('<Configure>', lambda e: self.draw())
@@ -192,6 +194,20 @@ class Timeline(tk.Canvas):
         self.markers = list(seconds)
         self.draw()
 
+    def set_phases(self, occlusion_s: Optional[float], release_s: Optional[float]):
+        """The official occlusion and release (seconds), drawn as a bar under the track; None hides it."""
+        self.occlusion_s, self.release_s = occlusion_s, release_s
+        self.draw()
+
+    def phase_at(self, seconds: float) -> str:
+        if self.occlusion_s is None:
+            return ''
+        if seconds < self.occlusion_s:
+            return 'rest'
+        if self.release_s is None:
+            return 'occlusion or later'
+        return 'occlusion' if seconds < self.release_s else 'after release'
+
     # drawing ------------------------------------------------------------------------
     def draw(self):
         self.delete('all')
@@ -211,6 +227,11 @@ class Timeline(tk.Canvas):
             self.create_line(left, y, right, y, fill=COLORS['border'], width=thickness, capstyle='round')
             for x in (x0, x1):
                 self.create_line(x, y - px(10), x, y + px(10), fill=COLORS['accent'], width=px(2))
+        if self.occlusion_s is not None:
+            x0 = self.x_of(self.occlusion_s * self.fps)
+            x1 = self.x_of(self.release_s * self.fps) if self.release_s is not None else x0
+            self.create_rectangle(x0, y + px(11), max(x1, x0 + px(2)), y + px(14), fill=COLORS['warning'],
+                                  outline='')
         x = self.x_of(self.position)
         self.create_line(left, y, x, y, fill=COLORS['accent'], width=thickness, capstyle='round')
         for seconds in self.markers:
@@ -222,7 +243,8 @@ class Timeline(tk.Canvas):
                          width=px(2))
         if self._hover_x is not None:
             index = self.index_at(self._hover_x)
-            label = f'{format_time(index / self.fps)}  ·  frame {index}'
+            phase = self.phase_at(index / self.fps)
+            label = f'{format_time(index / self.fps)}  ·  frame {index}' + (f'  ·  {phase}' if phase else '')
             text = self.create_text(0, 0, text=label, font=FONTS['tiny'], fill=COLORS['overlay_text'], anchor='n')
             x0, y0, x1, y1 = self.bbox(text)
             half = (x1 - x0) / 2

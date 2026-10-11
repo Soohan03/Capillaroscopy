@@ -35,12 +35,18 @@ Names and visits that do not fit the pattern are flagged, not corrected:
 
 Run ``python -m capillary.inventory`` for a summary, and ``--out`` to write the
 tables.
+
+`recording_phases` turns one recording's official times into frames of its
+video: the rest, the occlusion and the time after release, as the measure
+pages offer them for the range.
 """
 
 from __future__ import annotations
 
 import argparse
 import datetime
+import functools
+import math
 import os
 import re
 import sys
@@ -58,6 +64,8 @@ MIN_REST_S = 30.0
 REST_MARGIN_S = 2.0
 #: A före this long after the day's first recording is flagged as probably an efter.
 LATE_BEFORE_MIN = 45.0
+#: The phases of every recording, in order.
+PHASES = ('rest', 'occlusion', 'after release')
 
 _NAME = re.compile(r'^(?P<ismoke>ISMOKE_)?(?P<subject>FP\d+)_?(?P<condition>[WQSC])(?P<phase>före|efter)?'
                    r'(?P<suffix>\d)?(?:_försök(?P<attempt>\d+))?_(?P<date>\d{2}-[A-Za-z]{3}-\d{4})_'
@@ -112,6 +120,84 @@ def official_times(folder: str = METADATA) -> pd.DataFrame:
         table['name'] = table['name'].map(nfc)
         frames.append(table)
     return pd.concat(frames, ignore_index=True)
+
+
+@functools.lru_cache(maxsize=4)
+def _times_by_name(folder: str) -> dict:
+    """``{name: (occlusion_s, release_s or None)}`` from the official times, read once per folder."""
+    return {row.name: (float(row.occlusion_s), None if pd.isna(row.release_s) else float(row.release_s))
+            for row in official_times(folder).itertuples(index=False)}
+
+
+@dataclass(frozen=True)
+class Phases:
+    """One recording's phases as frames of its video, from its official times.
+
+    `windows` gives each phase's first and last frame (inclusive), kept
+    `REST_MARGIN_S` away from the events around it: the rest from 2 s after
+    the start to 2 s before the occlusion, the occlusion from 2 s after it to
+    2 s before the release, and after release up to 2 s before the video ends.
+    Without a release time only the rest is given. When an official time lies
+    after the end of the video, no window is given, because the times do not
+    fit it. `notes` says what the user should know about the times.
+    """
+
+    occlusion_s: float
+    release_s: Optional[float]
+    duration_s: float
+    windows: dict
+    notes: tuple
+
+    def phase_of(self, first: int, last: int, fps: float) -> str:
+        """The phases frames `first`..`last` lie in, by the official times themselves (no margins).
+
+        'rest', 'occlusion', 'after release', or several joined by ' + '. Without
+        a release time, frames after the occlusion began are 'occlusion or later'.
+        '' when the times do not fit the video.
+        """
+        if not self.windows:
+            return ''
+        start, stop = first / fps, (last + 1) / fps
+        spans = [('rest', 0.0, self.occlusion_s)]
+        if self.release_s is None:
+            spans.append(('occlusion or later', self.occlusion_s, math.inf))
+        else:
+            spans += [('occlusion', self.occlusion_s, self.release_s), ('after release', self.release_s, math.inf)]
+        return ' + '.join(phase for phase, low, high in spans if start < high and stop > low)
+
+
+def recording_phases(name: str, fps: float, frame_count: int, folder: str = METADATA) -> Optional[Phases]:
+    """The phases of the recording `name` in its video (`fps`, `frame_count`); None without official times."""
+    times = _times_by_name(folder).get(nfc(name))
+    if times is None or not fps or fps <= 0 or frame_count < 1:
+        return None
+    occlusion, release = times
+    duration = frame_count / fps
+    late = [(event, seconds) for event, seconds in (('occlusion', occlusion), ('release', release))
+            if seconds is not None and seconds > duration]
+    if late:
+        listed = ' and '.join(f'{event} ({seconds:.1f} s)' for event, seconds in late)
+        return Phases(occlusion, release, duration, {}, (
+            f'The official {listed} {"lies" if len(late) == 1 else "lie"} after the end of the video '
+            f'({duration:.1f} s at {fps:g} fps), so the times do not fit it. Check its frame rate '
+            '(metadata/README.md).',))
+    spans = {'rest': (REST_MARGIN_S, occlusion - REST_MARGIN_S)}
+    if release is not None:
+        spans['occlusion'] = (occlusion + REST_MARGIN_S, release - REST_MARGIN_S)
+        spans['after release'] = (release + REST_MARGIN_S, duration - REST_MARGIN_S)
+    windows = {}
+    for phase, (start_s, stop_s) in spans.items():
+        first = math.ceil(round(start_s * fps, 6))
+        last = min(math.ceil(round(stop_s * fps, 6)) - 1, frame_count - 1)
+        if last >= first:
+            windows[phase] = (first, last)
+    notes = []
+    rest = occlusion - 2 * REST_MARGIN_S
+    if rest < MIN_REST_S:
+        notes.append(f'Only {max(rest, 0.0):.0f} s of rest before the occlusion; the aims need {MIN_REST_S:.0f} s.')
+    if release is None:
+        notes.append('No official release time, so only the rest is known.')
+    return Phases(occlusion, release, duration, windows, tuple(notes))
 
 
 def recordings(folder: str = METADATA) -> pd.DataFrame:
