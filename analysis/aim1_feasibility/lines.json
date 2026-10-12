@@ -1,0 +1,2126 @@
+{
+ "FP01_Qföre_22-Oct-2019_08-16-35": {
+  "tall loop, left limb": {
+   "kind": "limb",
+   "loop": "tall loop",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     340.0,
+     198.0
+    ],
+    [
+     343.3,
+     186.0
+    ],
+    [
+     345.9,
+     174.0
+    ],
+    [
+     347.2,
+     162.0
+    ],
+    [
+     351.7,
+     150.0
+    ],
+    [
+     354.7,
+     138.0
+    ],
+    [
+     354.0,
+     126.0
+    ],
+    [
+     356.9,
+     114.0
+    ],
+    [
+     361.3,
+     102.0
+    ],
+    [
+     365.8,
+     90.0
+    ]
+   ]
+  },
+  "tall loop, right limb": {
+   "kind": "limb",
+   "loop": "tall loop",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     367,
+     158
+    ],
+    [
+     371,
+     140
+    ],
+    [
+     375,
+     122
+    ],
+    [
+     379,
+     105
+    ],
+    [
+     383,
+     88
+    ]
+   ]
+  },
+  "\"2\" loop, stem": {
+   "kind": "limb",
+   "loop": "\"2\" loop",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     236,
+     308
+    ],
+    [
+     242,
+     292
+    ],
+    [
+     250,
+     276
+    ],
+    [
+     258,
+     260
+    ]
+   ]
+  },
+  "U loop, left limb": {
+   "kind": "limb",
+   "loop": "U loop",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     195,
+     336
+    ],
+    [
+     191,
+     325
+    ],
+    [
+     187,
+     312
+    ],
+    [
+     185,
+     298
+    ]
+   ]
+  },
+  "tissue beside tall loop": {
+   "kind": "tissue",
+   "source": "resting_flow_feasibility",
+   "points": [
+    [
+     343.8,
+     90.0
+    ],
+    [
+     339.3,
+     102.0
+    ],
+    [
+     334.9,
+     114.0
+    ],
+    [
+     332.0,
+     126.0
+    ],
+    [
+     332.7,
+     138.0
+    ],
+    [
+     329.7,
+     150.0
+    ],
+    [
+     325.2,
+     162.0
+    ],
+    [
+     323.9,
+     174.0
+    ],
+    [
+     321.3,
+     186.0
+    ],
+    [
+     318.0,
+     198.0
+    ]
+   ]
+  }
+ },
+ "FP03_Qföre_15-Oct-2019_09-15-49": {
+  "curly loop, left limb": {
+   "kind": "limb",
+   "loop": "curly loop",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     260,
+     210
+    ],
+    [
+     257.5,
+     185
+    ],
+    [
+     256,
+     160
+    ],
+    [
+     257.5,
+     135
+    ],
+    [
+     260,
+     110
+    ],
+    [
+     256,
+     85
+    ],
+    [
+     254,
+     65
+    ]
+   ]
+  },
+  "curly loop, right limb": {
+   "kind": "limb",
+   "loop": "curly loop",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     290,
+     210
+    ],
+    [
+     285,
+     185
+    ],
+    [
+     282.5,
+     160
+    ],
+    [
+     280,
+     135
+    ],
+    [
+     275,
+     110
+    ],
+    [
+     275,
+     85
+    ],
+    [
+     280,
+     65
+    ]
+   ]
+  },
+  "loop D": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     235,
+     260
+    ],
+    [
+     230,
+     235
+    ],
+    [
+     225,
+     210
+    ],
+    [
+     222.5,
+     185
+    ]
+   ]
+  },
+  "loop E, left limb": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     385,
+     160
+    ],
+    [
+     385,
+     135
+    ],
+    [
+     385,
+     110
+    ],
+    [
+     388,
+     85
+    ],
+    [
+     390,
+     60
+    ]
+   ]
+  },
+  "loop F": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     440,
+     197.5
+    ],
+    [
+     440,
+     172.5
+    ],
+    [
+     437.5,
+     147.5
+    ],
+    [
+     435,
+     122.5
+    ]
+   ]
+  },
+  "loop G": {
+   "kind": "limb",
+   "loop": "G",
+   "apex_seen": true,
+   "source": "resting_flow_feasibility, reversed",
+   "points": [
+    [
+     480,
+     197.5
+    ],
+    [
+     480,
+     172.5
+    ],
+    [
+     477.5,
+     147.5
+    ],
+    [
+     477.5,
+     122.5
+    ],
+    [
+     477.5,
+     95
+    ]
+   ]
+  },
+  "tissue at x 330": {
+   "kind": "tissue",
+   "source": "resting_flow_feasibility",
+   "points": [
+    [
+     330,
+     60
+    ],
+    [
+     330,
+     95
+    ],
+    [
+     330,
+     130
+    ],
+    [
+     330,
+     165
+    ],
+    [
+     330,
+     200
+    ]
+   ]
+  }
+ },
+ "FP03_Wföre_21-Oct-2019_08-58-40": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     288,
+     330
+    ],
+    [
+     287,
+     260
+    ],
+    [
+     294,
+     186
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     332,
+     372
+    ],
+    [
+     316,
+     300
+    ],
+    [
+     306,
+     216
+    ],
+    [
+     294,
+     186
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     422,
+     335
+    ],
+    [
+     422,
+     174
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     433,
+     300
+    ],
+    [
+     424,
+     174
+    ]
+   ]
+  },
+  "D left": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     141,
+     300
+    ],
+    [
+     143,
+     246
+    ]
+   ]
+  },
+  "D right": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     152,
+     300
+    ],
+    [
+     147,
+     247
+    ]
+   ]
+  },
+  "E left": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     269,
+     440
+    ],
+    [
+     254,
+     316
+    ]
+   ]
+  },
+  "E right": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     283,
+     432
+    ],
+    [
+     257,
+     316
+    ]
+   ]
+  },
+  "F left": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     69,
+     420
+    ],
+    [
+     66,
+     299
+    ]
+   ]
+  },
+  "F right": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     84,
+     415
+    ],
+    [
+     69,
+     299
+    ]
+   ]
+  },
+  "tissue between A and B": {
+   "kind": "tissue",
+   "points": [
+    [
+     360,
+     200
+    ],
+    [
+     360,
+     330
+    ]
+   ]
+  }
+ },
+ "FP05_Qföre_försök4_23-Oct-2019_09-24-22": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     192,
+     165
+    ],
+    [
+     204,
+     110
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     212,
+     160
+    ],
+    [
+     205,
+     110
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     298,
+     225
+    ],
+    [
+     303,
+     175
+    ],
+    [
+     318,
+     124
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     314,
+     225
+    ],
+    [
+     322,
+     175
+    ],
+    [
+     320,
+     124
+    ]
+   ]
+  },
+  "tissue between A and B": {
+   "kind": "tissue",
+   "points": [
+    [
+     250,
+     120
+    ],
+    [
+     250,
+     195
+    ]
+   ]
+  }
+ },
+ "FP05_Wföre_17-Oct-2019_09-11-49": {
+  "L1 left": {
+   "kind": "limb",
+   "loop": "L1",
+   "apex_seen": true,
+   "points": [
+    [
+     12,
+     448
+    ],
+    [
+     20,
+     407
+    ]
+   ]
+  },
+  "L1 right": {
+   "kind": "limb",
+   "loop": "L1",
+   "apex_seen": true,
+   "points": [
+    [
+     28,
+     447
+    ],
+    [
+     21,
+     407
+    ]
+   ]
+  },
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     142,
+     395
+    ],
+    [
+     150,
+     340
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     162,
+     392
+    ],
+    [
+     152,
+     340
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     222,
+     428
+    ],
+    [
+     226,
+     362
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     236,
+     412
+    ],
+    [
+     229,
+     362
+    ]
+   ]
+  },
+  "C left": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     330,
+     410
+    ],
+    [
+     338,
+     324
+    ]
+   ]
+  },
+  "C right": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     347,
+     405
+    ],
+    [
+     341,
+     324
+    ]
+   ]
+  },
+  "tissue between C and D": {
+   "kind": "tissue",
+   "points": [
+    [
+     380,
+     330
+    ],
+    [
+     380,
+     420
+    ]
+   ]
+  }
+ },
+ "FP06_Qföre_försök2_06-Nov-2019_08-20-16": {
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     228,
+     285
+    ],
+    [
+     236,
+     158
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     246,
+     262
+    ],
+    [
+     238,
+     158
+    ]
+   ]
+  },
+  "C left": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     364,
+     240
+    ],
+    [
+     365,
+     180
+    ],
+    [
+     371,
+     121
+    ]
+   ]
+  },
+  "C right": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     377,
+     235
+    ],
+    [
+     381,
+     180
+    ],
+    [
+     373,
+     121
+    ]
+   ]
+  },
+  "D left": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     503,
+     175
+    ],
+    [
+     509,
+     107
+    ]
+   ]
+  },
+  "D right": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     519,
+     178
+    ],
+    [
+     512,
+     107
+    ]
+   ]
+  },
+  "E left": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     563,
+     275
+    ],
+    [
+     572,
+     139
+    ]
+   ]
+  },
+  "E right": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     580,
+     215
+    ],
+    [
+     575,
+     139
+    ]
+   ]
+  },
+  "H left": {
+   "kind": "limb",
+   "loop": "H",
+   "apex_seen": true,
+   "points": [
+    [
+     106,
+     440
+    ],
+    [
+     112,
+     351
+    ]
+   ]
+  },
+  "H right": {
+   "kind": "limb",
+   "loop": "H",
+   "apex_seen": true,
+   "points": [
+    [
+     123,
+     440
+    ],
+    [
+     115,
+     351
+    ]
+   ]
+  },
+  "I left": {
+   "kind": "limb",
+   "loop": "I",
+   "apex_seen": true,
+   "points": [
+    [
+     204,
+     385
+    ],
+    [
+     209,
+     299
+    ]
+   ]
+  },
+  "I right": {
+   "kind": "limb",
+   "loop": "I",
+   "apex_seen": true,
+   "points": [
+    [
+     216,
+     360
+    ],
+    [
+     211,
+     299
+    ]
+   ]
+  },
+  "J left": {
+   "kind": "limb",
+   "loop": "J",
+   "apex_seen": true,
+   "points": [
+    [
+     264,
+     395
+    ],
+    [
+     271,
+     318
+    ]
+   ]
+  },
+  "J right": {
+   "kind": "limb",
+   "loop": "J",
+   "apex_seen": true,
+   "points": [
+    [
+     281,
+     385
+    ],
+    [
+     273,
+     318
+    ]
+   ]
+  },
+  "K left": {
+   "kind": "limb",
+   "loop": "K",
+   "apex_seen": true,
+   "points": [
+    [
+     305,
+     320
+    ],
+    [
+     311,
+     244
+    ]
+   ]
+  },
+  "K right": {
+   "kind": "limb",
+   "loop": "K",
+   "apex_seen": true,
+   "points": [
+    [
+     319,
+     305
+    ],
+    [
+     313,
+     244
+    ]
+   ]
+  },
+  "tissue between C and D": {
+   "kind": "tissue",
+   "points": [
+    [
+     440,
+     120
+    ],
+    [
+     440,
+     230
+    ]
+   ]
+  }
+ },
+ "FP06_Wföre_18-Oct-2019_08-28-30": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     323,
+     245
+    ],
+    [
+     322,
+     230
+    ],
+    [
+     329,
+     212
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     341,
+     243
+    ],
+    [
+     342,
+     230
+    ],
+    [
+     331,
+     212
+    ]
+   ]
+  },
+  "C left": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     455,
+     262
+    ],
+    [
+     457,
+     196
+    ]
+   ]
+  },
+  "C right": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     476,
+     262
+    ],
+    [
+     460,
+     196
+    ]
+   ]
+  },
+  "D left": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     163,
+     390
+    ],
+    [
+     169,
+     291
+    ]
+   ]
+  },
+  "D right": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     177,
+     345
+    ],
+    [
+     172,
+     291
+    ]
+   ]
+  },
+  "E left": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     242,
+     380
+    ],
+    [
+     226,
+     335
+    ],
+    [
+     231,
+     301
+    ]
+   ]
+  },
+  "tissue between A and C": {
+   "kind": "tissue",
+   "points": [
+    [
+     400,
+     200
+    ],
+    [
+     400,
+     300
+    ]
+   ]
+  }
+ },
+ "FP07_Qföre_18-Oct-2019_09-18-37": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     283,
+     200
+    ],
+    [
+     289,
+     134
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     298,
+     198
+    ],
+    [
+     292,
+     134
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     78,
+     250
+    ],
+    [
+     88,
+     168
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     97,
+     225
+    ],
+    [
+     91,
+     168
+    ]
+   ]
+  },
+  "C left": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     488,
+     235
+    ],
+    [
+     493,
+     191
+    ]
+   ]
+  },
+  "C right": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     500,
+     235
+    ],
+    [
+     495,
+     191
+    ]
+   ]
+  },
+  "tissue between A and C": {
+   "kind": "tissue",
+   "points": [
+    [
+     400,
+     160
+    ],
+    [
+     400,
+     300
+    ]
+   ]
+  }
+ },
+ "FP07_Wföre_07-Nov-2019_08-56-50": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     80,
+     145
+    ],
+    [
+     85,
+     52
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     92,
+     145
+    ],
+    [
+     87,
+     52
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     181,
+     215
+    ],
+    [
+     183,
+     160
+    ],
+    [
+     189,
+     111
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     198,
+     215
+    ],
+    [
+     196,
+     160
+    ],
+    [
+     192,
+     111
+    ]
+   ]
+  },
+  "C left": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     353,
+     280
+    ],
+    [
+     359,
+     126
+    ]
+   ]
+  },
+  "C right": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     368,
+     260
+    ],
+    [
+     362,
+     126
+    ]
+   ]
+  },
+  "D left": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     457,
+     290
+    ],
+    [
+     471,
+     142
+    ]
+   ]
+  },
+  "D right": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     470,
+     290
+    ],
+    [
+     474,
+     142
+    ]
+   ]
+  },
+  "F left": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     246,
+     378
+    ],
+    [
+     254,
+     321
+    ]
+   ]
+  },
+  "F right": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     258,
+     378
+    ],
+    [
+     257,
+     321
+    ]
+   ]
+  },
+  "H left": {
+   "kind": "limb",
+   "loop": "H",
+   "apex_seen": true,
+   "points": [
+    [
+     387,
+     455
+    ],
+    [
+     394,
+     364
+    ]
+   ]
+  },
+  "H right": {
+   "kind": "limb",
+   "loop": "H",
+   "apex_seen": true,
+   "points": [
+    [
+     403,
+     455
+    ],
+    [
+     397,
+     364
+    ]
+   ]
+  },
+  "tissue between B and C": {
+   "kind": "tissue",
+   "points": [
+    [
+     270,
+     120
+    ],
+    [
+     270,
+     230
+    ]
+   ]
+  }
+ },
+ "FP09_Qföre_12-Nov-2019_08-26-50": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     330,
+     250
+    ],
+    [
+     338,
+     202
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     352,
+     255
+    ],
+    [
+     342,
+     202
+    ]
+   ]
+  },
+  "tissue right of A": {
+   "kind": "tissue",
+   "points": [
+    [
+     430,
+     150
+    ],
+    [
+     430,
+     260
+    ]
+   ]
+  }
+ },
+ "FP09_Wföre_23-Oct-2019_08-20-37": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     263,
+     205
+    ],
+    [
+     270,
+     170
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     280,
+     203
+    ],
+    [
+     274,
+     170
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     384,
+     228
+    ],
+    [
+     389,
+     162
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     403,
+     232
+    ],
+    [
+     392,
+     162
+    ]
+   ]
+  },
+  "F left": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     18,
+     398
+    ],
+    [
+     35,
+     340
+    ]
+   ]
+  },
+  "F right": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     57,
+     398
+    ],
+    [
+     40,
+     340
+    ]
+   ]
+  },
+  "tissue between A and B": {
+   "kind": "tissue",
+   "points": [
+    [
+     330,
+     160
+    ],
+    [
+     330,
+     240
+    ]
+   ]
+  }
+ },
+ "FP12_Qföre_08-Nov-2019_08-28-52": {
+  "D limb": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     310,
+     295
+    ],
+    [
+     330,
+     229
+    ]
+   ]
+  },
+  "E left": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     386,
+     310
+    ],
+    [
+     394,
+     248
+    ]
+   ]
+  },
+  "tissue left of G": {
+   "kind": "tissue",
+   "points": [
+    [
+     520,
+     240
+    ],
+    [
+     520,
+     330
+    ]
+   ]
+  }
+ },
+ "FP12_Wföre_15-Nov-2019_08-31-17": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     122,
+     250
+    ],
+    [
+     141,
+     212
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     134,
+     248
+    ],
+    [
+     146,
+     214
+    ]
+   ]
+  },
+  "B left": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     230,
+     280
+    ],
+    [
+     236,
+     209
+    ]
+   ]
+  },
+  "B right": {
+   "kind": "limb",
+   "loop": "B",
+   "apex_seen": true,
+   "points": [
+    [
+     247,
+     255
+    ],
+    [
+     239,
+     209
+    ]
+   ]
+  },
+  "tissue right of C": {
+   "kind": "tissue",
+   "points": [
+    [
+     380,
+     230
+    ],
+    [
+     380,
+     330
+    ]
+   ]
+  }
+ },
+ "FP13_Qföre_10-Dec-2019_08-23-22": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     393,
+     290
+    ],
+    [
+     399,
+     181
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     414,
+     280
+    ],
+    [
+     411,
+     230
+    ],
+    [
+     402,
+     181
+    ]
+   ]
+  },
+  "D left": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     186,
+     400
+    ],
+    [
+     187,
+     242
+    ]
+   ]
+  },
+  "D right": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     198,
+     330
+    ],
+    [
+     189,
+     242
+    ]
+   ]
+  },
+  "E left": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     266,
+     435
+    ],
+    [
+     271,
+     261
+    ]
+   ]
+  },
+  "E right": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     281,
+     430
+    ],
+    [
+     274,
+     261
+    ]
+   ]
+  },
+  "F left": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     358,
+     430
+    ],
+    [
+     361,
+     317
+    ]
+   ]
+  },
+  "F right": {
+   "kind": "limb",
+   "loop": "F",
+   "apex_seen": true,
+   "points": [
+    [
+     381,
+     375
+    ],
+    [
+     376,
+     345
+    ],
+    [
+     364,
+     317
+    ]
+   ]
+  },
+  "G left": {
+   "kind": "limb",
+   "loop": "G",
+   "apex_seen": true,
+   "points": [
+    [
+     75,
+     400
+    ],
+    [
+     84,
+     279
+    ]
+   ]
+  },
+  "G right": {
+   "kind": "limb",
+   "loop": "G",
+   "apex_seen": true,
+   "points": [
+    [
+     103,
+     400
+    ],
+    [
+     99,
+     330
+    ],
+    [
+     88,
+     279
+    ]
+   ]
+  },
+  "tissue between E and A": {
+   "kind": "tissue",
+   "points": [
+    [
+     320,
+     170
+    ],
+    [
+     320,
+     280
+    ]
+   ]
+  }
+ },
+ "FP13_Wföre_försök2_08-Nov-2019_09-15-44": {
+  "A left": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     341,
+     208
+    ],
+    [
+     354,
+     164
+    ]
+   ]
+  },
+  "A right": {
+   "kind": "limb",
+   "loop": "A",
+   "apex_seen": true,
+   "points": [
+    [
+     363,
+     208
+    ],
+    [
+     357,
+     164
+    ]
+   ]
+  },
+  "C left": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     526,
+     250
+    ],
+    [
+     531,
+     177
+    ]
+   ]
+  },
+  "C right": {
+   "kind": "limb",
+   "loop": "C",
+   "apex_seen": true,
+   "points": [
+    [
+     542,
+     245
+    ],
+    [
+     534,
+     177
+    ]
+   ]
+  },
+  "D left": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     119,
+     243
+    ],
+    [
+     136,
+     184
+    ]
+   ]
+  },
+  "D right": {
+   "kind": "limb",
+   "loop": "D",
+   "apex_seen": true,
+   "points": [
+    [
+     141,
+     243
+    ],
+    [
+     139,
+     184
+    ]
+   ]
+  },
+  "E left": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     191,
+     272
+    ],
+    [
+     199,
+     219
+    ]
+   ]
+  },
+  "E right": {
+   "kind": "limb",
+   "loop": "E",
+   "apex_seen": true,
+   "points": [
+    [
+     208,
+     272
+    ],
+    [
+     202,
+     219
+    ]
+   ]
+  },
+  "G left": {
+   "kind": "limb",
+   "loop": "G",
+   "apex_seen": true,
+   "points": [
+    [
+     284,
+     320
+    ],
+    [
+     283,
+     300
+    ],
+    [
+     292,
+     289
+    ]
+   ]
+  },
+  "G right": {
+   "kind": "limb",
+   "loop": "G",
+   "apex_seen": true,
+   "points": [
+    [
+     299,
+     320
+    ],
+    [
+     298,
+     300
+    ],
+    [
+     295,
+     289
+    ]
+   ]
+  },
+  "H left": {
+   "kind": "limb",
+   "loop": "H",
+   "apex_seen": true,
+   "points": [
+    [
+     590,
+     330
+    ],
+    [
+     597,
+     262
+    ]
+   ]
+  },
+  "H right": {
+   "kind": "limb",
+   "loop": "H",
+   "apex_seen": true,
+   "points": [
+    [
+     608,
+     330
+    ],
+    [
+     600,
+     262
+    ]
+   ]
+  },
+  "tissue between E and G": {
+   "kind": "tissue",
+   "points": [
+    [
+     250,
+     200
+    ],
+    [
+     250,
+     300
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,9 @@
+study,subject,both_measured,active_resolved,active_resolved_arterial,active_resolved_arterial_mean_mm_s,control_resolved,control_resolved_arterial,control_resolved_arterial_mean_mm_s,resolved_arterial_both_visits,resolved_any_both_visits,active_robust,active_robust_arterial,active_robust_arterial_mean_mm_s,control_robust,control_robust_arterial,control_robust_arterial_mean_mm_s,robust_arterial_both_visits,robust_any_both_visits,active_combined,active_combined_arterial,active_combined_arterial_mean_mm_s,control_combined,control_combined_arterial,control_combined_arterial_mean_mm_s,combined_arterial_both_visits,combined_any_both_visits
+ESMOKE,FP01,False,,,,3,1,0.1059309145025771,False,False,,,,2,1,0.1059309145025771,False,False,,,,2,1,0.1059309145025771,False,False
+ESMOKE,FP03,True,3,1,0.0801126425527967,0,0,,False,False,2,1,0.0801126425527967,0,0,,False,False,2,1,0.0801126425527967,0,0,,False,False
+ESMOKE,FP05,True,0,0,,2,1,0.1389851316232347,False,False,0,0,,2,1,0.1389851316232347,False,False,0,0,,2,1,0.1389851316232347,False,False
+ESMOKE,FP06,True,2,1,0.1383625864385556,5,1,0.0684474601967464,True,True,1,0,,2,1,0.0684474601967464,False,True,1,0,,5,2,0.05436269352312095,False,True
+ESMOKE,FP07,True,2,1,0.1404865371608758,1,0,,False,True,2,1,0.1404865371608758,1,0,,False,True,2,1,0.1404865371608758,1,0,,False,True
+ESMOKE,FP09,True,0,0,,0,0,,False,False,0,0,,0,0,,False,False,4,2,0.0113716506400767,0,0,,False,False
+ESMOKE,FP12,True,0,0,,0,0,,False,False,0,0,,0,0,,False,False,1,0,,1,0,,False,True
+ESMOKE,FP13,True,0,0,,6,3,0.06625539719699776,False,False,0,0,,4,2,0.07291213889457,False,False,3,1,0.0381708105747946,6,3,0.07769569163496197,True,True

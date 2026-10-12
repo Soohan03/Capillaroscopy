@@ -23,7 +23,8 @@ products".
 - **Aim 2:** the difference in before→after change, active minus control.
 - **Who can be used** (`metadata/README.md`, from `capillary.inventory`): aim 1 has 14 ESMOKE and
   10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 8 ISMOKE. The
-  aims use 90 recordings; 8 of them had been downloaded by 2026-10-09.
+  aims use 90 recordings; 8 of them had been downloaded by 2026-10-09, 30 (all ESMOKE) were on
+  the desktop by 2026-10-12.
 - **Resting CBV must come from the rest window before occlusion.**
 
 ## Change diary (mandatory)
@@ -82,13 +83,16 @@ If the user reports the app froze or crashed, check the task output file and
 
 - `RecordedVideos/` — raw recordings copied in to be stabilized. On the Mac: links to the 9
   ESMOKE recordings downloaded from DynCap into `Video_inventory/` (untracked, 2026-10-08).
-  On the desktop: the raw recordings themselves, copied in from OneDrive (since 2026-10-11)
+  On the desktop: the raw recordings themselves, copied in from OneDrive (since 2026-10-11;
+  35 ESMOKE recordings by 2026-10-12, 30 of them used by the aims)
 - `StabilizedVideos/` — stabilized videos ready for analysis, made by `capillary.stabilize`.
   Each has `<stem>___stabilization.csv` (the shift of every frame) and
   `___stabilization_provenance.json` next to it; a video without them was not made by the
   current stabilizer. The app calls every video in this folder stabilized, so put nothing
   else here. Until 2026-10-11 the desktop's folder held 8 raw recordings that had never
-  been stabilized (Known issues)
+  been stabilized (Known issues). The study need not be sorted into separate folders: ISMOKE
+  names start with `ISMOKE_`, and the inventory sorts by name (on 2026-10-12 the folder was
+  briefly renamed `ESMOKE_Videos/`, which the app cannot see, and renamed back)
 - `Flows/` — optical-flow video of one recording, from before the flow feature was
   removed (2026-10-06); kept on disk, not shown, trashed along with its recording
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time
@@ -219,6 +223,16 @@ the 2026-10-05 GUI rebuild entry.
     the threshold. Most capillaries show no moving pattern at rest at all (their space-time
     pictures are noise), so they cannot be measured from these videos at 30 fps. Aim 1 needs a
     rule for choosing capillaries with visible plasma gaps.
+  - **Aim 1's feasibility** (2026-10-12, `analysis/aim1_feasibility/`): 15 före recordings of 8
+    ESMOKE participants, 109 limbs placed by Claude Code on the resting image.
+    - The pattern shift resolved 24 limbs at rest (16 robust), at 0.04–0.14 mm/s.
+    - 18 more scored high at its slowest speed. Adding the centre-line blocks for flow below
+      0.04 mm/s (an exploratory rule: 25% of blocks resolved, 90% one way) measures 30 limbs.
+    - All 12 loops with both limbs measured then run opposite ways, and no tissue line shows
+      flow.
+    - An arterial limb at both visits in 1 of 7 participants (any limb in 4). Arterial-only
+      resting CBV looks infeasible with these videos. The choice (any limb? the combined rule?)
+      is for the supervisors.
 - **Large movements defeat the stabilizer** (found 2026-10-08). On FP01_W (a steady drift of about
   200 px), FP03_Qföre (after the cuff) and FP03_Wefter (jumps of 100–200 px at rest) the match
   falls to 0.1–0.3. Planned fix: follow the movement outwards from the reference frame in both
