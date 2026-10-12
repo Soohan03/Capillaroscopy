@@ -16,9 +16,7 @@ from capillary.video import probe_video  # noqa: E402
 OUT = os.path.join(HERE, 'out')
 LINES = os.path.join(HERE, 'lines.json')
 RESULTS = os.path.join(HERE, 'results.csv')
-#: Where stabilized videos are looked for: the app's folder, and the per-study folders the desktop has
-#: used since 2026-10-12 (StabilizedVideos/ renamed to ESMOKE_Videos/).
-VIDEO_FOLDERS = [os.path.join(REPO, name) for name in ('StabilizedVideos', 'ESMOKE_Videos', 'ISMOKE_Videos')]
+VIDEOS = os.path.join(REPO, 'StabilizedVideos')
 #: The app's default calibration (mm per pixel of the video).
 MM_PER_PIXEL = 0.001328903654
 #: The resting image is band-passed with a difference of Gaussians of these sigmas (px). Finer than the
@@ -28,13 +26,12 @@ VESSEL_SIGMAS_PX = (1.0, 8.0)
 
 
 def video_path(stem: str) -> str:
-    """The stabilized video of the recording `stem` in one of `VIDEO_FOLDERS`, however its name is spelled."""
-    for folder in VIDEO_FOLDERS:
-        for name in (os.listdir(folder) if os.path.isdir(folder) else []):
-            base, ext = os.path.splitext(name)
-            if ext.lower() == '.avi' and inventory.nfc(base) == inventory.nfc(stem):
-                return os.path.join(folder, name)
-    raise FileNotFoundError(f'no stabilized video of {stem} in {", ".join(VIDEO_FOLDERS)}')
+    """The stabilized video of the recording `stem`, however its name is spelled on disk."""
+    for name in os.listdir(VIDEOS):
+        base, ext = os.path.splitext(name)
+        if ext.lower() == '.avi' and inventory.nfc(base) == inventory.nfc(stem):
+            return os.path.join(VIDEOS, name)
+    raise FileNotFoundError(f'no stabilized video of {stem} in {VIDEOS}')
 
 
 def rest_window(stem: str) -> tuple:

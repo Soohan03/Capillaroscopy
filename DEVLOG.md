@@ -13,8 +13,9 @@ the Centre line page, was merged).
 
 **Commits:**
 
-- this entry, with `analysis/aim1_feasibility/`, notes in `CLAUDE.md`, and `ESMOKE_Videos/` and
-  `ISMOKE_Videos/` in `.gitignore`
+- `a0a95da` — this entry, with `analysis/aim1_feasibility/` and notes in `CLAUDE.md`
+- a follow-up after the user renamed the video folder back (below): the notes and
+  `.gitignore` corrected, the analysis reading `StabilizedVideos/` only
 
 The user asked to continue where the last session left off.
 
@@ -86,22 +87,23 @@ Without a release time, "in occlusion" runs to the end of the video.
   place lines on, but the alignment at rest is less certain than in the others.
 - **FP09_Qföre** matches only 0.48 at rest; its references agree.
 
-### The folder renamed: `ESMOKE_Videos/`
+### The folder renamed, and renamed back
 
-At 18:22, after the stabilization, the user renamed `StabilizedVideos/` to `ESMOKE_Videos/`, to sort
-the stabilized videos by study (`ISMOKE_Videos/` to follow). Asked, the user chose to keep it.
+At 18:22, after the stabilization, `StabilizedVideos/` was renamed to `ESMOKE_Videos/`. It held
+the 31 stabilized videos (the 10 of 2026-10-11 and the 21 above), each with its shift file and
+provenance.
 
-- `ESMOKE_Videos/` holds the 31 stabilized videos (the 10 of 2026-10-11 and the 21 above), each
-  with its shift file and provenance.
-- **The app does not look there yet.**
-  - `gui.settings.DataFolder.stabilized` is `StabilizedVideos/`, and `ensure()` creates it,
-    empty, at the next start.
-  - So the app lists the 31 recordings as raw only, and would offer to stabilize them again.
-  - Teaching it about per-study folders is a separate change.
-- `.gitignore` now ignores `ESMOKE_Videos/` and `ISMOKE_Videos/`, as it does the other data
-  folders, so 55 GB of video never shows up as untracked.
-- The analysis below looks for stabilized videos in `StabilizedVideos/`, `ESMOKE_Videos/` and
-  `ISMOKE_Videos/` (`common.VIDEO_FOLDERS`).
+- **The app could not see them.** `gui.settings.DataFolder.stabilized` is `StabilizedVideos/`,
+  and `ensure()` creates it, empty, at the next start. The app would have listed the 31
+  recordings as raw only and offered to stabilize them again.
+- **Sorting by study is not needed:** ISMOKE names start with `ISMOKE_`, and the inventory sorts
+  the recordings by name. Changing the app to read one folder per study would only buy tidier
+  folders.
+- **So the user renamed it back** the same evening. `StabilizedVideos/` again holds the 31 videos
+  with their shift files. CLAUDE.md's data layout notes the episode.
+- In between, the analysis below read the videos from either name, and `a0a95da` added
+  `ESMOKE_Videos/` and `ISMOKE_Videos/` to `.gitignore`. The follow-up commit takes both out
+  again.
 
 ### The feasibility check (`analysis/aim1_feasibility/`)
 
@@ -228,6 +230,8 @@ To discuss with the supervisors:
 ### Verification
 
 - `python -m pytest`: 265 passed; nothing in the package changed.
+- **After the folder was renamed back,** all 15 recordings' videos and rest windows were found in
+  `StabilizedVideos/` (scratch check). `summarize.py` gave the same numbers.
 - flake8: the CI's error selection is clean on the whole repository, and the full set on
   `analysis/aim1_feasibility/`.
 - **The measurement ran twice,** the second time with three more centre-line columns. All 30
@@ -244,8 +248,6 @@ To discuss with the supervisors:
 
 ### Open
 
-- **The app and `ESMOKE_Videos/`:** let the app read per-study folders. Until then it lists the 31
-  recordings as raw only.
 - **Decide with the supervisors:** arterial limb only, or any limb, for aim 1; and whether to
   combine the two methods, and by which rule.
 - **Line placement by the study's observer** in the app, blind to the visit, then compared with

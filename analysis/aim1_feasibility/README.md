@@ -108,9 +108,8 @@ diagram (`<recording>__<line>.npy`).
 
 ## Rerunning
 
-From the repository, with the stabilized videos in `StabilizedVideos/`, `ESMOKE_Videos/`
-or `ISMOKE_Videos/` (`common.VIDEO_FOLDERS`; the lines belong to these videos'
-coordinates):
+From the repository, with the stabilized videos in `StabilizedVideos/` (the lines belong
+to their coordinates):
 
 ```
 python analysis/aim1_feasibility/rest_image.py <recording> ...   # about 10 s each

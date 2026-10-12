@@ -90,12 +90,9 @@ If the user reports the app froze or crashed, check the task output file and
   `___stabilization_provenance.json` next to it; a video without them was not made by the
   current stabilizer. The app calls every video in this folder stabilized, so put nothing
   else here. Until 2026-10-11 the desktop's folder held 8 raw recordings that had never
-  been stabilized (Known issues)
-- `ESMOKE_Videos/` (desktop, since 2026-10-12) — the user renamed `StabilizedVideos/` to
-  sort the stabilized videos by study (`ISMOKE_Videos/` to follow). It holds 31 stabilized
-  ESMOKE recordings with their shift files. The app does not look there yet: it lists
-  these recordings as not stabilized (and creates an empty `StabilizedVideos/`).
-  `analysis/aim1_feasibility/` reads both. Both names are git-ignored
+  been stabilized (Known issues). The study need not be sorted into separate folders: ISMOKE
+  names start with `ISMOKE_`, and the inventory sorts by name (on 2026-10-12 the folder was
+  briefly renamed `ESMOKE_Videos/`, which the app cannot see, and renamed back)
 - `Flows/` — optical-flow video of one recording, from before the flow feature was
   removed (2026-10-06); kept on disk, not shown, trashed along with its recording
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time

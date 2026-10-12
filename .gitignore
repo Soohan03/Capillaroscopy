@@ -11,9 +11,6 @@ __pycache__/
 # Data files (ignored to keep repo clean)
 RecordedVideos/
 StabilizedVideos/
-# stabilized videos sorted by study (the desktop since 2026-10-12)
-ESMOKE_Videos/
-ISMOKE_Videos/
 Reports/
 Statistics/
 Flows/
