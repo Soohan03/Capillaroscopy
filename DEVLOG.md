@@ -6,6 +6,260 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-12 — Aim 1 feasibility: resting flow on the arterial limb in 15 before-exposure recordings
+
+**Branch:** `analysis/aim1-feasibility`, from `main` at `17a2770` (after PR #16, the arterial limb on
+the Centre line page, was merged).
+
+**Commits:**
+
+- this entry, with `analysis/aim1_feasibility/`, notes in `CLAUDE.md`, and `ESMOKE_Videos/` and
+  `ISMOKE_Videos/` in `.gitignore`
+
+The user asked to continue where the last session left off.
+
+- The user merged PR #16 (step 2 of the arterial-limb plan) on GitHub at the start of the session.
+  `main` was fast-forwarded to `17a2770` and `feature/arterial-limb` deleted.
+- 23 more recordings had arrived in `RecordedVideos/`. The user chose to stabilize them. As the next
+  task the user chose aim 1's feasibility: for the participants now on the desktop, can an arterial
+  limb's resting flow be measured in the före recordings of both visits?
+
+### The recordings on the desktop
+
+- **35 raw recordings** are in `RecordedVideos/`. The 23 new ones (FP05–FP13) came from
+  `OneDrive_2_2026-10-11.zip` and `OneDrive_3_2026-10-11.zip`.
+- **Each new one was checked** (scratch script, read only):
+  - the name is in NFC and in the official times;
+  - rawvideo, 640 × 480, 30 fps;
+  - every frame reads and none is black;
+  - every official occlusion and release falls inside the video at 30 fps.
+- **`FP09_Wefter_23-Oct-2019_10-04-53` is not in the official times.** DynCap has no times for
+  any FP09 W after-exposure recording, which is why FP09 is used for aim 1 only.
+  - The file holds 2052 frames (68 s), probably an aborted attempt.
+  - It was not stabilized.
+- **FP09_Qefter** is in the official times but used by no aim, so it was not stabilized either.
+- **Clean-up.** The 23 `:Zone.Identifier` files Windows had added were deleted. All were 143 bytes
+  and pointed at the two OneDrive zips.
+- **Coverage** (`python -m capillary.inventory --have RecordedVideos`):
+  - 30 of the 90 recordings the aims use are here, all ESMOKE.
+  - 8 ESMOKE participants have both före recordings: FP01, FP03, FP05, FP06, FP07, FP09, FP12
+    and FP13.
+  - No ISMOKE recording has arrived yet.
+
+### Stabilized
+
+The 21 new recordings the aims use were stabilized with the command line at commit `17a2770`:
+`python -m capillary.stabilize RecordedVideos/<name>.avi --out StabilizedVideos/<name>.avi`. They
+ran 11 at a time on 16 cores and took 9 minutes (213–349 s each).
+
+| Recording | Used for | Moved (px) | Match at rest | In occlusion | After release | Notes |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| FP05_Qföre_försök4 | aims 1, 2 | 107.5 × 33.6 | 0.75 | 0.81 | 0.71 | |
+| FP05_Wföre | aims 1, 2 | 87.7 × 192.2 | 0.71 | 0.62 | 0.81 | a 44-px jump after the rest |
+| FP05_Wefter_försök2 | aim 2 | 204.7 × 128.9 | 0.67 | 0.59 | 0.62 | |
+| FP06_Qföre_försök2 | aims 1, 2 | 35.5 × 12.6 | 0.66 | 0.75 | 0.84 | |
+| FP06_Qefter_försök2 | aim 2 | 106.3 × 71.0 | 0.73 | 0.91 | 0.81 | |
+| FP06_Wföre | aims 1, 2 | 92.8 × 138.5 | 0.82 | 0.72 | 0.63 | |
+| FP06_Wefter | aim 2 | 70.4 × 88.8 | 0.73 | 0.44 | – | no release time |
+| FP07_Qföre | aims 1, 2 | 292.0 × 320.9 | 0.76 | 0.75 | – | no release time; jumps of up to 294 px from 134 s on, 9 frames at the search limit |
+| FP07_Qefter | aim 2 | 58.9 × 19.2 | 0.83 | 0.65 | – | no release time |
+| FP07_Wföre | aims 1, 2 | 68.2 × 15.0 | 0.93 | 0.62 | 0.88 | |
+| FP07_Wefter | aim 2 | 46.7 × 25.2 | 0.91 | 0.88 | 0.88 | references disagree by more than 1 px on 3 rest frames |
+| FP09_Qföre | aim 1 | 43.1 × 29.4 | 0.48 | 0.85 | 0.48 | |
+| FP09_Wföre | aim 1 | 7.0 × 12.0 | 0.83 | 0.75 | – | no release time |
+| FP12_Qföre | aims 1, 2 | 10.4 × 19.8 | 0.42 | 0.90 | 0.55 | references disagree by more than 1 px on 78 rest frames (at most 3.0 px) |
+| FP12_Qefter | aim 2 | 29.4 × 26.2 | 0.44 | 0.79 | 0.61 | |
+| FP12_Wföre | aims 1, 2 | 12.4 × 45.0 | 0.42 | 0.80 | 0.39 | references disagree by more than 1 px on 147 rest frames (at most 6.7 px) |
+| FP12_Wefter | aim 2 | 24.7 × 33.5 | 0.50 | 0.85 | 0.49 | |
+| FP13_Qföre | aims 1, 2 | 145.3 × 79.0 | 0.94 | 0.90 | 0.87 | |
+| FP13_Qefter | aim 2 | 28.0 × 9.7 | 0.94 | 0.91 | 0.96 | |
+| FP13_Wföre_försök2 | aims 1, 2 | 27.4 × 117.8 | 0.91 | 0.90 | 0.90 | |
+| FP13_Wefter | aim 2 | 33.4 × 107.4 | 0.87 | 0.87 | 0.83 | |
+
+Match is the median normalized cross-correlation with the references, per phase as on 2026-10-11.
+Without a release time, "in occlusion" runs to the end of the video.
+
+- **At rest no frame is at the search limit.** FP07_Qföre's one large step at rest (21 px, at
+  30 s) was followed: its match stays at 0.71 or more and its references agree within 0.3 px.
+- **FP12's two före recordings are the weakest at rest:** match 0.42, and the two references
+  disagree by more than 1 px on 78 and 147 frames. Their resting images are still sharp enough to
+  place lines on, but the alignment at rest is less certain than in the others.
+- **FP09_Qföre** matches only 0.48 at rest; its references agree.
+
+### The folder renamed: `ESMOKE_Videos/`
+
+At 18:22, after the stabilization, the user renamed `StabilizedVideos/` to `ESMOKE_Videos/`, to sort
+the stabilized videos by study (`ISMOKE_Videos/` to follow). Asked, the user chose to keep it.
+
+- `ESMOKE_Videos/` holds the 31 stabilized videos (the 10 of 2026-10-11 and the 21 above), each
+  with its shift file and provenance.
+- **The app does not look there yet.**
+  - `gui.settings.DataFolder.stabilized` is `StabilizedVideos/`, and `ensure()` creates it,
+    empty, at the next start.
+  - So the app lists the 31 recordings as raw only, and would offer to stabilize them again.
+  - Teaching it about per-study folders is a separate change.
+- `.gitignore` now ignores `ESMOKE_Videos/` and `ISMOKE_Videos/`, as it does the other data
+  folders, so 55 GB of video never shows up as untracked.
+- The analysis below looks for stabilized videos in `StabilizedVideos/`, `ESMOKE_Videos/` and
+  `ISMOKE_Videos/` (`common.VIDEO_FOLDERS`).
+
+### The feasibility check (`analysis/aim1_feasibility/`)
+
+**The question.** Aim 1 compares resting CBV between the two före recordings of each participant,
+and the PI wants it from the arterial limb only. Seven of the eight participants have both före
+recordings measurable; FP01_W cannot be stabilized. How many of the seven give an arterial limb
+with measurable resting flow at both visits?
+
+**Lines** (the folder's README has the details):
+
+- **What:** 109 limbs of 59 loops in the 15 recordings (2–16 limbs per recording, median 6), and
+  one line through tissue in each as a control.
+- **Who and from what:** placed by Claude Code by eye, not by the study's observer.
+  - They were placed on the resting image: the mean of the official rest (52–77 s per
+    recording), band-passed with σ 1 and 8 px.
+  - No velocity had been seen at that point.
+  - FP01_Qföre and FP03_Qföre reuse the lines of 2026-10-08.
+- **Which loops:** those whose two limbs could be told apart and followed down from the apex.
+  Loops whose limbs cross at once, rings, single bands and loops washed out at the frame's edge
+  were left out.
+- **Direction:** each limb runs from its base to the apex. In every recording the apexes point
+  up, as each loop's U-turn shows.
+- **Tracing:** each line follows the vessel's ridge from point to point (the cheapest path
+  through the image), and the two limbs of a loop are kept 5 px apart except near the apex.
+- **Checks before measuring:** gridded close-ups of every loop, in three rounds. Lines were
+  ended above where the limbs cross or merge, a point was added on a thin limb beside a wide
+  one, and four loops were dropped.
+- **Measurement:** over the official rest window. Per line, the pattern shift pooled over the
+  rest and its halves, as a centre-line data set keeps it, plus the centre-line method's 3-s
+  blocks. About 7 minutes for the 124 lines.
+
+**When a limb counts as measured**, at three levels (`summarize.py`):
+
+1. **Resolved:** the pooled pattern shift reaches a signal-to-noise ratio of 8, the app's rule.
+2. **Robust:** resolved, and also at least 1.5 px/frame (0.06 mm/s), with a 95% interval clear
+   of zero. This rule was set before any result was seen:
+   - near the slowest speed reported (1 px/frame), slow drift pulls the band-passed estimate
+     (2026-10-11);
+   - the limb check rests on the direction, which an interval across zero leaves open.
+3. **Combined (exploratory):** robust, or else the centre-line blocks, when at least 25% of
+   them are resolved and at least 90% of those run the same way. Without flow the benchmark
+   resolves 7–11% of blocks under strong jitter. This level was added after the first results,
+   for the reason below.
+
+**Results** (art/ven: arterial and venous limbs measured; loops: those with both limbs measured at
+the combined level, and in brackets how many of them run opposite ways):
+
+| Participant | Visit | Recording | Limbs (loops) | Resolved: art/ven | Robust: art/ven | Combined: art/ven | Loops (opposite) | Arterial, combined (mm/s) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| FP01 | W | FP01_W | not measured (stabilizer fails) | | | | | |
+| FP01 | Q | FP01_Qföre | 4 (3) | 1/2 | 1/1 | 1/1 | 1 (1) | 0.106 |
+| FP03 | Q | FP03_Qföre | 6 (5) | 0/0 | 0/0 | 0/0 | 0 | |
+| FP03 | W | FP03_Wföre | 10 (5) | 1/2 | 1/1 | 1/1 | 1 (1) | 0.080 |
+| FP05 | W | FP05_Wföre | 8 (4) | 0/0 | 0/0 | 0/0 | 0 | |
+| FP05 | Q | FP05_Qföre_försök4 | 4 (2) | 1/1 | 1/1 | 1/1 | 1 (1) | 0.139 |
+| FP06 | W | FP06_Wföre | 7 (4) | 1/1 | 0/1 | 0/1 | 0 | |
+| FP06 | Q | FP06_Qföre_försök2 | 16 (8) | 1/4 | 1/1 | 2/3 | 2 (2) | 0.068, 0.040 |
+| FP07 | Q | FP07_Qföre | 6 (3) | 0/1 | 0/1 | 0/1 | 0 | |
+| FP07 | W | FP07_Wföre | 12 (6) | 1/1 | 1/1 | 1/1 | 1 (1) | 0.140 |
+| FP09 | W | FP09_Wföre | 6 (3) | 0/0 | 0/0 | 2/2 | 2 (2) | 0.009, 0.014 |
+| FP09 | Q | FP09_Qföre | 2 (1) | 0/0 | 0/0 | 0/0 | 0 | |
+| FP12 | Q | FP12_Qföre | 2 (2) | 0/0 | 0/0 | 0/1 | 0 | |
+| FP12 | W | FP12_Wföre | 4 (2) | 0/0 | 0/0 | 0/1 | 0 | |
+| FP13 | W | FP13_Wföre_försök2 | 12 (6) | 0/0 | 0/0 | 1/2 | 1 (1) | 0.038 |
+| FP13 | Q | FP13_Qföre | 10 (5) | 3/3 | 2/2 | 3/3 | 3 (3) | 0.066, 0.087, 0.080 |
+
+| Level | Limbs measured (of 109) | Arterial | Recordings with a limb (of 15) | Loops with both limbs (opposite) | Arterial limb at both visits (of 7) | Any limb at both visits (of 7) |
+| --- | ---: | ---: | ---: | --- | ---: | ---: |
+| Resolved | 24 | 9 | 8 | 8 (7) | 1 (FP06) | 2 |
+| Robust | 16 | 7 | 8 | 6 (6) | 0 | 2 |
+| Combined | 30 | 12 | 12 | 12 (12) | 1 (FP13) | 4 (FP06, FP07, FP12, FP13) |
+
+- **No tissue line shows flow.** None of the 15 was resolved by the pattern shift (highest score
+  4.4), and the centre-line method resolved none of their blocks.
+- **Much resting flow is slower than the pattern shift's range.**
+  - 18 limbs in 6 recordings scored 8 or more at its slowest speed (1 px/frame, 0.04 mm/s), which
+    the method never reports.
+  - Where the two limbs of such a loop moved opposite ways, the centre-line blocks resolved 25–80%
+    of the rest, all one way: FP06_Qföre's loop D, FP09_Wföre's loop B, FP13_Wföre's loop D.
+  - Where they moved the same way, the blocks resolved 0–5%: FP03_Wföre's loops E and F, all four
+    limbs towards the base. That is drift of the image, not flow.
+  - The combined level takes 14 limbs from the centre-line blocks, at 0.005–0.087 mm/s, in 6
+    recordings. 8 of them were at the pattern shift's edge.
+  - All 12 loops with both limbs measured at this level run opposite ways.
+- **The space-time pictures** (10 s of 24 lines, scratch script) agree:
+  - mirrored slanted streaks in FP13_Qföre's loop A, FP06_Qföre's loop D, and FP13_Wföre's loop A.
+    The pattern shift missed the last on its 50-px lines (scores 7.2 and 4.7); the centre-line
+    method resolved about 60% of its blocks.
+  - Noise on FP03_Qföre's limbs and on FP03_Wföre's B left. The pattern shift resolved that limb
+    at 10.2, but its interval spans zero, so it is not robust.
+  - Faint texture moving the same way on both limbs of FP03_Wföre's loop E.
+  - FP09_Wföre's limbs (0.005–0.02 mm/s) show slowly moving large features, close to standstill.
+- **The one loop that broke the rule at the resolved level,** FP06_Qföre's loop H, has both limbs
+  venous at 1.1–1.2 px/frame, near the slow edge.
+  - Its right limb shows clear streaks towards the base: real venous flow.
+  - The left limb's line lies off the ridge (0.25 of the ridge's brightness, against 0.5–0.8 on
+    most lines). Its weak score (8.7) is probably the right limb's flow, picked up near the apex.
+  - The robust rule drops both, as slower than 1.5 px/frame.
+- **The velocities are low:** arterial limbs a median 0.074 mm/s (0.009–0.140), venous 0.067
+  (0.005–0.101).
+  - That is far below the 0.5–1 mm/s the project expected from the literature.
+  - The limbs that can be measured are those whose plasma gaps show, probably the slower ones.
+  - The frame rate and the pixel size are still unverified.
+- **Measured limbs are longer:** a median of 98 px, against 70 px for the others.
+- **Where nothing was measured:** FP03_Qföre, FP05_Wföre and FP09_Qföre give no limb at any
+  level. Their space-time pictures are noise.
+
+### What it means for aim 1
+
+To discuss with the supervisors:
+
+- **Resting CBV from the arterial limb only is feasible in at most 1 of these 7 participants.**
+  Whether a visit gives an arterial limb depends on which few loops happen to show plasma gaps,
+  and each recording gives 0–3 such loops.
+- **Any limb, arterial or venous,** gives both visits in 2 participants with the pattern shift
+  alone, and in 4 with the centre-line method added for slower flow.
+- **The combined rule is exploratory.** If it is to be used, it should be fixed before the real
+  analysis and checked on recordings it was not made on: the rest of ESMOKE, and ISMOKE.
+- **The lines here are a lower bound on what can be found.**
+  - They were placed on clearly visible loops only (2–16 limbs per recording).
+  - An observer working in the app, with the video, may find more.
+  - The study's observer should place the lines for the real analysis, blind to the visit.
+
+### Verification
+
+- `python -m pytest`: 265 passed; nothing in the package changed.
+- flake8: the CI's error selection is clean on the whole repository, and the full set on
+  `analysis/aim1_feasibility/`.
+- **The measurement ran twice,** the second time with three more centre-line columns. All 30
+  earlier columns of the 124 lines agreed exactly.
+- **Controls:**
+  - the tissue lines (none showed flow);
+  - the direction rule in loops (12 of 12 at the combined level);
+  - 24 space-time pictures looked at.
+- **Scratch scripts** (in the session's scratchpad, not in the repository):
+  - the read-only check of the raw recordings;
+  - the parallel stabilization and its quality per phase;
+  - the gridded close-ups for placing and checking lines;
+  - the space-time pictures.
+
+### Open
+
+- **The app and `ESMOKE_Videos/`:** let the app read per-study folders. Until then it lists the 31
+  recordings as raw only.
+- **Decide with the supervisors:** arterial limb only, or any limb, for aim 1; and whether to
+  combine the two methods, and by which rule.
+- **Line placement by the study's observer** in the app, blind to the visit, then compared with
+  these lines (`capillary/placement.py` should compare the pooled velocity at rest, not the
+  blocks).
+- **If the combined rule is kept,** the Centre line page should show it, since it now gives the
+  pooled pattern shift as the headline.
+- **More recordings:** 60 of the 90 the aims use are still to come, all of ISMOKE among them.
+- **The stabilizer fix for large movements:** FP01's active visit (FP01_W) cannot be measured
+  until then.
+- **Still unverified:** the frame rate, the pixel size and the exposure time.
+
+---
+
 ## 2026-10-11 — The arterial limb on the Centre line page: pattern shift, official phases, direction check
 
 **Branch:** `feature/arterial-limb`, from `main` at `06700a0` (after PR #15, the band-pass of step 1,
