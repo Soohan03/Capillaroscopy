@@ -13,7 +13,7 @@ video's name: raw recording, stabilized copy, data sets) and four pages:
 
 | Page | What you do there |
 | --- | --- |
-| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range, name the data set, press **Measure velocity and save**. |
+| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range (for a recording of the study, **Rest**, **Occlusion** or **After release** from its official times), name the data set, press **Measure velocity and save**. The result gives the velocity pooled over the range (pattern shift) and that of the 3-s blocks. For the resting velocity of an arterial limb, tick **Arterial limb** and draw the line from the base of the limb to the apex: the direction of the flow then shows whether it is the arterial limb. |
 | **Two boxes** | The original method: place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary; the velocity comes from the delay between their brightness signals. Kept for comparison and for the data sets made with it (see below). |
 | **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the line or boxes of a data set restored on its page. |
 | **Validation** | Checks the centre-line velocity on real recordings, where there is no ground truth. A *reading set* draws 3-s blocks from centre-line data sets; observers read them by hand, blinded, by drawing lines along the streaks; the agreement with the estimator, between observers and between two sessions of one observer is computed with Bland–Altman limits, intraclass correlation and kappa. *Line placement* compares data sets of the same capillary measured by different observers (or twice by one). |
@@ -99,8 +99,20 @@ as unresolved. A longer line reaches further: round a whole simulated loop
 (300 px), 0.48–1.6 mm/s were measured within about 1%. Until 2026-10-11 the
 rows were differenced instead; on the recordings band-passing resolved more
 limbs (5 against 3 of 29 at rest) and stayed lower on lines through tissue
-(`analysis/pattern_shift_bandpass/`). It is not on the app's pages yet; the
-batch command prints it for a line (below).
+(`analysis/pattern_shift_bandpass/`). Since 2026-10-11 every centre-line data
+set keeps the pattern shift of its whole range and of each half (the halves
+show whether the flow stayed the same), and the batch command prints them for
+a line (below).
+
+**The arterial limb (since 2026-10-11).** Resting velocity is measured on the
+arterial limb of a capillary loop, since the velocity changes towards the
+venous side. Blood flows up the arterial limb to the apex and down the venous
+limb, so a line drawn from a limb's base to the apex shows which limb it is by
+the direction of the pooled flow: towards the apex in the arterial limb. A line
+marked as an arterial limb saves this check with its data set
+(`limb_check`: arterial, venous, or unknown when the flow is not resolved),
+and the range's official phase (`phase`: rest, occlusion, after release, or
+several).
 
 **Two boxes (the original method).** The delay between the brightness signals
 of two boxes on the vessel, found by cross-correlation in windows of
@@ -187,7 +199,7 @@ changed later with the gear button. Inside the folder it uses:
 | `Caper.py` | The report plots of both methods, and the agreement plots of the Validation page |
 | `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), and the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`) |
 | `tests/` | Unit tests |
-| `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README) |
+| `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README); the measure pages take their Rest, Occlusion and After release ranges from them |
 
 ## Setup
 

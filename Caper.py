@@ -221,6 +221,15 @@ class CrossCorrelation:
         return report_data
 
 
+def _finite(value):
+    """`value` as a float, or None when it is missing or not finite."""
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return None
+    return value if math.isfinite(value) else None
+
+
 def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, first_frame, time_points=(),
                          summary=None):
     """Plot a centre-line data set and write its summary row (see capillary.datasets).
@@ -229,10 +238,13 @@ def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, firs
     `blocks` the per-block table from capillary.spacetime.analyze_space_time,
     `first_frame` the video frame of the diagram's first row and
     `report_prefix` is ``Reports/<stem>___<name>``. Writes
-    ``___line_velocity.png`` (velocity over time), ``___space_time.png`` (the
-    diagram with the measured slopes) and ``___line_summary.csv``.
+    ``___line_velocity.png`` (velocity over time, with the pattern shift pooled
+    over the range and its 95% interval if the summary has it resolved),
+    ``___space_time.png`` (the diagram with the measured slopes) and
+    ``___line_summary.csv``.
     """
     fps = fps or 30.0
+    summary = summary or {}
     resolved_mask = blocks['resolved'].astype(bool)
     resolved = blocks[resolved_mask]
     unresolved = blocks[~resolved_mask]
@@ -245,13 +257,25 @@ def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, firs
                 label='3-s blocks')
         median = float(resolved['velocity_mm_s'].median())
         ax.axhline(median, color='#2F6FDE', linestyle='--', linewidth=1, label=f'median {median:.4f} mm/s')
+    pooled = _finite(summary.get('pattern_shift_velocity_mm_s'))
+    if pooled is not None:
+        span = [first_frame / fps, (first_frame + len(diagram)) / fps]
+        ci_low, ci_high = (_finite(summary.get(f'pattern_shift_ci95_{end}_mm_s')) for end in ('low', 'high'))
+        if ci_low is not None and ci_high is not None:
+            ax.fill_between(span, ci_low, ci_high, color='#1E874B', alpha=0.15, linewidth=0,
+                            label='95% interval of the pattern shift')
+        ax.plot(span, [pooled, pooled], color='#1E874B', linewidth=1.5,
+                label=f'pattern shift over the range {pooled:.4f} mm/s')
     if len(unresolved):
-        low = ax.get_ylim()[0] if len(resolved) else 0.0
+        low = ax.get_ylim()[0] if len(resolved) or pooled is not None else 0.0
         ax.plot(unresolved['time_s'], [low] * len(unresolved), '|', color='#9AA3AF', markersize=8,
                 label='unresolved blocks')
     for point in time_points:
         ax.axvline(x=float(point), c='r', linewidth=1)
-    ax.set_title('Velocity along the centre line')
+    limb = {'arterial': 'arterial limb, flow towards the apex',
+            'venous': 'drawn as the arterial limb, but the flow runs towards the base: venous',
+            'unknown': 'arterial limb, direction of flow not resolved'}.get(summary.get('limb_check'))
+    ax.set_title('Velocity along the centre line' + (f' ({limb})' if limb else ''))
     ax.set_ylabel('mm/s (positive: from the first point towards the last)')
     ax.set_xlabel('Seconds')
     ax.legend(loc='best', fontsize=8)

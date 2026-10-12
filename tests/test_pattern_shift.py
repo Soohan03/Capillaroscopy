@@ -11,8 +11,10 @@ from capillary.pattern_shift import (
     MIN_SPEED,
     _block_sums,
     _prepared,
+    limb_from_direction,
     pattern_shift,
     shift_time_course,
+    summarize,
 )
 from capillary.spacetime import space_time_diagram
 
@@ -145,6 +147,46 @@ def test_time_course_in_windows():
     np.testing.assert_allclose(course['velocity_mm_s'], course['speed_px_per_frame'] * FPS * MM_PER_PIXEL)
     with pytest.raises(ValueError):
         shift_time_course(data[:600], FPS, MM_PER_PIXEL, window_frames=900, step_frames=450)
+
+
+def test_a_data_set_keeps_the_pooled_speed_and_each_half():
+    # the flow slows from 5 to 4 px/frame halfway: each half shows its own speed
+    data = np.vstack([diagram(5.0, frames=900, seed=13), diagram(4.0, frames=900, seed=14)])
+    summary = summarize(data, FPS, MM_PER_PIXEL)
+    to_mm_s = FPS * MM_PER_PIXEL
+    velocity = summary['pattern_shift_velocity_mm_s']
+    assert summary['pattern_shift_resolved'] and summary['pattern_shift_blocks'] == 20
+    assert 0.98 * 4.0 * to_mm_s <= velocity <= 1.02 * 5.0 * to_mm_s
+    assert summary['pattern_shift_ci95_low_mm_s'] < velocity < summary['pattern_shift_ci95_high_mm_s']
+    assert summary['pattern_shift_speed_px_per_frame'] * to_mm_s == pytest.approx(velocity)
+    assert summary['pattern_shift_first_half_mm_s'] == pytest.approx(5.0 * to_mm_s, rel=0.03)
+    assert summary['pattern_shift_second_half_mm_s'] == pytest.approx(4.0 * to_mm_s, rel=0.03)
+    assert min(summary['pattern_shift_first_half_snr'], summary['pattern_shift_second_half_snr']) >= MIN_SNR
+
+
+def test_a_short_or_unresolved_range_keeps_no_velocity_it_cannot_support():
+    short = summarize(diagram(5.0, frames=4 * BLOCK_FRAMES, seed=15), FPS, MM_PER_PIXEL)
+    assert short['pattern_shift_resolved'] and short['pattern_shift_blocks'] == 4
+    assert np.isnan(short['pattern_shift_first_half_snr']) and np.isnan(short['pattern_shift_second_half_mm_s'])
+    still = summarize(diagram(0.0, frames=900, seed=1), FPS, MM_PER_PIXEL)
+    assert not still['pattern_shift_resolved'] and np.isfinite(still['pattern_shift_speed_px_per_frame'])
+    assert np.isnan(still['pattern_shift_velocity_mm_s']) and np.isnan(still['pattern_shift_ci95_low_mm_s'])
+    assert np.isnan(still['pattern_shift_first_half_mm_s']) and np.isfinite(still['pattern_shift_first_half_snr'])
+
+
+def test_the_direction_of_flow_tells_the_limbs_of_a_loop_apart():
+    # lines from a limb's base to the apex: blood flows up the arterial limb and down the venous one
+    assert (limb_from_direction(0.11), limb_from_direction(-0.08)) == ('arterial', 'venous')
+    assert limb_from_direction(float('nan')) == limb_from_direction(None) == 'unknown'
+    loop = simulate.simulate(simulate.hairpin(), 900, 4.0, seed=5)      # up the left limb, down the right one
+
+    def limb(base_arc, apex_arc):
+        line = loop.drawn_line(base_arc, apex_arc, seed=1)
+        summary = summarize(space_time_diagram(loop.frames, line), loop.fps, MM_PER_PIXEL)
+        return limb_from_direction(summary['pattern_shift_velocity_mm_s'])
+
+    assert limb(20, 140) == 'arterial'
+    assert limb(320, 200) == 'venous'
 
 
 def test_a_synthetic_recording_with_motion_blur():

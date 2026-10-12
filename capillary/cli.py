@@ -188,7 +188,7 @@ def _measure_line(args, line: spacetime.Centreline, mm_per_pixel: float) -> int:
         diagram = spacetime.space_time_diagram(iter_frames(args.video, max_frames=args.max_frames, start=args.start),
                                                line)
         blocks = spacetime.analyze_space_time(diagram, fps, mm_per_pixel, first_frame=args.start)
-        pooled = pattern_shift.pattern_shift(diagram)
+        pooled = pattern_shift.summarize(diagram, fps, mm_per_pixel)
     except (FileNotFoundError, ValueError) as exc:
         print(f'error: {exc}', file=sys.stderr)
         return 1
@@ -210,12 +210,18 @@ def _measure_line(args, line: spacetime.Centreline, mm_per_pixel: float) -> int:
                   f'(IQR {summary["q25"]:.4f} to {summary["q75"]:.4f}), '
                   f'median signal-to-noise {summary["median_snr"]:.0f}')
         to_mm_s = fps * mm_per_pixel
-        if np.isfinite(pooled.speed_px_per_frame):
-            interval = (f', 95% CI {pooled.ci95[0] * to_mm_s:.4f} to {pooled.ci95[1] * to_mm_s:.4f}'
-                        if np.isfinite(pooled.ci95[0]) else '')
-            print(f'  pattern shift  : {pooled.speed_px_per_frame * to_mm_s:.4f} mm/s{interval}, signal-to-noise '
-                  f'{pooled.snr:.1f}, pooled over {pooled.blocks} blocks - '
-                  f'{"resolved" if pooled.resolved else "not resolved"}')
+        speed = pooled['pattern_shift_speed_px_per_frame']
+        if np.isfinite(speed):
+            low, high = pooled['pattern_shift_ci95_low_mm_s'], pooled['pattern_shift_ci95_high_mm_s']
+            interval = f', 95% CI {low:.4f} to {high:.4f}' if np.isfinite(low) else ''
+            print(f'  pattern shift  : {speed * to_mm_s:.4f} mm/s{interval}, signal-to-noise '
+                  f'{pooled["pattern_shift_snr"]:.1f}, pooled over {pooled["pattern_shift_blocks"]} blocks - '
+                  f'{"resolved" if pooled["pattern_shift_resolved"] else "not resolved"}')
+            halves = ('first_half', 'second_half')
+            if np.isfinite(pooled['pattern_shift_first_half_snr']):
+                print('  halves         : ' + ' / '.join(
+                    f'{pooled[f"pattern_shift_{half}_mm_s"]:.4f}' if np.isfinite(pooled[f'pattern_shift_{half}_mm_s'])
+                    else 'not resolved' for half in halves) + ' mm/s')
         else:
             print('  pattern shift  : no estimate (the line or the range is too short)')
     return 0

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from capillary import datasets, simulate
+from capillary import datasets, inventory, pattern_shift, simulate
 from gui import library, tasks
 from gui.settings import DataFolder
 
@@ -78,8 +78,11 @@ def test_measurement_saves_the_data_set_and_its_report(recording, measured):
     assert record['kind'] == 'line' and record['frames'] == {'first': 10, 'last': 229, 'count': 220}
     assert [tuple(p) for p in record['line']['points']] == [tuple(round(v, 2) for v in p) for p in points]
     assert record['estimator']['min_snr'] == pytest.approx(8.0)
+    assert record['pattern_shift']['bandpass_px'] == [1.0, 4.0]
     assert record['time_points_s'] == [3.0]
     assert record['observer'] == 'SJ'
+    assert record['line']['role'] is None and record['summary']['limb_check'] == ''
+    assert record['summary']['phase'] == ''                       # this recording has no official times
     for path in datasets.line_report_files(folder.reports, STEM, 'line1').values():
         assert os.path.isfile(path)
     summary_row = pd.read_csv(datasets.line_report_files(folder.reports, STEM, 'line1')['summary'])
@@ -101,8 +104,34 @@ def test_the_report_can_be_regenerated_without_the_video(recording, measured, tm
     result = tasks.regenerate_line_report(FakeJob(), folder=folder, stem=STEM, name='line1', fps=clip.fps,
                                           mm_per_pixel=MM_PER_PIXEL, time_points=[2.0, 5.0])
     assert result['summary']['median'] == pytest.approx(measured[0]['summary']['median'])
+    pooled = measured[0]['summary']['pattern_shift_velocity_mm_s']
+    assert result['summary']['pattern_shift_velocity_mm_s'] == pytest.approx(pooled, rel=1e-4)    # float32 on disk
     record = datasets.read_provenance(datasets.line_dataset_files(folder.statistics, STEM, 'line1')['provenance'])
     assert record['time_points_s'] == [2.0, 5.0] and 'report_regenerated' in record
+
+
+def test_an_arterial_limb_is_checked_by_the_direction_of_its_flow(recording, monkeypatch):
+    folder, path, clip, points = recording
+    # official times that put the occlusion 5 s and the release 6 s into this 8-s recording
+    monkeypatch.setattr(inventory, '_times_by_name', lambda _folder: {STEM: (5.0, 6.0)})
+    results = {}
+    for name, line in (('limb', points), ('from_apex', points[::-1])):      # the line runs up the arterial limb
+        results[name] = tasks.measure_line_dataset(
+            FakeJob(), folder=folder, stem=STEM, name=name, video_path=path, points=line, start=10, end=229,
+            mm_per_pixel=MM_PER_PIXEL, role=pattern_shift.ARTERIAL_LIMB)
+    summary = results['limb']['summary']
+    assert summary['pattern_shift_velocity_mm_s'] == pytest.approx(clip.true_velocity_mm_s(MM_PER_PIXEL), rel=0.05)
+    assert (summary['line_role'], summary['limb_check']) == ('arterial limb', 'arterial')
+    assert results['from_apex']['summary']['limb_check'] == 'venous'     # against the flow, as in a venous limb
+    assert summary['phase'] == 'rest + occlusion + after release'
+    record = datasets.read_provenance(datasets.line_dataset_files(folder.statistics, STEM, 'limb')['provenance'])
+    assert record['line']['role'] == 'arterial limb' and record['summary']['limb_check'] == 'arterial'
+    row = pd.read_csv(datasets.line_report_files(folder.reports, STEM, 'limb')['summary'])
+    assert row['pattern_shift_velocity_mm_s'].iloc[0] == pytest.approx(summary['pattern_shift_velocity_mm_s'])
+    assert row['limb_check'].iloc[0] == 'arterial' and row['phase'].iloc[0] == 'rest + occlusion + after release'
+    regenerated = tasks.regenerate_line_report(FakeJob(), folder=folder, stem=STEM, name='limb', fps=clip.fps,
+                                               mm_per_pixel=MM_PER_PIXEL)
+    assert regenerated['summary']['limb_check'] == 'arterial'           # the role is kept from the provenance
 
 
 def test_the_preview_measures_the_frames_around_the_playhead(recording):

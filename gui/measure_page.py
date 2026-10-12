@@ -7,18 +7,24 @@ the range of frames, name the data set, press Measure. The frames of the range
 are read straight from the file in a background job, the data set is saved and
 its report written, and the result appears in the panel. `LinePage` and
 `AnalyzePage` add their own tool and live preview.
+
+A recording with official occlusion and release times (`metadata/`) offers
+its rest, occlusion and the time after release as ranges
+(`capillary.inventory.recording_phases`); the timeline marks the occlusion.
 """
 
 from __future__ import annotations
 
 import datetime
+import logging
 import math
 import os
 import tkinter as tk
+from functools import partial
 from tkinter import ttk
 from typing import Optional
 
-from capillary import datasets, validation
+from capillary import datasets, inventory, validation
 
 from . import tasks
 from .dialogs import confirm, show_error
@@ -29,7 +35,13 @@ from .transport import Player, Timeline, TransportBar
 from .video_view import VideoView
 from .widgets import Banner, LineChart, ScrollFrame, Tooltip, section, separator
 
+log = logging.getLogger(__name__)
+
 INSPECTOR_WIDTH = 380
+#: What each official phase's range covers, for its button's tooltip.
+PHASE_SPANS = {'rest': 'from 2 s after the start to 2 s before the occlusion',
+               'occlusion': 'from 2 s after the occlusion to 2 s before the release',
+               'after release': 'from 2 s after the release to 2 s before the end of the video'}
 
 
 class MeasurePage(ttk.Frame):
@@ -45,6 +57,7 @@ class MeasurePage(ttk.Frame):
         self.app = app
         self.recording: Optional[Recording] = None
         self.video_path: Optional[str] = None
+        self.phases: Optional[inventory.Phases] = None
         self.range = None
         self.markers: list[float] = []
         self.results = {}
@@ -152,7 +165,9 @@ class MeasurePage(ttk.Frame):
         frame = section(body, 'Range and time points', help_text=(
             'Measure uses the frames from the start to the end of the range. Set them at the current frame '
             'with the buttons, or with I and O on the keyboard; the range is shaded on the timeline. '
-            'Time points mark events such as a released cuff.'))
+            'For a recording of the study, the official phases set the range from its occlusion and release '
+            'times (metadata/), 2 s away from each event: Rest is what the aims measure. The timeline marks '
+            'the occlusion with an orange bar. Time points mark events such as a released cuff.'))
         top = ttk.Frame(frame, style='Panel.TFrame')
         top.pack(fill='x')
         ttk.Label(top, text='Range', style='Muted.Panel.TLabel').pack(side='left')
@@ -161,7 +176,8 @@ class MeasurePage(ttk.Frame):
         Tooltip(reset, 'Use every frame of the video (R)')
         self.range_label = ttk.Label(frame, text='–', style='Mono.Panel.TLabel')
         self.range_label.pack(anchor='w', pady=(px(2), 0))
-        self.range_detail = ttk.Label(frame, text='', style='Faint.Panel.TLabel')
+        self.range_detail = ttk.Label(frame, text='', style='Faint.Panel.TLabel', wraplength=px(INSPECTOR_WIDTH - 40),
+                                      justify='left')
         self.range_detail.pack(anchor='w')
         buttons = ttk.Frame(frame, style='Panel.TFrame')
         buttons.pack(fill='x', pady=(px(8), 0))
@@ -171,6 +187,26 @@ class MeasurePage(ttk.Frame):
         end = ttk.Button(buttons, text='End here', command=self.set_range_end)
         end.pack(side='left', fill='x', expand=True, padx=(px(8), 0))
         Tooltip(end, 'End the range at the current frame (O)')
+
+        phase_head = ttk.Frame(frame, style='Panel.TFrame')
+        phase_head.pack(fill='x', pady=(px(14), 0))
+        ttk.Label(phase_head, text='Official phases', style='Muted.Panel.TLabel').pack(side='left')
+        self.phase_times = ttk.Label(phase_head, text='', style='Faint.Panel.TLabel')
+        self.phase_times.pack(side='right')
+        phase_row = ttk.Frame(frame, style='Panel.TFrame')
+        phase_row.pack(fill='x', pady=(px(4), 0))
+        self.phase_buttons = {}
+        for index, phase in enumerate(inventory.PHASES):
+            # three equal columns; the theme's minimum button width would push the third out of the panel
+            button = ttk.Button(phase_row, text=phase.capitalize(), width=1, padding=(px(4), px(5)),
+                                command=partial(self.set_range_to_phase, phase))
+            button.grid(row=0, column=index, sticky='ew', padx=(px(6) if index else 0, 0))
+            phase_row.columnconfigure(index, weight=1, uniform='phase')
+            Tooltip(button, partial(self._phase_tip, phase))
+            self.phase_buttons[phase] = button
+        self.phase_note = ttk.Label(frame, text='', style='Faint.Panel.TLabel', wraplength=px(INSPECTOR_WIDTH - 40),
+                                    justify='left')
+        self.phase_note.pack(anchor='w', pady=(px(3), 0))
 
         marker_head = ttk.Frame(frame, style='Panel.TFrame')
         marker_head.pack(fill='x', pady=(px(14), 0))
@@ -251,6 +287,7 @@ class MeasurePage(ttk.Frame):
         if changed or path != self.video_path:
             self.video_path = path
             self._open_video(path)
+            self.phases = self._official_phases(recording)
             self.restore_state(self._saved_state.get(recording.stem) if recording else None)
             self.name_var.set(datasets.suggest_dataset_name(self.existing_names()))
         self.markers = (datasets.load_time_points(datasets.time_points_file(self.app.folder.statistics,
@@ -282,6 +319,16 @@ class MeasurePage(ttk.Frame):
         self.timeline.configure_video(source.frame_count, source.fps)
         self.player.open(source)
         self.transport.update_state()
+
+    def _official_phases(self, recording) -> Optional[inventory.Phases]:
+        source = self.player.source
+        if recording is None or source is None:
+            return None
+        try:
+            return inventory.recording_phases(recording.stem, source.fps, source.frame_count)
+        except (OSError, ValueError, KeyError):
+            log.warning('Could not read the official times', exc_info=True)
+            return None
 
     def refresh(self):
         recording = self.recording
@@ -352,6 +399,21 @@ class MeasurePage(ttk.Frame):
         self.range = None
         self._range_changed()
 
+    def set_range_to_phase(self, phase):
+        """Set the range to an official phase of the recording ('rest', 'occlusion', 'after release')."""
+        window = (self.phases.windows if self.phases is not None else {}).get(phase)
+        if window is None or self.player.source is None:
+            return
+        self.range = tuple(window)
+        self._range_changed()
+
+    def range_phase(self) -> str:
+        """The official phases the current range lies in ('rest', 'rest + occlusion', ...), '' if unknown."""
+        selected = self.current_range()
+        if selected is None or self.phases is None:
+            return ''
+        return self.phases.phase_of(selected[0], selected[1], self.player.fps)
+
     def _range_changed(self):
         if self.range == (0, self.player.frame_count - 1):
             self.range = None
@@ -359,6 +421,7 @@ class MeasurePage(ttk.Frame):
         self.update_measure_state()
 
     def _update_range_ui(self):
+        self._update_phase_ui()
         selected = self.current_range()
         if selected is None:
             self.range_label.configure(text='–')
@@ -369,9 +432,38 @@ class MeasurePage(ttk.Frame):
         fps = self.player.fps
         count = end - start + 1
         self.range_label.configure(text=f'{format_time(start / fps)}  →  {format_time(end / fps)}')
-        scope = 'whole video' if self.range is None else 'part of the video'
+        scope = 'whole video' if self.range is None else (self.range_phase() or 'part of the video')
         self.range_detail.configure(text=f'frames {start}–{end}  ·  {count} frames ({count / fps:.1f} s)  ·  {scope}')
         self.timeline.set_range(None if self.range is None else self.range)
+
+    def _update_phase_ui(self):
+        phases = self.phases
+        windows = phases.windows if phases is not None else {}
+        for phase, button in self.phase_buttons.items():
+            button.state(['!disabled'] if phase in windows else ['disabled'])
+        if phases is None:
+            self.phase_times.configure(text='')
+            self.phase_note.configure(text='No official times for this recording.' if self.player.source else '')
+            self.timeline.set_phases(None, None)
+            return
+        times = f'occlusion {format_time(phases.occlusion_s)}'
+        if phases.release_s is not None:
+            times += f'  ·  release {format_time(phases.release_s)}'
+        self.phase_times.configure(text=times)
+        self.phase_note.configure(text=' '.join(phases.notes))
+        if windows:
+            self.timeline.set_phases(phases.occlusion_s, phases.release_s)
+        else:
+            self.timeline.set_phases(None, None)
+
+    def _phase_tip(self, phase):
+        window = (self.phases.windows if self.phases is not None else {}).get(phase)
+        if window is None:
+            return f'No official {phase} for this recording.'
+        first, last = window
+        fps = self.player.fps
+        return (f'Set the range to the {phase}, {PHASE_SPANS[phase]}: {format_time(first / fps)} → '
+                f'{format_time(last / fps)}, frames {first}–{last} ({(last - first + 1) / fps:.1f} s).')
 
     # ----------------------------------------------------------------------- markers
     def add_marker(self):
@@ -561,7 +653,11 @@ class MeasurePage(ttk.Frame):
         if len(values) > 1:
             self.result_chart.set_data([(series['t'], series['v'], COLORS['accent'])])
         else:
-            self.result_chart.set_message('No value could be resolved in this range, so there is nothing to plot.')
+            self.result_chart.set_message(self.empty_chart_message(result))
+
+    def empty_chart_message(self, result) -> str:
+        """What the result chart says when it has fewer than two values to plot."""
+        return 'No value could be resolved in this range, so there is nothing to plot.'
 
     def _open_result(self):
         result = self.results.get(self.recording.stem) if self.recording else None

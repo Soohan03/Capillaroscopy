@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 import Caper
-from capillary import datasets, placement, spacetime, validation
+from capillary import datasets, inventory, pattern_shift, placement, spacetime, validation
 from capillary import stabilize as stabilizer
 from capillary.intensity import extract_traces
 from capillary.measure import measure_velocity
@@ -202,6 +202,22 @@ def _video_record(path: str, info) -> dict:
             'frame_count': info.frame_count, 'fps': info.fps, 'width': info.width, 'height': info.height}
 
 
+def range_phase(stem: str, fps: float, frame_count, first: int, last: int) -> str:
+    """The official phases frames `first`..`last` of the recording lie in, e.g. 'rest' (`capillary.inventory`).
+
+    '' when the recording has no official times, they do not fit its video, or
+    the metadata cannot be read.
+    """
+    if not frame_count:
+        return ''
+    try:
+        phases = inventory.recording_phases(stem, fps, int(frame_count))
+    except (OSError, ValueError, KeyError):
+        log.warning('Could not read the official times', exc_info=True)
+        return ''
+    return phases.phase_of(first, last, fps) if phases is not None else ''
+
+
 def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str,
                              box1: ROI, box2: ROI, start: int, end: int, mm_per_pixel: float,
                              time_points=(), blur_cache=None, observer: str = '') -> dict:
@@ -225,6 +241,8 @@ def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, v
             progress=lambda p: job.report(0.55 + 0.37 * p, 'Computing velocities'))
         job.report(0.97, 'Writing the summary')
         summary = summarize_velocity_report(report)
+        summary['phase'] = range_phase(stem, measurement.fps, measurement.frame_count, measurement.start_frame,
+                                       measurement.start_frame + measurement.frames_read - 1)
         slowest, fastest = resolvable_range(trace.distance_px, measurement.fps, mm_per_pixel)
         record = {
             'kind': 'velocity',
@@ -278,6 +296,10 @@ def regenerate_velocity_report(job, *, folder: DataFolder, stem: str, name: str,
     provenance = datasets.velocity_dataset_files(folder.statistics, stem, name)['provenance']
     record = datasets.read_provenance(provenance)
     if record is not None:
+        frames = record.get('frames') or {}
+        if 'first' in frames and 'last' in frames:
+            summary['phase'] = range_phase(stem, fps, (record.get('video') or {}).get('frame_count'),
+                                           int(frames['first']), int(frames['last']))
         record['summary'] = summary
         record['time_points_s'] = sorted(float(t) for t in time_points)
         record['report_regenerated'] = datetime.datetime.now().isoformat(timespec='seconds')
@@ -322,6 +344,20 @@ def summarize_line_blocks(blocks: pd.DataFrame, length_px: float, fps: float, mm
     return summary
 
 
+def summarize_line(diagram, blocks: pd.DataFrame, length_px: float, fps: float, mm_per_pixel: float,
+                   role: Optional[str] = None, phase: str = '') -> dict:
+    """Everything a centre-line data set reports: its 3-s blocks, the pattern shift pooled over the range
+    (`capillary.pattern_shift.summarize`), what the line follows and, for an arterial limb, which limb the
+    direction of the pooled flow shows; `phase` is the official phase of the range ('' if unknown)."""
+    summary = summarize_line_blocks(blocks, length_px, fps, mm_per_pixel)
+    summary.update(pattern_shift.summarize(diagram, fps, mm_per_pixel))
+    summary['line_role'] = role or ''
+    summary['limb_check'] = (pattern_shift.limb_from_direction(summary['pattern_shift_velocity_mm_s'])
+                             if role == pattern_shift.ARTERIAL_LIMB else '')
+    summary['phase'] = phase
+    return summary
+
+
 def _estimator_record() -> dict:
     return {'method': 'capillary.spacetime: slope of the streaks in the space-time diagram (Radon transform '
                       'evaluated in the Fourier domain, mirror line subtracted)',
@@ -331,9 +367,23 @@ def _estimator_record() -> dict:
             'fastest_fraction': spacetime.FASTEST_FRACTION, 'half_width_px': spacetime.DEFAULT_HALF_WIDTH_PX}
 
 
+def _pattern_shift_record() -> dict:
+    return {'method': 'capillary.pattern_shift: the shift of the pattern along the line between a frame and the '
+                      f'next 1-{pattern_shift.MAX_LAG}, pooled over all 3-s blocks of the range, and of each half',
+            'block_frames': pattern_shift.BLOCK_FRAMES, 'max_lag': pattern_shift.MAX_LAG,
+            'bandpass_px': list(pattern_shift.BANDPASS_PX), 'min_snr': pattern_shift.MIN_SNR,
+            'min_speed_px_per_frame': pattern_shift.MIN_SPEED, 'min_shift_px': pattern_shift.MIN_SHIFT_PX,
+            'min_half_blocks': pattern_shift.MIN_HALF_BLOCKS}
+
+
 def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str, points,
-                         start: int, end: int, mm_per_pixel: float, time_points=(), observer: str = '') -> dict:
-    """Measure frames ``start..end`` (inclusive) along the centre line, save the data set, write its report."""
+                         start: int, end: int, mm_per_pixel: float, time_points=(), observer: str = '',
+                         role: Optional[str] = None) -> dict:
+    """Measure frames ``start..end`` (inclusive) along the centre line, save the data set, write its report.
+
+    `role` is `capillary.pattern_shift.ARTERIAL_LIMB` for a line drawn along a capillary loop's arterial
+    limb, from its base to the apex; None for any other line.
+    """
     info = probe_video(video_path)
     line = spacetime.Centreline.from_points(points)
     sampler = spacetime.SpaceTimeSampler(line)
@@ -349,12 +399,15 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
                          f'{spacetime.DEFAULT_BLOCK_FRAMES}.')
     diagram = np.asarray(rows, dtype=np.float32)
     blocks = spacetime.analyze_space_time(diagram, info.fps, mm_per_pixel, first_frame=start,
-                                          progress=lambda p: job.report(0.5 + 0.4 * p, 'Measuring the streaks'))
+                                          progress=lambda p: job.report(0.5 + 0.35 * p, 'Measuring the streaks'))
+    job.report(0.86, 'Pooling the pattern shift')
+    last = start + len(rows) - 1
+    summary = summarize_line(diagram, blocks, line.length_px, info.fps, mm_per_pixel, role,
+                             range_phase(stem, info.fps, info.frame_count, start, last))
     files = datasets.line_dataset_files(folder.statistics, stem, name)
     try:
         job.report(0.92, 'Saving the data set')
         datasets.write_line_dataset(folder.statistics, stem, name, diagram, blocks)
-        summary = summarize_line_blocks(blocks, line.length_px, info.fps, mm_per_pixel)
         Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, info.fps,
                                    mm_per_pixel, start, sorted(time_points), summary)
         record = {
@@ -364,16 +417,20 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
             'created': datetime.datetime.now().isoformat(timespec='seconds'),
             'observer': observer or None,
             'video': _video_record(video_path, info),
-            'frames': {'first': start, 'last': start + len(rows) - 1, 'count': len(rows)},
+            'frames': {'first': start, 'last': last, 'count': len(rows)},
             'line': {'points': [[round(x, 2), round(y, 2)] for x, y in line.points],
                      'length_px': line.length_px,
                      'length_um': line.length_px * mm_per_pixel * 1000.0,
                      'coordinates': 'clicked points in video pixels, x to the right, y down from the top-left '
-                                    'corner; positive velocity runs from the first point towards the last'},
+                                    'corner; positive velocity runs from the first point towards the last',
+                     'role': role,
+                     'roles': f'"{pattern_shift.ARTERIAL_LIMB}": drawn along a capillary loop\'s arterial limb '
+                              'from its base to the apex; null: any other line'},
             'mm_per_pixel': mm_per_pixel,
             'resolvable_mm_per_s': {'slowest': summary['slowest_mm_s'], 'fastest': summary['fastest_mm_s']},
             'time_points_s': sorted(float(t) for t in time_points),
             'estimator': _estimator_record(),
+            'pattern_shift': _pattern_shift_record(),
             'summary': summary,
             'software': datasets.software_version(),
         }
@@ -399,16 +456,20 @@ def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps
     else:
         first = int(old_blocks.index.min()) - spacetime.DEFAULT_BLOCK_FRAMES // 2 if len(old_blocks) else 0
     blocks = spacetime.analyze_space_time(diagram, fps, mm_per_pixel, first_frame=first,
-                                          progress=lambda p: job.report(0.1 + 0.75 * p, 'Measuring the streaks'))
+                                          progress=lambda p: job.report(0.1 + 0.7 * p, 'Measuring the streaks'))
     blocks.to_csv(files['velocity'])
-    length = ((record or {}).get('line') or {}).get('length_px') or float(diagram.shape[1] - 1)
-    summary = summarize_line_blocks(blocks, length, fps, mm_per_pixel)
+    line = (record or {}).get('line') or {}
+    length = line.get('length_px') or float(diagram.shape[1] - 1)
+    job.report(0.82, 'Pooling the pattern shift')
+    frame_count = ((record or {}).get('video') or {}).get('frame_count')
+    summary = summarize_line(diagram, blocks, length, fps, mm_per_pixel, line.get('role'),
+                             range_phase(stem, fps, frame_count, first, first + diagram.shape[0] - 1))
     job.report(0.9, 'Drawing the report')
     Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, fps,
                                mm_per_pixel, first, sorted(time_points), summary)
     if record is not None:
-        record.update(summary=summary, estimator=_estimator_record(), mm_per_pixel=mm_per_pixel,
-                      time_points_s=sorted(float(t) for t in time_points),
+        record.update(summary=summary, estimator=_estimator_record(), pattern_shift=_pattern_shift_record(),
+                      mm_per_pixel=mm_per_pixel, time_points_s=sorted(float(t) for t in time_points),
                       report_regenerated=datetime.datetime.now().isoformat(timespec='seconds'))
         datasets.write_provenance(files['provenance'], record)
     return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks)}

@@ -28,7 +28,13 @@ Centre-line data set (Centre line page, since 2026-10-06; `capillary.spacetime`)
     ``___line_provenance.json``   the video, the line's points, the frames,
                                   calibration, estimator settings and summary
 plus ``___line_velocity.png``, ``___space_time.png`` and ``___line_summary.csv``
-in ``Reports/``.
+in ``Reports/``. Since 2026-10-11 the summary (in the provenance and the
+summary CSV) also holds the pattern shift pooled over the range and over each
+half (``pattern_shift_...``, `capillary.pattern_shift.summarize`), the line's
+role (``line_role``: 'arterial limb' for a line drawn from a capillary loop's
+base to its apex, else empty), the direction check of an arterial limb
+(``limb_check``: arterial, venous or unknown) and the official phase of the
+range (``phase``: rest, occlusion, after release, or several joined by ' + ').
 
 Versions before 2026-10-06 also had an optical-flow measurement, saved as
 ``___flow.pickle`` and ``___mask.pickle`` (plus ``___flow_provenance.json``)
