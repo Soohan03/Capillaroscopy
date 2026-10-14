@@ -1,0 +1,3421 @@
+condition,seed,variant,band,max_score
+as measured,0,before,1-2,5.364112245397556
+as measured,0,before,2-inf,2.4334836398864317
+as measured,0,floor only,0.1-0.2,3.6619395860206954
+as measured,0,floor only,0.2-0.3,5.8273637501125695
+as measured,0,floor only,0.3-0.5,7.921583066379347
+as measured,0,floor only,0.5-1,7.9557561751520955
+as measured,0,floor only,1-2,5.364112245397556
+as measured,0,floor only,2-inf,2.4334836398864317
+as measured,0,all lags,0.1-0.2,4.597912394903905
+as measured,0,all lags,0.2-0.3,3.8070399844698652
+as measured,0,all lags,0.3-0.5,5.858155585752824
+as measured,0,all lags,0.5-1,6.613449933238218
+as measured,0,all lags,1-2,5.364112245397556
+as measured,0,all lags,2-inf,2.4334836398864317
+as measured,0,"all lags, mean",0.1-0.2,4.597912394903905
+as measured,0,"all lags, mean",0.2-0.3,3.8070399844698652
+as measured,0,"all lags, mean",0.3-0.5,5.858155585752824
+as measured,0,"all lags, mean",0.5-1,6.613449933238218
+as measured,0,"all lags, mean",1-2,5.364112245397556
+as measured,0,"all lags, mean",2-inf,2.4334836398864317
+as measured,0,"stretched, uncentred",0.1-0.2,2.9994205484765133
+as measured,0,"stretched, uncentred",0.2-0.3,2.417350719425729
+as measured,0,"stretched, uncentred",0.3-0.5,4.0004527958841765
+as measured,0,"stretched, uncentred",0.5-1,5.625408081629888
+as measured,0,"stretched, uncentred",1-2,5.364112245397556
+as measured,0,"stretched, uncentred",2-inf,2.4334836398864317
+as measured,0,stretched,0.1-0.2,3.062400091111948
+as measured,0,stretched,0.2-0.3,2.555632697360074
+as measured,0,stretched,0.3-0.5,3.953767903941065
+as measured,0,stretched,0.5-1,5.631432321735547
+as measured,0,stretched,1-2,5.364112245397556
+as measured,0,stretched,2-inf,2.4334836398864317
+as measured,0,"stretched, 6-s blocks",0.1-0.2,1.8755574614296266
+as measured,0,"stretched, 6-s blocks",0.2-0.3,1.3667949675427642
+as measured,0,"stretched, 6-s blocks",0.3-0.5,4.70666692443178
+as measured,0,"stretched, 6-s blocks",0.5-1,5.361654954619885
+as measured,0,"stretched, 6-s blocks",1-2,4.872864110766315
+as measured,0,"stretched, 6-s blocks",2-inf,2.5798110622604473
+as measured,1,before,1-2,3.3396792218882054
+as measured,1,before,2-inf,2.434723697304216
+as measured,1,floor only,0.1-0.2,3.0897004963239545
+as measured,1,floor only,0.2-0.3,4.412535015720207
+as measured,1,floor only,0.3-0.5,4.831032677730492
+as measured,1,floor only,0.5-1,4.648334045456124
+as measured,1,floor only,1-2,3.3396792218882054
+as measured,1,floor only,2-inf,2.434723697304216
+as measured,1,all lags,0.1-0.2,4.298777917827914
+as measured,1,all lags,0.2-0.3,1.5847200830029724
+as measured,1,all lags,0.3-0.5,2.5799957950012704
+as measured,1,all lags,0.5-1,3.4959928048725595
+as measured,1,all lags,1-2,3.3396792218882054
+as measured,1,all lags,2-inf,2.434723697304216
+as measured,1,"all lags, mean",0.1-0.2,4.298777917827914
+as measured,1,"all lags, mean",0.2-0.3,1.5847200830029724
+as measured,1,"all lags, mean",0.3-0.5,2.5799957950012704
+as measured,1,"all lags, mean",0.5-1,3.4959928048725595
+as measured,1,"all lags, mean",1-2,3.3396792218882054
+as measured,1,"all lags, mean",2-inf,2.434723697304216
+as measured,1,"stretched, uncentred",0.1-0.2,1.9434892297872088
+as measured,1,"stretched, uncentred",0.2-0.3,1.154193751083355
+as measured,1,"stretched, uncentred",0.3-0.5,1.6158404982059194
+as measured,1,"stretched, uncentred",0.5-1,3.335607865209389
+as measured,1,"stretched, uncentred",1-2,3.3396792218882054
+as measured,1,"stretched, uncentred",2-inf,2.434723697304216
+as measured,1,stretched,0.1-0.2,2.117381410451491
+as measured,1,stretched,0.2-0.3,1.247568853718238
+as measured,1,stretched,0.3-0.5,1.5957652402135043
+as measured,1,stretched,0.5-1,3.335767448737599
+as measured,1,stretched,1-2,3.3396792218882054
+as measured,1,stretched,2-inf,2.434723697304216
+as measured,1,"stretched, 6-s blocks",0.1-0.2,1.1450045808079483
+as measured,1,"stretched, 6-s blocks",0.2-0.3,1.6791732651660496
+as measured,1,"stretched, 6-s blocks",0.3-0.5,1.947181161365137
+as measured,1,"stretched, 6-s blocks",0.5-1,3.3691538985792624
+as measured,1,"stretched, 6-s blocks",1-2,3.3719744941495007
+as measured,1,"stretched, 6-s blocks",2-inf,2.344424544071146
+as measured,2,before,1-2,3.5950623491931286
+as measured,2,before,2-inf,2.171361561712524
+as measured,2,floor only,0.1-0.2,4.390794116509398
+as measured,2,floor only,0.2-0.3,5.8723563682779485
+as measured,2,floor only,0.3-0.5,6.11199324117959
+as measured,2,floor only,0.5-1,5.58208512614613
+as measured,2,floor only,1-2,3.5950623491931286
+as measured,2,floor only,2-inf,2.171361561712524
+as measured,2,all lags,0.1-0.2,4.0876445791051745
+as measured,2,all lags,0.2-0.3,8.001410829921396
+as measured,2,all lags,0.3-0.5,7.9032998753113555
+as measured,2,all lags,0.5-1,5.858277207354609
+as measured,2,all lags,1-2,3.5950623491931286
+as measured,2,all lags,2-inf,2.171361561712524
+as measured,2,"all lags, mean",0.1-0.2,4.0876445791051745
+as measured,2,"all lags, mean",0.2-0.3,8.001410829921396
+as measured,2,"all lags, mean",0.3-0.5,7.9032998753113555
+as measured,2,"all lags, mean",0.5-1,5.858277207354609
+as measured,2,"all lags, mean",1-2,3.5950623491931286
+as measured,2,"all lags, mean",2-inf,2.171361561712524
+as measured,2,"stretched, uncentred",0.1-0.2,1.91831669492819
+as measured,2,"stretched, uncentred",0.2-0.3,4.443404701479417
+as measured,2,"stretched, uncentred",0.3-0.5,4.824683087494051
+as measured,2,"stretched, uncentred",0.5-1,4.139743696182891
+as measured,2,"stretched, uncentred",1-2,3.5950623491931286
+as measured,2,"stretched, uncentred",2-inf,2.171361561712524
+as measured,2,stretched,0.1-0.2,2.127295847142649
+as measured,2,stretched,0.2-0.3,4.39764651458379
+as measured,2,stretched,0.3-0.5,4.796856655779535
+as measured,2,stretched,0.5-1,4.127396721300745
+as measured,2,stretched,1-2,3.5950623491931286
+as measured,2,stretched,2-inf,2.171361561712524
+as measured,2,"stretched, 6-s blocks",0.1-0.2,3.101494643641136
+as measured,2,"stretched, 6-s blocks",0.2-0.3,4.670684698561844
+as measured,2,"stretched, 6-s blocks",0.3-0.5,4.847998625262857
+as measured,2,"stretched, 6-s blocks",0.5-1,4.366475886586456
+as measured,2,"stretched, 6-s blocks",1-2,3.6569888540258493
+as measured,2,"stretched, 6-s blocks",2-inf,2.4493184956945298
+as measured,3,before,1-2,0.837735773298196
+as measured,3,before,2-inf,2.604394787760617
+as measured,3,floor only,0.1-0.2,0.7020119689765801
+as measured,3,floor only,0.2-0.3,1.262752951201014
+as measured,3,floor only,0.3-0.5,1.377237001941288
+as measured,3,floor only,0.5-1,1.1781978619699156
+as measured,3,floor only,1-2,0.837735773298196
+as measured,3,floor only,2-inf,2.604394787760617
+as measured,3,all lags,0.1-0.2,4.379646056376186
+as measured,3,all lags,0.2-0.3,1.9509666850450627
+as measured,3,all lags,0.3-0.5,1.0996048020566727
+as measured,3,all lags,0.5-1,1.6323752613654272
+as measured,3,all lags,1-2,0.837735773298196
+as measured,3,all lags,2-inf,2.604394787760617
+as measured,3,"all lags, mean",0.1-0.2,4.379646056376186
+as measured,3,"all lags, mean",0.2-0.3,1.9509666850450627
+as measured,3,"all lags, mean",0.3-0.5,1.0996048020566727
+as measured,3,"all lags, mean",0.5-1,1.6323752613654272
+as measured,3,"all lags, mean",1-2,0.837735773298196
+as measured,3,"all lags, mean",2-inf,2.604394787760617
+as measured,3,"stretched, uncentred",0.1-0.2,2.1323736701537
+as measured,3,"stretched, uncentred",0.2-0.3,1.4346472976237337
+as measured,3,"stretched, uncentred",0.3-0.5,1.0084453564061828
+as measured,3,"stretched, uncentred",0.5-1,1.4918905812514052
+as measured,3,"stretched, uncentred",1-2,0.837735773298196
+as measured,3,"stretched, uncentred",2-inf,2.604394787760617
+as measured,3,stretched,0.1-0.2,2.4143011166143564
+as measured,3,stretched,0.2-0.3,1.366280004234395
+as measured,3,stretched,0.3-0.5,0.9275571578889882
+as measured,3,stretched,0.5-1,1.4604798368272216
+as measured,3,stretched,1-2,0.837735773298196
+as measured,3,stretched,2-inf,2.604394787760617
+as measured,3,"stretched, 6-s blocks",0.1-0.2,2.506025638013899
+as measured,3,"stretched, 6-s blocks",0.2-0.3,1.3864983067216916
+as measured,3,"stretched, 6-s blocks",0.3-0.5,1.2729483040763365
+as measured,3,"stretched, 6-s blocks",0.5-1,1.226570041589354
+as measured,3,"stretched, 6-s blocks",1-2,0.7219311883464379
+as measured,3,"stretched, 6-s blocks",2-inf,2.5717409488548633
+as measured,4,before,1-2,3.6789055155686565
+as measured,4,before,2-inf,2.0315694915121094
+as measured,4,floor only,0.1-0.2,5.8965301959362515
+as measured,4,floor only,0.2-0.3,7.830002998713947
+as measured,4,floor only,0.3-0.5,8.045980494283903
+as measured,4,floor only,0.5-1,6.79100788423566
+as measured,4,floor only,1-2,3.6789055155686565
+as measured,4,floor only,2-inf,2.0315694915121094
+as measured,4,all lags,0.1-0.2,7.554893369649899
+as measured,4,all lags,0.2-0.3,6.8193694072252935
+as measured,4,all lags,0.3-0.5,6.0011744404780805
+as measured,4,all lags,0.5-1,5.881613622627093
+as measured,4,all lags,1-2,3.6789055155686565
+as measured,4,all lags,2-inf,2.0315694915121094
+as measured,4,"all lags, mean",0.1-0.2,7.554893369649899
+as measured,4,"all lags, mean",0.2-0.3,6.8193694072252935
+as measured,4,"all lags, mean",0.3-0.5,6.0011744404780805
+as measured,4,"all lags, mean",0.5-1,5.881613622627093
+as measured,4,"all lags, mean",1-2,3.6789055155686565
+as measured,4,"all lags, mean",2-inf,2.0315694915121094
+as measured,4,"stretched, uncentred",0.1-0.2,3.8708473167889443
+as measured,4,"stretched, uncentred",0.2-0.3,3.5839635341717297
+as measured,4,"stretched, uncentred",0.3-0.5,4.230016609544193
+as measured,4,"stretched, uncentred",0.5-1,4.71925785929118
+as measured,4,"stretched, uncentred",1-2,3.6789055155686565
+as measured,4,"stretched, uncentred",2-inf,2.0315694915121094
+as measured,4,stretched,0.1-0.2,3.826403972891616
+as measured,4,stretched,0.2-0.3,3.4832689663259933
+as measured,4,stretched,0.3-0.5,4.225496379690011
+as measured,4,stretched,0.5-1,4.7422908199264375
+as measured,4,stretched,1-2,3.6789055155686565
+as measured,4,stretched,2-inf,2.0315694915121094
+as measured,4,"stretched, 6-s blocks",0.1-0.2,4.3618395607755405
+as measured,4,"stretched, 6-s blocks",0.2-0.3,3.6077478580706726
+as measured,4,"stretched, 6-s blocks",0.3-0.5,4.35273234414926
+as measured,4,"stretched, 6-s blocks",0.5-1,4.825647046837069
+as measured,4,"stretched, 6-s blocks",1-2,3.640819303799454
+as measured,4,"stretched, 6-s blocks",2-inf,2.066131638447724
+as measured,5,before,1-2,1.3345697655769895
+as measured,5,before,2-inf,3.0223295428096275
+as measured,5,floor only,0.1-0.2,3.1875455636486714
+as measured,5,floor only,0.2-0.3,3.9786173287042184
+as measured,5,floor only,0.3-0.5,3.980466814227999
+as measured,5,floor only,0.5-1,2.597136981434284
+as measured,5,floor only,1-2,1.3345697655769895
+as measured,5,floor only,2-inf,3.0223295428096275
+as measured,5,all lags,0.1-0.2,4.097582681891447
+as measured,5,all lags,0.2-0.3,1.750414591630041
+as measured,5,all lags,0.3-0.5,1.9320584973957224
+as measured,5,all lags,0.5-1,1.8898382474542055
+as measured,5,all lags,1-2,1.3345697655769895
+as measured,5,all lags,2-inf,3.0223295428096275
+as measured,5,"all lags, mean",0.1-0.2,4.097582681891447
+as measured,5,"all lags, mean",0.2-0.3,1.750414591630041
+as measured,5,"all lags, mean",0.3-0.5,1.9320584973957224
+as measured,5,"all lags, mean",0.5-1,1.8898382474542055
+as measured,5,"all lags, mean",1-2,1.3345697655769895
+as measured,5,"all lags, mean",2-inf,3.0223295428096275
+as measured,5,"stretched, uncentred",0.1-0.2,2.1281245134949214
+as measured,5,"stretched, uncentred",0.2-0.3,1.0765375431689421
+as measured,5,"stretched, uncentred",0.3-0.5,1.4411142150215916
+as measured,5,"stretched, uncentred",0.5-1,1.4827537999160634
+as measured,5,"stretched, uncentred",1-2,1.3345697655769895
+as measured,5,"stretched, uncentred",2-inf,3.0223295428096275
+as measured,5,stretched,0.1-0.2,2.2244419972887615
+as measured,5,stretched,0.2-0.3,1.1674948935359621
+as measured,5,stretched,0.3-0.5,1.5102007316312707
+as measured,5,stretched,0.5-1,1.4830560874821315
+as measured,5,stretched,1-2,1.3345697655769895
+as measured,5,stretched,2-inf,3.0223295428096275
+as measured,5,"stretched, 6-s blocks",0.1-0.2,1.7128937361201875
+as measured,5,"stretched, 6-s blocks",0.2-0.3,1.0677267052405182
+as measured,5,"stretched, 6-s blocks",0.3-0.5,1.2704451447598695
+as measured,5,"stretched, 6-s blocks",0.5-1,1.3156965748516716
+as measured,5,"stretched, 6-s blocks",1-2,1.40119424946381
+as measured,5,"stretched, 6-s blocks",2-inf,2.8746220268275513
+as measured,6,before,1-2,2.0800888771815664
+as measured,6,before,2-inf,2.1338240504054036
+as measured,6,floor only,0.1-0.2,5.287790227262741
+as measured,6,floor only,0.2-0.3,6.84876496116503
+as measured,6,floor only,0.3-0.5,6.867828009045094
+as measured,6,floor only,0.5-1,5.184421160227081
+as measured,6,floor only,1-2,2.0800888771815664
+as measured,6,floor only,2-inf,2.1338240504054036
+as measured,6,all lags,0.1-0.2,5.461514710958421
+as measured,6,all lags,0.2-0.3,3.880870345333912
+as measured,6,all lags,0.3-0.5,5.693339243834783
+as measured,6,all lags,0.5-1,4.4551513553021405
+as measured,6,all lags,1-2,2.0800888771815664
+as measured,6,all lags,2-inf,2.1338240504054036
+as measured,6,"all lags, mean",0.1-0.2,5.461514710958421
+as measured,6,"all lags, mean",0.2-0.3,3.880870345333912
+as measured,6,"all lags, mean",0.3-0.5,5.693339243834783
+as measured,6,"all lags, mean",0.5-1,4.4551513553021405
+as measured,6,"all lags, mean",1-2,2.0800888771815664
+as measured,6,"all lags, mean",2-inf,2.1338240504054036
+as measured,6,"stretched, uncentred",0.1-0.2,2.799467383045402
+as measured,6,"stretched, uncentred",0.2-0.3,2.459295000798408
+as measured,6,"stretched, uncentred",0.3-0.5,3.687271190227238
+as measured,6,"stretched, uncentred",0.5-1,3.1350839961646817
+as measured,6,"stretched, uncentred",1-2,2.0800888771815664
+as measured,6,"stretched, uncentred",2-inf,2.1338240504054036
+as measured,6,stretched,0.1-0.2,2.699096023761874
+as measured,6,stretched,0.2-0.3,2.3594391624133038
+as measured,6,stretched,0.3-0.5,3.6408607113368556
+as measured,6,stretched,0.5-1,3.113924468481769
+as measured,6,stretched,1-2,2.0800888771815664
+as measured,6,stretched,2-inf,2.1338240504054036
+as measured,6,"stretched, 6-s blocks",0.1-0.2,2.991018258053749
+as measured,6,"stretched, 6-s blocks",0.2-0.3,2.6829218947092697
+as measured,6,"stretched, 6-s blocks",0.3-0.5,3.801842167535906
+as measured,6,"stretched, 6-s blocks",0.5-1,3.0635233742199386
+as measured,6,"stretched, 6-s blocks",1-2,2.0908671035086908
+as measured,6,"stretched, 6-s blocks",2-inf,2.0455489581615796
+as measured,7,before,1-2,0.6324634523241107
+as measured,7,before,2-inf,2.956219704067074
+as measured,7,floor only,0.1-0.2,4.0612548572418605
+as measured,7,floor only,0.2-0.3,4.976463148175218
+as measured,7,floor only,0.3-0.5,4.988009291216114
+as measured,7,floor only,0.5-1,3.486674167150655
+as measured,7,floor only,1-2,0.6324634523241107
+as measured,7,floor only,2-inf,2.956219704067074
+as measured,7,all lags,0.1-0.2,4.014908360310488
+as measured,7,all lags,0.2-0.3,3.7461009367831655
+as measured,7,all lags,0.3-0.5,2.331364297174765
+as measured,7,all lags,0.5-1,1.3326461740908688
+as measured,7,all lags,1-2,0.6324634523241107
+as measured,7,all lags,2-inf,2.956219704067074
+as measured,7,"all lags, mean",0.1-0.2,4.014908360310488
+as measured,7,"all lags, mean",0.2-0.3,3.7461009367831655
+as measured,7,"all lags, mean",0.3-0.5,2.331364297174765
+as measured,7,"all lags, mean",0.5-1,1.3326461740908688
+as measured,7,"all lags, mean",1-2,0.6324634523241107
+as measured,7,"all lags, mean",2-inf,2.956219704067074
+as measured,7,"stretched, uncentred",0.1-0.2,1.898276048690437
+as measured,7,"stretched, uncentred",0.2-0.3,2.095766351244865
+as measured,7,"stretched, uncentred",0.3-0.5,1.6024510227062747
+as measured,7,"stretched, uncentred",0.5-1,1.073512619195211
+as measured,7,"stretched, uncentred",1-2,0.6324634523241107
+as measured,7,"stretched, uncentred",2-inf,2.956219704067074
+as measured,7,stretched,0.1-0.2,1.8381705213489303
+as measured,7,stretched,0.2-0.3,2.064655764229949
+as measured,7,stretched,0.3-0.5,1.5752401992678302
+as measured,7,stretched,0.5-1,1.0679737196552712
+as measured,7,stretched,1-2,0.6324634523241107
+as measured,7,stretched,2-inf,2.956219704067074
+as measured,7,"stretched, 6-s blocks",0.1-0.2,1.95322529839482
+as measured,7,"stretched, 6-s blocks",0.2-0.3,1.8500293203990779
+as measured,7,"stretched, 6-s blocks",0.3-0.5,1.7359995471337044
+as measured,7,"stretched, 6-s blocks",0.5-1,1.3564976161402393
+as measured,7,"stretched, 6-s blocks",1-2,0.6775030423668769
+as measured,7,"stretched, 6-s blocks",2-inf,3.0372109564714593
+as measured,8,before,1-2,1.8922156796321672
+as measured,8,before,2-inf,2.5865474481143718
+as measured,8,floor only,0.1-0.2,3.2873628921002322
+as measured,8,floor only,0.2-0.3,4.2661304263859865
+as measured,8,floor only,0.3-0.5,4.359265589699391
+as measured,8,floor only,0.5-1,3.8259262525696203
+as measured,8,floor only,1-2,1.8922156796321672
+as measured,8,floor only,2-inf,2.5865474481143718
+as measured,8,all lags,0.1-0.2,3.7200061679822847
+as measured,8,all lags,0.2-0.3,5.172295649958659
+as measured,8,all lags,0.3-0.5,5.493378385885897
+as measured,8,all lags,0.5-1,3.905724863428053
+as measured,8,all lags,1-2,1.8922156796321672
+as measured,8,all lags,2-inf,2.5865474481143718
+as measured,8,"all lags, mean",0.1-0.2,3.7200061679822847
+as measured,8,"all lags, mean",0.2-0.3,5.172295649958659
+as measured,8,"all lags, mean",0.3-0.5,5.493378385885897
+as measured,8,"all lags, mean",0.5-1,3.905724863428053
+as measured,8,"all lags, mean",1-2,1.8922156796321672
+as measured,8,"all lags, mean",2-inf,2.5865474481143718
+as measured,8,"stretched, uncentred",0.1-0.2,1.6346445145368904
+as measured,8,"stretched, uncentred",0.2-0.3,2.981972290502745
+as measured,8,"stretched, uncentred",0.3-0.5,3.8139184446458567
+as measured,8,"stretched, uncentred",0.5-1,3.0409114385481684
+as measured,8,"stretched, uncentred",1-2,1.8922156796321672
+as measured,8,"stretched, uncentred",2-inf,2.5865474481143718
+as measured,8,stretched,0.1-0.2,1.552410836965976
+as measured,8,stretched,0.2-0.3,2.8976907271686723
+as measured,8,stretched,0.3-0.5,3.7650928003082376
+as measured,8,stretched,0.5-1,2.996065798755759
+as measured,8,stretched,1-2,1.8922156796321672
+as measured,8,stretched,2-inf,2.5865474481143718
+as measured,8,"stretched, 6-s blocks",0.1-0.2,3.227320019307236
+as measured,8,"stretched, 6-s blocks",0.2-0.3,1.819465180865099
+as measured,8,"stretched, 6-s blocks",0.3-0.5,3.1934882664998603
+as measured,8,"stretched, 6-s blocks",0.5-1,2.0565617135435015
+as measured,8,"stretched, 6-s blocks",1-2,2.234524863748415
+as measured,8,"stretched, 6-s blocks",2-inf,2.536545936240218
+as measured,9,before,1-2,1.0822438719199372
+as measured,9,before,2-inf,2.0911442885212566
+as measured,9,floor only,0.1-0.2,0.4600615373067797
+as measured,9,floor only,0.2-0.3,0.3725473936241773
+as measured,9,floor only,0.3-0.5,1.2069078755788105
+as measured,9,floor only,0.5-1,2.330462418241676
+as measured,9,floor only,1-2,1.0822438719199372
+as measured,9,floor only,2-inf,2.0911442885212566
+as measured,9,all lags,0.1-0.2,2.9372777432034396
+as measured,9,all lags,0.2-0.3,2.8910588546850042
+as measured,9,all lags,0.3-0.5,2.1530233552837834
+as measured,9,all lags,0.5-1,2.24579216336687
+as measured,9,all lags,1-2,1.0822438719199372
+as measured,9,all lags,2-inf,2.0911442885212566
+as measured,9,"all lags, mean",0.1-0.2,2.9372777432034396
+as measured,9,"all lags, mean",0.2-0.3,2.8910588546850042
+as measured,9,"all lags, mean",0.3-0.5,2.1530233552837834
+as measured,9,"all lags, mean",0.5-1,2.24579216336687
+as measured,9,"all lags, mean",1-2,1.0822438719199372
+as measured,9,"all lags, mean",2-inf,2.0911442885212566
+as measured,9,"stretched, uncentred",0.1-0.2,2.570118669241479
+as measured,9,"stretched, uncentred",0.2-0.3,2.0004720223366985
+as measured,9,"stretched, uncentred",0.3-0.5,2.249944115804561
+as measured,9,"stretched, uncentred",0.5-1,2.306296763493888
+as measured,9,"stretched, uncentred",1-2,1.0822438719199372
+as measured,9,"stretched, uncentred",2-inf,2.0911442885212566
+as measured,9,stretched,0.1-0.2,2.2439666757629833
+as measured,9,stretched,0.2-0.3,2.0348859900850838
+as measured,9,stretched,0.3-0.5,2.450855793568057
+as measured,9,stretched,0.5-1,2.5123411998586476
+as measured,9,stretched,1-2,1.0822438719199372
+as measured,9,stretched,2-inf,2.0911442885212566
+as measured,9,"stretched, 6-s blocks",0.1-0.2,0.9411680082362465
+as measured,9,"stretched, 6-s blocks",0.2-0.3,1.0898196492792969
+as measured,9,"stretched, 6-s blocks",0.3-0.5,2.013217216656532
+as measured,9,"stretched, 6-s blocks",0.5-1,2.058330108542646
+as measured,9,"stretched, 6-s blocks",1-2,1.293663465889969
+as measured,9,"stretched, 6-s blocks",2-inf,2.309556219885919
+as measured,10,before,1-2,3.027014053601108
+as measured,10,before,2-inf,2.3818478724396446
+as measured,10,floor only,0.1-0.2,7.328812155136349
+as measured,10,floor only,0.2-0.3,9.229961267928779
+as measured,10,floor only,0.3-0.5,9.537311639040182
+as measured,10,floor only,0.5-1,8.586631305248714
+as measured,10,floor only,1-2,3.027014053601108
+as measured,10,floor only,2-inf,2.3818478724396446
+as measured,10,all lags,0.1-0.2,3.8733352575483937
+as measured,10,all lags,0.2-0.3,4.285769656910945
+as measured,10,all lags,0.3-0.5,6.591797173784348
+as measured,10,all lags,0.5-1,6.0830073878583875
+as measured,10,all lags,1-2,3.027014053601108
+as measured,10,all lags,2-inf,2.3818478724396446
+as measured,10,"all lags, mean",0.1-0.2,3.8733352575483937
+as measured,10,"all lags, mean",0.2-0.3,4.285769656910945
+as measured,10,"all lags, mean",0.3-0.5,6.591797173784348
+as measured,10,"all lags, mean",0.5-1,6.0830073878583875
+as measured,10,"all lags, mean",1-2,3.027014053601108
+as measured,10,"all lags, mean",2-inf,2.3818478724396446
+as measured,10,"stretched, uncentred",0.1-0.2,2.0356978775363554
+as measured,10,"stretched, uncentred",0.2-0.3,2.744491324132479
+as measured,10,"stretched, uncentred",0.3-0.5,4.545359152104127
+as measured,10,"stretched, uncentred",0.5-1,4.442921391886689
+as measured,10,"stretched, uncentred",1-2,3.027014053601108
+as measured,10,"stretched, uncentred",2-inf,2.3818478724396446
+as measured,10,stretched,0.1-0.2,1.569501948627019
+as measured,10,stretched,0.2-0.3,2.1981970122095014
+as measured,10,stretched,0.3-0.5,4.337723873482636
+as measured,10,stretched,0.5-1,4.2518418136490235
+as measured,10,stretched,1-2,3.027014053601108
+as measured,10,stretched,2-inf,2.3818478724396446
+as measured,10,"stretched, 6-s blocks",0.1-0.2,2.5733523162372154
+as measured,10,"stretched, 6-s blocks",0.2-0.3,3.206748321345775
+as measured,10,"stretched, 6-s blocks",0.3-0.5,5.144129349175735
+as measured,10,"stretched, 6-s blocks",0.5-1,4.998297338546065
+as measured,10,"stretched, 6-s blocks",1-2,3.3289482451774886
+as measured,10,"stretched, 6-s blocks",2-inf,2.183891586388632
+as measured,11,before,1-2,1.7618758489201607
+as measured,11,before,2-inf,3.7046487430230526
+as measured,11,floor only,0.1-0.2,3.384460587440408
+as measured,11,floor only,0.2-0.3,4.107303702877705
+as measured,11,floor only,0.3-0.5,4.127645435194605
+as measured,11,floor only,0.5-1,3.109465337801783
+as measured,11,floor only,1-2,1.7618758489201607
+as measured,11,floor only,2-inf,3.7046487430230526
+as measured,11,all lags,0.1-0.2,5.701197741000872
+as measured,11,all lags,0.2-0.3,0.7221709193978879
+as measured,11,all lags,0.3-0.5,3.3692104691050604
+as measured,11,all lags,0.5-1,3.244623120581574
+as measured,11,all lags,1-2,1.7618758489201607
+as measured,11,all lags,2-inf,3.7046487430230526
+as measured,11,"all lags, mean",0.1-0.2,5.701197741000872
+as measured,11,"all lags, mean",0.2-0.3,0.7221709193978879
+as measured,11,"all lags, mean",0.3-0.5,3.3692104691050604
+as measured,11,"all lags, mean",0.5-1,3.244623120581574
+as measured,11,"all lags, mean",1-2,1.7618758489201607
+as measured,11,"all lags, mean",2-inf,3.7046487430230526
+as measured,11,"stretched, uncentred",0.1-0.2,2.6829413419763006
+as measured,11,"stretched, uncentred",0.2-0.3,0.49611219688596764
+as measured,11,"stretched, uncentred",0.3-0.5,2.3083656977683966
+as measured,11,"stretched, uncentred",0.5-1,2.2975972814950256
+as measured,11,"stretched, uncentred",1-2,1.7618758489201607
+as measured,11,"stretched, uncentred",2-inf,3.7046487430230526
+as measured,11,stretched,0.1-0.2,2.7992412475584616
+as measured,11,stretched,0.2-0.3,0.5013694514505229
+as measured,11,stretched,0.3-0.5,2.251651051900194
+as measured,11,stretched,0.5-1,2.253197404252812
+as measured,11,stretched,1-2,1.7618758489201607
+as measured,11,stretched,2-inf,3.7046487430230526
+as measured,11,"stretched, 6-s blocks",0.1-0.2,3.0020972794826783
+as measured,11,"stretched, 6-s blocks",0.2-0.3,1.3548109672657866
+as measured,11,"stretched, 6-s blocks",0.3-0.5,1.7873990760172331
+as measured,11,"stretched, 6-s blocks",0.5-1,1.8016151154453028
+as measured,11,"stretched, 6-s blocks",1-2,1.6704828358648554
+as measured,11,"stretched, 6-s blocks",2-inf,3.5348855902776872
+as measured,12,before,1-2,1.277091360994066
+as measured,12,before,2-inf,2.607905881860933
+as measured,12,floor only,0.1-0.2,6.001245207991595
+as measured,12,floor only,0.2-0.3,8.001038417848008
+as measured,12,floor only,0.3-0.5,8.080261441702364
+as measured,12,floor only,0.5-1,6.29991946448219
+as measured,12,floor only,1-2,1.277091360994066
+as measured,12,floor only,2-inf,2.607905881860933
+as measured,12,all lags,0.1-0.2,5.73778454835489
+as measured,12,all lags,0.2-0.3,4.768514657079882
+as measured,12,all lags,0.3-0.5,5.170901406555753
+as measured,12,all lags,0.5-1,4.502431253744619
+as measured,12,all lags,1-2,1.277091360994066
+as measured,12,all lags,2-inf,2.607905881860933
+as measured,12,"all lags, mean",0.1-0.2,5.73778454835489
+as measured,12,"all lags, mean",0.2-0.3,4.768514657079882
+as measured,12,"all lags, mean",0.3-0.5,5.170901406555753
+as measured,12,"all lags, mean",0.5-1,4.502431253744619
+as measured,12,"all lags, mean",1-2,1.277091360994066
+as measured,12,"all lags, mean",2-inf,2.607905881860933
+as measured,12,"stretched, uncentred",0.1-0.2,3.3811283273569757
+as measured,12,"stretched, uncentred",0.2-0.3,1.756777140014952
+as measured,12,"stretched, uncentred",0.3-0.5,3.763064327246829
+as measured,12,"stretched, uncentred",0.5-1,3.144323574524629
+as measured,12,"stretched, uncentred",1-2,1.277091360994066
+as measured,12,"stretched, uncentred",2-inf,2.607905881860933
+as measured,12,stretched,0.1-0.2,3.661678532036411
+as measured,12,stretched,0.2-0.3,1.941835387140524
+as measured,12,stretched,0.3-0.5,3.572477037212026
+as measured,12,stretched,0.5-1,3.0805911822973284
+as measured,12,stretched,1-2,1.277091360994066
+as measured,12,stretched,2-inf,2.607905881860933
+as measured,12,"stretched, 6-s blocks",0.1-0.2,3.777891752316427
+as measured,12,"stretched, 6-s blocks",0.2-0.3,2.01222309310555
+as measured,12,"stretched, 6-s blocks",0.3-0.5,2.6523038707240554
+as measured,12,"stretched, 6-s blocks",0.5-1,2.4254568215395764
+as measured,12,"stretched, 6-s blocks",1-2,1.8250892038460924
+as measured,12,"stretched, 6-s blocks",2-inf,2.234729282915592
+as measured,13,before,1-2,1.842514762834614
+as measured,13,before,2-inf,2.83746674962636
+as measured,13,floor only,0.1-0.2,1.5527786107314958
+as measured,13,floor only,0.2-0.3,1.624202369163231
+as measured,13,floor only,0.3-0.5,1.4749691576795414
+as measured,13,floor only,0.5-1,0.39833460974287177
+as measured,13,floor only,1-2,1.842514762834614
+as measured,13,floor only,2-inf,2.83746674962636
+as measured,13,all lags,0.1-0.2,8.531175546763865
+as measured,13,all lags,0.2-0.3,8.741082840918782
+as measured,13,all lags,0.3-0.5,4.8931364931995285
+as measured,13,all lags,0.5-1,1.0380483372156215
+as measured,13,all lags,1-2,1.842514762834614
+as measured,13,all lags,2-inf,2.83746674962636
+as measured,13,"all lags, mean",0.1-0.2,8.531175546763865
+as measured,13,"all lags, mean",0.2-0.3,8.741082840918782
+as measured,13,"all lags, mean",0.3-0.5,4.8931364931995285
+as measured,13,"all lags, mean",0.5-1,1.0380483372156215
+as measured,13,"all lags, mean",1-2,1.842514762834614
+as measured,13,"all lags, mean",2-inf,2.83746674962636
+as measured,13,"stretched, uncentred",0.1-0.2,4.657484815520934
+as measured,13,"stretched, uncentred",0.2-0.3,4.688565496836774
+as measured,13,"stretched, uncentred",0.3-0.5,2.6999856392630472
+as measured,13,"stretched, uncentred",0.5-1,0.8737021168007069
+as measured,13,"stretched, uncentred",1-2,1.842514762834614
+as measured,13,"stretched, uncentred",2-inf,2.83746674962636
+as measured,13,stretched,0.1-0.2,4.730599258282208
+as measured,13,stretched,0.2-0.3,4.610806139052967
+as measured,13,stretched,0.3-0.5,2.666903407606284
+as measured,13,stretched,0.5-1,0.8798737134370133
+as measured,13,stretched,1-2,1.842514762834614
+as measured,13,stretched,2-inf,2.83746674962636
+as measured,13,"stretched, 6-s blocks",0.1-0.2,3.403970914263634
+as measured,13,"stretched, 6-s blocks",0.2-0.3,4.795898510483656
+as measured,13,"stretched, 6-s blocks",0.3-0.5,3.2665404268828033
+as measured,13,"stretched, 6-s blocks",0.5-1,1.6163552382424098
+as measured,13,"stretched, 6-s blocks",1-2,1.556349218597329
+as measured,13,"stretched, 6-s blocks",2-inf,2.774797940207255
+as measured,14,before,1-2,1.6240163054514898
+as measured,14,before,2-inf,4.257485583665996
+as measured,14,floor only,0.1-0.2,3.7776577439811656
+as measured,14,floor only,0.2-0.3,5.303909229659642
+as measured,14,floor only,0.3-0.5,5.557940151571453
+as measured,14,floor only,0.5-1,4.70174762315347
+as measured,14,floor only,1-2,1.6240163054514898
+as measured,14,floor only,2-inf,4.257485583665996
+as measured,14,all lags,0.1-0.2,1.68870728129795
+as measured,14,all lags,0.2-0.3,3.432452160389497
+as measured,14,all lags,0.3-0.5,4.229227919372053
+as measured,14,all lags,0.5-1,2.8354682630593135
+as measured,14,all lags,1-2,1.6240163054514898
+as measured,14,all lags,2-inf,4.257485583665996
+as measured,14,"all lags, mean",0.1-0.2,1.68870728129795
+as measured,14,"all lags, mean",0.2-0.3,3.432452160389497
+as measured,14,"all lags, mean",0.3-0.5,4.229227919372053
+as measured,14,"all lags, mean",0.5-1,2.8354682630593135
+as measured,14,"all lags, mean",1-2,1.6240163054514898
+as measured,14,"all lags, mean",2-inf,4.257485583665996
+as measured,14,"stretched, uncentred",0.1-0.2,1.7009666762642748
+as measured,14,"stretched, uncentred",0.2-0.3,2.2311652718712494
+as measured,14,"stretched, uncentred",0.3-0.5,2.790424323908212
+as measured,14,"stretched, uncentred",0.5-1,2.3585762186709367
+as measured,14,"stretched, uncentred",1-2,1.6240163054514898
+as measured,14,"stretched, uncentred",2-inf,4.257485583665996
+as measured,14,stretched,0.1-0.2,1.8038640194634457
+as measured,14,stretched,0.2-0.3,2.339713086307949
+as measured,14,stretched,0.3-0.5,2.7830047384281738
+as measured,14,stretched,0.5-1,2.386289801410507
+as measured,14,stretched,1-2,1.6240163054514898
+as measured,14,stretched,2-inf,4.257485583665996
+as measured,14,"stretched, 6-s blocks",0.1-0.2,2.5905668284249512
+as measured,14,"stretched, 6-s blocks",0.2-0.3,2.4332451294958406
+as measured,14,"stretched, 6-s blocks",0.3-0.5,2.9816337795842442
+as measured,14,"stretched, 6-s blocks",0.5-1,2.3624947498220674
+as measured,14,"stretched, 6-s blocks",1-2,1.6007234459188366
+as measured,14,"stretched, 6-s blocks",2-inf,4.219440155697579
+as measured,15,before,1-2,3.1545254004737022
+as measured,15,before,2-inf,2.7229368641501943
+as measured,15,floor only,0.1-0.2,3.4204043664776282
+as measured,15,floor only,0.2-0.3,4.60300877098345
+as measured,15,floor only,0.3-0.5,5.136817124537727
+as measured,15,floor only,0.5-1,4.970882775805344
+as measured,15,floor only,1-2,3.1545254004737022
+as measured,15,floor only,2-inf,2.7229368641501943
+as measured,15,all lags,0.1-0.2,9.011639468040276
+as measured,15,all lags,0.2-0.3,7.057383691820686
+as measured,15,all lags,0.3-0.5,4.0984415964753795
+as measured,15,all lags,0.5-1,4.317870257549208
+as measured,15,all lags,1-2,3.1545254004737022
+as measured,15,all lags,2-inf,2.7229368641501943
+as measured,15,"all lags, mean",0.1-0.2,9.011639468040276
+as measured,15,"all lags, mean",0.2-0.3,7.057383691820686
+as measured,15,"all lags, mean",0.3-0.5,4.0984415964753795
+as measured,15,"all lags, mean",0.5-1,4.317870257549208
+as measured,15,"all lags, mean",1-2,3.1545254004737022
+as measured,15,"all lags, mean",2-inf,2.7229368641501943
+as measured,15,"stretched, uncentred",0.1-0.2,4.250836266257818
+as measured,15,"stretched, uncentred",0.2-0.3,3.2590405183921116
+as measured,15,"stretched, uncentred",0.3-0.5,2.9873012526881384
+as measured,15,"stretched, uncentred",0.5-1,3.5864932918309336
+as measured,15,"stretched, uncentred",1-2,3.1545254004737022
+as measured,15,"stretched, uncentred",2-inf,2.7229368641501943
+as measured,15,stretched,0.1-0.2,4.2444918581607665
+as measured,15,stretched,0.2-0.3,3.093259798069879
+as measured,15,stretched,0.3-0.5,3.0875651436734852
+as measured,15,stretched,0.5-1,3.565407263228146
+as measured,15,stretched,1-2,3.1545254004737022
+as measured,15,stretched,2-inf,2.7229368641501943
+as measured,15,"stretched, 6-s blocks",0.1-0.2,5.541374220971084
+as measured,15,"stretched, 6-s blocks",0.2-0.3,3.290900124441711
+as measured,15,"stretched, 6-s blocks",0.3-0.5,3.764834409360227
+as measured,15,"stretched, 6-s blocks",0.5-1,4.401234222141692
+as measured,15,"stretched, 6-s blocks",1-2,3.5848358566273273
+as measured,15,"stretched, 6-s blocks",2-inf,2.802673947792265
+as measured,16,before,1-2,5.2737844566084435
+as measured,16,before,2-inf,2.0494290584796513
+as measured,16,floor only,0.1-0.2,4.086906154147523
+as measured,16,floor only,0.2-0.3,6.002193775327267
+as measured,16,floor only,0.3-0.5,6.90529673428712
+as measured,16,floor only,0.5-1,6.8336337766868365
+as measured,16,floor only,1-2,5.2737844566084435
+as measured,16,floor only,2-inf,2.0494290584796513
+as measured,16,all lags,0.1-0.2,4.267797851132305
+as measured,16,all lags,0.2-0.3,4.293851737015723
+as measured,16,all lags,0.3-0.5,3.2355864727682526
+as measured,16,all lags,0.5-1,5.849925700054879
+as measured,16,all lags,1-2,5.2737844566084435
+as measured,16,all lags,2-inf,2.0494290584796513
+as measured,16,"all lags, mean",0.1-0.2,4.267797851132305
+as measured,16,"all lags, mean",0.2-0.3,4.293851737015723
+as measured,16,"all lags, mean",0.3-0.5,3.2355864727682526
+as measured,16,"all lags, mean",0.5-1,5.849925700054879
+as measured,16,"all lags, mean",1-2,5.2737844566084435
+as measured,16,"all lags, mean",2-inf,2.0494290584796513
+as measured,16,"stretched, uncentred",0.1-0.2,2.34512950007957
+as measured,16,"stretched, uncentred",0.2-0.3,2.1342296565604935
+as measured,16,"stretched, uncentred",0.3-0.5,2.3801605407863935
+as measured,16,"stretched, uncentred",0.5-1,5.273295842518327
+as measured,16,"stretched, uncentred",1-2,5.2737844566084435
+as measured,16,"stretched, uncentred",2-inf,2.0494290584796513
+as measured,16,stretched,0.1-0.2,2.346431233076201
+as measured,16,stretched,0.2-0.3,2.1383504694976256
+as measured,16,stretched,0.3-0.5,2.311376419708834
+as measured,16,stretched,0.5-1,5.2733264493405185
+as measured,16,stretched,1-2,5.2737844566084435
+as measured,16,stretched,2-inf,2.0494290584796513
+as measured,16,"stretched, 6-s blocks",0.1-0.2,3.06509892517162
+as measured,16,"stretched, 6-s blocks",0.2-0.3,1.7618556009768722
+as measured,16,"stretched, 6-s blocks",0.3-0.5,2.568600591843827
+as measured,16,"stretched, 6-s blocks",0.5-1,5.301584813686354
+as measured,16,"stretched, 6-s blocks",1-2,5.245238213320203
+as measured,16,"stretched, 6-s blocks",2-inf,2.0680575632214384
+as measured,17,before,1-2,2.614796741834343
+as measured,17,before,2-inf,2.5556783182039235
+as measured,17,floor only,0.1-0.2,5.237352949836403
+as measured,17,floor only,0.2-0.3,6.481624684986045
+as measured,17,floor only,0.3-0.5,6.486952634699222
+as measured,17,floor only,0.5-1,5.338064667510209
+as measured,17,floor only,1-2,2.614796741834343
+as measured,17,floor only,2-inf,2.5556783182039235
+as measured,17,all lags,0.1-0.2,3.798800918827835
+as measured,17,all lags,0.2-0.3,6.90482972684333
+as measured,17,all lags,0.3-0.5,6.922142921316133
+as measured,17,all lags,0.5-1,4.580809001071345
+as measured,17,all lags,1-2,2.614796741834343
+as measured,17,all lags,2-inf,2.5556783182039235
+as measured,17,"all lags, mean",0.1-0.2,3.798800918827835
+as measured,17,"all lags, mean",0.2-0.3,6.90482972684333
+as measured,17,"all lags, mean",0.3-0.5,6.922142921316133
+as measured,17,"all lags, mean",0.5-1,4.580809001071345
+as measured,17,"all lags, mean",1-2,2.614796741834343
+as measured,17,"all lags, mean",2-inf,2.5556783182039235
+as measured,17,"stretched, uncentred",0.1-0.2,2.2620818422760993
+as measured,17,"stretched, uncentred",0.2-0.3,3.970241648993643
+as measured,17,"stretched, uncentred",0.3-0.5,4.643198287790535
+as measured,17,"stretched, uncentred",0.5-1,2.9335434052283045
+as measured,17,"stretched, uncentred",1-2,2.614796741834343
+as measured,17,"stretched, uncentred",2-inf,2.5556783182039235
+as measured,17,stretched,0.1-0.2,2.162489633819851
+as measured,17,stretched,0.2-0.3,3.8926908044705186
+as measured,17,stretched,0.3-0.5,4.620939142437913
+as measured,17,stretched,0.5-1,2.967589310881851
+as measured,17,stretched,1-2,2.614796741834343
+as measured,17,stretched,2-inf,2.5556783182039235
+as measured,17,"stretched, 6-s blocks",0.1-0.2,2.3674928949978336
+as measured,17,"stretched, 6-s blocks",0.2-0.3,2.9583236852949426
+as measured,17,"stretched, 6-s blocks",0.3-0.5,3.52798817195987
+as measured,17,"stretched, 6-s blocks",0.5-1,2.5776502424831014
+as measured,17,"stretched, 6-s blocks",1-2,2.5471759066703212
+as measured,17,"stretched, 6-s blocks",2-inf,2.6440766838281227
+as measured,18,before,1-2,2.1715202264410216
+as measured,18,before,2-inf,3.118742955148189
+as measured,18,floor only,0.1-0.2,2.251407597974239
+as measured,18,floor only,0.2-0.3,3.680388183952588
+as measured,18,floor only,0.3-0.5,3.9539869757983857
+as measured,18,floor only,0.5-1,3.5212311272984067
+as measured,18,floor only,1-2,2.1715202264410216
+as measured,18,floor only,2-inf,3.118742955148189
+as measured,18,all lags,0.1-0.2,3.5303001957574045
+as measured,18,all lags,0.2-0.3,3.5708852064085144
+as measured,18,all lags,0.3-0.5,2.901194942436575
+as measured,18,all lags,0.5-1,2.203339780515941
+as measured,18,all lags,1-2,2.1715202264410216
+as measured,18,all lags,2-inf,3.118742955148189
+as measured,18,"all lags, mean",0.1-0.2,3.5303001957574045
+as measured,18,"all lags, mean",0.2-0.3,3.5708852064085144
+as measured,18,"all lags, mean",0.3-0.5,2.901194942436575
+as measured,18,"all lags, mean",0.5-1,2.203339780515941
+as measured,18,"all lags, mean",1-2,2.1715202264410216
+as measured,18,"all lags, mean",2-inf,3.118742955148189
+as measured,18,"stretched, uncentred",0.1-0.2,1.9658078492913167
+as measured,18,"stretched, uncentred",0.2-0.3,2.2923387376682904
+as measured,18,"stretched, uncentred",0.3-0.5,1.9971796812143354
+as measured,18,"stretched, uncentred",0.5-1,2.165108482097628
+as measured,18,"stretched, uncentred",1-2,2.1715202264410216
+as measured,18,"stretched, uncentred",2-inf,3.118742955148189
+as measured,18,stretched,0.1-0.2,1.6959480631652102
+as measured,18,stretched,0.2-0.3,2.2855125604813016
+as measured,18,stretched,0.3-0.5,1.9874107699335535
+as measured,18,stretched,0.5-1,2.164846194675523
+as measured,18,stretched,1-2,2.1715202264410216
+as measured,18,stretched,2-inf,3.118742955148189
+as measured,18,"stretched, 6-s blocks",0.1-0.2,2.260275273810228
+as measured,18,"stretched, 6-s blocks",0.2-0.3,1.9163915418166746
+as measured,18,"stretched, 6-s blocks",0.3-0.5,1.9957788459916224
+as measured,18,"stretched, 6-s blocks",0.5-1,1.968050746113659
+as measured,18,"stretched, 6-s blocks",1-2,1.9730583871764853
+as measured,18,"stretched, 6-s blocks",2-inf,3.225138891938518
+as measured,19,before,1-2,1.0859336502794625
+as measured,19,before,2-inf,2.6398683778610583
+as measured,19,floor only,0.1-0.2,1.2462328699015566
+as measured,19,floor only,0.2-0.3,1.9806502343791614
+as measured,19,floor only,0.3-0.5,4.3075202673893545
+as measured,19,floor only,0.5-1,4.3458301255847545
+as measured,19,floor only,1-2,1.0859336502794625
+as measured,19,floor only,2-inf,2.6398683778610583
+as measured,19,all lags,0.1-0.2,6.380448060323222
+as measured,19,all lags,0.2-0.3,1.853067302214005
+as measured,19,all lags,0.3-0.5,3.3845306508205306
+as measured,19,all lags,0.5-1,3.4076461722702365
+as measured,19,all lags,1-2,1.0859336502794625
+as measured,19,all lags,2-inf,2.6398683778610583
+as measured,19,"all lags, mean",0.1-0.2,6.380448060323222
+as measured,19,"all lags, mean",0.2-0.3,1.853067302214005
+as measured,19,"all lags, mean",0.3-0.5,3.3845306508205306
+as measured,19,"all lags, mean",0.5-1,3.4076461722702365
+as measured,19,"all lags, mean",1-2,1.0859336502794625
+as measured,19,"all lags, mean",2-inf,2.6398683778610583
+as measured,19,"stretched, uncentred",0.1-0.2,2.631075165492446
+as measured,19,"stretched, uncentred",0.2-0.3,1.2033512558159523
+as measured,19,"stretched, uncentred",0.3-0.5,2.5081523247739095
+as measured,19,"stretched, uncentred",0.5-1,2.5256934486000153
+as measured,19,"stretched, uncentred",1-2,1.0859336502794625
+as measured,19,"stretched, uncentred",2-inf,2.6398683778610583
+as measured,19,stretched,0.1-0.2,2.897086663875031
+as measured,19,stretched,0.2-0.3,1.104249359343696
+as measured,19,stretched,0.3-0.5,2.50425856688115
+as measured,19,stretched,0.5-1,2.52177882514027
+as measured,19,stretched,1-2,1.0859336502794625
+as measured,19,stretched,2-inf,2.6398683778610583
+as measured,19,"stretched, 6-s blocks",0.1-0.2,2.908283503560678
+as measured,19,"stretched, 6-s blocks",0.2-0.3,1.034405428700945
+as measured,19,"stretched, 6-s blocks",0.3-0.5,2.358852958766551
+as measured,19,"stretched, 6-s blocks",0.5-1,2.383053017328173
+as measured,19,"stretched, 6-s blocks",1-2,1.2614846872960181
+as measured,19,"stretched, 6-s blocks",2-inf,2.7840992484647447
+as measured,20,before,1-2,0.5757570774002099
+as measured,20,before,2-inf,3.166587554817379
+as measured,20,floor only,0.1-0.2,1.7185008940856816
+as measured,20,floor only,0.2-0.3,2.2181034187778095
+as measured,20,floor only,0.3-0.5,2.2251999304996612
+as measured,20,floor only,0.5-1,1.1591887411931407
+as measured,20,floor only,1-2,0.5757570774002099
+as measured,20,floor only,2-inf,3.166587554817379
+as measured,20,all lags,0.1-0.2,4.711280277419591
+as measured,20,all lags,0.2-0.3,0.9558521428075997
+as measured,20,all lags,0.3-0.5,0.5180336422894409
+as measured,20,all lags,0.5-1,0.39066729568459846
+as measured,20,all lags,1-2,0.5757570774002099
+as measured,20,all lags,2-inf,3.166587554817379
+as measured,20,"all lags, mean",0.1-0.2,4.711280277419591
+as measured,20,"all lags, mean",0.2-0.3,0.9558521428075997
+as measured,20,"all lags, mean",0.3-0.5,0.5180336422894409
+as measured,20,"all lags, mean",0.5-1,0.39066729568459846
+as measured,20,"all lags, mean",1-2,0.5757570774002099
+as measured,20,"all lags, mean",2-inf,3.166587554817379
+as measured,20,"stretched, uncentred",0.1-0.2,1.8191221080361366
+as measured,20,"stretched, uncentred",0.2-0.3,0.6987637280785985
+as measured,20,"stretched, uncentred",0.3-0.5,0.5733650532983354
+as measured,20,"stretched, uncentred",0.5-1,0.3918353187898959
+as measured,20,"stretched, uncentred",1-2,0.5757570774002099
+as measured,20,"stretched, uncentred",2-inf,3.166587554817379
+as measured,20,stretched,0.1-0.2,1.2262080224381966
+as measured,20,stretched,0.2-0.3,0.7463844264302859
+as measured,20,stretched,0.3-0.5,0.5946897395645657
+as measured,20,stretched,0.5-1,0.3827149989813852
+as measured,20,stretched,1-2,0.5757570774002099
+as measured,20,stretched,2-inf,3.166587554817379
+as measured,20,"stretched, 6-s blocks",0.1-0.2,2.21378514801477
+as measured,20,"stretched, 6-s blocks",0.2-0.3,0.6731483630249565
+as measured,20,"stretched, 6-s blocks",0.3-0.5,0.6489180330288541
+as measured,20,"stretched, 6-s blocks",0.5-1,0.3568813450566638
+as measured,20,"stretched, 6-s blocks",1-2,0.5326207825457067
+as measured,20,"stretched, 6-s blocks",2-inf,3.4687283623776284
+as measured,21,before,1-2,3.665065714292077
+as measured,21,before,2-inf,2.4651883553391705
+as measured,21,floor only,0.1-0.2,5.594998785959704
+as measured,21,floor only,0.2-0.3,7.253752629371875
+as measured,21,floor only,0.3-0.5,7.5424128119926594
+as measured,21,floor only,0.5-1,6.851389392657162
+as measured,21,floor only,1-2,3.665065714292077
+as measured,21,floor only,2-inf,2.4651883553391705
+as measured,21,all lags,0.1-0.2,8.43804882351858
+as measured,21,all lags,0.2-0.3,8.431831656206324
+as measured,21,all lags,0.3-0.5,8.245027597755032
+as measured,21,all lags,0.5-1,5.455581905995989
+as measured,21,all lags,1-2,3.665065714292077
+as measured,21,all lags,2-inf,2.4651883553391705
+as measured,21,"all lags, mean",0.1-0.2,8.43804882351858
+as measured,21,"all lags, mean",0.2-0.3,8.431831656206324
+as measured,21,"all lags, mean",0.3-0.5,8.245027597755032
+as measured,21,"all lags, mean",0.5-1,5.455581905995989
+as measured,21,"all lags, mean",1-2,3.665065714292077
+as measured,21,"all lags, mean",2-inf,2.4651883553391705
+as measured,21,"stretched, uncentred",0.1-0.2,3.836053366608016
+as measured,21,"stretched, uncentred",0.2-0.3,4.7066617829066635
+as measured,21,"stretched, uncentred",0.3-0.5,4.537714592056944
+as measured,21,"stretched, uncentred",0.5-1,4.070768040598999
+as measured,21,"stretched, uncentred",1-2,3.665065714292077
+as measured,21,"stretched, uncentred",2-inf,2.4651883553391705
+as measured,21,stretched,0.1-0.2,3.767632666533368
+as measured,21,stretched,0.2-0.3,4.911165609985753
+as measured,21,stretched,0.3-0.5,4.863499853687207
+as measured,21,stretched,0.5-1,4.070353500908776
+as measured,21,stretched,1-2,3.665065714292077
+as measured,21,stretched,2-inf,2.4651883553391705
+as measured,21,"stretched, 6-s blocks",0.1-0.2,3.359059790275106
+as measured,21,"stretched, 6-s blocks",0.2-0.3,4.238866857339871
+as measured,21,"stretched, 6-s blocks",0.3-0.5,4.070728280888755
+as measured,21,"stretched, 6-s blocks",0.5-1,3.851900593734298
+as measured,21,"stretched, 6-s blocks",1-2,3.3128173473037124
+as measured,21,"stretched, 6-s blocks",2-inf,2.5436973416559505
+as measured,22,before,1-2,1.1168893830041757
+as measured,22,before,2-inf,2.500077790458486
+as measured,22,floor only,0.1-0.2,3.089689500833663
+as measured,22,floor only,0.2-0.3,5.155105882134035
+as measured,22,floor only,0.3-0.5,5.943454507577624
+as measured,22,floor only,0.5-1,5.288686970199249
+as measured,22,floor only,1-2,1.1168893830041757
+as measured,22,floor only,2-inf,2.500077790458486
+as measured,22,all lags,0.1-0.2,7.507774779944205
+as measured,22,all lags,0.2-0.3,2.44273654274276
+as measured,22,all lags,0.3-0.5,2.8127671347789835
+as measured,22,all lags,0.5-1,2.851944833656241
+as measured,22,all lags,1-2,1.1168893830041757
+as measured,22,all lags,2-inf,2.500077790458486
+as measured,22,"all lags, mean",0.1-0.2,7.507774779944205
+as measured,22,"all lags, mean",0.2-0.3,2.44273654274276
+as measured,22,"all lags, mean",0.3-0.5,2.8127671347789835
+as measured,22,"all lags, mean",0.5-1,2.851944833656241
+as measured,22,"all lags, mean",1-2,1.1168893830041757
+as measured,22,"all lags, mean",2-inf,2.500077790458486
+as measured,22,"stretched, uncentred",0.1-0.2,3.308577931111335
+as measured,22,"stretched, uncentred",0.2-0.3,1.1076446928145516
+as measured,22,"stretched, uncentred",0.3-0.5,2.197345899022959
+as measured,22,"stretched, uncentred",0.5-1,2.3304560529851006
+as measured,22,"stretched, uncentred",1-2,1.1168893830041757
+as measured,22,"stretched, uncentred",2-inf,2.500077790458486
+as measured,22,stretched,0.1-0.2,2.5068629043419834
+as measured,22,stretched,0.2-0.3,1.1270502778718812
+as measured,22,stretched,0.3-0.5,2.213932952040145
+as measured,22,stretched,0.5-1,2.2991110021637677
+as measured,22,stretched,1-2,1.1168893830041757
+as measured,22,stretched,2-inf,2.500077790458486
+as measured,22,"stretched, 6-s blocks",0.1-0.2,2.344640430613274
+as measured,22,"stretched, 6-s blocks",0.2-0.3,1.3554709263157547
+as measured,22,"stretched, 6-s blocks",0.3-0.5,2.1804001052387423
+as measured,22,"stretched, 6-s blocks",0.5-1,2.2308543409715442
+as measured,22,"stretched, 6-s blocks",1-2,1.2109538871400893
+as measured,22,"stretched, 6-s blocks",2-inf,2.40825603733396
+as measured,23,before,1-2,1.695190191800247
+as measured,23,before,2-inf,3.9166305067203715
+as measured,23,floor only,0.1-0.2,3.048794468541996
+as measured,23,floor only,0.2-0.3,4.6041331803108285
+as measured,23,floor only,0.3-0.5,5.014507459796763
+as measured,23,floor only,0.5-1,4.699581523019116
+as measured,23,floor only,1-2,1.695190191800247
+as measured,23,floor only,2-inf,3.9166305067203715
+as measured,23,all lags,0.1-0.2,8.06016508593824
+as measured,23,all lags,0.2-0.3,6.817445992271923
+as measured,23,all lags,0.3-0.5,4.2956742533924706
+as measured,23,all lags,0.5-1,3.1409098275260035
+as measured,23,all lags,1-2,1.695190191800247
+as measured,23,all lags,2-inf,3.9166305067203715
+as measured,23,"all lags, mean",0.1-0.2,8.06016508593824
+as measured,23,"all lags, mean",0.2-0.3,6.817445992271923
+as measured,23,"all lags, mean",0.3-0.5,4.2956742533924706
+as measured,23,"all lags, mean",0.5-1,3.1409098275260035
+as measured,23,"all lags, mean",1-2,1.695190191800247
+as measured,23,"all lags, mean",2-inf,3.9166305067203715
+as measured,23,"stretched, uncentred",0.1-0.2,3.7460420601643474
+as measured,23,"stretched, uncentred",0.2-0.3,4.040412666664218
+as measured,23,"stretched, uncentred",0.3-0.5,2.8159337414330974
+as measured,23,"stretched, uncentred",0.5-1,2.520982126558559
+as measured,23,"stretched, uncentred",1-2,1.695190191800247
+as measured,23,"stretched, uncentred",2-inf,3.9166305067203715
+as measured,23,stretched,0.1-0.2,3.721438822905054
+as measured,23,stretched,0.2-0.3,3.994141638319616
+as measured,23,stretched,0.3-0.5,2.7193293876940743
+as measured,23,stretched,0.5-1,2.5461839661958297
+as measured,23,stretched,1-2,1.695190191800247
+as measured,23,stretched,2-inf,3.9166305067203715
+as measured,23,"stretched, 6-s blocks",0.1-0.2,4.033186205024948
+as measured,23,"stretched, 6-s blocks",0.2-0.3,4.195527174866012
+as measured,23,"stretched, 6-s blocks",0.3-0.5,3.0945003356537693
+as measured,23,"stretched, 6-s blocks",0.5-1,2.6118670964602546
+as measured,23,"stretched, 6-s blocks",1-2,1.5736531076134659
+as measured,23,"stretched, 6-s blocks",2-inf,3.716413213703383
+as measured,24,before,1-2,3.0553033018224216
+as measured,24,before,2-inf,2.2448425003585415
+as measured,24,floor only,0.1-0.2,4.243872369351558
+as measured,24,floor only,0.2-0.3,5.659685099272578
+as measured,24,floor only,0.3-0.5,5.71416917969247
+as measured,24,floor only,0.5-1,4.245572730731987
+as measured,24,floor only,1-2,3.0553033018224216
+as measured,24,floor only,2-inf,2.2448425003585415
+as measured,24,all lags,0.1-0.2,4.7018413578627944
+as measured,24,all lags,0.2-0.3,5.503935276290102
+as measured,24,all lags,0.3-0.5,2.483427954349241
+as measured,24,all lags,0.5-1,3.440688350916576
+as measured,24,all lags,1-2,3.0553033018224216
+as measured,24,all lags,2-inf,2.2448425003585415
+as measured,24,"all lags, mean",0.1-0.2,4.7018413578627944
+as measured,24,"all lags, mean",0.2-0.3,5.503935276290102
+as measured,24,"all lags, mean",0.3-0.5,2.483427954349241
+as measured,24,"all lags, mean",0.5-1,3.440688350916576
+as measured,24,"all lags, mean",1-2,3.0553033018224216
+as measured,24,"all lags, mean",2-inf,2.2448425003585415
+as measured,24,"stretched, uncentred",0.1-0.2,2.259676509515415
+as measured,24,"stretched, uncentred",0.2-0.3,3.2060929401568545
+as measured,24,"stretched, uncentred",0.3-0.5,1.5708189277839526
+as measured,24,"stretched, uncentred",0.5-1,3.023107626018043
+as measured,24,"stretched, uncentred",1-2,3.0553033018224216
+as measured,24,"stretched, uncentred",2-inf,2.2448425003585415
+as measured,24,stretched,0.1-0.2,2.2316172237679286
+as measured,24,stretched,0.2-0.3,3.2125239361017797
+as measured,24,stretched,0.3-0.5,1.47460795032579
+as measured,24,stretched,0.5-1,3.0660996489259964
+as measured,24,stretched,1-2,3.0553033018224216
+as measured,24,stretched,2-inf,2.2448425003585415
+as measured,24,"stretched, 6-s blocks",0.1-0.2,2.361894678463984
+as measured,24,"stretched, 6-s blocks",0.2-0.3,3.6333748079181953
+as measured,24,"stretched, 6-s blocks",0.3-0.5,2.2378048648123805
+as measured,24,"stretched, 6-s blocks",0.5-1,3.5910385940026326
+as measured,24,"stretched, 6-s blocks",1-2,3.4222717321143308
+as measured,24,"stretched, 6-s blocks",2-inf,2.1009816017599072
+as measured,25,before,1-2,1.8523844222882948
+as measured,25,before,2-inf,3.8955671818711544
+as measured,25,floor only,0.1-0.2,2.006452620221053
+as measured,25,floor only,0.2-0.3,3.212339386902623
+as measured,25,floor only,0.3-0.5,3.283064195133818
+as measured,25,floor only,0.5-1,2.253785820009435
+as measured,25,floor only,1-2,1.8523844222882948
+as measured,25,floor only,2-inf,3.8955671818711544
+as measured,25,all lags,0.1-0.2,5.612324800469669
+as measured,25,all lags,0.2-0.3,2.2471423785717253
+as measured,25,all lags,0.3-0.5,2.7029038250105675
+as measured,25,all lags,0.5-1,2.0585169797262917
+as measured,25,all lags,1-2,1.8523844222882948
+as measured,25,all lags,2-inf,3.8955671818711544
+as measured,25,"all lags, mean",0.1-0.2,5.612324800469669
+as measured,25,"all lags, mean",0.2-0.3,2.2471423785717253
+as measured,25,"all lags, mean",0.3-0.5,2.7029038250105675
+as measured,25,"all lags, mean",0.5-1,2.0585169797262917
+as measured,25,"all lags, mean",1-2,1.8523844222882948
+as measured,25,"all lags, mean",2-inf,3.8955671818711544
+as measured,25,"stretched, uncentred",0.1-0.2,2.3431068431781896
+as measured,25,"stretched, uncentred",0.2-0.3,2.53880941052426
+as measured,25,"stretched, uncentred",0.3-0.5,2.573437383346998
+as measured,25,"stretched, uncentred",0.5-1,1.5198585845885555
+as measured,25,"stretched, uncentred",1-2,1.8523844222882948
+as measured,25,"stretched, uncentred",2-inf,3.8955671818711544
+as measured,25,stretched,0.1-0.2,2.0805880934407033
+as measured,25,stretched,0.2-0.3,2.5365485140707458
+as measured,25,stretched,0.3-0.5,2.551229782024558
+as measured,25,stretched,0.5-1,1.471852818350097
+as measured,25,stretched,1-2,1.8523844222882948
+as measured,25,stretched,2-inf,3.8955671818711544
+as measured,25,"stretched, 6-s blocks",0.1-0.2,2.521792191191806
+as measured,25,"stretched, 6-s blocks",0.2-0.3,2.1943744010545676
+as measured,25,"stretched, 6-s blocks",0.3-0.5,2.572560552152636
+as measured,25,"stretched, 6-s blocks",0.5-1,2.07805239797463
+as measured,25,"stretched, 6-s blocks",1-2,1.8937807266562243
+as measured,25,"stretched, 6-s blocks",2-inf,3.7637939621618823
+as measured,26,before,1-2,3.1261841979346503
+as measured,26,before,2-inf,2.696610471789636
+as measured,26,floor only,0.1-0.2,2.384490671376984
+as measured,26,floor only,0.2-0.3,4.264207666120145
+as measured,26,floor only,0.3-0.5,5.210471483406034
+as measured,26,floor only,0.5-1,4.9274039076749405
+as measured,26,floor only,1-2,3.1261841979346503
+as measured,26,floor only,2-inf,2.696610471789636
+as measured,26,all lags,0.1-0.2,8.182696582592268
+as measured,26,all lags,0.2-0.3,5.158630440181752
+as measured,26,all lags,0.3-0.5,3.910194469514061
+as measured,26,all lags,0.5-1,3.828290542785572
+as measured,26,all lags,1-2,3.1261841979346503
+as measured,26,all lags,2-inf,2.696610471789636
+as measured,26,"all lags, mean",0.1-0.2,8.182696582592268
+as measured,26,"all lags, mean",0.2-0.3,5.158630440181752
+as measured,26,"all lags, mean",0.3-0.5,3.910194469514061
+as measured,26,"all lags, mean",0.5-1,3.828290542785572
+as measured,26,"all lags, mean",1-2,3.1261841979346503
+as measured,26,"all lags, mean",2-inf,2.696610471789636
+as measured,26,"stretched, uncentred",0.1-0.2,3.6688200501555666
+as measured,26,"stretched, uncentred",0.2-0.3,2.7541083685818033
+as measured,26,"stretched, uncentred",0.3-0.5,2.6957989064376178
+as measured,26,"stretched, uncentred",0.5-1,3.1568189700299887
+as measured,26,"stretched, uncentred",1-2,3.1261841979346503
+as measured,26,"stretched, uncentred",2-inf,2.696610471789636
+as measured,26,stretched,0.1-0.2,3.6468612042225432
+as measured,26,stretched,0.2-0.3,2.6895612127415616
+as measured,26,stretched,0.3-0.5,2.7277780275342374
+as measured,26,stretched,0.5-1,3.165375815465877
+as measured,26,stretched,1-2,3.1261841979346503
+as measured,26,stretched,2-inf,2.696610471789636
+as measured,26,"stretched, 6-s blocks",0.1-0.2,4.004583212251776
+as measured,26,"stretched, 6-s blocks",0.2-0.3,2.4770769983449923
+as measured,26,"stretched, 6-s blocks",0.3-0.5,2.6817963831131806
+as measured,26,"stretched, 6-s blocks",0.5-1,2.864978368904068
+as measured,26,"stretched, 6-s blocks",1-2,2.861218203063757
+as measured,26,"stretched, 6-s blocks",2-inf,2.6449200364665666
+as measured,27,before,1-2,0.9925322321718137
+as measured,27,before,2-inf,2.6215945535395524
+as measured,27,floor only,0.1-0.2,0.39832010413585256
+as measured,27,floor only,0.2-0.3,0.5888175659126584
+as measured,27,floor only,0.3-0.5,1.8957916835865531
+as measured,27,floor only,0.5-1,2.3356977105564733
+as measured,27,floor only,1-2,0.9925322321718137
+as measured,27,floor only,2-inf,2.6215945535395524
+as measured,27,all lags,0.1-0.2,4.873512421156135
+as measured,27,all lags,0.2-0.3,2.0806690061536934
+as measured,27,all lags,0.3-0.5,1.4696395594349667
+as measured,27,all lags,0.5-1,1.9136320932843072
+as measured,27,all lags,1-2,0.9925322321718137
+as measured,27,all lags,2-inf,2.6215945535395524
+as measured,27,"all lags, mean",0.1-0.2,4.873512421156135
+as measured,27,"all lags, mean",0.2-0.3,2.0806690061536934
+as measured,27,"all lags, mean",0.3-0.5,1.4696395594349667
+as measured,27,"all lags, mean",0.5-1,1.9136320932843072
+as measured,27,"all lags, mean",1-2,0.9925322321718137
+as measured,27,"all lags, mean",2-inf,2.6215945535395524
+as measured,27,"stretched, uncentred",0.1-0.2,2.270033139129093
+as measured,27,"stretched, uncentred",0.2-0.3,1.4174069651756758
+as measured,27,"stretched, uncentred",0.3-0.5,1.2879805066273797
+as measured,27,"stretched, uncentred",0.5-1,1.6634535958660706
+as measured,27,"stretched, uncentred",1-2,0.9925322321718137
+as measured,27,"stretched, uncentred",2-inf,2.6215945535395524
+as measured,27,stretched,0.1-0.2,2.5039587006663493
+as measured,27,stretched,0.2-0.3,1.385987814760388
+as measured,27,stretched,0.3-0.5,1.2309557945447647
+as measured,27,stretched,0.5-1,1.6967070430689872
+as measured,27,stretched,1-2,0.9925322321718137
+as measured,27,stretched,2-inf,2.6215945535395524
+as measured,27,"stretched, 6-s blocks",0.1-0.2,2.064805653691565
+as measured,27,"stretched, 6-s blocks",0.2-0.3,1.951005295883375
+as measured,27,"stretched, 6-s blocks",0.3-0.5,1.9161404797666877
+as measured,27,"stretched, 6-s blocks",0.5-1,2.27618533603814
+as measured,27,"stretched, 6-s blocks",1-2,1.1231681921410734
+as measured,27,"stretched, 6-s blocks",2-inf,2.7647412367891766
+as measured,28,before,1-2,1.4609134139205942
+as measured,28,before,2-inf,2.208423489564538
+as measured,28,floor only,0.1-0.2,1.1255201764569163
+as measured,28,floor only,0.2-0.3,1.13238722502879
+as measured,28,floor only,0.3-0.5,0.898859003154431
+as measured,28,floor only,0.5-1,2.282231996744258
+as measured,28,floor only,1-2,1.4609134139205942
+as measured,28,floor only,2-inf,2.208423489564538
+as measured,28,all lags,0.1-0.2,4.53084002073439
+as measured,28,all lags,0.2-0.3,1.366069682511674
+as measured,28,all lags,0.3-0.5,0.6827974513502003
+as measured,28,all lags,0.5-1,1.644658929803666
+as measured,28,all lags,1-2,1.4609134139205942
+as measured,28,all lags,2-inf,2.208423489564538
+as measured,28,"all lags, mean",0.1-0.2,4.53084002073439
+as measured,28,"all lags, mean",0.2-0.3,1.366069682511674
+as measured,28,"all lags, mean",0.3-0.5,0.6827974513502003
+as measured,28,"all lags, mean",0.5-1,1.644658929803666
+as measured,28,"all lags, mean",1-2,1.4609134139205942
+as measured,28,"all lags, mean",2-inf,2.208423489564538
+as measured,28,"stretched, uncentred",0.1-0.2,2.4540108368005393
+as measured,28,"stretched, uncentred",0.2-0.3,1.3798732622987928
+as measured,28,"stretched, uncentred",0.3-0.5,0.6817237812517478
+as measured,28,"stretched, uncentred",0.5-1,1.459927134167602
+as measured,28,"stretched, uncentred",1-2,1.4609134139205942
+as measured,28,"stretched, uncentred",2-inf,2.208423489564538
+as measured,28,stretched,0.1-0.2,2.628250152711704
+as measured,28,stretched,0.2-0.3,1.3969563767287738
+as measured,28,stretched,0.3-0.5,0.5949610513473523
+as measured,28,stretched,0.5-1,1.4599050191224356
+as measured,28,stretched,1-2,1.4609134139205942
+as measured,28,stretched,2-inf,2.208423489564538
+as measured,28,"stretched, 6-s blocks",0.1-0.2,1.50827579853158
+as measured,28,"stretched, 6-s blocks",0.2-0.3,1.7805126962916804
+as measured,28,"stretched, 6-s blocks",0.3-0.5,2.025579233708287
+as measured,28,"stretched, 6-s blocks",0.5-1,1.2676776580980509
+as measured,28,"stretched, 6-s blocks",1-2,1.2681109906519217
+as measured,28,"stretched, 6-s blocks",2-inf,2.81777607008458
+as measured,29,before,1-2,1.9896758137033999
+as measured,29,before,2-inf,3.9031722284841743
+as measured,29,floor only,0.1-0.2,1.93748256402157
+as measured,29,floor only,0.2-0.3,2.819049876127225
+as measured,29,floor only,0.3-0.5,3.326224664405656
+as measured,29,floor only,0.5-1,3.2852825465188755
+as measured,29,floor only,1-2,1.9896758137033999
+as measured,29,floor only,2-inf,3.9031722284841743
+as measured,29,all lags,0.1-0.2,4.624789730002299
+as measured,29,all lags,0.2-0.3,6.532219597739367
+as measured,29,all lags,0.3-0.5,5.603502960837027
+as measured,29,all lags,0.5-1,2.5988272570299786
+as measured,29,all lags,1-2,1.9896758137033999
+as measured,29,all lags,2-inf,3.9031722284841743
+as measured,29,"all lags, mean",0.1-0.2,4.624789730002299
+as measured,29,"all lags, mean",0.2-0.3,6.532219597739367
+as measured,29,"all lags, mean",0.3-0.5,5.603502960837027
+as measured,29,"all lags, mean",0.5-1,2.5988272570299786
+as measured,29,"all lags, mean",1-2,1.9896758137033999
+as measured,29,"all lags, mean",2-inf,3.9031722284841743
+as measured,29,"stretched, uncentred",0.1-0.2,2.3856133843808904
+as measured,29,"stretched, uncentred",0.2-0.3,3.514182207426856
+as measured,29,"stretched, uncentred",0.3-0.5,2.9123620951164098
+as measured,29,"stretched, uncentred",0.5-1,2.033927507909587
+as measured,29,"stretched, uncentred",1-2,1.9896758137033999
+as measured,29,"stretched, uncentred",2-inf,3.9031722284841743
+as measured,29,stretched,0.1-0.2,2.5084418733884983
+as measured,29,stretched,0.2-0.3,3.574515368465789
+as measured,29,stretched,0.3-0.5,2.964735422684541
+as measured,29,stretched,0.5-1,2.0316985385933024
+as measured,29,stretched,1-2,1.9896758137033999
+as measured,29,stretched,2-inf,3.9031722284841743
+as measured,29,"stretched, 6-s blocks",0.1-0.2,3.7599982671462384
+as measured,29,"stretched, 6-s blocks",0.2-0.3,4.6112000844806325
+as measured,29,"stretched, 6-s blocks",0.3-0.5,3.4825484680955663
+as measured,29,"stretched, 6-s blocks",0.5-1,1.8308843929911145
+as measured,29,"stretched, 6-s blocks",1-2,1.8131135060980537
+as measured,29,"stretched, 6-s blocks",2-inf,4.406577067166319
+strong,0,before,1-2,4.817374413136892
+strong,0,before,2-inf,2.294853752157341
+strong,0,floor only,0.1-0.2,5.008880338182424
+strong,0,floor only,0.2-0.3,7.199340867134079
+strong,0,floor only,0.3-0.5,8.312697843592204
+strong,0,floor only,0.5-1,8.22950075959634
+strong,0,floor only,1-2,4.817374413136892
+strong,0,floor only,2-inf,2.294853752157341
+strong,0,all lags,0.1-0.2,6.266248107419693
+strong,0,all lags,0.2-0.3,3.827345490183116
+strong,0,all lags,0.3-0.5,6.4286775216752785
+strong,0,all lags,0.5-1,6.463607823204228
+strong,0,all lags,1-2,4.817374413136892
+strong,0,all lags,2-inf,2.294853752157341
+strong,0,"all lags, mean",0.1-0.2,6.266248107419693
+strong,0,"all lags, mean",0.2-0.3,3.827345490183116
+strong,0,"all lags, mean",0.3-0.5,6.4286775216752785
+strong,0,"all lags, mean",0.5-1,6.463607823204228
+strong,0,"all lags, mean",1-2,4.817374413136892
+strong,0,"all lags, mean",2-inf,2.294853752157341
+strong,0,"stretched, uncentred",0.1-0.2,3.1509225739868025
+strong,0,"stretched, uncentred",0.2-0.3,1.803399035934744
+strong,0,"stretched, uncentred",0.3-0.5,4.827576237046462
+strong,0,"stretched, uncentred",0.5-1,5.000592763337859
+strong,0,"stretched, uncentred",1-2,4.817374413136892
+strong,0,"stretched, uncentred",2-inf,2.294853752157341
+strong,0,stretched,0.1-0.2,3.155205522583429
+strong,0,stretched,0.2-0.3,1.9193369349424423
+strong,0,stretched,0.3-0.5,4.743172007675751
+strong,0,stretched,0.5-1,5.001064948365177
+strong,0,stretched,1-2,4.817374413136892
+strong,0,stretched,2-inf,2.294853752157341
+strong,0,"stretched, 6-s blocks",0.1-0.2,1.1375918820540787
+strong,0,"stretched, 6-s blocks",0.2-0.3,0.7841727208964245
+strong,0,"stretched, 6-s blocks",0.3-0.5,4.4192500468751135
+strong,0,"stretched, 6-s blocks",0.5-1,4.636100648773481
+strong,0,"stretched, 6-s blocks",1-2,4.393093400527814
+strong,0,"stretched, 6-s blocks",2-inf,2.382951430552135
+strong,1,before,1-2,3.3190205290225374
+strong,1,before,2-inf,1.804372570913155
+strong,1,floor only,0.1-0.2,1.1872217660429156
+strong,1,floor only,0.2-0.3,2.076848956319747
+strong,1,floor only,0.3-0.5,3.937709597259406
+strong,1,floor only,0.5-1,4.6656988064597495
+strong,1,floor only,1-2,3.3190205290225374
+strong,1,floor only,2-inf,1.804372570913155
+strong,1,all lags,0.1-0.2,2.3909381805738166
+strong,1,all lags,0.2-0.3,1.5199549247368411
+strong,1,all lags,0.3-0.5,3.5879612212594414
+strong,1,all lags,0.5-1,4.591977490577357
+strong,1,all lags,1-2,3.3190205290225374
+strong,1,all lags,2-inf,1.804372570913155
+strong,1,"all lags, mean",0.1-0.2,2.3909381805738166
+strong,1,"all lags, mean",0.2-0.3,1.5199549247368411
+strong,1,"all lags, mean",0.3-0.5,3.5879612212594414
+strong,1,"all lags, mean",0.5-1,4.591977490577357
+strong,1,"all lags, mean",1-2,3.3190205290225374
+strong,1,"all lags, mean",2-inf,1.804372570913155
+strong,1,"stretched, uncentred",0.1-0.2,1.818391507729608
+strong,1,"stretched, uncentred",0.2-0.3,2.2236504446622694
+strong,1,"stretched, uncentred",0.3-0.5,2.584922005445218
+strong,1,"stretched, uncentred",0.5-1,3.3520087284725286
+strong,1,"stretched, uncentred",1-2,3.3190205290225374
+strong,1,"stretched, uncentred",2-inf,1.804372570913155
+strong,1,stretched,0.1-0.2,1.9459641310591616
+strong,1,stretched,0.2-0.3,2.406945123489337
+strong,1,stretched,0.3-0.5,2.4845617222279146
+strong,1,stretched,0.5-1,3.317803185768176
+strong,1,stretched,1-2,3.3190205290225374
+strong,1,stretched,2-inf,1.804372570913155
+strong,1,"stretched, 6-s blocks",0.1-0.2,2.703585704577747
+strong,1,"stretched, 6-s blocks",0.2-0.3,2.039419757958094
+strong,1,"stretched, 6-s blocks",0.3-0.5,2.9536456824441673
+strong,1,"stretched, 6-s blocks",0.5-1,3.6947679912877964
+strong,1,"stretched, 6-s blocks",1-2,3.4875190472793904
+strong,1,"stretched, 6-s blocks",2-inf,1.8431730704705338
+strong,2,before,1-2,3.9592383103676045
+strong,2,before,2-inf,1.7530453907650592
+strong,2,floor only,0.1-0.2,3.2581690272661064
+strong,2,floor only,0.2-0.3,4.7591941577586665
+strong,2,floor only,0.3-0.5,5.400316074374486
+strong,2,floor only,0.5-1,5.327172816981859
+strong,2,floor only,1-2,3.9592383103676045
+strong,2,floor only,2-inf,1.7530453907650592
+strong,2,all lags,0.1-0.2,7.33018559975789
+strong,2,all lags,0.2-0.3,7.621854449507443
+strong,2,all lags,0.3-0.5,7.742772166613086
+strong,2,all lags,0.5-1,5.867472016578016
+strong,2,all lags,1-2,3.9592383103676045
+strong,2,all lags,2-inf,1.7530453907650592
+strong,2,"all lags, mean",0.1-0.2,7.33018559975789
+strong,2,"all lags, mean",0.2-0.3,7.621854449507443
+strong,2,"all lags, mean",0.3-0.5,7.742772166613086
+strong,2,"all lags, mean",0.5-1,5.867472016578016
+strong,2,"all lags, mean",1-2,3.9592383103676045
+strong,2,"all lags, mean",2-inf,1.7530453907650592
+strong,2,"stretched, uncentred",0.1-0.2,3.4387509446271154
+strong,2,"stretched, uncentred",0.2-0.3,4.058800083723873
+strong,2,"stretched, uncentred",0.3-0.5,4.528821409956152
+strong,2,"stretched, uncentred",0.5-1,4.180102587802659
+strong,2,"stretched, uncentred",1-2,3.9592383103676045
+strong,2,"stretched, uncentred",2-inf,1.7530453907650592
+strong,2,stretched,0.1-0.2,3.2685283488718646
+strong,2,stretched,0.2-0.3,3.958481415208194
+strong,2,stretched,0.3-0.5,4.432985576671154
+strong,2,stretched,0.5-1,4.177407785973739
+strong,2,stretched,1-2,3.9592383103676045
+strong,2,stretched,2-inf,1.7530453907650592
+strong,2,"stretched, 6-s blocks",0.1-0.2,3.581059172028097
+strong,2,"stretched, 6-s blocks",0.2-0.3,3.74801487403103
+strong,2,"stretched, 6-s blocks",0.3-0.5,4.3460735547020475
+strong,2,"stretched, 6-s blocks",0.5-1,4.278903753353965
+strong,2,"stretched, 6-s blocks",1-2,4.108278816095126
+strong,2,"stretched, 6-s blocks",2-inf,1.8265358968084027
+strong,3,before,1-2,0.5687136358257449
+strong,3,before,2-inf,2.657923659827357
+strong,3,floor only,0.1-0.2,2.3783906591350132
+strong,3,floor only,0.2-0.3,2.7961102974574037
+strong,3,floor only,0.3-0.5,2.770422369088691
+strong,3,floor only,0.5-1,1.5527314435603372
+strong,3,floor only,1-2,0.5687136358257449
+strong,3,floor only,2-inf,2.657923659827357
+strong,3,all lags,0.1-0.2,2.9730105033625036
+strong,3,all lags,0.2-0.3,3.081202035882598
+strong,3,all lags,0.3-0.5,1.3476515870739054
+strong,3,all lags,0.5-1,0.8744764774589509
+strong,3,all lags,1-2,0.5687136358257449
+strong,3,all lags,2-inf,2.657923659827357
+strong,3,"all lags, mean",0.1-0.2,2.9730105033625036
+strong,3,"all lags, mean",0.2-0.3,3.081202035882598
+strong,3,"all lags, mean",0.3-0.5,1.3476515870739054
+strong,3,"all lags, mean",0.5-1,0.8744764774589509
+strong,3,"all lags, mean",1-2,0.5687136358257449
+strong,3,"all lags, mean",2-inf,2.657923659827357
+strong,3,"stretched, uncentred",0.1-0.2,1.740796236199107
+strong,3,"stretched, uncentred",0.2-0.3,1.7773211535491036
+strong,3,"stretched, uncentred",0.3-0.5,1.0649118489185212
+strong,3,"stretched, uncentred",0.5-1,0.8059182955529516
+strong,3,"stretched, uncentred",1-2,0.5687136358257449
+strong,3,"stretched, uncentred",2-inf,2.657923659827357
+strong,3,stretched,0.1-0.2,1.9949108248299705
+strong,3,stretched,0.2-0.3,1.8514718993462531
+strong,3,stretched,0.3-0.5,1.1105394864222642
+strong,3,stretched,0.5-1,0.8360635546965158
+strong,3,stretched,1-2,0.5687136358257449
+strong,3,stretched,2-inf,2.657923659827357
+strong,3,"stretched, 6-s blocks",0.1-0.2,1.8241116528652308
+strong,3,"stretched, 6-s blocks",0.2-0.3,0.9457642407534732
+strong,3,"stretched, 6-s blocks",0.3-0.5,1.4627336572246006
+strong,3,"stretched, 6-s blocks",0.5-1,0.835188521501899
+strong,3,"stretched, 6-s blocks",1-2,0.6066058533068149
+strong,3,"stretched, 6-s blocks",2-inf,2.883784638453748
+strong,4,before,1-2,4.333651337365549
+strong,4,before,2-inf,3.219030596922086
+strong,4,floor only,0.1-0.2,7.172133987301
+strong,4,floor only,0.2-0.3,9.61133047576954
+strong,4,floor only,0.3-0.5,9.768655097275404
+strong,4,floor only,0.5-1,8.020173385747912
+strong,4,floor only,1-2,4.333651337365549
+strong,4,floor only,2-inf,3.219030596922086
+strong,4,all lags,0.1-0.2,10.312017469694034
+strong,4,all lags,0.2-0.3,10.290154331816693
+strong,4,all lags,0.3-0.5,7.527690360845233
+strong,4,all lags,0.5-1,6.128123521704349
+strong,4,all lags,1-2,4.333651337365549
+strong,4,all lags,2-inf,3.219030596922086
+strong,4,"all lags, mean",0.1-0.2,10.312017469694034
+strong,4,"all lags, mean",0.2-0.3,10.290154331816693
+strong,4,"all lags, mean",0.3-0.5,7.527690360845233
+strong,4,"all lags, mean",0.5-1,6.128123521704349
+strong,4,"all lags, mean",1-2,4.333651337365549
+strong,4,"all lags, mean",2-inf,3.219030596922086
+strong,4,"stretched, uncentred",0.1-0.2,4.959153265267032
+strong,4,"stretched, uncentred",0.2-0.3,5.186379273699434
+strong,4,"stretched, uncentred",0.3-0.5,4.390737254617273
+strong,4,"stretched, uncentred",0.5-1,5.051336091842408
+strong,4,"stretched, uncentred",1-2,4.333651337365549
+strong,4,"stretched, uncentred",2-inf,3.219030596922086
+strong,4,stretched,0.1-0.2,4.848447396740325
+strong,4,stretched,0.2-0.3,5.103285611591919
+strong,4,stretched,0.3-0.5,4.390536450168772
+strong,4,stretched,0.5-1,5.018728079103352
+strong,4,stretched,1-2,4.333651337365549
+strong,4,stretched,2-inf,3.219030596922086
+strong,4,"stretched, 6-s blocks",0.1-0.2,5.232621638988081
+strong,4,"stretched, 6-s blocks",0.2-0.3,5.4379996980485235
+strong,4,"stretched, 6-s blocks",0.3-0.5,4.546407079575382
+strong,4,"stretched, 6-s blocks",0.5-1,5.123761493766388
+strong,4,"stretched, 6-s blocks",1-2,4.391724891604411
+strong,4,"stretched, 6-s blocks",2-inf,2.8446704478210147
+strong,5,before,1-2,1.0976586846135588
+strong,5,before,2-inf,2.486759834509281
+strong,5,floor only,0.1-0.2,3.225796346318991
+strong,5,floor only,0.2-0.3,4.172388460602514
+strong,5,floor only,0.3-0.5,4.193199054115734
+strong,5,floor only,0.5-1,2.968177277754169
+strong,5,floor only,1-2,1.0976586846135588
+strong,5,floor only,2-inf,2.486759834509281
+strong,5,all lags,0.1-0.2,7.186693298540036
+strong,5,all lags,0.2-0.3,5.315590306989168
+strong,5,all lags,0.3-0.5,2.9153733360860214
+strong,5,all lags,0.5-1,1.8159977340504376
+strong,5,all lags,1-2,1.0976586846135588
+strong,5,all lags,2-inf,2.486759834509281
+strong,5,"all lags, mean",0.1-0.2,7.186693298540036
+strong,5,"all lags, mean",0.2-0.3,5.315590306989168
+strong,5,"all lags, mean",0.3-0.5,2.9153733360860214
+strong,5,"all lags, mean",0.5-1,1.8159977340504376
+strong,5,"all lags, mean",1-2,1.0976586846135588
+strong,5,"all lags, mean",2-inf,2.486759834509281
+strong,5,"stretched, uncentred",0.1-0.2,4.058402985015178
+strong,5,"stretched, uncentred",0.2-0.3,2.610716992563895
+strong,5,"stretched, uncentred",0.3-0.5,1.5343516457633557
+strong,5,"stretched, uncentred",0.5-1,1.4611604797596232
+strong,5,"stretched, uncentred",1-2,1.0976586846135588
+strong,5,"stretched, uncentred",2-inf,2.486759834509281
+strong,5,stretched,0.1-0.2,3.7022409364892734
+strong,5,stretched,0.2-0.3,2.564327028655311
+strong,5,stretched,0.3-0.5,1.5854370462648701
+strong,5,stretched,0.5-1,1.4745828094763214
+strong,5,stretched,1-2,1.0976586846135588
+strong,5,stretched,2-inf,2.486759834509281
+strong,5,"stretched, 6-s blocks",0.1-0.2,4.415471060583528
+strong,5,"stretched, 6-s blocks",0.2-0.3,2.422921890233222
+strong,5,"stretched, 6-s blocks",0.3-0.5,1.734179335826183
+strong,5,"stretched, 6-s blocks",0.5-1,1.364399416871634
+strong,5,"stretched, 6-s blocks",1-2,1.1381617099162378
+strong,5,"stretched, 6-s blocks",2-inf,2.500041303608471
+strong,6,before,1-2,3.040778724171437
+strong,6,before,2-inf,2.1619235163625783
+strong,6,floor only,0.1-0.2,6.131149591207372
+strong,6,floor only,0.2-0.3,8.246339944650265
+strong,6,floor only,0.3-0.5,8.403479179152969
+strong,6,floor only,0.5-1,6.884651771493633
+strong,6,floor only,1-2,3.040778724171437
+strong,6,floor only,2-inf,2.1619235163625783
+strong,6,all lags,0.1-0.2,4.844613854953466
+strong,6,all lags,0.2-0.3,5.221970785720646
+strong,6,all lags,0.3-0.5,8.321583392797702
+strong,6,all lags,0.5-1,6.293060088447352
+strong,6,all lags,1-2,3.040778724171437
+strong,6,all lags,2-inf,2.1619235163625783
+strong,6,"all lags, mean",0.1-0.2,4.844613854953466
+strong,6,"all lags, mean",0.2-0.3,5.221970785720646
+strong,6,"all lags, mean",0.3-0.5,8.321583392797702
+strong,6,"all lags, mean",0.5-1,6.293060088447352
+strong,6,"all lags, mean",1-2,3.040778724171437
+strong,6,"all lags, mean",2-inf,2.1619235163625783
+strong,6,"stretched, uncentred",0.1-0.2,3.470963181782655
+strong,6,"stretched, uncentred",0.2-0.3,3.13776067894358
+strong,6,"stretched, uncentred",0.3-0.5,5.144415705535422
+strong,6,"stretched, uncentred",0.5-1,4.2146129035892885
+strong,6,"stretched, uncentred",1-2,3.040778724171437
+strong,6,"stretched, uncentred",2-inf,2.1619235163625783
+strong,6,stretched,0.1-0.2,3.139029946054703
+strong,6,stretched,0.2-0.3,3.256253993842646
+strong,6,stretched,0.3-0.5,5.111603417788336
+strong,6,stretched,0.5-1,4.189797648897039
+strong,6,stretched,1-2,3.040778724171437
+strong,6,stretched,2-inf,2.1619235163625783
+strong,6,"stretched, 6-s blocks",0.1-0.2,4.328241718219568
+strong,6,"stretched, 6-s blocks",0.2-0.3,3.7470706114400856
+strong,6,"stretched, 6-s blocks",0.3-0.5,5.332581864069125
+strong,6,"stretched, 6-s blocks",0.5-1,3.9569279602013276
+strong,6,"stretched, 6-s blocks",1-2,3.0573166882524068
+strong,6,"stretched, 6-s blocks",2-inf,2.1495911818632423
+strong,7,before,1-2,1.109471202161516
+strong,7,before,2-inf,2.5863317837531516
+strong,7,floor only,0.1-0.2,3.4226884550826635
+strong,7,floor only,0.2-0.3,4.9174812222529685
+strong,7,floor only,0.3-0.5,5.181779349170076
+strong,7,floor only,0.5-1,4.46438598053813
+strong,7,floor only,1-2,1.109471202161516
+strong,7,floor only,2-inf,2.5863317837531516
+strong,7,all lags,0.1-0.2,5.455272785711122
+strong,7,all lags,0.2-0.3,5.274413039800298
+strong,7,all lags,0.3-0.5,2.7610481970630194
+strong,7,all lags,0.5-1,3.0254287415159835
+strong,7,all lags,1-2,1.109471202161516
+strong,7,all lags,2-inf,2.5863317837531516
+strong,7,"all lags, mean",0.1-0.2,5.455272785711122
+strong,7,"all lags, mean",0.2-0.3,5.274413039800298
+strong,7,"all lags, mean",0.3-0.5,2.7610481970630194
+strong,7,"all lags, mean",0.5-1,3.0254287415159835
+strong,7,"all lags, mean",1-2,1.109471202161516
+strong,7,"all lags, mean",2-inf,2.5863317837531516
+strong,7,"stretched, uncentred",0.1-0.2,1.9865199179509987
+strong,7,"stretched, uncentred",0.2-0.3,2.2330553616418483
+strong,7,"stretched, uncentred",0.3-0.5,2.126822178038893
+strong,7,"stretched, uncentred",0.5-1,2.347749307519871
+strong,7,"stretched, uncentred",1-2,1.109471202161516
+strong,7,"stretched, uncentred",2-inf,2.5863317837531516
+strong,7,stretched,0.1-0.2,1.74504475334789
+strong,7,stretched,0.2-0.3,2.129121170296143
+strong,7,stretched,0.3-0.5,2.213472116394305
+strong,7,stretched,0.5-1,2.4039120747468754
+strong,7,stretched,1-2,1.109471202161516
+strong,7,stretched,2-inf,2.5863317837531516
+strong,7,"stretched, 6-s blocks",0.1-0.2,1.5077050362793105
+strong,7,"stretched, 6-s blocks",0.2-0.3,1.8909612188507918
+strong,7,"stretched, 6-s blocks",0.3-0.5,2.0219272823511414
+strong,7,"stretched, 6-s blocks",0.5-1,2.3991040273150888
+strong,7,"stretched, 6-s blocks",1-2,1.0016702545174276
+strong,7,"stretched, 6-s blocks",2-inf,2.7370530801291073
+strong,8,before,1-2,3.986878443854353
+strong,8,before,2-inf,2.4549724334261627
+strong,8,floor only,0.1-0.2,6.190520584999004
+strong,8,floor only,0.2-0.3,8.92865680062709
+strong,8,floor only,0.3-0.5,9.699992511400959
+strong,8,floor only,0.5-1,9.269409804011401
+strong,8,floor only,1-2,3.986878443854353
+strong,8,floor only,2-inf,2.4549724334261627
+strong,8,all lags,0.1-0.2,5.517739261528787
+strong,8,all lags,0.2-0.3,9.922521329804196
+strong,8,all lags,0.3-0.5,11.418023804898862
+strong,8,all lags,0.5-1,7.855331626242801
+strong,8,all lags,1-2,3.986878443854353
+strong,8,all lags,2-inf,2.4549724334261627
+strong,8,"all lags, mean",0.1-0.2,5.517739261528787
+strong,8,"all lags, mean",0.2-0.3,9.922521329804196
+strong,8,"all lags, mean",0.3-0.5,11.418023804898862
+strong,8,"all lags, mean",0.5-1,7.855331626242801
+strong,8,"all lags, mean",1-2,3.986878443854353
+strong,8,"all lags, mean",2-inf,2.4549724334261627
+strong,8,"stretched, uncentred",0.1-0.2,2.4423634021770426
+strong,8,"stretched, uncentred",0.2-0.3,5.621469345710572
+strong,8,"stretched, uncentred",0.3-0.5,6.9063594932848185
+strong,8,"stretched, uncentred",0.5-1,5.4361074812653305
+strong,8,"stretched, uncentred",1-2,3.986878443854353
+strong,8,"stretched, uncentred",2-inf,2.4549724334261627
+strong,8,stretched,0.1-0.2,2.104377629754253
+strong,8,stretched,0.2-0.3,5.281451595365552
+strong,8,stretched,0.3-0.5,6.667998407707382
+strong,8,stretched,0.5-1,5.349241633148824
+strong,8,stretched,1-2,3.986878443854353
+strong,8,stretched,2-inf,2.4549724334261627
+strong,8,"stretched, 6-s blocks",0.1-0.2,5.681688471730254
+strong,8,"stretched, 6-s blocks",0.2-0.3,2.517329314959754
+strong,8,"stretched, 6-s blocks",0.3-0.5,4.774867580593887
+strong,8,"stretched, 6-s blocks",0.5-1,3.7227982716326764
+strong,8,"stretched, 6-s blocks",1-2,2.8290559275388563
+strong,8,"stretched, 6-s blocks",2-inf,2.9028972786808835
+strong,9,before,1-2,1.0489911537969436
+strong,9,before,2-inf,2.1472726617444824
+strong,9,floor only,0.1-0.2,1.6922081902286035
+strong,9,floor only,0.2-0.3,2.125319108731147
+strong,9,floor only,0.3-0.5,2.1310854872128417
+strong,9,floor only,0.5-1,1.651120433355185
+strong,9,floor only,1-2,1.0489911537969436
+strong,9,floor only,2-inf,2.1472726617444824
+strong,9,all lags,0.1-0.2,3.1113515660876536
+strong,9,all lags,0.2-0.3,2.3832535314704426
+strong,9,all lags,0.3-0.5,0.8123677161864359
+strong,9,all lags,0.5-1,0.470594680642657
+strong,9,all lags,1-2,1.0489911537969436
+strong,9,all lags,2-inf,2.1472726617444824
+strong,9,"all lags, mean",0.1-0.2,3.1113515660876536
+strong,9,"all lags, mean",0.2-0.3,2.3832535314704426
+strong,9,"all lags, mean",0.3-0.5,0.8123677161864359
+strong,9,"all lags, mean",0.5-1,0.470594680642657
+strong,9,"all lags, mean",1-2,1.0489911537969436
+strong,9,"all lags, mean",2-inf,2.1472726617444824
+strong,9,"stretched, uncentred",0.1-0.2,3.094216411702417
+strong,9,"stretched, uncentred",0.2-0.3,1.5080118214629592
+strong,9,"stretched, uncentred",0.3-0.5,0.7946520974645483
+strong,9,"stretched, uncentred",0.5-1,0.6638470534181304
+strong,9,"stretched, uncentred",1-2,1.0489911537969436
+strong,9,"stretched, uncentred",2-inf,2.1472726617444824
+strong,9,stretched,0.1-0.2,2.5993713760944157
+strong,9,stretched,0.2-0.3,1.6184079600837231
+strong,9,stretched,0.3-0.5,0.7905736272244049
+strong,9,stretched,0.5-1,0.7404550358063141
+strong,9,stretched,1-2,1.0489911537969436
+strong,9,stretched,2-inf,2.1472726617444824
+strong,9,"stretched, 6-s blocks",0.1-0.2,1.2911490806400834
+strong,9,"stretched, 6-s blocks",0.2-0.3,0.4381229874684669
+strong,9,"stretched, 6-s blocks",0.3-0.5,0.8713832506542677
+strong,9,"stretched, 6-s blocks",0.5-1,0.6454060131577332
+strong,9,"stretched, 6-s blocks",1-2,0.970313678145017
+strong,9,"stretched, 6-s blocks",2-inf,2.1169537892989547
+strong,10,before,1-2,5.437417093692653
+strong,10,before,2-inf,2.6056401967409775
+strong,10,floor only,0.1-0.2,7.379735076417331
+strong,10,floor only,0.2-0.3,10.895021208407762
+strong,10,floor only,0.3-0.5,12.217821434203666
+strong,10,floor only,0.5-1,11.715946419959685
+strong,10,floor only,1-2,5.437417093692653
+strong,10,floor only,2-inf,2.6056401967409775
+strong,10,all lags,0.1-0.2,4.3697610158675495
+strong,10,all lags,0.2-0.3,8.880866295314224
+strong,10,all lags,0.3-0.5,10.734864692301517
+strong,10,all lags,0.5-1,9.991595017587025
+strong,10,all lags,1-2,5.437417093692653
+strong,10,all lags,2-inf,2.6056401967409775
+strong,10,"all lags, mean",0.1-0.2,4.3697610158675495
+strong,10,"all lags, mean",0.2-0.3,8.880866295314224
+strong,10,"all lags, mean",0.3-0.5,10.734864692301517
+strong,10,"all lags, mean",0.5-1,9.991595017587025
+strong,10,"all lags, mean",1-2,5.437417093692653
+strong,10,"all lags, mean",2-inf,2.6056401967409775
+strong,10,"stretched, uncentred",0.1-0.2,1.7384427243808218
+strong,10,"stretched, uncentred",0.2-0.3,4.641308162582955
+strong,10,"stretched, uncentred",0.3-0.5,7.23319204317754
+strong,10,"stretched, uncentred",0.5-1,7.151216571250826
+strong,10,"stretched, uncentred",1-2,5.437417093692653
+strong,10,"stretched, uncentred",2-inf,2.6056401967409775
+strong,10,stretched,0.1-0.2,1.6120753977911648
+strong,10,stretched,0.2-0.3,4.06722388736706
+strong,10,stretched,0.3-0.5,7.242889474506002
+strong,10,stretched,0.5-1,7.011997620710385
+strong,10,stretched,1-2,5.437417093692653
+strong,10,stretched,2-inf,2.6056401967409775
+strong,10,"stretched, 6-s blocks",0.1-0.2,3.3153953491722468
+strong,10,"stretched, 6-s blocks",0.2-0.3,5.424758326988642
+strong,10,"stretched, 6-s blocks",0.3-0.5,7.528260338850619
+strong,10,"stretched, 6-s blocks",0.5-1,7.422390509503461
+strong,10,"stretched, 6-s blocks",1-2,5.619947954766579
+strong,10,"stretched, 6-s blocks",2-inf,2.566093395352929
+strong,11,before,1-2,1.883078772933201
+strong,11,before,2-inf,2.415529631962916
+strong,11,floor only,0.1-0.2,4.3291294581804065
+strong,11,floor only,0.2-0.3,5.623692906675162
+strong,11,floor only,0.3-0.5,5.690736827534861
+strong,11,floor only,0.5-1,4.455174120018201
+strong,11,floor only,1-2,1.883078772933201
+strong,11,floor only,2-inf,2.415529631962916
+strong,11,all lags,0.1-0.2,4.697223253315402
+strong,11,all lags,0.2-0.3,1.422871181730498
+strong,11,all lags,0.3-0.5,2.7870183052941107
+strong,11,all lags,0.5-1,2.7447113098180593
+strong,11,all lags,1-2,1.883078772933201
+strong,11,all lags,2-inf,2.415529631962916
+strong,11,"all lags, mean",0.1-0.2,4.697223253315402
+strong,11,"all lags, mean",0.2-0.3,1.422871181730498
+strong,11,"all lags, mean",0.3-0.5,2.7870183052941107
+strong,11,"all lags, mean",0.5-1,2.7447113098180593
+strong,11,"all lags, mean",1-2,1.883078772933201
+strong,11,"all lags, mean",2-inf,2.415529631962916
+strong,11,"stretched, uncentred",0.1-0.2,2.1291024999649055
+strong,11,"stretched, uncentred",0.2-0.3,1.6803939669882109
+strong,11,"stretched, uncentred",0.3-0.5,2.050553578884192
+strong,11,"stretched, uncentred",0.5-1,2.0923066463797135
+strong,11,"stretched, uncentred",1-2,1.883078772933201
+strong,11,"stretched, uncentred",2-inf,2.415529631962916
+strong,11,stretched,0.1-0.2,2.283951076988784
+strong,11,stretched,0.2-0.3,1.7167031962484596
+strong,11,stretched,0.3-0.5,1.9868244072518528
+strong,11,stretched,0.5-1,2.028909627496288
+strong,11,stretched,1-2,1.883078772933201
+strong,11,stretched,2-inf,2.415529631962916
+strong,11,"stretched, 6-s blocks",0.1-0.2,3.41996998681478
+strong,11,"stretched, 6-s blocks",0.2-0.3,2.264071673974189
+strong,11,"stretched, 6-s blocks",0.3-0.5,1.340410154800537
+strong,11,"stretched, 6-s blocks",0.5-1,1.4670982840187763
+strong,11,"stretched, 6-s blocks",1-2,1.3404376418700914
+strong,11,"stretched, 6-s blocks",2-inf,2.632036563832362
+strong,12,before,1-2,4.059023088411805
+strong,12,before,2-inf,2.2948360550981137
+strong,12,floor only,0.1-0.2,6.114993014968176
+strong,12,floor only,0.2-0.3,8.888361374457414
+strong,12,floor only,0.3-0.5,10.309042631791055
+strong,12,floor only,0.5-1,10.165136739852043
+strong,12,floor only,1-2,4.059023088411805
+strong,12,floor only,2-inf,2.2948360550981137
+strong,12,all lags,0.1-0.2,7.454966631093219
+strong,12,all lags,0.2-0.3,7.792635608544943
+strong,12,all lags,0.3-0.5,7.294909914533528
+strong,12,all lags,0.5-1,7.9029084315551055
+strong,12,all lags,1-2,4.059023088411805
+strong,12,all lags,2-inf,2.2948360550981137
+strong,12,"all lags, mean",0.1-0.2,7.454966631093219
+strong,12,"all lags, mean",0.2-0.3,7.792635608544943
+strong,12,"all lags, mean",0.3-0.5,7.294909914533528
+strong,12,"all lags, mean",0.5-1,7.9029084315551055
+strong,12,"all lags, mean",1-2,4.059023088411805
+strong,12,"all lags, mean",2-inf,2.2948360550981137
+strong,12,"stretched, uncentred",0.1-0.2,4.114810520647153
+strong,12,"stretched, uncentred",0.2-0.3,2.9809368601388604
+strong,12,"stretched, uncentred",0.3-0.5,5.504537576889739
+strong,12,"stretched, uncentred",0.5-1,5.998916182771168
+strong,12,"stretched, uncentred",1-2,4.059023088411805
+strong,12,"stretched, uncentred",2-inf,2.2948360550981137
+strong,12,stretched,0.1-0.2,4.209911009830615
+strong,12,stretched,0.2-0.3,3.1303374203285115
+strong,12,stretched,0.3-0.5,5.490020524884183
+strong,12,stretched,0.5-1,5.993020771658416
+strong,12,stretched,1-2,4.059023088411805
+strong,12,stretched,2-inf,2.2948360550981137
+strong,12,"stretched, 6-s blocks",0.1-0.2,3.690540425049123
+strong,12,"stretched, 6-s blocks",0.2-0.3,2.7250891028955473
+strong,12,"stretched, 6-s blocks",0.3-0.5,4.775700362529493
+strong,12,"stretched, 6-s blocks",0.5-1,5.593912536019811
+strong,12,"stretched, 6-s blocks",1-2,3.5130242145340436
+strong,12,"stretched, 6-s blocks",2-inf,2.1618406570321542
+strong,13,before,1-2,1.7934696388722546
+strong,13,before,2-inf,2.0711554053697734
+strong,13,floor only,0.1-0.2,1.8637772553093757
+strong,13,floor only,0.2-0.3,2.6042611816869514
+strong,13,floor only,0.3-0.5,2.668605801329702
+strong,13,floor only,0.5-1,1.7482132570282765
+strong,13,floor only,1-2,1.7934696388722546
+strong,13,floor only,2-inf,2.0711554053697734
+strong,13,all lags,0.1-0.2,7.014676964061993
+strong,13,all lags,0.2-0.3,7.041446348821096
+strong,13,all lags,0.3-0.5,2.0753823636188002
+strong,13,all lags,0.5-1,0.9153411953724587
+strong,13,all lags,1-2,1.7934696388722546
+strong,13,all lags,2-inf,2.0711554053697734
+strong,13,"all lags, mean",0.1-0.2,7.014676964061993
+strong,13,"all lags, mean",0.2-0.3,7.041446348821096
+strong,13,"all lags, mean",0.3-0.5,2.0753823636188002
+strong,13,"all lags, mean",0.5-1,0.9153411953724587
+strong,13,"all lags, mean",1-2,1.7934696388722546
+strong,13,"all lags, mean",2-inf,2.0711554053697734
+strong,13,"stretched, uncentred",0.1-0.2,3.342175418932458
+strong,13,"stretched, uncentred",0.2-0.3,4.078097186542539
+strong,13,"stretched, uncentred",0.3-0.5,1.2985609654899264
+strong,13,"stretched, uncentred",0.5-1,0.749224194712545
+strong,13,"stretched, uncentred",1-2,1.7934696388722546
+strong,13,"stretched, uncentred",2-inf,2.0711554053697734
+strong,13,stretched,0.1-0.2,3.5985459479034425
+strong,13,stretched,0.2-0.3,4.194051683982697
+strong,13,stretched,0.3-0.5,1.32413916207296
+strong,13,stretched,0.5-1,0.749731108982529
+strong,13,stretched,1-2,1.7934696388722546
+strong,13,stretched,2-inf,2.0711554053697734
+strong,13,"stretched, 6-s blocks",0.1-0.2,3.6416461226922645
+strong,13,"stretched, 6-s blocks",0.2-0.3,4.617628316077178
+strong,13,"stretched, 6-s blocks",0.3-0.5,2.1921639981010914
+strong,13,"stretched, 6-s blocks",0.5-1,1.9684396728994034
+strong,13,"stretched, 6-s blocks",1-2,1.0122226760407522
+strong,13,"stretched, 6-s blocks",2-inf,2.185575051365714
+strong,14,before,1-2,1.741205173012685
+strong,14,before,2-inf,1.8989201562789702
+strong,14,floor only,0.1-0.2,3.4721025907890843
+strong,14,floor only,0.2-0.3,5.256230357800642
+strong,14,floor only,0.3-0.5,5.871119918548092
+strong,14,floor only,0.5-1,5.434869664593989
+strong,14,floor only,1-2,1.741205173012685
+strong,14,floor only,2-inf,1.8989201562789702
+strong,14,all lags,0.1-0.2,2.528628570712635
+strong,14,all lags,0.2-0.3,3.576214014146445
+strong,14,all lags,0.3-0.5,4.211663105511376
+strong,14,all lags,0.5-1,3.4408892392205477
+strong,14,all lags,1-2,1.741205173012685
+strong,14,all lags,2-inf,1.8989201562789702
+strong,14,"all lags, mean",0.1-0.2,2.528628570712635
+strong,14,"all lags, mean",0.2-0.3,3.576214014146445
+strong,14,"all lags, mean",0.3-0.5,4.211663105511376
+strong,14,"all lags, mean",0.5-1,3.4408892392205477
+strong,14,"all lags, mean",1-2,1.741205173012685
+strong,14,"all lags, mean",2-inf,1.8989201562789702
+strong,14,"stretched, uncentred",0.1-0.2,1.1226217902431648
+strong,14,"stretched, uncentred",0.2-0.3,2.577944798859866
+strong,14,"stretched, uncentred",0.3-0.5,2.599028381290586
+strong,14,"stretched, uncentred",0.5-1,2.295199284613699
+strong,14,"stretched, uncentred",1-2,1.741205173012685
+strong,14,"stretched, uncentred",2-inf,1.8989201562789702
+strong,14,stretched,0.1-0.2,1.339697496246307
+strong,14,stretched,0.2-0.3,2.6179398187407696
+strong,14,stretched,0.3-0.5,2.634299709594771
+strong,14,stretched,0.5-1,2.339315930438254
+strong,14,stretched,1-2,1.741205173012685
+strong,14,stretched,2-inf,1.8989201562789702
+strong,14,"stretched, 6-s blocks",0.1-0.2,2.691441890129362
+strong,14,"stretched, 6-s blocks",0.2-0.3,2.337238527671359
+strong,14,"stretched, 6-s blocks",0.3-0.5,3.0462864544058466
+strong,14,"stretched, 6-s blocks",0.5-1,2.483025506483801
+strong,14,"stretched, 6-s blocks",1-2,1.7579850691691608
+strong,14,"stretched, 6-s blocks",2-inf,2.004030999949514
+strong,15,before,1-2,3.787681839852653
+strong,15,before,2-inf,2.52821569775718
+strong,15,floor only,0.1-0.2,0.9989665718339834
+strong,15,floor only,0.2-0.3,1.7744241365488225
+strong,15,floor only,0.3-0.5,3.0017158928476935
+strong,15,floor only,0.5-1,3.788380992746797
+strong,15,floor only,1-2,3.787681839852653
+strong,15,floor only,2-inf,2.52821569775718
+strong,15,all lags,0.1-0.2,12.5263954522227
+strong,15,all lags,0.2-0.3,12.006052595316683
+strong,15,all lags,0.3-0.5,5.703170723826617
+strong,15,all lags,0.5-1,3.858008164158497
+strong,15,all lags,1-2,3.787681839852653
+strong,15,all lags,2-inf,2.52821569775718
+strong,15,"all lags, mean",0.1-0.2,12.5263954522227
+strong,15,"all lags, mean",0.2-0.3,12.006052595316683
+strong,15,"all lags, mean",0.3-0.5,5.703170723826617
+strong,15,"all lags, mean",0.5-1,3.858008164158497
+strong,15,"all lags, mean",1-2,3.787681839852653
+strong,15,"all lags, mean",2-inf,2.52821569775718
+strong,15,"stretched, uncentred",0.1-0.2,6.017824072154067
+strong,15,"stretched, uncentred",0.2-0.3,6.0544780796024975
+strong,15,"stretched, uncentred",0.3-0.5,3.515498702240558
+strong,15,"stretched, uncentred",0.5-1,3.7831531267241045
+strong,15,"stretched, uncentred",1-2,3.787681839852653
+strong,15,"stretched, uncentred",2-inf,2.52821569775718
+strong,15,stretched,0.1-0.2,5.671572441448904
+strong,15,stretched,0.2-0.3,5.71334048794103
+strong,15,stretched,0.3-0.5,3.1881111288024
+strong,15,stretched,0.5-1,3.783130264550105
+strong,15,stretched,1-2,3.787681839852653
+strong,15,stretched,2-inf,2.52821569775718
+strong,15,"stretched, 6-s blocks",0.1-0.2,5.040187099385867
+strong,15,"stretched, 6-s blocks",0.2-0.3,4.879086596595263
+strong,15,"stretched, 6-s blocks",0.3-0.5,2.260573331598523
+strong,15,"stretched, 6-s blocks",0.5-1,4.250437510103837
+strong,15,"stretched, 6-s blocks",1-2,4.252105343902336
+strong,15,"stretched, 6-s blocks",2-inf,2.6978227281265914
+strong,16,before,1-2,6.195125866440309
+strong,16,before,2-inf,2.128706042568771
+strong,16,floor only,0.1-0.2,3.3672284187761523
+strong,16,floor only,0.2-0.3,5.392509908493828
+strong,16,floor only,0.3-0.5,7.296627388430721
+strong,16,floor only,0.5-1,7.523760214512417
+strong,16,floor only,1-2,6.195125866440309
+strong,16,floor only,2-inf,2.128706042568771
+strong,16,all lags,0.1-0.2,2.662981107349928
+strong,16,all lags,0.2-0.3,3.183465300548343
+strong,16,all lags,0.3-0.5,4.231276590333304
+strong,16,all lags,0.5-1,6.89285422767541
+strong,16,all lags,1-2,6.195125866440309
+strong,16,all lags,2-inf,2.128706042568771
+strong,16,"all lags, mean",0.1-0.2,2.662981107349928
+strong,16,"all lags, mean",0.2-0.3,3.183465300548343
+strong,16,"all lags, mean",0.3-0.5,4.231276590333304
+strong,16,"all lags, mean",0.5-1,6.89285422767541
+strong,16,"all lags, mean",1-2,6.195125866440309
+strong,16,"all lags, mean",2-inf,2.128706042568771
+strong,16,"stretched, uncentred",0.1-0.2,1.7477947239456533
+strong,16,"stretched, uncentred",0.2-0.3,1.952431245042181
+strong,16,"stretched, uncentred",0.3-0.5,2.757834834588986
+strong,16,"stretched, uncentred",0.5-1,6.194312118875893
+strong,16,"stretched, uncentred",1-2,6.195125866440309
+strong,16,"stretched, uncentred",2-inf,2.128706042568771
+strong,16,stretched,0.1-0.2,1.9439707457551456
+strong,16,stretched,0.2-0.3,1.873482722612951
+strong,16,stretched,0.3-0.5,2.683487687791307
+strong,16,stretched,0.5-1,6.194253078306501
+strong,16,stretched,1-2,6.195125866440309
+strong,16,stretched,2-inf,2.128706042568771
+strong,16,"stretched, 6-s blocks",0.1-0.2,3.3984290923952574
+strong,16,"stretched, 6-s blocks",0.2-0.3,2.10673264531194
+strong,16,"stretched, 6-s blocks",0.3-0.5,2.744681746671823
+strong,16,"stretched, 6-s blocks",0.5-1,6.242131713252835
+strong,16,"stretched, 6-s blocks",1-2,6.24252205114586
+strong,16,"stretched, 6-s blocks",2-inf,2.672680921681075
+strong,17,before,1-2,3.9671844578049806
+strong,17,before,2-inf,2.308706876347183
+strong,17,floor only,0.1-0.2,5.324536968853877
+strong,17,floor only,0.2-0.3,7.115518395618841
+strong,17,floor only,0.3-0.5,7.457317701215167
+strong,17,floor only,0.5-1,6.923718244999094
+strong,17,floor only,1-2,3.9671844578049806
+strong,17,floor only,2-inf,2.308706876347183
+strong,17,all lags,0.1-0.2,5.676745449255592
+strong,17,all lags,0.2-0.3,7.039518377983038
+strong,17,all lags,0.3-0.5,8.530150840763135
+strong,17,all lags,0.5-1,7.108701601233155
+strong,17,all lags,1-2,3.9671844578049806
+strong,17,all lags,2-inf,2.308706876347183
+strong,17,"all lags, mean",0.1-0.2,5.676745449255592
+strong,17,"all lags, mean",0.2-0.3,7.039518377983038
+strong,17,"all lags, mean",0.3-0.5,8.530150840763135
+strong,17,"all lags, mean",0.5-1,7.108701601233155
+strong,17,"all lags, mean",1-2,3.9671844578049806
+strong,17,"all lags, mean",2-inf,2.308706876347183
+strong,17,"stretched, uncentred",0.1-0.2,2.8943026654356028
+strong,17,"stretched, uncentred",0.2-0.3,4.063567314882988
+strong,17,"stretched, uncentred",0.3-0.5,5.355368480038376
+strong,17,"stretched, uncentred",0.5-1,4.7978398076248245
+strong,17,"stretched, uncentred",1-2,3.9671844578049806
+strong,17,"stretched, uncentred",2-inf,2.308706876347183
+strong,17,stretched,0.1-0.2,2.521662371343855
+strong,17,stretched,0.2-0.3,3.836838982168767
+strong,17,stretched,0.3-0.5,5.367055771754378
+strong,17,stretched,0.5-1,4.771190903136885
+strong,17,stretched,1-2,3.9671844578049806
+strong,17,stretched,2-inf,2.308706876347183
+strong,17,"stretched, 6-s blocks",0.1-0.2,1.7896667610075736
+strong,17,"stretched, 6-s blocks",0.2-0.3,1.9727465953092165
+strong,17,"stretched, 6-s blocks",0.3-0.5,3.9510911099983037
+strong,17,"stretched, 6-s blocks",0.5-1,4.050632041925927
+strong,17,"stretched, 6-s blocks",1-2,4.0576807858902075
+strong,17,"stretched, 6-s blocks",2-inf,2.2049954321791163
+strong,18,before,1-2,1.3198324864216568
+strong,18,before,2-inf,3.059951734296371
+strong,18,floor only,0.1-0.2,2.4486310924215826
+strong,18,floor only,0.2-0.3,4.690379663702398
+strong,18,floor only,0.3-0.5,5.507259402194227
+strong,18,floor only,0.5-1,5.248675057044854
+strong,18,floor only,1-2,1.3198324864216568
+strong,18,floor only,2-inf,3.059951734296371
+strong,18,all lags,0.1-0.2,5.510753850972796
+strong,18,all lags,0.2-0.3,1.8631355138181247
+strong,18,all lags,0.3-0.5,2.0982614003492146
+strong,18,all lags,0.5-1,3.1615377696159124
+strong,18,all lags,1-2,1.3198324864216568
+strong,18,all lags,2-inf,3.059951734296371
+strong,18,"all lags, mean",0.1-0.2,5.510753850972796
+strong,18,"all lags, mean",0.2-0.3,1.8631355138181247
+strong,18,"all lags, mean",0.3-0.5,2.0982614003492146
+strong,18,"all lags, mean",0.5-1,3.1615377696159124
+strong,18,"all lags, mean",1-2,1.3198324864216568
+strong,18,"all lags, mean",2-inf,3.059951734296371
+strong,18,"stretched, uncentred",0.1-0.2,2.0554249358200227
+strong,18,"stretched, uncentred",0.2-0.3,1.4676572653791011
+strong,18,"stretched, uncentred",0.3-0.5,1.4614815718322436
+strong,18,"stretched, uncentred",0.5-1,3.030513962451045
+strong,18,"stretched, uncentred",1-2,1.3198324864216568
+strong,18,"stretched, uncentred",2-inf,3.059951734296371
+strong,18,stretched,0.1-0.2,2.148757997577585
+strong,18,stretched,0.2-0.3,1.443213269069255
+strong,18,stretched,0.3-0.5,1.4251120931676025
+strong,18,stretched,0.5-1,2.9759198710867603
+strong,18,stretched,1-2,1.3198324864216568
+strong,18,stretched,2-inf,3.059951734296371
+strong,18,"stretched, 6-s blocks",0.1-0.2,3.3264107126568896
+strong,18,"stretched, 6-s blocks",0.2-0.3,1.7945270322751723
+strong,18,"stretched, 6-s blocks",0.3-0.5,1.5229024351510951
+strong,18,"stretched, 6-s blocks",0.5-1,2.6228774672517052
+strong,18,"stretched, 6-s blocks",1-2,0.8337045100990886
+strong,18,"stretched, 6-s blocks",2-inf,3.291254671195864
+strong,19,before,1-2,2.2972103899579266
+strong,19,before,2-inf,2.4733544085393375
+strong,19,floor only,0.1-0.2,2.786019278317952
+strong,19,floor only,0.2-0.3,1.8823477028297413
+strong,19,floor only,0.3-0.5,5.20028571699775
+strong,19,floor only,0.5-1,5.496641548335041
+strong,19,floor only,1-2,2.2972103899579266
+strong,19,floor only,2-inf,2.4733544085393375
+strong,19,all lags,0.1-0.2,9.99211668602186
+strong,19,all lags,0.2-0.3,9.213070487277923
+strong,19,all lags,0.3-0.5,4.416657762357402
+strong,19,all lags,0.5-1,4.4204676753659395
+strong,19,all lags,1-2,2.2972103899579266
+strong,19,all lags,2-inf,2.4733544085393375
+strong,19,"all lags, mean",0.1-0.2,9.99211668602186
+strong,19,"all lags, mean",0.2-0.3,9.213070487277923
+strong,19,"all lags, mean",0.3-0.5,4.416657762357402
+strong,19,"all lags, mean",0.5-1,4.4204676753659395
+strong,19,"all lags, mean",1-2,2.2972103899579266
+strong,19,"all lags, mean",2-inf,2.4733544085393375
+strong,19,"stretched, uncentred",0.1-0.2,4.483092031901477
+strong,19,"stretched, uncentred",0.2-0.3,4.498132286216259
+strong,19,"stretched, uncentred",0.3-0.5,3.3481912200696193
+strong,19,"stretched, uncentred",0.5-1,3.3649081119050392
+strong,19,"stretched, uncentred",1-2,2.2972103899579266
+strong,19,"stretched, uncentred",2-inf,2.4733544085393375
+strong,19,stretched,0.1-0.2,4.491966328023404
+strong,19,stretched,0.2-0.3,4.5058342935926925
+strong,19,stretched,0.3-0.5,3.3655129683029386
+strong,19,stretched,0.5-1,3.382887997294932
+strong,19,stretched,1-2,2.2972103899579266
+strong,19,stretched,2-inf,2.4733544085393375
+strong,19,"stretched, 6-s blocks",0.1-0.2,4.302139395668754
+strong,19,"stretched, 6-s blocks",0.2-0.3,3.9919497096426233
+strong,19,"stretched, 6-s blocks",0.3-0.5,2.804591235586374
+strong,19,"stretched, 6-s blocks",0.5-1,2.8367371405888044
+strong,19,"stretched, 6-s blocks",1-2,2.7155201551344974
+strong,19,"stretched, 6-s blocks",2-inf,2.3293191370684574
+strong,20,before,1-2,0.4578093525179476
+strong,20,before,2-inf,2.557373960803915
+strong,20,floor only,0.1-0.2,1.8721830593446893
+strong,20,floor only,0.2-0.3,2.377947862250448
+strong,20,floor only,0.3-0.5,2.383213141738479
+strong,20,floor only,0.5-1,1.390375698779761
+strong,20,floor only,1-2,0.4578093525179476
+strong,20,floor only,2-inf,2.557373960803915
+strong,20,all lags,0.1-0.2,6.697624613540019
+strong,20,all lags,0.2-0.3,3.752275064089653
+strong,20,all lags,0.3-0.5,0.6884798239989351
+strong,20,all lags,0.5-1,0.5363735495915358
+strong,20,all lags,1-2,0.4578093525179476
+strong,20,all lags,2-inf,2.557373960803915
+strong,20,"all lags, mean",0.1-0.2,6.697624613540019
+strong,20,"all lags, mean",0.2-0.3,3.752275064089653
+strong,20,"all lags, mean",0.3-0.5,0.6884798239989351
+strong,20,"all lags, mean",0.5-1,0.5363735495915358
+strong,20,"all lags, mean",1-2,0.4578093525179476
+strong,20,"all lags, mean",2-inf,2.557373960803915
+strong,20,"stretched, uncentred",0.1-0.2,3.1239270732683537
+strong,20,"stretched, uncentred",0.2-0.3,1.4448903438041483
+strong,20,"stretched, uncentred",0.3-0.5,0.652381459216124
+strong,20,"stretched, uncentred",0.5-1,0.45635920152389786
+strong,20,"stretched, uncentred",1-2,0.4578093525179476
+strong,20,"stretched, uncentred",2-inf,2.557373960803915
+strong,20,stretched,0.1-0.2,2.7845637534433823
+strong,20,stretched,0.2-0.3,1.4470666255555609
+strong,20,stretched,0.3-0.5,0.7861139045818006
+strong,20,stretched,0.5-1,0.4528212769631162
+strong,20,stretched,1-2,0.4578093525179476
+strong,20,stretched,2-inf,2.557373960803915
+strong,20,"stretched, 6-s blocks",0.1-0.2,2.0936050181386237
+strong,20,"stretched, 6-s blocks",0.2-0.3,1.7180013893577235
+strong,20,"stretched, 6-s blocks",0.3-0.5,0.7256437452100455
+strong,20,"stretched, 6-s blocks",0.5-1,0.3971412077127932
+strong,20,"stretched, 6-s blocks",1-2,0.4762136732127851
+strong,20,"stretched, 6-s blocks",2-inf,2.163570762746672
+strong,21,before,1-2,3.1071141281266237
+strong,21,before,2-inf,3.296019216861406
+strong,21,floor only,0.1-0.2,4.64405758778829
+strong,21,floor only,0.2-0.3,6.297865153995974
+strong,21,floor only,0.3-0.5,6.646410264804324
+strong,21,floor only,0.5-1,6.082877325192078
+strong,21,floor only,1-2,3.1071141281266237
+strong,21,floor only,2-inf,3.296019216861406
+strong,21,all lags,0.1-0.2,7.06808142165984
+strong,21,all lags,0.2-0.3,8.063129144028945
+strong,21,all lags,0.3-0.5,7.858922333923546
+strong,21,all lags,0.5-1,4.256164599500222
+strong,21,all lags,1-2,3.1071141281266237
+strong,21,all lags,2-inf,3.296019216861406
+strong,21,"all lags, mean",0.1-0.2,7.06808142165984
+strong,21,"all lags, mean",0.2-0.3,8.063129144028945
+strong,21,"all lags, mean",0.3-0.5,7.858922333923546
+strong,21,"all lags, mean",0.5-1,4.256164599500222
+strong,21,"all lags, mean",1-2,3.1071141281266237
+strong,21,"all lags, mean",2-inf,3.296019216861406
+strong,21,"stretched, uncentred",0.1-0.2,3.454952319875703
+strong,21,"stretched, uncentred",0.2-0.3,4.231838260839733
+strong,21,"stretched, uncentred",0.3-0.5,4.308994771788167
+strong,21,"stretched, uncentred",0.5-1,3.103939126348211
+strong,21,"stretched, uncentred",1-2,3.1071141281266237
+strong,21,"stretched, uncentred",2-inf,3.296019216861406
+strong,21,stretched,0.1-0.2,3.536424527142747
+strong,21,stretched,0.2-0.3,4.4284405088240915
+strong,21,stretched,0.3-0.5,4.4183304025028
+strong,21,stretched,0.5-1,3.1039156887528083
+strong,21,stretched,1-2,3.1071141281266237
+strong,21,stretched,2-inf,3.296019216861406
+strong,21,"stretched, 6-s blocks",0.1-0.2,2.6874085539300165
+strong,21,"stretched, 6-s blocks",0.2-0.3,4.592713009519269
+strong,21,"stretched, 6-s blocks",0.3-0.5,4.18719914555692
+strong,21,"stretched, 6-s blocks",0.5-1,3.1037178114465087
+strong,21,"stretched, 6-s blocks",1-2,3.0891184639164497
+strong,21,"stretched, 6-s blocks",2-inf,3.234305530475369
+strong,22,before,1-2,1.6680928821599725
+strong,22,before,2-inf,2.319655620508738
+strong,22,floor only,0.1-0.2,4.252279150642346
+strong,22,floor only,0.2-0.3,6.399853555203216
+strong,22,floor only,0.3-0.5,7.102142019224423
+strong,22,floor only,0.5-1,6.354750194731681
+strong,22,floor only,1-2,1.6680928821599725
+strong,22,floor only,2-inf,2.319655620508738
+strong,22,all lags,0.1-0.2,7.297439491596657
+strong,22,all lags,0.2-0.3,1.013151914246616
+strong,22,all lags,0.3-0.5,2.088107100421946
+strong,22,all lags,0.5-1,3.2784481708638658
+strong,22,all lags,1-2,1.6680928821599725
+strong,22,all lags,2-inf,2.319655620508738
+strong,22,"all lags, mean",0.1-0.2,7.297439491596657
+strong,22,"all lags, mean",0.2-0.3,1.013151914246616
+strong,22,"all lags, mean",0.3-0.5,2.088107100421946
+strong,22,"all lags, mean",0.5-1,3.2784481708638658
+strong,22,"all lags, mean",1-2,1.6680928821599725
+strong,22,"all lags, mean",2-inf,2.319655620508738
+strong,22,"stretched, uncentred",0.1-0.2,3.889480466491516
+strong,22,"stretched, uncentred",0.2-0.3,0.7911901469865965
+strong,22,"stretched, uncentred",0.3-0.5,1.6444590561937489
+strong,22,"stretched, uncentred",0.5-1,2.7088910791481147
+strong,22,"stretched, uncentred",1-2,1.6680928821599725
+strong,22,"stretched, uncentred",2-inf,2.319655620508738
+strong,22,stretched,0.1-0.2,2.9767475795752962
+strong,22,stretched,0.2-0.3,0.7931376466779952
+strong,22,stretched,0.3-0.5,1.5898547919525365
+strong,22,stretched,0.5-1,2.7005020477622566
+strong,22,stretched,1-2,1.6680928821599725
+strong,22,stretched,2-inf,2.319655620508738
+strong,22,"stretched, 6-s blocks",0.1-0.2,2.1308841347840852
+strong,22,"stretched, 6-s blocks",0.2-0.3,1.6376062512207994
+strong,22,"stretched, 6-s blocks",0.3-0.5,1.8485401566764588
+strong,22,"stretched, 6-s blocks",0.5-1,2.4757631850804285
+strong,22,"stretched, 6-s blocks",1-2,1.6971597255332878
+strong,22,"stretched, 6-s blocks",2-inf,2.5415479443846865
+strong,23,before,1-2,3.641917499622417
+strong,23,before,2-inf,2.6679416821098156
+strong,23,floor only,0.1-0.2,5.307703825596111
+strong,23,floor only,0.2-0.3,7.317337895701914
+strong,23,floor only,0.3-0.5,7.906649957697598
+strong,23,floor only,0.5-1,7.489685084833284
+strong,23,floor only,1-2,3.641917499622417
+strong,23,floor only,2-inf,2.6679416821098156
+strong,23,all lags,0.1-0.2,9.302361532925852
+strong,23,all lags,0.2-0.3,7.856959123488818
+strong,23,all lags,0.3-0.5,7.861425800968381
+strong,23,all lags,0.5-1,6.0535434312189365
+strong,23,all lags,1-2,3.641917499622417
+strong,23,all lags,2-inf,2.6679416821098156
+strong,23,"all lags, mean",0.1-0.2,9.302361532925852
+strong,23,"all lags, mean",0.2-0.3,7.856959123488818
+strong,23,"all lags, mean",0.3-0.5,7.861425800968381
+strong,23,"all lags, mean",0.5-1,6.0535434312189365
+strong,23,"all lags, mean",1-2,3.641917499622417
+strong,23,"all lags, mean",2-inf,2.6679416821098156
+strong,23,"stretched, uncentred",0.1-0.2,3.7432234392613606
+strong,23,"stretched, uncentred",0.2-0.3,4.250970769153622
+strong,23,"stretched, uncentred",0.3-0.5,4.652732761683683
+strong,23,"stretched, uncentred",0.5-1,4.219300946102068
+strong,23,"stretched, uncentred",1-2,3.641917499622417
+strong,23,"stretched, uncentred",2-inf,2.6679416821098156
+strong,23,stretched,0.1-0.2,3.7287473067217514
+strong,23,stretched,0.2-0.3,4.009431543020361
+strong,23,stretched,0.3-0.5,4.563825890924786
+strong,23,stretched,0.5-1,4.1831545545526465
+strong,23,stretched,1-2,3.641917499622417
+strong,23,stretched,2-inf,2.6679416821098156
+strong,23,"stretched, 6-s blocks",0.1-0.2,3.2447743335837766
+strong,23,"stretched, 6-s blocks",0.2-0.3,4.256186069537301
+strong,23,"stretched, 6-s blocks",0.3-0.5,4.972524298955542
+strong,23,"stretched, 6-s blocks",0.5-1,4.796015732405763
+strong,23,"stretched, 6-s blocks",1-2,3.6578504384451844
+strong,23,"stretched, 6-s blocks",2-inf,2.7669427254439034
+strong,24,before,1-2,3.9481675611326583
+strong,24,before,2-inf,1.7516128049815483
+strong,24,floor only,0.1-0.2,4.531505719385715
+strong,24,floor only,0.2-0.3,6.3185435014075395
+strong,24,floor only,0.3-0.5,6.562540269438955
+strong,24,floor only,0.5-1,5.508118126384424
+strong,24,floor only,1-2,3.9481675611326583
+strong,24,floor only,2-inf,1.7516128049815483
+strong,24,all lags,0.1-0.2,5.647900137952999
+strong,24,all lags,0.2-0.3,5.38599888274613
+strong,24,all lags,0.3-0.5,7.051730339398333
+strong,24,all lags,0.5-1,5.937173950522683
+strong,24,all lags,1-2,3.9481675611326583
+strong,24,all lags,2-inf,1.7516128049815483
+strong,24,"all lags, mean",0.1-0.2,5.647900137952999
+strong,24,"all lags, mean",0.2-0.3,5.38599888274613
+strong,24,"all lags, mean",0.3-0.5,7.051730339398333
+strong,24,"all lags, mean",0.5-1,5.937173950522683
+strong,24,"all lags, mean",1-2,3.9481675611326583
+strong,24,"all lags, mean",2-inf,1.7516128049815483
+strong,24,"stretched, uncentred",0.1-0.2,3.308311458457652
+strong,24,"stretched, uncentred",0.2-0.3,3.3873094055825366
+strong,24,"stretched, uncentred",0.3-0.5,4.435878918487962
+strong,24,"stretched, uncentred",0.5-1,4.959679970209168
+strong,24,"stretched, uncentred",1-2,3.9481675611326583
+strong,24,"stretched, uncentred",2-inf,1.7516128049815483
+strong,24,stretched,0.1-0.2,3.292223371863301
+strong,24,stretched,0.2-0.3,3.232330469268213
+strong,24,stretched,0.3-0.5,4.400017966791544
+strong,24,stretched,0.5-1,5.004619444089828
+strong,24,stretched,1-2,3.9481675611326583
+strong,24,stretched,2-inf,1.7516128049815483
+strong,24,"stretched, 6-s blocks",0.1-0.2,3.0518208612129234
+strong,24,"stretched, 6-s blocks",0.2-0.3,3.5315994452570334
+strong,24,"stretched, 6-s blocks",0.3-0.5,5.220696748393645
+strong,24,"stretched, 6-s blocks",0.5-1,5.821670214123539
+strong,24,"stretched, 6-s blocks",1-2,4.389631865683155
+strong,24,"stretched, 6-s blocks",2-inf,1.6325616074299572
+strong,25,before,1-2,2.850821582636116
+strong,25,before,2-inf,2.989114487994492
+strong,25,floor only,0.1-0.2,5.770904089531313
+strong,25,floor only,0.2-0.3,8.04630718449201
+strong,25,floor only,0.3-0.5,8.091149287399624
+strong,25,floor only,0.5-1,4.533703893751655
+strong,25,floor only,1-2,2.850821582636116
+strong,25,floor only,2-inf,2.989114487994492
+strong,25,all lags,0.1-0.2,5.770011000236954
+strong,25,all lags,0.2-0.3,5.940904200381638
+strong,25,all lags,0.3-0.5,6.47454522477541
+strong,25,all lags,0.5-1,5.198793313972818
+strong,25,all lags,1-2,2.850821582636116
+strong,25,all lags,2-inf,2.989114487994492
+strong,25,"all lags, mean",0.1-0.2,5.770011000236954
+strong,25,"all lags, mean",0.2-0.3,5.940904200381638
+strong,25,"all lags, mean",0.3-0.5,6.47454522477541
+strong,25,"all lags, mean",0.5-1,5.198793313972818
+strong,25,"all lags, mean",1-2,2.850821582636116
+strong,25,"all lags, mean",2-inf,2.989114487994492
+strong,25,"stretched, uncentred",0.1-0.2,1.8815783288851182
+strong,25,"stretched, uncentred",0.2-0.3,4.46700774500859
+strong,25,"stretched, uncentred",0.3-0.5,4.666776490573628
+strong,25,"stretched, uncentred",0.5-1,3.7733978296674717
+strong,25,"stretched, uncentred",1-2,2.850821582636116
+strong,25,"stretched, uncentred",2-inf,2.989114487994492
+strong,25,stretched,0.1-0.2,1.885268745613827
+strong,25,stretched,0.2-0.3,4.392670913240374
+strong,25,stretched,0.3-0.5,4.600865300207986
+strong,25,stretched,0.5-1,3.6286806137230667
+strong,25,stretched,1-2,2.850821582636116
+strong,25,stretched,2-inf,2.989114487994492
+strong,25,"stretched, 6-s blocks",0.1-0.2,2.6329963974519166
+strong,25,"stretched, 6-s blocks",0.2-0.3,4.9840346467208745
+strong,25,"stretched, 6-s blocks",0.3-0.5,5.141741603219433
+strong,25,"stretched, 6-s blocks",0.5-1,3.5637117652318677
+strong,25,"stretched, 6-s blocks",1-2,2.6353904506739023
+strong,25,"stretched, 6-s blocks",2-inf,2.942564037237058
+strong,26,before,1-2,3.6847622849433717
+strong,26,before,2-inf,2.113535442647237
+strong,26,floor only,0.1-0.2,4.9815144319707345
+strong,26,floor only,0.2-0.3,6.47723720348209
+strong,26,floor only,0.3-0.5,6.658622034135348
+strong,26,floor only,0.5-1,5.791184157830705
+strong,26,floor only,1-2,3.6847622849433717
+strong,26,floor only,2-inf,2.113535442647237
+strong,26,all lags,0.1-0.2,4.891089213693202
+strong,26,all lags,0.2-0.3,2.8391146899824795
+strong,26,all lags,0.3-0.5,3.357196980039641
+strong,26,all lags,0.5-1,4.269091681874523
+strong,26,all lags,1-2,3.6847622849433717
+strong,26,all lags,2-inf,2.113535442647237
+strong,26,"all lags, mean",0.1-0.2,4.891089213693202
+strong,26,"all lags, mean",0.2-0.3,2.8391146899824795
+strong,26,"all lags, mean",0.3-0.5,3.357196980039641
+strong,26,"all lags, mean",0.5-1,4.269091681874523
+strong,26,"all lags, mean",1-2,3.6847622849433717
+strong,26,"all lags, mean",2-inf,2.113535442647237
+strong,26,"stretched, uncentred",0.1-0.2,2.729358337113693
+strong,26,"stretched, uncentred",0.2-0.3,1.324889959993463
+strong,26,"stretched, uncentred",0.3-0.5,1.9399599915843366
+strong,26,"stretched, uncentred",0.5-1,3.981884102040225
+strong,26,"stretched, uncentred",1-2,3.6847622849433717
+strong,26,"stretched, uncentred",2-inf,2.113535442647237
+strong,26,stretched,0.1-0.2,2.9429054558613705
+strong,26,stretched,0.2-0.3,1.2180461299026126
+strong,26,stretched,0.3-0.5,1.9788912108095524
+strong,26,stretched,0.5-1,3.955344994560777
+strong,26,stretched,1-2,3.6847622849433717
+strong,26,stretched,2-inf,2.113535442647237
+strong,26,"stretched, 6-s blocks",0.1-0.2,3.0489396455734084
+strong,26,"stretched, 6-s blocks",0.2-0.3,1.103967415634655
+strong,26,"stretched, 6-s blocks",0.3-0.5,2.5962347625650977
+strong,26,"stretched, 6-s blocks",0.5-1,3.6911745120180806
+strong,26,"stretched, 6-s blocks",1-2,3.5640804295326216
+strong,26,"stretched, 6-s blocks",2-inf,2.3746098220328786
+strong,27,before,1-2,0.7099780883595631
+strong,27,before,2-inf,2.0674120010166956
+strong,27,floor only,0.1-0.2,1.5353895076457744
+strong,27,floor only,0.2-0.3,1.5043937852230527
+strong,27,floor only,0.3-0.5,0.8546759278047044
+strong,27,floor only,0.5-1,0.9448822428088145
+strong,27,floor only,1-2,0.7099780883595631
+strong,27,floor only,2-inf,2.0674120010166956
+strong,27,all lags,0.1-0.2,3.478937281526841
+strong,27,all lags,0.2-0.3,3.344447353205798
+strong,27,all lags,0.3-0.5,2.1380533769339154
+strong,27,all lags,0.5-1,2.036857164689409
+strong,27,all lags,1-2,0.7099780883595631
+strong,27,all lags,2-inf,2.0674120010166956
+strong,27,"all lags, mean",0.1-0.2,3.478937281526841
+strong,27,"all lags, mean",0.2-0.3,3.344447353205798
+strong,27,"all lags, mean",0.3-0.5,2.1380533769339154
+strong,27,"all lags, mean",0.5-1,2.036857164689409
+strong,27,"all lags, mean",1-2,0.7099780883595631
+strong,27,"all lags, mean",2-inf,2.0674120010166956
+strong,27,"stretched, uncentred",0.1-0.2,1.8232067415689774
+strong,27,"stretched, uncentred",0.2-0.3,1.656234586642634
+strong,27,"stretched, uncentred",0.3-0.5,1.389968237654681
+strong,27,"stretched, uncentred",0.5-1,1.424582851718123
+strong,27,"stretched, uncentred",1-2,0.7099780883595631
+strong,27,"stretched, uncentred",2-inf,2.0674120010166956
+strong,27,stretched,0.1-0.2,1.806931999064696
+strong,27,stretched,0.2-0.3,2.0089516049708642
+strong,27,stretched,0.3-0.5,1.327846634947969
+strong,27,stretched,0.5-1,1.361835467614426
+strong,27,stretched,1-2,0.7099780883595631
+strong,27,stretched,2-inf,2.0674120010166956
+strong,27,"stretched, 6-s blocks",0.1-0.2,2.6459246567690187
+strong,27,"stretched, 6-s blocks",0.2-0.3,1.1444362714419503
+strong,27,"stretched, 6-s blocks",0.3-0.5,0.4612086454313978
+strong,27,"stretched, 6-s blocks",0.5-1,0.3463266231676791
+strong,27,"stretched, 6-s blocks",1-2,0.8546183235151952
+strong,27,"stretched, 6-s blocks",2-inf,2.2405874397862835
+strong,28,before,1-2,2.281705870613193
+strong,28,before,2-inf,2.2197481933626233
+strong,28,floor only,0.1-0.2,2.4548423085438333
+strong,28,floor only,0.2-0.3,2.5074456456218854
+strong,28,floor only,0.3-0.5,2.0043798661761785
+strong,28,floor only,0.5-1,4.328385464138491
+strong,28,floor only,1-2,2.281705870613193
+strong,28,floor only,2-inf,2.2197481933626233
+strong,28,all lags,0.1-0.2,2.952573605191579
+strong,28,all lags,0.2-0.3,2.6520916815129016
+strong,28,all lags,0.3-0.5,2.1164732512416586
+strong,28,all lags,0.5-1,3.147824284401271
+strong,28,all lags,1-2,2.281705870613193
+strong,28,all lags,2-inf,2.2197481933626233
+strong,28,"all lags, mean",0.1-0.2,2.952573605191579
+strong,28,"all lags, mean",0.2-0.3,2.6520916815129016
+strong,28,"all lags, mean",0.3-0.5,2.1164732512416586
+strong,28,"all lags, mean",0.5-1,3.147824284401271
+strong,28,"all lags, mean",1-2,2.281705870613193
+strong,28,"all lags, mean",2-inf,2.2197481933626233
+strong,28,"stretched, uncentred",0.1-0.2,1.6128574494796244
+strong,28,"stretched, uncentred",0.2-0.3,2.1513006449403504
+strong,28,"stretched, uncentred",0.3-0.5,1.4576049936711184
+strong,28,"stretched, uncentred",0.5-1,2.62690646528571
+strong,28,"stretched, uncentred",1-2,2.281705870613193
+strong,28,"stretched, uncentred",2-inf,2.2197481933626233
+strong,28,stretched,0.1-0.2,2.0355766031382396
+strong,28,stretched,0.2-0.3,2.2164981835041453
+strong,28,stretched,0.3-0.5,1.3704464478969425
+strong,28,stretched,0.5-1,2.662193958686819
+strong,28,stretched,1-2,2.281705870613193
+strong,28,stretched,2-inf,2.2197481933626233
+strong,28,"stretched, 6-s blocks",0.1-0.2,1.8365144098466222
+strong,28,"stretched, 6-s blocks",0.2-0.3,0.9023401073716096
+strong,28,"stretched, 6-s blocks",0.3-0.5,2.002684595594322
+strong,28,"stretched, 6-s blocks",0.5-1,3.0031937151407577
+strong,28,"stretched, 6-s blocks",1-2,1.8555138876291208
+strong,28,"stretched, 6-s blocks",2-inf,2.2745677406324996
+strong,29,before,1-2,4.033939323252262
+strong,29,before,2-inf,2.657740285022694
+strong,29,floor only,0.1-0.2,1.5197589957047637
+strong,29,floor only,0.2-0.3,2.6925805078691347
+strong,29,floor only,0.3-0.5,4.437059632758004
+strong,29,floor only,0.5-1,5.150023368682889
+strong,29,floor only,1-2,4.033939323252262
+strong,29,floor only,2-inf,2.657740285022694
+strong,29,all lags,0.1-0.2,12.003873427348523
+strong,29,all lags,0.2-0.3,6.19047038051441
+strong,29,all lags,0.3-0.5,6.689292001326839
+strong,29,all lags,0.5-1,4.93199974462054
+strong,29,all lags,1-2,4.033939323252262
+strong,29,all lags,2-inf,2.657740285022694
+strong,29,"all lags, mean",0.1-0.2,12.003873427348523
+strong,29,"all lags, mean",0.2-0.3,6.19047038051441
+strong,29,"all lags, mean",0.3-0.5,6.689292001326839
+strong,29,"all lags, mean",0.5-1,4.93199974462054
+strong,29,"all lags, mean",1-2,4.033939323252262
+strong,29,"all lags, mean",2-inf,2.657740285022694
+strong,29,"stretched, uncentred",0.1-0.2,4.43332838138237
+strong,29,"stretched, uncentred",0.2-0.3,3.3094606377440225
+strong,29,"stretched, uncentred",0.3-0.5,3.9940706627638596
+strong,29,"stretched, uncentred",0.5-1,4.031426643231774
+strong,29,"stretched, uncentred",1-2,4.033939323252262
+strong,29,"stretched, uncentred",2-inf,2.657740285022694
+strong,29,stretched,0.1-0.2,3.84519129489549
+strong,29,stretched,0.2-0.3,3.4192890504862072
+strong,29,stretched,0.3-0.5,4.080927867163826
+strong,29,stretched,0.5-1,4.031459792571371
+strong,29,stretched,1-2,4.033939323252262
+strong,29,stretched,2-inf,2.657740285022694
+strong,29,"stretched, 6-s blocks",0.1-0.2,2.148981781629825
+strong,29,"stretched, 6-s blocks",0.2-0.3,4.336272826013955
+strong,29,"stretched, 6-s blocks",0.3-0.5,4.407557152104705
+strong,29,"stretched, 6-s blocks",0.5-1,3.930591062451304
+strong,29,"stretched, 6-s blocks",1-2,3.933617230924199
+strong,29,"stretched, 6-s blocks",2-inf,2.1906246326320438
+faint,0,before,1-2,2.252435599034078
+faint,0,before,2-inf,2.744381142216638
+faint,0,floor only,0.1-0.2,1.1043744244051839
+faint,0,floor only,0.2-0.3,1.2087411455775972
+faint,0,floor only,0.3-0.5,2.0444635056549787
+faint,0,floor only,0.5-1,2.4519316362156145
+faint,0,floor only,1-2,2.252435599034078
+faint,0,floor only,2-inf,2.744381142216638
+faint,0,all lags,0.1-0.2,3.297177199177615
+faint,0,all lags,0.2-0.3,2.986958268372522
+faint,0,all lags,0.3-0.5,2.129818981183758
+faint,0,all lags,0.5-1,2.7499204737489116
+faint,0,all lags,1-2,2.252435599034078
+faint,0,all lags,2-inf,2.744381142216638
+faint,0,"all lags, mean",0.1-0.2,3.297177199177615
+faint,0,"all lags, mean",0.2-0.3,2.986958268372522
+faint,0,"all lags, mean",0.3-0.5,2.129818981183758
+faint,0,"all lags, mean",0.5-1,2.7499204737489116
+faint,0,"all lags, mean",1-2,2.252435599034078
+faint,0,"all lags, mean",2-inf,2.744381142216638
+faint,0,"stretched, uncentred",0.1-0.2,2.151527958267021
+faint,0,"stretched, uncentred",0.2-0.3,3.1698872193754677
+faint,0,"stretched, uncentred",0.3-0.5,1.734135656131027
+faint,0,"stretched, uncentred",0.5-1,2.5320703155475934
+faint,0,"stretched, uncentred",1-2,2.252435599034078
+faint,0,"stretched, uncentred",2-inf,2.744381142216638
+faint,0,stretched,0.1-0.2,2.154481034449863
+faint,0,stretched,0.2-0.3,3.2091773025474284
+faint,0,stretched,0.3-0.5,1.6718747769267506
+faint,0,stretched,0.5-1,2.550993805489392
+faint,0,stretched,1-2,2.252435599034078
+faint,0,stretched,2-inf,2.744381142216638
+faint,0,"stretched, 6-s blocks",0.1-0.2,1.5724237420502205
+faint,0,"stretched, 6-s blocks",0.2-0.3,2.436329801016844
+faint,0,"stretched, 6-s blocks",0.3-0.5,1.7291080246041173
+faint,0,"stretched, 6-s blocks",0.5-1,2.425630739165239
+faint,0,"stretched, 6-s blocks",1-2,2.1071212359079974
+faint,0,"stretched, 6-s blocks",2-inf,2.5784801695681328
+faint,1,before,1-2,2.641348724366745
+faint,1,before,2-inf,3.3801056111831977
+faint,1,floor only,0.1-0.2,0.3295011107263207
+faint,1,floor only,0.2-0.3,0.6742908685177732
+faint,1,floor only,0.3-0.5,1.315664780642262
+faint,1,floor only,0.5-1,2.727816971962776
+faint,1,floor only,1-2,2.641348724366745
+faint,1,floor only,2-inf,3.3801056111831977
+faint,1,all lags,0.1-0.2,3.0218813950934336
+faint,1,all lags,0.2-0.3,2.152377783067621
+faint,1,all lags,0.3-0.5,1.6616773116740446
+faint,1,all lags,0.5-1,2.6428212092751973
+faint,1,all lags,1-2,2.641348724366745
+faint,1,all lags,2-inf,3.3801056111831977
+faint,1,"all lags, mean",0.1-0.2,3.0218813950934336
+faint,1,"all lags, mean",0.2-0.3,2.152377783067621
+faint,1,"all lags, mean",0.3-0.5,1.6616773116740446
+faint,1,"all lags, mean",0.5-1,2.6428212092751973
+faint,1,"all lags, mean",1-2,2.641348724366745
+faint,1,"all lags, mean",2-inf,3.3801056111831977
+faint,1,"stretched, uncentred",0.1-0.2,1.5384025623729751
+faint,1,"stretched, uncentred",0.2-0.3,1.7227790646918917
+faint,1,"stretched, uncentred",0.3-0.5,1.171658224893658
+faint,1,"stretched, uncentred",0.5-1,2.6309877895353657
+faint,1,"stretched, uncentred",1-2,2.641348724366745
+faint,1,"stretched, uncentred",2-inf,3.3801056111831977
+faint,1,stretched,0.1-0.2,1.621115566303623
+faint,1,stretched,0.2-0.3,1.667537864358539
+faint,1,stretched,0.3-0.5,1.1488908485184166
+faint,1,stretched,0.5-1,2.6311114512669334
+faint,1,stretched,1-2,2.641348724366745
+faint,1,stretched,2-inf,3.3801056111831977
+faint,1,"stretched, 6-s blocks",0.1-0.2,1.6651937910976369
+faint,1,"stretched, 6-s blocks",0.2-0.3,1.1254847777172445
+faint,1,"stretched, 6-s blocks",0.3-0.5,1.4707644959027002
+faint,1,"stretched, 6-s blocks",0.5-1,2.534040706444032
+faint,1,"stretched, 6-s blocks",1-2,2.544287851552091
+faint,1,"stretched, 6-s blocks",2-inf,3.4391675539670707
+faint,2,before,1-2,1.64493623887718
+faint,2,before,2-inf,2.7184008036019454
+faint,2,floor only,0.1-0.2,4.008520544835191
+faint,2,floor only,0.2-0.3,4.135886196579753
+faint,2,floor only,0.3-0.5,3.8269414914119952
+faint,2,floor only,0.5-1,1.9949427665722208
+faint,2,floor only,1-2,1.64493623887718
+faint,2,floor only,2-inf,2.7184008036019454
+faint,2,all lags,0.1-0.2,1.5989540993836218
+faint,2,all lags,0.2-0.3,3.840989222639
+faint,2,all lags,0.3-0.5,4.182323288606658
+faint,2,all lags,0.5-1,2.6713734978093995
+faint,2,all lags,1-2,1.64493623887718
+faint,2,all lags,2-inf,2.7184008036019454
+faint,2,"all lags, mean",0.1-0.2,1.5989540993836218
+faint,2,"all lags, mean",0.2-0.3,3.840989222639
+faint,2,"all lags, mean",0.3-0.5,4.182323288606658
+faint,2,"all lags, mean",0.5-1,2.6713734978093995
+faint,2,"all lags, mean",1-2,1.64493623887718
+faint,2,"all lags, mean",2-inf,2.7184008036019454
+faint,2,"stretched, uncentred",0.1-0.2,1.9774756873093324
+faint,2,"stretched, uncentred",0.2-0.3,2.48335897468877
+faint,2,"stretched, uncentred",0.3-0.5,3.0698905840481068
+faint,2,"stretched, uncentred",0.5-1,2.004342042442579
+faint,2,"stretched, uncentred",1-2,1.64493623887718
+faint,2,"stretched, uncentred",2-inf,2.7184008036019454
+faint,2,stretched,0.1-0.2,1.6953737921272451
+faint,2,stretched,0.2-0.3,2.4394434966340413
+faint,2,stretched,0.3-0.5,3.0246638148022162
+faint,2,stretched,0.5-1,2.0461511815774385
+faint,2,stretched,1-2,1.64493623887718
+faint,2,stretched,2-inf,2.7184008036019454
+faint,2,"stretched, 6-s blocks",0.1-0.2,1.639821257007938
+faint,2,"stretched, 6-s blocks",0.2-0.3,2.149260962232295
+faint,2,"stretched, 6-s blocks",0.3-0.5,3.060740269346427
+faint,2,"stretched, 6-s blocks",0.5-1,2.11007919989909
+faint,2,"stretched, 6-s blocks",1-2,1.7584908027272714
+faint,2,"stretched, 6-s blocks",2-inf,2.789840259642911
+faint,3,before,1-2,0.8638802429246332
+faint,3,before,2-inf,2.816969425882661
+faint,3,floor only,0.1-0.2,1.6286959565368528
+faint,3,floor only,0.2-0.3,1.6393938775614092
+faint,3,floor only,0.3-0.5,1.2736694917030598
+faint,3,floor only,0.5-1,1.262861107607727
+faint,3,floor only,1-2,0.8638802429246332
+faint,3,floor only,2-inf,2.816969425882661
+faint,3,all lags,0.1-0.2,2.43670015603796
+faint,3,all lags,0.2-0.3,1.9452011736446864
+faint,3,all lags,0.3-0.5,1.6582456702768478
+faint,3,all lags,0.5-1,1.6818102457347806
+faint,3,all lags,1-2,0.8638802429246332
+faint,3,all lags,2-inf,2.816969425882661
+faint,3,"all lags, mean",0.1-0.2,2.43670015603796
+faint,3,"all lags, mean",0.2-0.3,1.9452011736446864
+faint,3,"all lags, mean",0.3-0.5,1.6582456702768478
+faint,3,"all lags, mean",0.5-1,1.6818102457347806
+faint,3,"all lags, mean",1-2,0.8638802429246332
+faint,3,"all lags, mean",2-inf,2.816969425882661
+faint,3,"stretched, uncentred",0.1-0.2,1.8363951355436112
+faint,3,"stretched, uncentred",0.2-0.3,1.5885091051878255
+faint,3,"stretched, uncentred",0.3-0.5,1.8215990344947304
+faint,3,"stretched, uncentred",0.5-1,1.6059781965953583
+faint,3,"stretched, uncentred",1-2,0.8638802429246332
+faint,3,"stretched, uncentred",2-inf,2.816969425882661
+faint,3,stretched,0.1-0.2,1.8200889403280647
+faint,3,stretched,0.2-0.3,1.5882057110652907
+faint,3,stretched,0.3-0.5,1.8063730247491032
+faint,3,stretched,0.5-1,1.5996127318875113
+faint,3,stretched,1-2,0.8638802429246332
+faint,3,stretched,2-inf,2.816969425882661
+faint,3,"stretched, 6-s blocks",0.1-0.2,2.1094345885924506
+faint,3,"stretched, 6-s blocks",0.2-0.3,2.0021965946126112
+faint,3,"stretched, 6-s blocks",0.3-0.5,1.9957319656479564
+faint,3,"stretched, 6-s blocks",0.5-1,1.5835228357303792
+faint,3,"stretched, 6-s blocks",1-2,0.9321044747700515
+faint,3,"stretched, 6-s blocks",2-inf,3.0398221643574437
+faint,4,before,1-2,1.5902874017286421
+faint,4,before,2-inf,2.471708496452412
+faint,4,floor only,0.1-0.2,2.0835413917153933
+faint,4,floor only,0.2-0.3,2.7126380705863005
+faint,4,floor only,0.3-0.5,2.849927256857309
+faint,4,floor only,0.5-1,2.260656950416725
+faint,4,floor only,1-2,1.5902874017286421
+faint,4,floor only,2-inf,2.471708496452412
+faint,4,all lags,0.1-0.2,1.8405516745976285
+faint,4,all lags,0.2-0.3,0.7879993194471523
+faint,4,all lags,0.3-0.5,2.589615955788376
+faint,4,all lags,0.5-1,2.386998245776755
+faint,4,all lags,1-2,1.5902874017286421
+faint,4,all lags,2-inf,2.471708496452412
+faint,4,"all lags, mean",0.1-0.2,1.8405516745976285
+faint,4,"all lags, mean",0.2-0.3,0.7879993194471523
+faint,4,"all lags, mean",0.3-0.5,2.589615955788376
+faint,4,"all lags, mean",0.5-1,2.386998245776755
+faint,4,"all lags, mean",1-2,1.5902874017286421
+faint,4,"all lags, mean",2-inf,2.471708496452412
+faint,4,"stretched, uncentred",0.1-0.2,1.6554077848009925
+faint,4,"stretched, uncentred",0.2-0.3,0.7222057044315414
+faint,4,"stretched, uncentred",0.3-0.5,2.494770481334961
+faint,4,"stretched, uncentred",0.5-1,2.326098967412122
+faint,4,"stretched, uncentred",1-2,1.5902874017286421
+faint,4,"stretched, uncentred",2-inf,2.471708496452412
+faint,4,stretched,0.1-0.2,1.7404941796168398
+faint,4,stretched,0.2-0.3,0.7266754530103194
+faint,4,stretched,0.3-0.5,2.533590828061296
+faint,4,stretched,0.5-1,2.3848789113237068
+faint,4,stretched,1-2,1.5902874017286421
+faint,4,stretched,2-inf,2.471708496452412
+faint,4,"stretched, 6-s blocks",0.1-0.2,2.212684844297169
+faint,4,"stretched, 6-s blocks",0.2-0.3,0.9107745809696313
+faint,4,"stretched, 6-s blocks",0.3-0.5,2.2812424280043992
+faint,4,"stretched, 6-s blocks",0.5-1,2.248365497448551
+faint,4,"stretched, 6-s blocks",1-2,1.8562043441676046
+faint,4,"stretched, 6-s blocks",2-inf,2.4737018946016907
+faint,5,before,1-2,2.6969840199402313
+faint,5,before,2-inf,2.6455996633770393
+faint,5,floor only,0.1-0.2,2.3334667011692147
+faint,5,floor only,0.2-0.3,2.787031421645521
+faint,5,floor only,0.3-0.5,2.7457244731574537
+faint,5,floor only,0.5-1,1.2375691433787372
+faint,5,floor only,1-2,2.6969840199402313
+faint,5,floor only,2-inf,2.6455996633770393
+faint,5,all lags,0.1-0.2,1.45451250464606
+faint,5,all lags,0.2-0.3,1.6728205662428492
+faint,5,all lags,0.3-0.5,1.9777360521696554
+faint,5,all lags,0.5-1,1.8085291092733462
+faint,5,all lags,1-2,2.6969840199402313
+faint,5,all lags,2-inf,2.6455996633770393
+faint,5,"all lags, mean",0.1-0.2,1.45451250464606
+faint,5,"all lags, mean",0.2-0.3,1.6728205662428492
+faint,5,"all lags, mean",0.3-0.5,1.9777360521696554
+faint,5,"all lags, mean",0.5-1,1.8085291092733462
+faint,5,"all lags, mean",1-2,2.6969840199402313
+faint,5,"all lags, mean",2-inf,2.6455996633770393
+faint,5,"stretched, uncentred",0.1-0.2,1.2837650287805418
+faint,5,"stretched, uncentred",0.2-0.3,1.4903623895736438
+faint,5,"stretched, uncentred",0.3-0.5,1.5566930711647138
+faint,5,"stretched, uncentred",0.5-1,1.6126655302632107
+faint,5,"stretched, uncentred",1-2,2.6969840199402313
+faint,5,"stretched, uncentred",2-inf,2.6455996633770393
+faint,5,stretched,0.1-0.2,1.4486155899547895
+faint,5,stretched,0.2-0.3,1.4440082441987758
+faint,5,stretched,0.3-0.5,1.5204484220467742
+faint,5,stretched,0.5-1,1.6018145138090931
+faint,5,stretched,1-2,2.6969840199402313
+faint,5,stretched,2-inf,2.6455996633770393
+faint,5,"stretched, 6-s blocks",0.1-0.2,1.6874365549722774
+faint,5,"stretched, 6-s blocks",0.2-0.3,1.7215006870929759
+faint,5,"stretched, 6-s blocks",0.3-0.5,1.5864426829625864
+faint,5,"stretched, 6-s blocks",0.5-1,1.4675618478721646
+faint,5,"stretched, 6-s blocks",1-2,2.512200902446446
+faint,5,"stretched, 6-s blocks",2-inf,2.4993726096191153
+faint,6,before,1-2,2.0957194240217407
+faint,6,before,2-inf,3.3004835298961734
+faint,6,floor only,0.1-0.2,1.5163761394277866
+faint,6,floor only,0.2-0.3,1.7992995503650933
+faint,6,floor only,0.3-0.5,1.7386241187732978
+faint,6,floor only,0.5-1,1.278368221746365
+faint,6,floor only,1-2,2.0957194240217407
+faint,6,floor only,2-inf,3.3004835298961734
+faint,6,all lags,0.1-0.2,1.0509252605854333
+faint,6,all lags,0.2-0.3,0.8103471661198572
+faint,6,all lags,0.3-0.5,2.3612673188688036
+faint,6,all lags,0.5-1,2.1562752476643814
+faint,6,all lags,1-2,2.0957194240217407
+faint,6,all lags,2-inf,3.3004835298961734
+faint,6,"all lags, mean",0.1-0.2,1.0509252605854333
+faint,6,"all lags, mean",0.2-0.3,0.8103471661198572
+faint,6,"all lags, mean",0.3-0.5,2.3612673188688036
+faint,6,"all lags, mean",0.5-1,2.1562752476643814
+faint,6,"all lags, mean",1-2,2.0957194240217407
+faint,6,"all lags, mean",2-inf,3.3004835298961734
+faint,6,"stretched, uncentred",0.1-0.2,2.4788688567232087
+faint,6,"stretched, uncentred",0.2-0.3,1.5994399760760356
+faint,6,"stretched, uncentred",0.3-0.5,2.2143047001995937
+faint,6,"stretched, uncentred",0.5-1,1.7932924412718851
+faint,6,"stretched, uncentred",1-2,2.0957194240217407
+faint,6,"stretched, uncentred",2-inf,3.3004835298961734
+faint,6,stretched,0.1-0.2,2.5827554840966416
+faint,6,stretched,0.2-0.3,1.434044469925975
+faint,6,stretched,0.3-0.5,2.199174962676939
+faint,6,stretched,0.5-1,1.7931521704800775
+faint,6,stretched,1-2,2.0957194240217407
+faint,6,stretched,2-inf,3.3004835298961734
+faint,6,"stretched, 6-s blocks",0.1-0.2,3.0699722983915243
+faint,6,"stretched, 6-s blocks",0.2-0.3,1.175194726532258
+faint,6,"stretched, 6-s blocks",0.3-0.5,2.153429966386773
+faint,6,"stretched, 6-s blocks",0.5-1,1.888906029302076
+faint,6,"stretched, 6-s blocks",1-2,2.081999351971045
+faint,6,"stretched, 6-s blocks",2-inf,3.06489389020756
+faint,7,before,1-2,0.8023747626759611
+faint,7,before,2-inf,3.6032794376446033
+faint,7,floor only,0.1-0.2,1.1241054378673585
+faint,7,floor only,0.2-0.3,1.2069056211877824
+faint,7,floor only,0.3-0.5,1.0732426550267544
+faint,7,floor only,0.5-1,0.9013426558493611
+faint,7,floor only,1-2,0.8023747626759611
+faint,7,floor only,2-inf,3.6032794376446033
+faint,7,all lags,0.1-0.2,2.9018280321133747
+faint,7,all lags,0.2-0.3,2.04646381566728
+faint,7,all lags,0.3-0.5,0.5805722307283641
+faint,7,all lags,0.5-1,1.1890496992734596
+faint,7,all lags,1-2,0.8023747626759611
+faint,7,all lags,2-inf,3.6032794376446033
+faint,7,"all lags, mean",0.1-0.2,2.9018280321133747
+faint,7,"all lags, mean",0.2-0.3,2.04646381566728
+faint,7,"all lags, mean",0.3-0.5,0.5805722307283641
+faint,7,"all lags, mean",0.5-1,1.1890496992734596
+faint,7,"all lags, mean",1-2,0.8023747626759611
+faint,7,"all lags, mean",2-inf,3.6032794376446033
+faint,7,"stretched, uncentred",0.1-0.2,1.686525010016555
+faint,7,"stretched, uncentred",0.2-0.3,1.7304604160078838
+faint,7,"stretched, uncentred",0.3-0.5,1.0545106019523671
+faint,7,"stretched, uncentred",0.5-1,1.1248462241175918
+faint,7,"stretched, uncentred",1-2,0.8023747626759611
+faint,7,"stretched, uncentred",2-inf,3.6032794376446033
+faint,7,stretched,0.1-0.2,1.6477179323607996
+faint,7,stretched,0.2-0.3,1.69674822301861
+faint,7,stretched,0.3-0.5,1.006999396382362
+faint,7,stretched,0.5-1,1.1510639400642595
+faint,7,stretched,1-2,0.8023747626759611
+faint,7,stretched,2-inf,3.6032794376446033
+faint,7,"stretched, 6-s blocks",0.1-0.2,2.0776725206074143
+faint,7,"stretched, 6-s blocks",0.2-0.3,1.564852836103562
+faint,7,"stretched, 6-s blocks",0.3-0.5,1.5554558878168634
+faint,7,"stretched, 6-s blocks",0.5-1,0.7292847818010538
+faint,7,"stretched, 6-s blocks",1-2,0.911887538585204
+faint,7,"stretched, 6-s blocks",2-inf,3.2737212621401257
+faint,8,before,1-2,0.6167774000430969
+faint,8,before,2-inf,3.4220369699225874
+faint,8,floor only,0.1-0.2,0.8767576209824991
+faint,8,floor only,0.2-0.3,1.0751951362515424
+faint,8,floor only,0.3-0.5,1.0583306020516177
+faint,8,floor only,0.5-1,0.6376385035690275
+faint,8,floor only,1-2,0.6167774000430969
+faint,8,floor only,2-inf,3.4220369699225874
+faint,8,all lags,0.1-0.2,1.9693735520961226
+faint,8,all lags,0.2-0.3,0.7252083733552674
+faint,8,all lags,0.3-0.5,0.9992387567522961
+faint,8,all lags,0.5-1,1.3343670652135395
+faint,8,all lags,1-2,0.6167774000430969
+faint,8,all lags,2-inf,3.4220369699225874
+faint,8,"all lags, mean",0.1-0.2,1.9693735520961226
+faint,8,"all lags, mean",0.2-0.3,0.7252083733552674
+faint,8,"all lags, mean",0.3-0.5,0.9992387567522961
+faint,8,"all lags, mean",0.5-1,1.3343670652135395
+faint,8,"all lags, mean",1-2,0.6167774000430969
+faint,8,"all lags, mean",2-inf,3.4220369699225874
+faint,8,"stretched, uncentred",0.1-0.2,1.7815799054585193
+faint,8,"stretched, uncentred",0.2-0.3,0.9306039441574209
+faint,8,"stretched, uncentred",0.3-0.5,1.4426056011008335
+faint,8,"stretched, uncentred",0.5-1,1.407368914048544
+faint,8,"stretched, uncentred",1-2,0.6167774000430969
+faint,8,"stretched, uncentred",2-inf,3.4220369699225874
+faint,8,stretched,0.1-0.2,1.8062983579799443
+faint,8,stretched,0.2-0.3,0.8427327286854042
+faint,8,stretched,0.3-0.5,1.462668292550572
+faint,8,stretched,0.5-1,1.3866920779520275
+faint,8,stretched,1-2,0.6167774000430969
+faint,8,stretched,2-inf,3.4220369699225874
+faint,8,"stretched, 6-s blocks",0.1-0.2,1.5543401203541511
+faint,8,"stretched, 6-s blocks",0.2-0.3,1.5841488368530445
+faint,8,"stretched, 6-s blocks",0.3-0.5,1.2266509647175958
+faint,8,"stretched, 6-s blocks",0.5-1,0.7689937037657191
+faint,8,"stretched, 6-s blocks",1-2,0.4670399808785014
+faint,8,"stretched, 6-s blocks",2-inf,3.2702301542312022
+faint,9,before,1-2,1.0654408144788552
+faint,9,before,2-inf,2.1657794080816375
+faint,9,floor only,0.1-0.2,1.3567808439398463
+faint,9,floor only,0.2-0.3,1.3512720777093619
+faint,9,floor only,0.3-0.5,1.2187953400183114
+faint,9,floor only,0.5-1,1.6930951387248554
+faint,9,floor only,1-2,1.0654408144788552
+faint,9,floor only,2-inf,2.1657794080816375
+faint,9,all lags,0.1-0.2,1.93173851308571
+faint,9,all lags,0.2-0.3,0.6379363781577494
+faint,9,all lags,0.3-0.5,1.3060667017597414
+faint,9,all lags,0.5-1,1.3001734092495683
+faint,9,all lags,1-2,1.0654408144788552
+faint,9,all lags,2-inf,2.1657794080816375
+faint,9,"all lags, mean",0.1-0.2,1.93173851308571
+faint,9,"all lags, mean",0.2-0.3,0.6379363781577494
+faint,9,"all lags, mean",0.3-0.5,1.3060667017597414
+faint,9,"all lags, mean",0.5-1,1.3001734092495683
+faint,9,"all lags, mean",1-2,1.0654408144788552
+faint,9,"all lags, mean",2-inf,2.1657794080816375
+faint,9,"stretched, uncentred",0.1-0.2,2.9288636121481035
+faint,9,"stretched, uncentred",0.2-0.3,1.3822410400067102
+faint,9,"stretched, uncentred",0.3-0.5,1.7551502948714637
+faint,9,"stretched, uncentred",0.5-1,1.8122445742313387
+faint,9,"stretched, uncentred",1-2,1.0654408144788552
+faint,9,"stretched, uncentred",2-inf,2.1657794080816375
+faint,9,stretched,0.1-0.2,2.514992148818725
+faint,9,stretched,0.2-0.3,1.403503143349877
+faint,9,stretched,0.3-0.5,1.8276877927472872
+faint,9,stretched,0.5-1,1.8861558565017258
+faint,9,stretched,1-2,1.0654408144788552
+faint,9,stretched,2-inf,2.1657794080816375
+faint,9,"stretched, 6-s blocks",0.1-0.2,1.2998739858832935
+faint,9,"stretched, 6-s blocks",0.2-0.3,1.3030129248751086
+faint,9,"stretched, 6-s blocks",0.3-0.5,1.6993438857777683
+faint,9,"stretched, 6-s blocks",0.5-1,1.742245738245742
+faint,9,"stretched, 6-s blocks",1-2,1.1201609319938883
+faint,9,"stretched, 6-s blocks",2-inf,2.3443147596833502
+faint,10,before,1-2,1.0353309700133377
+faint,10,before,2-inf,3.1031642719846992
+faint,10,floor only,0.1-0.2,1.8144779357101106
+faint,10,floor only,0.2-0.3,1.8645899116521627
+faint,10,floor only,0.3-0.5,2.0335305064359566
+faint,10,floor only,0.5-1,1.9019249163541334
+faint,10,floor only,1-2,1.0353309700133377
+faint,10,floor only,2-inf,3.1031642719846992
+faint,10,all lags,0.1-0.2,1.562110557909217
+faint,10,all lags,0.2-0.3,1.0802428224562404
+faint,10,all lags,0.3-0.5,1.5752421925363953
+faint,10,all lags,0.5-1,1.3698510714458263
+faint,10,all lags,1-2,1.0353309700133377
+faint,10,all lags,2-inf,3.1031642719846992
+faint,10,"all lags, mean",0.1-0.2,1.562110557909217
+faint,10,"all lags, mean",0.2-0.3,1.0802428224562404
+faint,10,"all lags, mean",0.3-0.5,1.5752421925363953
+faint,10,"all lags, mean",0.5-1,1.3698510714458263
+faint,10,"all lags, mean",1-2,1.0353309700133377
+faint,10,"all lags, mean",2-inf,3.1031642719846992
+faint,10,"stretched, uncentred",0.1-0.2,1.764513957505153
+faint,10,"stretched, uncentred",0.2-0.3,1.475543304467078
+faint,10,"stretched, uncentred",0.3-0.5,1.521075058963487
+faint,10,"stretched, uncentred",0.5-1,1.4786204772747884
+faint,10,"stretched, uncentred",1-2,1.0353309700133377
+faint,10,"stretched, uncentred",2-inf,3.1031642719846992
+faint,10,stretched,0.1-0.2,1.6796640220855485
+faint,10,stretched,0.2-0.3,1.5201991181771042
+faint,10,stretched,0.3-0.5,1.5240035730627384
+faint,10,stretched,0.5-1,1.3884860713272937
+faint,10,stretched,1-2,1.0353309700133377
+faint,10,stretched,2-inf,3.1031642719846992
+faint,10,"stretched, 6-s blocks",0.1-0.2,1.8648494647059997
+faint,10,"stretched, 6-s blocks",0.2-0.3,1.3006626863155923
+faint,10,"stretched, 6-s blocks",0.3-0.5,1.7065147463634545
+faint,10,"stretched, 6-s blocks",0.5-1,1.52695148962065
+faint,10,"stretched, 6-s blocks",1-2,0.9333523984294971
+faint,10,"stretched, 6-s blocks",2-inf,2.753831869011284
+faint,11,before,1-2,1.7539322291343569
+faint,11,before,2-inf,2.561033648308335
+faint,11,floor only,0.1-0.2,1.9356333067669291
+faint,11,floor only,0.2-0.3,1.9985711769437104
+faint,11,floor only,0.3-0.5,1.8281385499604907
+faint,11,floor only,0.5-1,1.9563770115657462
+faint,11,floor only,1-2,1.7539322291343569
+faint,11,floor only,2-inf,2.561033648308335
+faint,11,all lags,0.1-0.2,2.1665392257026044
+faint,11,all lags,0.2-0.3,1.2505906221153082
+faint,11,all lags,0.3-0.5,1.737952419772796
+faint,11,all lags,0.5-1,1.7406097120938793
+faint,11,all lags,1-2,1.7539322291343569
+faint,11,all lags,2-inf,2.561033648308335
+faint,11,"all lags, mean",0.1-0.2,2.1665392257026044
+faint,11,"all lags, mean",0.2-0.3,1.2505906221153082
+faint,11,"all lags, mean",0.3-0.5,1.737952419772796
+faint,11,"all lags, mean",0.5-1,1.7406097120938793
+faint,11,"all lags, mean",1-2,1.7539322291343569
+faint,11,"all lags, mean",2-inf,2.561033648308335
+faint,11,"stretched, uncentred",0.1-0.2,2.0495277707980577
+faint,11,"stretched, uncentred",0.2-0.3,0.9269386306725417
+faint,11,"stretched, uncentred",0.3-0.5,1.4979372891997065
+faint,11,"stretched, uncentred",0.5-1,1.4918476722257505
+faint,11,"stretched, uncentred",1-2,1.7539322291343569
+faint,11,"stretched, uncentred",2-inf,2.561033648308335
+faint,11,stretched,0.1-0.2,2.011396426078821
+faint,11,stretched,0.2-0.3,0.9510537385414924
+faint,11,stretched,0.3-0.5,1.5007239400053747
+faint,11,stretched,0.5-1,1.4840265268761446
+faint,11,stretched,1-2,1.7539322291343569
+faint,11,stretched,2-inf,2.561033648308335
+faint,11,"stretched, 6-s blocks",0.1-0.2,2.426129126306271
+faint,11,"stretched, 6-s blocks",0.2-0.3,1.0086172022147577
+faint,11,"stretched, 6-s blocks",0.3-0.5,1.3934986232267723
+faint,11,"stretched, 6-s blocks",0.5-1,1.4430491608277665
+faint,11,"stretched, 6-s blocks",1-2,2.0267471867798315
+faint,11,"stretched, 6-s blocks",2-inf,2.6656134608118083
+faint,12,before,1-2,1.7107421978601631
+faint,12,before,2-inf,2.727171967130228
+faint,12,floor only,0.1-0.2,1.5512509160061192
+faint,12,floor only,0.2-0.3,2.0920433374352148
+faint,12,floor only,0.3-0.5,2.114995350307431
+faint,12,floor only,0.5-1,1.521709933916382
+faint,12,floor only,1-2,1.7107421978601631
+faint,12,floor only,2-inf,2.727171967130228
+faint,12,all lags,0.1-0.2,1.4058843677769102
+faint,12,all lags,0.2-0.3,2.035519242745756
+faint,12,all lags,0.3-0.5,2.287453938552574
+faint,12,all lags,0.5-1,1.5180152818112307
+faint,12,all lags,1-2,1.7107421978601631
+faint,12,all lags,2-inf,2.727171967130228
+faint,12,"all lags, mean",0.1-0.2,1.4058843677769102
+faint,12,"all lags, mean",0.2-0.3,2.035519242745756
+faint,12,"all lags, mean",0.3-0.5,2.287453938552574
+faint,12,"all lags, mean",0.5-1,1.5180152818112307
+faint,12,"all lags, mean",1-2,1.7107421978601631
+faint,12,"all lags, mean",2-inf,2.727171967130228
+faint,12,"stretched, uncentred",0.1-0.2,1.5270467464376674
+faint,12,"stretched, uncentred",0.2-0.3,1.4702869709185347
+faint,12,"stretched, uncentred",0.3-0.5,1.5253380523600124
+faint,12,"stretched, uncentred",0.5-1,1.5176049109495449
+faint,12,"stretched, uncentred",1-2,1.7107421978601631
+faint,12,"stretched, uncentred",2-inf,2.727171967130228
+faint,12,stretched,0.1-0.2,1.591393655877009
+faint,12,stretched,0.2-0.3,1.3512808905967522
+faint,12,stretched,0.3-0.5,1.4092891414924136
+faint,12,stretched,0.5-1,1.5175777489354796
+faint,12,stretched,1-2,1.7107421978601631
+faint,12,stretched,2-inf,2.727171967130228
+faint,12,"stretched, 6-s blocks",0.1-0.2,1.3961445492606563
+faint,12,"stretched, 6-s blocks",0.2-0.3,1.6297483022223218
+faint,12,"stretched, 6-s blocks",0.3-0.5,1.030751891953475
+faint,12,"stretched, 6-s blocks",0.5-1,1.8678182183425565
+faint,12,"stretched, 6-s blocks",1-2,2.107581603846261
+faint,12,"stretched, 6-s blocks",2-inf,2.7637155899014045
+faint,13,before,1-2,1.9463580723516707
+faint,13,before,2-inf,2.774935233430927
+faint,13,floor only,0.1-0.2,1.0334431632039216
+faint,13,floor only,0.2-0.3,1.1076628901761076
+faint,13,floor only,0.3-0.5,0.9737035530573288
+faint,13,floor only,0.5-1,0.6195182245361952
+faint,13,floor only,1-2,1.9463580723516707
+faint,13,floor only,2-inf,2.774935233430927
+faint,13,all lags,0.1-0.2,3.0310023653209703
+faint,13,all lags,0.2-0.3,4.260546617251907
+faint,13,all lags,0.3-0.5,2.8324036967953603
+faint,13,all lags,0.5-1,0.7249296274229928
+faint,13,all lags,1-2,1.9463580723516707
+faint,13,all lags,2-inf,2.774935233430927
+faint,13,"all lags, mean",0.1-0.2,3.0310023653209703
+faint,13,"all lags, mean",0.2-0.3,4.260546617251907
+faint,13,"all lags, mean",0.3-0.5,2.8324036967953603
+faint,13,"all lags, mean",0.5-1,0.7249296274229928
+faint,13,"all lags, mean",1-2,1.9463580723516707
+faint,13,"all lags, mean",2-inf,2.774935233430927
+faint,13,"stretched, uncentred",0.1-0.2,1.9941120237939851
+faint,13,"stretched, uncentred",0.2-0.3,3.5488453760358043
+faint,13,"stretched, uncentred",0.3-0.5,2.1608014615355247
+faint,13,"stretched, uncentred",0.5-1,0.8141008236076178
+faint,13,"stretched, uncentred",1-2,1.9463580723516707
+faint,13,"stretched, uncentred",2-inf,2.774935233430927
+faint,13,stretched,0.1-0.2,1.9489021380443294
+faint,13,stretched,0.2-0.3,3.6273307998693336
+faint,13,stretched,0.3-0.5,2.125506790465054
+faint,13,stretched,0.5-1,0.7786334416413296
+faint,13,stretched,1-2,1.9463580723516707
+faint,13,stretched,2-inf,2.774935233430927
+faint,13,"stretched, 6-s blocks",0.1-0.2,1.7298726787146024
+faint,13,"stretched, 6-s blocks",0.2-0.3,3.0787984028830553
+faint,13,"stretched, 6-s blocks",0.3-0.5,2.529771526925402
+faint,13,"stretched, 6-s blocks",0.5-1,1.0187938433330863
+faint,13,"stretched, 6-s blocks",1-2,2.0039378470643405
+faint,13,"stretched, 6-s blocks",2-inf,2.866119841736492
+faint,14,before,1-2,0.8704071394793021
+faint,14,before,2-inf,3.884563901295913
+faint,14,floor only,0.1-0.2,1.4973933721579828
+faint,14,floor only,0.2-0.3,2.004647436814328
+faint,14,floor only,0.3-0.5,2.0482897417888393
+faint,14,floor only,0.5-1,1.5975784987435775
+faint,14,floor only,1-2,0.8704071394793021
+faint,14,floor only,2-inf,3.884563901295913
+faint,14,all lags,0.1-0.2,0.6322287501248749
+faint,14,all lags,0.2-0.3,0.9949114201332289
+faint,14,all lags,0.3-0.5,1.622549709755738
+faint,14,all lags,0.5-1,1.5966527202992638
+faint,14,all lags,1-2,0.8704071394793021
+faint,14,all lags,2-inf,3.884563901295913
+faint,14,"all lags, mean",0.1-0.2,0.6322287501248749
+faint,14,"all lags, mean",0.2-0.3,0.9949114201332289
+faint,14,"all lags, mean",0.3-0.5,1.622549709755738
+faint,14,"all lags, mean",0.5-1,1.5966527202992638
+faint,14,"all lags, mean",1-2,0.8704071394793021
+faint,14,"all lags, mean",2-inf,3.884563901295913
+faint,14,"stretched, uncentred",0.1-0.2,1.9613633778333086
+faint,14,"stretched, uncentred",0.2-0.3,1.2310377478993229
+faint,14,"stretched, uncentred",0.3-0.5,1.7264800322883262
+faint,14,"stretched, uncentred",0.5-1,1.5241352143204543
+faint,14,"stretched, uncentred",1-2,0.8704071394793021
+faint,14,"stretched, uncentred",2-inf,3.884563901295913
+faint,14,stretched,0.1-0.2,2.0599251129085805
+faint,14,stretched,0.2-0.3,1.2118873065940594
+faint,14,stretched,0.3-0.5,1.752217952901478
+faint,14,stretched,0.5-1,1.555053040112095
+faint,14,stretched,1-2,0.8704071394793021
+faint,14,stretched,2-inf,3.884563901295913
+faint,14,"stretched, 6-s blocks",0.1-0.2,1.7877922493543876
+faint,14,"stretched, 6-s blocks",0.2-0.3,1.1454310554609046
+faint,14,"stretched, 6-s blocks",0.3-0.5,1.738852884336103
+faint,14,"stretched, 6-s blocks",0.5-1,1.4519790195888855
+faint,14,"stretched, 6-s blocks",1-2,0.9319659504847043
+faint,14,"stretched, 6-s blocks",2-inf,4.196343036887823
+faint,15,before,1-2,0.8449176944334044
+faint,15,before,2-inf,4.219230311391874
+faint,15,floor only,0.1-0.2,2.228678151104059
+faint,15,floor only,0.2-0.3,2.2279415459261
+faint,15,floor only,0.3-0.5,1.8145465015280702
+faint,15,floor only,0.5-1,0.8161238318712013
+faint,15,floor only,1-2,0.8449176944334044
+faint,15,floor only,2-inf,4.219230311391874
+faint,15,all lags,0.1-0.2,3.0288944675454674
+faint,15,all lags,0.2-0.3,1.9970220609112788
+faint,15,all lags,0.3-0.5,1.4201554139037664
+faint,15,all lags,0.5-1,1.2023022319716854
+faint,15,all lags,1-2,0.8449176944334044
+faint,15,all lags,2-inf,4.219230311391874
+faint,15,"all lags, mean",0.1-0.2,3.0288944675454674
+faint,15,"all lags, mean",0.2-0.3,1.9970220609112788
+faint,15,"all lags, mean",0.3-0.5,1.4201554139037664
+faint,15,"all lags, mean",0.5-1,1.2023022319716854
+faint,15,"all lags, mean",1-2,0.8449176944334044
+faint,15,"all lags, mean",2-inf,4.219230311391874
+faint,15,"stretched, uncentred",0.1-0.2,2.548365103438069
+faint,15,"stretched, uncentred",0.2-0.3,1.5692043898289876
+faint,15,"stretched, uncentred",0.3-0.5,2.3505092867061
+faint,15,"stretched, uncentred",0.5-1,1.2226692094010665
+faint,15,"stretched, uncentred",1-2,0.8449176944334044
+faint,15,"stretched, uncentred",2-inf,4.219230311391874
+faint,15,stretched,0.1-0.2,2.392046458500813
+faint,15,stretched,0.2-0.3,1.6797376205894414
+faint,15,stretched,0.3-0.5,2.374078949057262
+faint,15,stretched,0.5-1,1.2060662303818568
+faint,15,stretched,1-2,0.8449176944334044
+faint,15,stretched,2-inf,4.219230311391874
+faint,15,"stretched, 6-s blocks",0.1-0.2,3.083562014166684
+faint,15,"stretched, 6-s blocks",0.2-0.3,1.7077144846297514
+faint,15,"stretched, 6-s blocks",0.3-0.5,2.891743362913951
+faint,15,"stretched, 6-s blocks",0.5-1,1.7528957374907221
+faint,15,"stretched, 6-s blocks",1-2,0.9015199032827292
+faint,15,"stretched, 6-s blocks",2-inf,3.720849875008414
+faint,16,before,1-2,3.7222287234502986
+faint,16,before,2-inf,2.558959762024358
+faint,16,floor only,0.1-0.2,1.0852784168964942
+faint,16,floor only,0.2-0.3,1.6989626433666294
+faint,16,floor only,0.3-0.5,1.8542283651479616
+faint,16,floor only,0.5-1,3.490174371638842
+faint,16,floor only,1-2,3.7222287234502986
+faint,16,floor only,2-inf,2.558959762024358
+faint,16,all lags,0.1-0.2,3.701201264664971
+faint,16,all lags,0.2-0.3,3.897032405637819
+faint,16,all lags,0.3-0.5,2.3026674541443133
+faint,16,all lags,0.5-1,3.48892126154903
+faint,16,all lags,1-2,3.7222287234502986
+faint,16,all lags,2-inf,2.558959762024358
+faint,16,"all lags, mean",0.1-0.2,3.701201264664971
+faint,16,"all lags, mean",0.2-0.3,3.897032405637819
+faint,16,"all lags, mean",0.3-0.5,2.3026674541443133
+faint,16,"all lags, mean",0.5-1,3.48892126154903
+faint,16,"all lags, mean",1-2,3.7222287234502986
+faint,16,"all lags, mean",2-inf,2.558959762024358
+faint,16,"stretched, uncentred",0.1-0.2,2.2457056516507556
+faint,16,"stretched, uncentred",0.2-0.3,2.5436258017298776
+faint,16,"stretched, uncentred",0.3-0.5,1.379149399384834
+faint,16,"stretched, uncentred",0.5-1,3.487431733670666
+faint,16,"stretched, uncentred",1-2,3.7222287234502986
+faint,16,"stretched, uncentred",2-inf,2.558959762024358
+faint,16,stretched,0.1-0.2,2.3492751156951694
+faint,16,stretched,0.2-0.3,2.7613069762313756
+faint,16,stretched,0.3-0.5,1.4453546889049445
+faint,16,stretched,0.5-1,3.487566634284276
+faint,16,stretched,1-2,3.7222287234502986
+faint,16,stretched,2-inf,2.558959762024358
+faint,16,"stretched, 6-s blocks",0.1-0.2,2.2100920644349706
+faint,16,"stretched, 6-s blocks",0.2-0.3,2.2611471952577
+faint,16,"stretched, 6-s blocks",0.3-0.5,1.28579558408371
+faint,16,"stretched, 6-s blocks",0.5-1,3.3029136985601424
+faint,16,"stretched, 6-s blocks",1-2,3.60671957518565
+faint,16,"stretched, 6-s blocks",2-inf,2.616546329946138
+faint,17,before,1-2,0.5232709733817297
+faint,17,before,2-inf,3.128367092106897
+faint,17,floor only,0.1-0.2,3.013208252901413
+faint,17,floor only,0.2-0.3,3.275488033284905
+faint,17,floor only,0.3-0.5,3.0749475407781697
+faint,17,floor only,0.5-1,2.2007373002569093
+faint,17,floor only,1-2,0.5232709733817297
+faint,17,floor only,2-inf,3.128367092106897
+faint,17,all lags,0.1-0.2,2.223593314569757
+faint,17,all lags,0.2-0.3,2.949096806373147
+faint,17,all lags,0.3-0.5,3.065949506541119
+faint,17,all lags,0.5-1,2.284936912997272
+faint,17,all lags,1-2,0.5232709733817297
+faint,17,all lags,2-inf,3.128367092106897
+faint,17,"all lags, mean",0.1-0.2,2.223593314569757
+faint,17,"all lags, mean",0.2-0.3,2.949096806373147
+faint,17,"all lags, mean",0.3-0.5,3.065949506541119
+faint,17,"all lags, mean",0.5-1,2.284936912997272
+faint,17,"all lags, mean",1-2,0.5232709733817297
+faint,17,"all lags, mean",2-inf,3.128367092106897
+faint,17,"stretched, uncentred",0.1-0.2,1.8688194562526075
+faint,17,"stretched, uncentred",0.2-0.3,1.874064204870082
+faint,17,"stretched, uncentred",0.3-0.5,2.758235487678197
+faint,17,"stretched, uncentred",0.5-1,1.8963998187896516
+faint,17,"stretched, uncentred",1-2,0.5232709733817297
+faint,17,"stretched, uncentred",2-inf,3.128367092106897
+faint,17,stretched,0.1-0.2,1.8561324273048718
+faint,17,stretched,0.2-0.3,1.8486129093018762
+faint,17,stretched,0.3-0.5,2.762328452770439
+faint,17,stretched,0.5-1,1.8938257990299592
+faint,17,stretched,1-2,0.5232709733817297
+faint,17,stretched,2-inf,3.128367092106897
+faint,17,"stretched, 6-s blocks",0.1-0.2,1.3019992001087624
+faint,17,"stretched, 6-s blocks",0.2-0.3,1.8098869591156934
+faint,17,"stretched, 6-s blocks",0.3-0.5,2.6404044954468513
+faint,17,"stretched, 6-s blocks",0.5-1,1.9803146809370233
+faint,17,"stretched, 6-s blocks",1-2,0.7890951417771387
+faint,17,"stretched, 6-s blocks",2-inf,2.9045139314489923
+faint,18,before,1-2,2.2694847154267714
+faint,18,before,2-inf,2.613228272638986
+faint,18,floor only,0.1-0.2,1.11017965699763
+faint,18,floor only,0.2-0.3,0.7286591464811591
+faint,18,floor only,0.3-0.5,1.55187965290775
+faint,18,floor only,0.5-1,2.4660446837578425
+faint,18,floor only,1-2,2.2694847154267714
+faint,18,floor only,2-inf,2.613228272638986
+faint,18,all lags,0.1-0.2,2.423759458647831
+faint,18,all lags,0.2-0.3,2.9517698230677505
+faint,18,all lags,0.3-0.5,1.6842721183961644
+faint,18,all lags,0.5-1,2.2646738791208234
+faint,18,all lags,1-2,2.2694847154267714
+faint,18,all lags,2-inf,2.613228272638986
+faint,18,"all lags, mean",0.1-0.2,2.423759458647831
+faint,18,"all lags, mean",0.2-0.3,2.9517698230677505
+faint,18,"all lags, mean",0.3-0.5,1.6842721183961644
+faint,18,"all lags, mean",0.5-1,2.2646738791208234
+faint,18,"all lags, mean",1-2,2.2694847154267714
+faint,18,"all lags, mean",2-inf,2.613228272638986
+faint,18,"stretched, uncentred",0.1-0.2,2.368681927968188
+faint,18,"stretched, uncentred",0.2-0.3,2.283067259225423
+faint,18,"stretched, uncentred",0.3-0.5,1.5223327375045286
+faint,18,"stretched, uncentred",0.5-1,2.257599431413485
+faint,18,"stretched, uncentred",1-2,2.2694847154267714
+faint,18,"stretched, uncentred",2-inf,2.613228272638986
+faint,18,stretched,0.1-0.2,2.1562060346882883
+faint,18,stretched,0.2-0.3,2.3390004656231005
+faint,18,stretched,0.3-0.5,1.4903131932477929
+faint,18,stretched,0.5-1,2.2573484947885474
+faint,18,stretched,1-2,2.2694847154267714
+faint,18,stretched,2-inf,2.613228272638986
+faint,18,"stretched, 6-s blocks",0.1-0.2,1.903006980190191
+faint,18,"stretched, 6-s blocks",0.2-0.3,1.6216353066155056
+faint,18,"stretched, 6-s blocks",0.3-0.5,1.334876784296649
+faint,18,"stretched, 6-s blocks",0.5-1,2.055628882671198
+faint,18,"stretched, 6-s blocks",1-2,2.0671307770790626
+faint,18,"stretched, 6-s blocks",2-inf,2.768824152820672
+faint,19,before,1-2,1.076185982136839
+faint,19,before,2-inf,2.8472366678756984
+faint,19,floor only,0.1-0.2,0.8085098811220767
+faint,19,floor only,0.2-0.3,1.7217444675883975
+faint,19,floor only,0.3-0.5,3.107849873272161
+faint,19,floor only,0.5-1,3.108256695371247
+faint,19,floor only,1-2,1.076185982136839
+faint,19,floor only,2-inf,2.8472366678756984
+faint,19,all lags,0.1-0.2,2.1191559885950397
+faint,19,all lags,0.2-0.3,1.4553860788431852
+faint,19,all lags,0.3-0.5,2.4542333837981136
+faint,19,all lags,0.5-1,2.2177175588447473
+faint,19,all lags,1-2,1.076185982136839
+faint,19,all lags,2-inf,2.8472366678756984
+faint,19,"all lags, mean",0.1-0.2,2.1191559885950397
+faint,19,"all lags, mean",0.2-0.3,1.4553860788431852
+faint,19,"all lags, mean",0.3-0.5,2.4542333837981136
+faint,19,"all lags, mean",0.5-1,2.2177175588447473
+faint,19,"all lags, mean",1-2,1.076185982136839
+faint,19,"all lags, mean",2-inf,2.8472366678756984
+faint,19,"stretched, uncentred",0.1-0.2,1.6236963942074198
+faint,19,"stretched, uncentred",0.2-0.3,1.1108672516418556
+faint,19,"stretched, uncentred",0.3-0.5,1.9249784143324893
+faint,19,"stretched, uncentred",0.5-1,1.5759451311356587
+faint,19,"stretched, uncentred",1-2,1.076185982136839
+faint,19,"stretched, uncentred",2-inf,2.8472366678756984
+faint,19,stretched,0.1-0.2,1.8183602130614454
+faint,19,stretched,0.2-0.3,1.115616765002503
+faint,19,stretched,0.3-0.5,1.888420868710189
+faint,19,stretched,0.5-1,1.5857342603772149
+faint,19,stretched,1-2,1.076185982136839
+faint,19,stretched,2-inf,2.8472366678756984
+faint,19,"stretched, 6-s blocks",0.1-0.2,1.6234284711841915
+faint,19,"stretched, 6-s blocks",0.2-0.3,1.2423457093959327
+faint,19,"stretched, 6-s blocks",0.3-0.5,1.9751942363852675
+faint,19,"stretched, 6-s blocks",0.5-1,1.6352636208767601
+faint,19,"stretched, 6-s blocks",1-2,1.080615189348726
+faint,19,"stretched, 6-s blocks",2-inf,2.665336782593283
+faint,20,before,1-2,1.2524866696752552
+faint,20,before,2-inf,3.177663586009908
+faint,20,floor only,0.1-0.2,1.761553350471581
+faint,20,floor only,0.2-0.3,1.0689117815146407
+faint,20,floor only,0.3-0.5,1.097528971089888
+faint,20,floor only,0.5-1,1.0217960989557031
+faint,20,floor only,1-2,1.2524866696752552
+faint,20,floor only,2-inf,3.177663586009908
+faint,20,all lags,0.1-0.2,2.3732836591609816
+faint,20,all lags,0.2-0.3,1.0848202262910585
+faint,20,all lags,0.3-0.5,1.0147614781237437
+faint,20,all lags,0.5-1,0.8937235555964277
+faint,20,all lags,1-2,1.2524866696752552
+faint,20,all lags,2-inf,3.177663586009908
+faint,20,"all lags, mean",0.1-0.2,2.3732836591609816
+faint,20,"all lags, mean",0.2-0.3,1.0848202262910585
+faint,20,"all lags, mean",0.3-0.5,1.0147614781237437
+faint,20,"all lags, mean",0.5-1,0.8937235555964277
+faint,20,"all lags, mean",1-2,1.2524866696752552
+faint,20,"all lags, mean",2-inf,3.177663586009908
+faint,20,"stretched, uncentred",0.1-0.2,1.4582526432870901
+faint,20,"stretched, uncentred",0.2-0.3,1.2660078626764248
+faint,20,"stretched, uncentred",0.3-0.5,0.7593016057727184
+faint,20,"stretched, uncentred",0.5-1,0.890507520076616
+faint,20,"stretched, uncentred",1-2,1.2524866696752552
+faint,20,"stretched, uncentred",2-inf,3.177663586009908
+faint,20,stretched,0.1-0.2,1.4534183997196137
+faint,20,stretched,0.2-0.3,1.277482079998147
+faint,20,stretched,0.3-0.5,0.773441277920502
+faint,20,stretched,0.5-1,0.890431091670116
+faint,20,stretched,1-2,1.2524866696752552
+faint,20,stretched,2-inf,3.177663586009908
+faint,20,"stretched, 6-s blocks",0.1-0.2,1.7459670375064136
+faint,20,"stretched, 6-s blocks",0.2-0.3,1.4827962914177186
+faint,20,"stretched, 6-s blocks",0.3-0.5,0.676599699141738
+faint,20,"stretched, 6-s blocks",0.5-1,0.8422688168139874
+faint,20,"stretched, 6-s blocks",1-2,0.958039281615099
+faint,20,"stretched, 6-s blocks",2-inf,3.0556530669038295
+faint,21,before,1-2,2.3955135956252454
+faint,21,before,2-inf,2.622629128793606
+faint,21,floor only,0.1-0.2,3.418621797510571
+faint,21,floor only,0.2-0.3,4.420805529025948
+faint,21,floor only,0.3-0.5,4.795635068423518
+faint,21,floor only,0.5-1,4.508408016711557
+faint,21,floor only,1-2,2.3955135956252454
+faint,21,floor only,2-inf,2.622629128793606
+faint,21,all lags,0.1-0.2,5.575740507961259
+faint,21,all lags,0.2-0.3,6.548862553297351
+faint,21,all lags,0.3-0.5,6.570466514843765
+faint,21,all lags,0.5-1,4.3650796905590905
+faint,21,all lags,1-2,2.3955135956252454
+faint,21,all lags,2-inf,2.622629128793606
+faint,21,"all lags, mean",0.1-0.2,5.575740507961259
+faint,21,"all lags, mean",0.2-0.3,6.548862553297351
+faint,21,"all lags, mean",0.3-0.5,6.570466514843765
+faint,21,"all lags, mean",0.5-1,4.3650796905590905
+faint,21,"all lags, mean",1-2,2.3955135956252454
+faint,21,"all lags, mean",2-inf,2.622629128793606
+faint,21,"stretched, uncentred",0.1-0.2,3.8118886735299684
+faint,21,"stretched, uncentred",0.2-0.3,4.7632318630999295
+faint,21,"stretched, uncentred",0.3-0.5,4.068689705115916
+faint,21,"stretched, uncentred",0.5-1,3.6464677856713026
+faint,21,"stretched, uncentred",1-2,2.3955135956252454
+faint,21,"stretched, uncentred",2-inf,2.622629128793606
+faint,21,stretched,0.1-0.2,3.6472447135634396
+faint,21,stretched,0.2-0.3,4.591466536791386
+faint,21,stretched,0.3-0.5,4.066039390659552
+faint,21,stretched,0.5-1,3.64501872129466
+faint,21,stretched,1-2,2.3955135956252454
+faint,21,stretched,2-inf,2.622629128793606
+faint,21,"stretched, 6-s blocks",0.1-0.2,3.28659652932733
+faint,21,"stretched, 6-s blocks",0.2-0.3,3.8732343526178252
+faint,21,"stretched, 6-s blocks",0.3-0.5,3.3154889164947074
+faint,21,"stretched, 6-s blocks",0.5-1,3.5632843446931233
+faint,21,"stretched, 6-s blocks",1-2,2.34751016145855
+faint,21,"stretched, 6-s blocks",2-inf,2.797169266695841
+faint,22,before,1-2,1.5692059562997613
+faint,22,before,2-inf,2.2365861852382953
+faint,22,floor only,0.1-0.2,0.8202314785258246
+faint,22,floor only,0.2-0.3,1.633188518890204
+faint,22,floor only,0.3-0.5,2.065832927142319
+faint,22,floor only,0.5-1,1.9871096192423572
+faint,22,floor only,1-2,1.5692059562997613
+faint,22,floor only,2-inf,2.2365861852382953
+faint,22,all lags,0.1-0.2,2.6007568411691224
+faint,22,all lags,0.2-0.3,1.4314713264739185
+faint,22,all lags,0.3-0.5,1.517997989923503
+faint,22,all lags,0.5-1,1.7083153684434602
+faint,22,all lags,1-2,1.5692059562997613
+faint,22,all lags,2-inf,2.2365861852382953
+faint,22,"all lags, mean",0.1-0.2,2.6007568411691224
+faint,22,"all lags, mean",0.2-0.3,1.4314713264739185
+faint,22,"all lags, mean",0.3-0.5,1.517997989923503
+faint,22,"all lags, mean",0.5-1,1.7083153684434602
+faint,22,"all lags, mean",1-2,1.5692059562997613
+faint,22,"all lags, mean",2-inf,2.2365861852382953
+faint,22,"stretched, uncentred",0.1-0.2,1.4490569040401857
+faint,22,"stretched, uncentred",0.2-0.3,1.49460106784511
+faint,22,"stretched, uncentred",0.3-0.5,1.0652900927705582
+faint,22,"stretched, uncentred",0.5-1,1.4041943225441587
+faint,22,"stretched, uncentred",1-2,1.5692059562997613
+faint,22,"stretched, uncentred",2-inf,2.2365861852382953
+faint,22,stretched,0.1-0.2,1.6101958194951915
+faint,22,stretched,0.2-0.3,1.5037138764694338
+faint,22,stretched,0.3-0.5,1.0967074453337782
+faint,22,stretched,0.5-1,1.3692278271697096
+faint,22,stretched,1-2,1.5692059562997613
+faint,22,stretched,2-inf,2.2365861852382953
+faint,22,"stretched, 6-s blocks",0.1-0.2,1.390940218905576
+faint,22,"stretched, 6-s blocks",0.2-0.3,1.547071485170653
+faint,22,"stretched, 6-s blocks",0.3-0.5,1.1890430575880515
+faint,22,"stretched, 6-s blocks",0.5-1,1.3297849280244938
+faint,22,"stretched, 6-s blocks",1-2,1.7982398510388267
+faint,22,"stretched, 6-s blocks",2-inf,2.3533368473104725
+faint,23,before,1-2,1.7272505659871356
+faint,23,before,2-inf,4.494054369255559
+faint,23,floor only,0.1-0.2,1.721036866807201
+faint,23,floor only,0.2-0.3,2.240279580187372
+faint,23,floor only,0.3-0.5,2.2779441835962424
+faint,23,floor only,0.5-1,2.063218639306821
+faint,23,floor only,1-2,1.7272505659871356
+faint,23,floor only,2-inf,4.494054369255559
+faint,23,all lags,0.1-0.2,4.948926273066007
+faint,23,all lags,0.2-0.3,4.618114196580883
+faint,23,all lags,0.3-0.5,1.840932798932146
+faint,23,all lags,0.5-1,1.324983208506057
+faint,23,all lags,1-2,1.7272505659871356
+faint,23,all lags,2-inf,4.494054369255559
+faint,23,"all lags, mean",0.1-0.2,4.948926273066007
+faint,23,"all lags, mean",0.2-0.3,4.618114196580883
+faint,23,"all lags, mean",0.3-0.5,1.840932798932146
+faint,23,"all lags, mean",0.5-1,1.324983208506057
+faint,23,"all lags, mean",1-2,1.7272505659871356
+faint,23,"all lags, mean",2-inf,4.494054369255559
+faint,23,"stretched, uncentred",0.1-0.2,2.5199861405458384
+faint,23,"stretched, uncentred",0.2-0.3,2.707773454198522
+faint,23,"stretched, uncentred",0.3-0.5,2.0397442767713
+faint,23,"stretched, uncentred",0.5-1,1.224540588039937
+faint,23,"stretched, uncentred",1-2,1.7272505659871356
+faint,23,"stretched, uncentred",2-inf,4.494054369255559
+faint,23,stretched,0.1-0.2,2.4744244647895175
+faint,23,stretched,0.2-0.3,2.6551022739566936
+faint,23,stretched,0.3-0.5,1.9733118584475404
+faint,23,stretched,0.5-1,1.240641033838384
+faint,23,stretched,1-2,1.7272505659871356
+faint,23,stretched,2-inf,4.494054369255559
+faint,23,"stretched, 6-s blocks",0.1-0.2,2.8262600262571644
+faint,23,"stretched, 6-s blocks",0.2-0.3,2.975151768223711
+faint,23,"stretched, 6-s blocks",0.3-0.5,1.6780661738790983
+faint,23,"stretched, 6-s blocks",0.5-1,1.1324428877246082
+faint,23,"stretched, 6-s blocks",1-2,1.4022059641304174
+faint,23,"stretched, 6-s blocks",2-inf,4.678675756101459
+faint,24,before,1-2,1.3519410162553558
+faint,24,before,2-inf,2.81730959100623
+faint,24,floor only,0.1-0.2,3.2037285807336913
+faint,24,floor only,0.2-0.3,4.133886757009605
+faint,24,floor only,0.3-0.5,4.129268320804263
+faint,24,floor only,0.5-1,1.7828921640012558
+faint,24,floor only,1-2,1.3519410162553558
+faint,24,floor only,2-inf,2.81730959100623
+faint,24,all lags,0.1-0.2,2.8767512114172273
+faint,24,all lags,0.2-0.3,3.560617799380395
+faint,24,all lags,0.3-0.5,2.2034845906176677
+faint,24,all lags,0.5-1,0.7221508069129202
+faint,24,all lags,1-2,1.3519410162553558
+faint,24,all lags,2-inf,2.81730959100623
+faint,24,"all lags, mean",0.1-0.2,2.8767512114172273
+faint,24,"all lags, mean",0.2-0.3,3.560617799380395
+faint,24,"all lags, mean",0.3-0.5,2.2034845906176677
+faint,24,"all lags, mean",0.5-1,0.7221508069129202
+faint,24,"all lags, mean",1-2,1.3519410162553558
+faint,24,"all lags, mean",2-inf,2.81730959100623
+faint,24,"stretched, uncentred",0.1-0.2,2.1155133304085276
+faint,24,"stretched, uncentred",0.2-0.3,2.2498413828155885
+faint,24,"stretched, uncentred",0.3-0.5,1.6383216788865318
+faint,24,"stretched, uncentred",0.5-1,0.9606586334982465
+faint,24,"stretched, uncentred",1-2,1.3519410162553558
+faint,24,"stretched, uncentred",2-inf,2.81730959100623
+faint,24,stretched,0.1-0.2,2.087141453466749
+faint,24,stretched,0.2-0.3,2.235905437930266
+faint,24,stretched,0.3-0.5,1.612880783754531
+faint,24,stretched,0.5-1,0.9354594775804843
+faint,24,stretched,1-2,1.3519410162553558
+faint,24,stretched,2-inf,2.81730959100623
+faint,24,"stretched, 6-s blocks",0.1-0.2,2.0444262501357704
+faint,24,"stretched, 6-s blocks",0.2-0.3,2.239322004209822
+faint,24,"stretched, 6-s blocks",0.3-0.5,1.578337310242137
+faint,24,"stretched, 6-s blocks",0.5-1,1.0342233116886326
+faint,24,"stretched, 6-s blocks",1-2,1.345081338690837
+faint,24,"stretched, 6-s blocks",2-inf,2.6782061287004186
+faint,25,before,1-2,0.7177525537427218
+faint,25,before,2-inf,4.126462259697454
+faint,25,floor only,0.1-0.2,1.2859890434254857
+faint,25,floor only,0.2-0.3,0.4662766757229443
+faint,25,floor only,0.3-0.5,0.5013856786739599
+faint,25,floor only,0.5-1,0.8688135006792845
+faint,25,floor only,1-2,0.7177525537427218
+faint,25,floor only,2-inf,4.126462259697454
+faint,25,all lags,0.1-0.2,0.8810560959068701
+faint,25,all lags,0.2-0.3,1.1681444214590817
+faint,25,all lags,0.3-0.5,0.979078607637127
+faint,25,all lags,0.5-1,1.2786142774315405
+faint,25,all lags,1-2,0.7177525537427218
+faint,25,all lags,2-inf,4.126462259697454
+faint,25,"all lags, mean",0.1-0.2,0.8810560959068701
+faint,25,"all lags, mean",0.2-0.3,1.1681444214590817
+faint,25,"all lags, mean",0.3-0.5,0.979078607637127
+faint,25,"all lags, mean",0.5-1,1.2786142774315405
+faint,25,"all lags, mean",1-2,0.7177525537427218
+faint,25,"all lags, mean",2-inf,4.126462259697454
+faint,25,"stretched, uncentred",0.1-0.2,1.615730927263984
+faint,25,"stretched, uncentred",0.2-0.3,1.545175509059187
+faint,25,"stretched, uncentred",0.3-0.5,1.178505382398926
+faint,25,"stretched, uncentred",0.5-1,1.0137223658865
+faint,25,"stretched, uncentred",1-2,0.7177525537427218
+faint,25,"stretched, uncentred",2-inf,4.126462259697454
+faint,25,stretched,0.1-0.2,1.7039647009285526
+faint,25,stretched,0.2-0.3,1.5579371506810482
+faint,25,stretched,0.3-0.5,1.1720374604025523
+faint,25,stretched,0.5-1,0.9958784278785877
+faint,25,stretched,1-2,0.7177525537427218
+faint,25,stretched,2-inf,4.126462259697454
+faint,25,"stretched, 6-s blocks",0.1-0.2,1.256199145880928
+faint,25,"stretched, 6-s blocks",0.2-0.3,2.0982166851913955
+faint,25,"stretched, 6-s blocks",0.3-0.5,1.3793577249557636
+faint,25,"stretched, 6-s blocks",0.5-1,1.2489197251556694
+faint,25,"stretched, 6-s blocks",1-2,0.8188596500756735
+faint,25,"stretched, 6-s blocks",2-inf,4.250443007526855
+faint,26,before,1-2,1.5207579900200268
+faint,26,before,2-inf,3.5772142760618624
+faint,26,floor only,0.1-0.2,0.08294673230197828
+faint,26,floor only,0.2-0.3,0.7221696972182963
+faint,26,floor only,0.3-0.5,1.454225734329472
+faint,26,floor only,0.5-1,1.3949838216377488
+faint,26,floor only,1-2,1.5207579900200268
+faint,26,floor only,2-inf,3.5772142760618624
+faint,26,all lags,0.1-0.2,2.390522209924502
+faint,26,all lags,0.2-0.3,1.0689994293987712
+faint,26,all lags,0.3-0.5,2.066826513417421
+faint,26,all lags,0.5-1,2.080495806804044
+faint,26,all lags,1-2,1.5207579900200268
+faint,26,all lags,2-inf,3.5772142760618624
+faint,26,"all lags, mean",0.1-0.2,2.390522209924502
+faint,26,"all lags, mean",0.2-0.3,1.0689994293987712
+faint,26,"all lags, mean",0.3-0.5,2.066826513417421
+faint,26,"all lags, mean",0.5-1,2.080495806804044
+faint,26,"all lags, mean",1-2,1.5207579900200268
+faint,26,"all lags, mean",2-inf,3.5772142760618624
+faint,26,"stretched, uncentred",0.1-0.2,1.9078422221218516
+faint,26,"stretched, uncentred",0.2-0.3,1.304547280441616
+faint,26,"stretched, uncentred",0.3-0.5,1.6590823606118537
+faint,26,"stretched, uncentred",0.5-1,1.5252984647757981
+faint,26,"stretched, uncentred",1-2,1.5207579900200268
+faint,26,"stretched, uncentred",2-inf,3.5772142760618624
+faint,26,stretched,0.1-0.2,1.8505571915019527
+faint,26,stretched,0.2-0.3,1.2813170698209844
+faint,26,stretched,0.3-0.5,1.677626179590395
+faint,26,stretched,0.5-1,1.531811056217487
+faint,26,stretched,1-2,1.5207579900200268
+faint,26,stretched,2-inf,3.5772142760618624
+faint,26,"stretched, 6-s blocks",0.1-0.2,2.0342622719376813
+faint,26,"stretched, 6-s blocks",0.2-0.3,1.3304402866288891
+faint,26,"stretched, 6-s blocks",0.3-0.5,1.4634250373027227
+faint,26,"stretched, 6-s blocks",0.5-1,1.5154575459283826
+faint,26,"stretched, 6-s blocks",1-2,1.7923584499984073
+faint,26,"stretched, 6-s blocks",2-inf,3.5774511498160977
+faint,27,before,1-2,0.8917977371748724
+faint,27,before,2-inf,2.798133582564279
+faint,27,floor only,0.1-0.2,1.6408906862041548
+faint,27,floor only,0.2-0.3,2.3613167711370986
+faint,27,floor only,0.3-0.5,2.7757605303539177
+faint,27,floor only,0.5-1,2.7707416399652387
+faint,27,floor only,1-2,0.8917977371748724
+faint,27,floor only,2-inf,2.798133582564279
+faint,27,all lags,0.1-0.2,1.1372277671097624
+faint,27,all lags,0.2-0.3,0.791868689964892
+faint,27,all lags,0.3-0.5,1.9472358814002628
+faint,27,all lags,0.5-1,2.612281025112647
+faint,27,all lags,1-2,0.8917977371748724
+faint,27,all lags,2-inf,2.798133582564279
+faint,27,"all lags, mean",0.1-0.2,1.1372277671097624
+faint,27,"all lags, mean",0.2-0.3,0.791868689964892
+faint,27,"all lags, mean",0.3-0.5,1.9472358814002628
+faint,27,"all lags, mean",0.5-1,2.612281025112647
+faint,27,"all lags, mean",1-2,0.8917977371748724
+faint,27,"all lags, mean",2-inf,2.798133582564279
+faint,27,"stretched, uncentred",0.1-0.2,1.223714987188221
+faint,27,"stretched, uncentred",0.2-0.3,0.9219800627736152
+faint,27,"stretched, uncentred",0.3-0.5,2.3062267332013486
+faint,27,"stretched, uncentred",0.5-1,2.342366693149226
+faint,27,"stretched, uncentred",1-2,0.8917977371748724
+faint,27,"stretched, uncentred",2-inf,2.798133582564279
+faint,27,stretched,0.1-0.2,1.221923113119887
+faint,27,stretched,0.2-0.3,0.8931587618954568
+faint,27,stretched,0.3-0.5,2.236764163296714
+faint,27,stretched,0.5-1,2.337076162248574
+faint,27,stretched,1-2,0.8917977371748724
+faint,27,stretched,2-inf,2.798133582564279
+faint,27,"stretched, 6-s blocks",0.1-0.2,1.4788844621352562
+faint,27,"stretched, 6-s blocks",0.2-0.3,1.5788475613494213
+faint,27,"stretched, 6-s blocks",0.3-0.5,1.9942622111657216
+faint,27,"stretched, 6-s blocks",0.5-1,2.512897448725071
+faint,27,"stretched, 6-s blocks",1-2,1.0223186939411613
+faint,27,"stretched, 6-s blocks",2-inf,3.054196168853241
+faint,28,before,1-2,0.9982144257493403
+faint,28,before,2-inf,2.2571078029388287
+faint,28,floor only,0.1-0.2,0.12021939059818706
+faint,28,floor only,0.2-0.3,0.16428733093594064
+faint,28,floor only,0.3-0.5,0.7513882470058078
+faint,28,floor only,0.5-1,1.3671132313472094
+faint,28,floor only,1-2,0.9982144257493403
+faint,28,floor only,2-inf,2.2571078029388287
+faint,28,all lags,0.1-0.2,3.03656367574794
+faint,28,all lags,0.2-0.3,2.2723006366909266
+faint,28,all lags,0.3-0.5,0.8029085202427921
+faint,28,all lags,0.5-1,1.2185071962770548
+faint,28,all lags,1-2,0.9982144257493403
+faint,28,all lags,2-inf,2.2571078029388287
+faint,28,"all lags, mean",0.1-0.2,3.03656367574794
+faint,28,"all lags, mean",0.2-0.3,2.2723006366909266
+faint,28,"all lags, mean",0.3-0.5,0.8029085202427921
+faint,28,"all lags, mean",0.5-1,1.2185071962770548
+faint,28,"all lags, mean",1-2,0.9982144257493403
+faint,28,"all lags, mean",2-inf,2.2571078029388287
+faint,28,"stretched, uncentred",0.1-0.2,1.9558080131389803
+faint,28,"stretched, uncentred",0.2-0.3,2.1041585091279553
+faint,28,"stretched, uncentred",0.3-0.5,1.089778696505563
+faint,28,"stretched, uncentred",0.5-1,1.4410637554163508
+faint,28,"stretched, uncentred",1-2,0.9982144257493403
+faint,28,"stretched, uncentred",2-inf,2.2571078029388287
+faint,28,stretched,0.1-0.2,2.0544921824565647
+faint,28,stretched,0.2-0.3,2.1817194760943712
+faint,28,stretched,0.3-0.5,1.1257415408602933
+faint,28,stretched,0.5-1,1.4818148576991272
+faint,28,stretched,1-2,0.9982144257493403
+faint,28,stretched,2-inf,2.2571078029388287
+faint,28,"stretched, 6-s blocks",0.1-0.2,1.8565838423340475
+faint,28,"stretched, 6-s blocks",0.2-0.3,1.8472499639814686
+faint,28,"stretched, 6-s blocks",0.3-0.5,1.038842073556493
+faint,28,"stretched, 6-s blocks",0.5-1,1.6577813951420461
+faint,28,"stretched, 6-s blocks",1-2,0.8646975474820707
+faint,28,"stretched, 6-s blocks",2-inf,2.158955514336218
+faint,29,before,1-2,0.971477363231397
+faint,29,before,2-inf,3.0185351748323446
+faint,29,floor only,0.1-0.2,0.6908432052888125
+faint,29,floor only,0.2-0.3,0.696436172566032
+faint,29,floor only,0.3-0.5,2.027752814224367
+faint,29,floor only,0.5-1,2.170353817244526
+faint,29,floor only,1-2,0.971477363231397
+faint,29,floor only,2-inf,3.0185351748323446
+faint,29,all lags,0.1-0.2,1.5699996991403062
+faint,29,all lags,0.2-0.3,3.5677871163770316
+faint,29,all lags,0.3-0.5,2.72441395328261
+faint,29,all lags,0.5-1,1.7641420550784979
+faint,29,all lags,1-2,0.971477363231397
+faint,29,all lags,2-inf,3.0185351748323446
+faint,29,"all lags, mean",0.1-0.2,1.5699996991403062
+faint,29,"all lags, mean",0.2-0.3,3.5677871163770316
+faint,29,"all lags, mean",0.3-0.5,2.72441395328261
+faint,29,"all lags, mean",0.5-1,1.7641420550784979
+faint,29,"all lags, mean",1-2,0.971477363231397
+faint,29,"all lags, mean",2-inf,3.0185351748323446
+faint,29,"stretched, uncentred",0.1-0.2,1.4864975895555426
+faint,29,"stretched, uncentred",0.2-0.3,2.135139768117484
+faint,29,"stretched, uncentred",0.3-0.5,1.709388349962323
+faint,29,"stretched, uncentred",0.5-1,1.4107828098734596
+faint,29,"stretched, uncentred",1-2,0.971477363231397
+faint,29,"stretched, uncentred",2-inf,3.0185351748323446
+faint,29,stretched,0.1-0.2,1.5398474330074912
+faint,29,stretched,0.2-0.3,2.204388415687392
+faint,29,stretched,0.3-0.5,1.7047201800257603
+faint,29,stretched,0.5-1,1.401462343828575
+faint,29,stretched,1-2,0.971477363231397
+faint,29,stretched,2-inf,3.0185351748323446
+faint,29,"stretched, 6-s blocks",0.1-0.2,2.2275982365339497
+faint,29,"stretched, 6-s blocks",0.2-0.3,2.868821444002204
+faint,29,"stretched, 6-s blocks",0.3-0.5,2.0598698912970046
+faint,29,"stretched, 6-s blocks",0.5-1,1.2992001734904264
+faint,29,"stretched, 6-s blocks",1-2,0.9238284306204348
+faint,29,"stretched, 6-s blocks",2-inf,3.113882246773194

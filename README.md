@@ -104,6 +104,19 @@ set keeps the pattern shift of its whole range and of each half (the halves
 show whether the flow stayed the same), and the batch command prints them for
 a line (below).
 
+**The slow range (since 2026-10-14, not the default).** By default the pattern
+shift searches from 1 px/frame (0.04 mm/s at 30 fps). Asked for (in code
+`min_speed=pattern_shift.SLOW_MIN_SPEED`, in the batch command `--slow-flow`),
+it searches from 0.1 px/frame (0.004 mm/s), comparing rows over as many frames
+as the pattern takes to move 2–8 px. On synthetic recordings every clip from
+0.15 to 1 px/frame was resolved within 5% (median 1%), and no clip without flow
+was. On the 109 limbs of the aim-1 check it measured 42 at rest instead of 24.
+But a single line cannot tell slow flow from the picture moving along it: a
+steady drift, or a movement of 10–20 px over a few seconds that goes one way
+slower than the other, reads as slow flow. The recordings show both
+(`analysis/pattern_shift_slow_flow/`), so slow results need a check that the
+picture held still, such as the loop's other limb running the opposite way.
+
 **The arterial limb (since 2026-10-11).** Resting velocity is measured on the
 arterial limb of a capillary loop, since the velocity changes towards the
 venous side. Blood flows up the arterial limb to the apex and down the venous
@@ -239,7 +252,8 @@ python3 -m capillary.cli StabilizedVideos/clip.avi \
 
 `--line` lists the points of a centre line in pixel coordinates, from where
 the blood comes from; for a line it also prints the pattern-shift velocity
-pooled over all the frames measured; `--roi1` is box 1 (downstream) and `--roi2` box 2
+pooled over all the frames measured (from 0.1 px/frame with `--slow-flow`,
+see above); `--roi1` is box 1 (downstream) and `--roi2` box 2
 (upstream), `--size` the box size for boxes given as just `x,y`. The points or
 box centres and the frames of a data set made in the app are in its
 `…_provenance.json`. The spatial calibration comes from `settings.csv`

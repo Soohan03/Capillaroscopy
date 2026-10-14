@@ -59,6 +59,46 @@ measured within about 1%; in a real loop the speed differs between the limbs.
 The centre-line method stops at about 5 px/frame on a 120-px line and is the
 better method for flow slower than `MIN_SPEED`.
 
+Slow range (since 2026-10-14; asked for with ``min_speed=SLOW_MIN_SPEED``).
+Below 1 px/frame the pattern moves less than 2 px over frame distances 1-8,
+too little to compare, so slower flow is compared over more frames:
+
+- To find it, a speed v is scored as 1 px/frame is, on a time axis stretched
+  by 1/v: term j = 1..`MAX_LAG` compares rows j / v frames apart (between
+  the two nearest frame distances) where the pattern has moved j px
+  (`_stretched_scores`). Every slow speed is scored from the same number of
+  terms at the same shifts, so the score stays in noise units. It is the
+  signal-to-noise ratio reported. Summing all frame distances instead
+  scored up to 12.5 on synthetic clips without flow: below 1 px/frame
+  neighbouring frame distances are read at nearly the same shift and share
+  their noise.
+- The speed found is then refined with the frame distances held fixed: the
+  whole frames nearest to j / v, chosen anew from each refined speed until
+  they stay the same, each read at frame distance x speed as from 1 px/frame
+  up. Frame distances that change with the speed tilt the estimate, because
+  the longer ones correlate less (fewer row pairs per block, and real blood
+  rearranges). On the recordings many estimates stopped at exactly
+  1 px/frame, where the two ranges meet, until the refinement covered that
+  point. Rows compared more than `MAX_LAG` frames apart are taken about
+  their own mean (`CENTRED`).
+- On synthetic recordings (60-s clips of the simulated loop's arterial limb,
+  analysis/pattern_shift_slow_flow/), every clip from 0.15 to 1 px/frame was
+  resolved within 5% of the truth (median 1%). At 0.1 px/frame, the edge,
+  4 of 12 were. None of 90 clips without flow was resolved (highest score
+  7.2, under strong disturbances). From 1 px/frame up the results are the
+  same as without the slow range.
+- But a single line cannot tell slow flow from the picture moving along it.
+  A steady drift is read as flow. With the cells standing still, back-and-
+  forth movements of 10-20 px over a few seconds, faster one way than the
+  other, were read as flow in 2-4 of 10 synthetic clips; movements of 2 px
+  were not. The recordings show both. At rest the four limbs of FP03_Wföre's
+  loops E and F move the same way. In the occlusion, when the blood should
+  stand still, 24 of 97 limbs gave a slow speed, some of them from such
+  movements (DEVLOG 2026-10-14). From 1 px/frame up these movements stayed
+  below the threshold. So the slow range is not the default: its results
+  need a check that the picture held still, such as the loop's other limb
+  running the opposite way.
+
 In the app (since 2026-10-11) every centre-line data set keeps the pattern
 shift of its whole range and of each half (`summarize`). A line can be marked
 as a capillary loop's arterial limb, drawn from its base to the apex; the
@@ -88,11 +128,22 @@ BLOCK_FRAMES = 90
 #: bands this one lost none of the limbs resolved before and did best on synthetic recordings (DEVLOG
 #: 2026-10-11, analysis/pattern_shift_bandpass/).
 BANDPASS_PX = (1.0, 4.0)
-#: Frame distances compared: row t with rows t + 1 .. t + MAX_LAG.
+#: Frame distances compared at 1 px/frame and faster: row t with rows t + 1 .. t + MAX_LAG. Slower flow
+#: is compared over the frames the pattern takes to move 1 .. MAX_LAG px (`_speed_scores`).
 MAX_LAG = 8
-#: Slowest speed this method reports (px/frame). At 0.5 px/frame it read 4-8% high on synthetic
-#: recordings; the centre-line method measures slower flow exactly.
+#: Slowest speed reported (px/frame), unless asked for the slow range (`min_speed=SLOW_MIN_SPEED`). Below
+#: 1 px/frame the method cannot tell flow from the picture moving along the line by 10 px or more over
+#: some seconds (validate_wobble.py), which the recordings do (DEVLOG 2026-10-14).
 MIN_SPEED = 1.0
+#: Slowest speed of the slow range (px/frame): 0.004 mm/s at 30 fps and 1.33 um/px. On synthetic recordings the
+#: estimate was within 5% of the truth from 0.15 to 1 px/frame (median 1%); at 0.1 most stopped at the edge.
+SLOW_MIN_SPEED = 0.1
+#: Below 1 px/frame, the rows compared beyond MAX_LAG frames apart are taken about their own mean: the
+#: block's mean, which the rows are first taken about, pulled the slowest estimates high (at 0.1 px/frame by 7-12%).
+CENTRED = True
+#: A speed found below 1 px/frame is refined up to this speed (px/frame), in at most REFINE_ROUNDS rounds.
+REFINE_TOP = 1.5
+REFINE_ROUNDS = 5
 #: A frame distance counts fully for a speed once the pattern moves at least this far over it (px),
 #: fading in from 1 px less. Close to zero shift, the backward correlation subtracted holds part of the
 #: peak's own tail; on synthetic recordings this lowered the error near 1 px/frame slightly. 3 px would
@@ -101,8 +152,9 @@ MIN_SPEED = 1.0
 MIN_SHIFT_PX = 2.0
 #: Near half the line a frame distance fades out over this share of the largest shift.
 FADE_SHARE = 0.1
-#: Speeds are searched in steps of this many px/frame.
+#: Speeds are searched in steps of this many px/frame, below 1 px/frame in steps of SLOW_SPEED_STEP.
 SPEED_STEP = 0.01
+SLOW_SPEED_STEP = 0.002
 #: Estimates with a lower signal-to-noise ratio count as unresolved. With band-passed rows, 90 synthetic
 #: recordings without flow reached at most 5.4 inside the searched range (7.3 at its slow edge, which is
 #: never reported), and six lines through tissue in the recordings at most 3.6 in any phase (DEVLOG
@@ -162,11 +214,15 @@ def _prepared(block: np.ndarray, bandpass_px=BANDPASS_PX) -> np.ndarray:
             - gaussian_filter1d(b, coarse, axis=1, mode='reflect'))
 
 
-def _block_sums(block: np.ndarray, lags: np.ndarray, max_shift: int, bandpass_px=BANDPASS_PX) -> np.ndarray:
+def _block_sums(block: np.ndarray, lags: np.ndarray, max_shift: int, bandpass_px=BANDPASS_PX,
+                centre_beyond=None) -> np.ndarray:
     """For each frame distance and shift -max..max: the cross product and the two energies, shape (lags, 3, shifts).
 
     The correlation of row t with row t + k shifted by d is
     ``sum_x a_t(x) a_{t+k}(x + d)`` over the positions where both exist.
+    At frame distances k beyond `centre_beyond` (None: none), the rows
+    compared (rows 0..T-k-1 and k..T-1 of the block) are each taken about
+    their own mean first.
     """
     b = _prepared(block, bandpass_px)
     frames, n = b.shape
@@ -174,14 +230,23 @@ def _block_sums(block: np.ndarray, lags: np.ndarray, max_shift: int, bandpass_px
     shifts = np.arange(-max_shift, max_shift + 1)
     out = np.zeros((len(lags), 3, shifts.size))
     spectra = np.fft.rfft(b, size, axis=1)
-    squares = b * b
+    # sums over the rows before row t: per position, and per frequency
+    energy = np.vstack([np.zeros(n), np.cumsum(b * b, axis=0)])
+    level = np.vstack([np.zeros(n), np.cumsum(b, axis=0)])
+    spectrum = np.vstack([np.zeros(spectra.shape[1], complex), np.cumsum(spectra, axis=0)])
     for i, k in enumerate(lags):
         if k >= frames:
             continue
-        cross = np.fft.irfft(np.conj(spectra[:-k]) * spectra[k:], size, axis=1).sum(axis=0)
-        out[i, 0] = cross[shifts % size]
-        early = np.concatenate([[0.0], np.cumsum(squares[:-k].sum(axis=0))])     # energy of x < m
-        late = np.concatenate([[0.0], np.cumsum(squares[k:].sum(axis=0))])
+        pairs = frames - k
+        product = (np.conj(spectra[:-k]) * spectra[k:]).sum(axis=0)
+        early_energy, late_energy = energy[pairs], energy[frames] - energy[k]
+        if centre_beyond is not None and k > centre_beyond:
+            product = product - np.conj(spectrum[pairs]) * (spectrum[frames] - spectrum[k]) / pairs
+            early_energy = early_energy - level[pairs] ** 2 / pairs
+            late_energy = late_energy - (level[frames] - level[k]) ** 2 / pairs
+        out[i, 0] = np.fft.irfft(product, size)[shifts % size]
+        early = np.concatenate([[0.0], np.cumsum(early_energy)])                  # energy of x < m
+        late = np.concatenate([[0.0], np.cumsum(late_energy)])
         forward = shifts >= 0
         d = np.abs(shifts)
         # d >= 0: early rows over x in [0, n - d), late rows over x in [d, n); d < 0 the other way round
@@ -198,55 +263,129 @@ def _lag_weight(reach: np.ndarray, max_shift: int) -> np.ndarray:
     return rise * fall
 
 
-def _speed_scores(sums: np.ndarray, lags: np.ndarray, max_shift: int, speeds: np.ndarray) -> np.ndarray:
-    """Score of every speed (signed), in noise units, from pooled sums (lags, 3, shifts)."""
+def _contrasts(sums: np.ndarray, max_shift: int) -> np.ndarray:
+    """Each frame distance's direction contrast at shifts 0..max_shift, in units of its own noise (NaN if none)."""
     with np.errstate(invalid='ignore', divide='ignore'):
         corr = sums[:, 0] / np.sqrt(sums[:, 1] * sums[:, 2])
     corr = np.nan_to_num(corr)
     centre = max_shift
     contrast = corr[:, centre:] - corr[:, centre::-1]                  # (lags, 0..max_shift)
+    out = np.full(contrast.shape, np.nan)
+    for i, row in enumerate(contrast):
+        noise = 1.4826 * np.median(np.abs(row[1:] - np.median(row[1:])))
+        if np.isfinite(noise) and noise > 0:
+            out[i] = row / noise
+    return out
+
+
+def _fixed_lag_scores(z: np.ndarray, chosen, speeds: np.ndarray, max_shift: int) -> np.ndarray:
+    """Score of each speed from the frame distances `chosen`, each read where the pattern has moved lag x speed px.
+
+    `z` holds the contrasts of frame distances 1, 2, .. (`_contrasts`).
+    """
     d = np.arange(max_shift + 1)
+    speed, sign = np.abs(speeds), np.sign(speeds)
     total = np.zeros(speeds.size)
-    weights = np.zeros(speeds.size)
-    for i, k in enumerate(lags):
-        c = contrast[i, 1:]
-        noise = 1.4826 * np.median(np.abs(c - np.median(c)))
-        if not np.isfinite(noise) or noise <= 0:
+    squares = np.zeros(speeds.size)
+    for k in chosen:
+        if not np.all(np.isfinite(z[k - 1])):
             continue
-        spline = CubicSpline(d, contrast[i] / noise)
-        reach = k * np.abs(speeds)
-        weight = _lag_weight(reach, max_shift)
+        weight = _lag_weight(k * speed, max_shift)
         used = weight > 0
-        total[used] += weight[used] * np.sign(speeds[used]) * spline(reach[used])
-        weights[used] += weight[used] ** 2
+        total[used] += weight[used] * sign[used] * CubicSpline(d, z[k - 1])(k * speed[used])
+        squares[used] += weight[used] ** 2
     with np.errstate(invalid='ignore', divide='ignore'):
-        return np.where(weights > 0, total / np.sqrt(weights), np.nan)
+        return np.where(squares > 0, total / np.sqrt(squares), np.nan)
+
+
+def _stretched_scores(z: np.ndarray, speeds: np.ndarray, max_shift: int, max_lag: int) -> np.ndarray:
+    """Score of each speed below 1 px/frame, read as flow of 1 px/frame on a stretched time axis.
+
+    Term j = 1..`max_lag` compares rows j / speed frames apart (between the two
+    nearest frame distances, linearly) where the pattern has moved j px: the
+    same number of terms at the same shifts as frame distances 1..`max_lag` at
+    1 px/frame. This finds the speed roughly; `_slow_lags` then refines it.
+    """
+    speed, sign = np.abs(speeds), np.sign(speeds)
+    longest = z.shape[0]
+    total = np.zeros(speeds.size)
+    squares = np.zeros(speeds.size)
+    for j in range(1, min(max_lag, max_shift) + 1):
+        weight = float(_lag_weight(np.array(float(j)), max_shift))
+        if weight <= 0:
+            continue
+        stretched = j / speed                                          # frames apart, between two frame distances
+        low = np.floor(stretched).astype(int)
+        share = stretched - low
+        inside = (low >= 1) & (low + (share > 0) <= longest)
+        value = ((1 - share) * z[np.clip(low, 1, longest) - 1, j]
+                 + share * z[np.clip(low + 1, 1, longest) - 1, j])
+        used = inside & np.isfinite(value)
+        total[used] += weight * sign[used] * value[used]
+        squares[used] += weight ** 2
+    with np.errstate(invalid='ignore', divide='ignore'):
+        return np.where(squares > 0, total / np.sqrt(squares), np.nan)
+
+
+def _speed_scores(sums: np.ndarray, lags: np.ndarray, max_shift: int, speeds: np.ndarray,
+                  max_lag: int = MAX_LAG) -> np.ndarray:
+    """Score of every speed (signed), in noise units, from pooled sums (lags, 3, shifts).
+
+    From 1 px/frame up, frame distances 1..`max_lag` (`_fixed_lag_scores`);
+    slower flow on a stretched time axis (`_stretched_scores`). `lags` must be
+    1, 2, .. without gaps.
+    """
+    z = _contrasts(sums, max_shift)
+    scores = np.full(speeds.size, np.nan)
+    fast = np.abs(speeds) >= 1.0
+    scores[fast] = _fixed_lag_scores(z, range(1, max_lag + 1), speeds[fast], max_shift)
+    if not fast.all():
+        scores[~fast] = _stretched_scores(z, speeds[~fast], max_shift, max_lag)
+    return scores
+
+
+def _slow_lags(speed: float, max_lag: int, longest: int) -> np.ndarray:
+    """Fixed frame distances to refine a speed below 1 px/frame: the nearest to j / speed, j = 1..`max_lag`."""
+    return np.unique(np.clip(np.round(np.arange(1, max_lag + 1) / speed).astype(int), 1, longest))
+
+
+def _speed_grid(min_speed: float, max_shift: int) -> np.ndarray:
+    """The speeds searched, both ways: `SLOW_SPEED_STEP` apart below 1 px/frame, `SPEED_STEP` from there on."""
+    slow = np.arange(min_speed, 1.0 - SLOW_SPEED_STEP / 2, SLOW_SPEED_STEP) if min_speed < 1.0 else np.empty(0)
+    upper = np.concatenate([slow, np.arange(max(min_speed, 1.0), max_shift + SPEED_STEP / 2, SPEED_STEP)])
+    return np.concatenate([-upper[::-1], upper])
 
 
 def _best(scores: np.ndarray, speeds: np.ndarray) -> tuple:
+    """The best speed, refined, its score, and whether it lies inside the searched range rather than at its edge."""
     if np.all(np.isnan(scores)):
         return float('nan'), float('nan'), False
     i = int(np.nanargmax(scores))
     speed = float(speeds[i])
-    neighbours = 0 < i < speeds.size - 1 and np.allclose(np.diff(speeds[i - 1:i + 2]), SPEED_STEP)
+    # refined between evenly spaced neighbours (not across zero, where the search jumps from one way to the other)
+    neighbours = 0 < i < speeds.size - 1 and np.isclose(speeds[i] - speeds[i - 1], speeds[i + 1] - speeds[i])
     if neighbours and np.isfinite(scores[i - 1]) and np.isfinite(scores[i + 1]):
         left, centre, right = scores[i - 1], scores[i], scores[i + 1]
         curvature = left - 2 * centre + right
         if curvature < 0:
             speed += float(0.5 * (left - right) / curvature) * (speeds[i + 1] - speeds[i])
-    edge = i in (0, speeds.size - 1) or abs(abs(speeds[i]) - MIN_SPEED) < SPEED_STEP / 2
+    edge = i in (0, speeds.size - 1) or np.isclose(abs(speeds[i]), np.abs(speeds).min())
     return speed, float(scores[i]), not edge
 
 
 def pattern_shift(diagram: np.ndarray, block_frames: int = BLOCK_FRAMES, max_lag: int = MAX_LAG,
-                  bandpass_px=BANDPASS_PX) -> ShiftEstimate:
+                  bandpass_px=BANDPASS_PX, min_speed: float = MIN_SPEED,
+                  centred: bool = CENTRED) -> ShiftEstimate:
     """The speed (px/frame along the line) of the pattern in `diagram`, pooled over all its blocks.
 
     `diagram` has frames down and positions across, as
     `capillary.spacetime.space_time_diagram` returns it; frames that do not
     fill a whole block at the end are left out. NaN when the diagram is too
     small or contains missing samples. `bandpass_px` None compares
-    differenced rows, as before 2026-10-11.
+    differenced rows, as before 2026-10-11. `min_speed` is the slowest speed
+    searched: `MIN_SPEED` by default, `SLOW_MIN_SPEED` for the slow range
+    (see the module's docstring), where `centred` takes the rows compared
+    more than `max_lag` frames apart about their own mean.
     """
     diagram = np.asarray(diagram, dtype=float)
     if diagram.ndim != 2 or diagram.shape[1] < MIN_LENGTH_PX or not np.all(np.isfinite(diagram)):
@@ -255,18 +394,46 @@ def pattern_shift(diagram: np.ndarray, block_frames: int = BLOCK_FRAMES, max_lag
     if n_blocks < 1:
         return _NO_ESTIMATE
     max_shift = (diagram.shape[1] - 1) // 2
-    lags = np.arange(1, min(max_lag, block_frames - 1) + 1)
+    # the slowest flow is compared up to max_lag / speed frames apart, inside a block
+    min_speed = max(min_speed, max_lag / (block_frames - 2))
+    longest = max_lag if min_speed >= 1.0 else int(np.ceil(max_lag / min_speed)) + 1
+    lags = np.arange(1, min(longest, block_frames - 1) + 1)
     per_block = np.stack([_block_sums(diagram[j * block_frames:(j + 1) * block_frames], lags, max_shift,
-                                      bandpass_px) for j in range(n_blocks)])
-    upper = np.arange(MIN_SPEED, max_shift + SPEED_STEP / 2, SPEED_STEP)
-    speeds = np.concatenate([-upper[::-1], upper])
+                                      bandpass_px, max_lag if centred else None) for j in range(n_blocks)])
+    speeds = _speed_grid(min_speed, max_shift)
     pooled = per_block.sum(axis=0)
-    speed, snr, in_range = _best(_speed_scores(pooled, lags, max_shift, speeds), speeds)
+    speed, snr, in_range = _best(_speed_scores(pooled, lags, max_shift, speeds, max_lag), speeds)
+    refine = in_range and min_speed < 1.0 and abs(speed) <= 1.0
+    if refine:
+        # Found below 1 px/frame, or where that range meets the faster one: refined with the frame distances held
+        # fixed (`_slow_lags`), chosen anew from each refined speed until they stay the same. The score stays the one
+        # that found the flow: searching again with other frame distances would fit the noise a second time.
+        window = np.sign(speed) * np.arange(min_speed, REFINE_TOP + SLOW_SPEED_STEP / 2, SLOW_SPEED_STEP)
+        z = _contrasts(pooled, max_shift)
+        chosen, refined, inside = None, speed, in_range
+        for _ in range(REFINE_ROUNDS):
+            again = _slow_lags(abs(refined), max_lag, lags.size)
+            if chosen is not None and np.array_equal(again, chosen):
+                break
+            chosen = again
+            refined, _, inside = _best(_fixed_lag_scores(z, chosen, window, max_shift), window)
+            if not np.isfinite(refined):
+                break
+        if np.isfinite(refined):
+            speed, in_range = refined, inside
+        else:
+            refine = False
+
+    def best(sums):
+        if refine:
+            return _best(_fixed_lag_scores(_contrasts(sums, max_shift), chosen, window, max_shift), window)
+        return _best(_speed_scores(sums, lags, max_shift, speeds, max_lag), speeds)
+
     ci = (float('nan'), float('nan'))
     if n_blocks >= 3 and np.isfinite(speed):
         others = []
         for j in range(n_blocks):
-            s, _, _ = _best(_speed_scores(pooled - per_block[j], lags, max_shift, speeds), speeds)
+            s, _, _ = best(pooled - per_block[j])
             others.append(s)
         others = np.asarray(others)
         if np.all(np.isfinite(others)):
@@ -277,7 +444,8 @@ def pattern_shift(diagram: np.ndarray, block_frames: int = BLOCK_FRAMES, max_lag
 
 def shift_time_course(diagram: np.ndarray, fps: float, mm_per_pixel: float, window_frames: int,
                       step_frames: int, spacing_px: float = 1.0, first_frame: int = 0,
-                      min_snr: float = MIN_SNR, bandpass_px=BANDPASS_PX) -> pd.DataFrame:
+                      min_snr: float = MIN_SNR, bandpass_px=BANDPASS_PX,
+                      min_speed: float = MIN_SPEED) -> pd.DataFrame:
     """`pattern_shift` in successive windows of `window_frames`, one row per window, indexed by its centre frame.
 
     Columns: ``time_s``, ``speed_px_per_frame``, ``velocity_mm_s`` (NaN when
@@ -289,7 +457,7 @@ def shift_time_course(diagram: np.ndarray, fps: float, mm_per_pixel: float, wind
     to_mm_s = spacing_px * fps * mm_per_pixel
     rows = []
     for start in range(0, diagram.shape[0] - window_frames + 1, max(1, int(step_frames))):
-        estimate = pattern_shift(diagram[start:start + window_frames], bandpass_px=bandpass_px)
+        estimate = pattern_shift(diagram[start:start + window_frames], bandpass_px=bandpass_px, min_speed=min_speed)
         resolved = estimate.is_resolved(min_snr)
         centre = first_frame + start + window_frames // 2
         rows.append({'frame': centre, 'time_s': centre / fps,
@@ -300,10 +468,12 @@ def shift_time_course(diagram: np.ndarray, fps: float, mm_per_pixel: float, wind
     return pd.DataFrame(rows).set_index('frame')
 
 
-def summarize(diagram: np.ndarray, fps: float, mm_per_pixel: float, spacing_px: float = 1.0) -> dict:
+def summarize(diagram: np.ndarray, fps: float, mm_per_pixel: float, spacing_px: float = 1.0,
+              min_speed: float = MIN_SPEED) -> dict:
     """The pattern shift of a measured range, pooled over all of it and over each half: what a data set keeps.
 
-    Keys, all starting with ``pattern_shift_``:
+    `min_speed` is the slowest speed searched (px/frame); `SLOW_MIN_SPEED`
+    adds the slow range. Keys, all starting with ``pattern_shift_``:
 
     - ``velocity_mm_s`` (positive along the line; NaN unless resolved) and
       ``speed_px_per_frame`` (the best speed, also when unresolved);
@@ -317,7 +487,7 @@ def summarize(diagram: np.ndarray, fps: float, mm_per_pixel: float, spacing_px: 
     """
     diagram = np.asarray(diagram, dtype=float)
     to_mm_s = spacing_px * fps * mm_per_pixel
-    whole = pattern_shift(diagram)
+    whole = pattern_shift(diagram, min_speed=min_speed)
     out = {'pattern_shift_velocity_mm_s': whole.speed_px_per_frame * to_mm_s if whole.resolved else float('nan'),
            'pattern_shift_speed_px_per_frame': whole.speed_px_per_frame,
            'pattern_shift_snr': whole.snr,
@@ -327,7 +497,8 @@ def summarize(diagram: np.ndarray, fps: float, mm_per_pixel: float, spacing_px: 
            'pattern_shift_ci95_high_mm_s': whole.ci95[1] * to_mm_s if whole.resolved else float('nan')}
     middle = diagram.shape[0] // 2 if diagram.ndim == 2 else 0
     for label, half in (('first_half', diagram[:middle]), ('second_half', diagram[middle:])):
-        estimate = pattern_shift(half) if middle // BLOCK_FRAMES >= MIN_HALF_BLOCKS else _NO_ESTIMATE
+        estimate = (pattern_shift(half, min_speed=min_speed) if middle // BLOCK_FRAMES >= MIN_HALF_BLOCKS
+                    else _NO_ESTIMATE)
         out[f'pattern_shift_{label}_mm_s'] = (estimate.speed_px_per_frame * to_mm_s if estimate.resolved
                                               else float('nan'))
         out[f'pattern_shift_{label}_snr'] = estimate.snr
