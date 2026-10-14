@@ -22,6 +22,12 @@ line). Since 2026-10-14 the pattern shift is also measured with its slow range
 same keys starting with ``slow_``, and `slow_limb_check`. Needs
 out/<recording>_rest_mean.npy (rest_image.py).
 
+Whole loops (since 2026-10-14): every loop with two limbs is also measured
+along one line up its first limb (as listed), over the apex and down the
+second (`whole_loops`), kind `loop` in results.csv. A longer line pools more of
+the moving pattern and follows faster flow; flow runs one way round a loop, so
+its direction names the arterial limb (`arterial_limb`).
+
 Writes out/<recording>_lines.png (the lines on the resting image, an arrowhead
 at the apex end) and out/<recording>__<line>.npy (each space-time diagram), and
 replaces the recording's rows in results.csv.
@@ -222,13 +228,47 @@ def traced_lines(stem: str, specs: dict) -> tuple:
     return lines, on_ridge
 
 
+def whole_loops(specs: dict, lines: dict, on_ridge: dict) -> tuple:
+    """A line along each loop of `specs` that has two limbs, joined from their traced lines (`traced_lines`).
+
+    It runs up the loop's first limb (as listed in lines.json) from its base to
+    the apex, then down the second limb to its base. Flow runs one way round a
+    loop, so the whole loop carries one velocity: positive means from the first
+    limb's base to the second's, the first limb being the arterial one. Returns
+    ({name: Centreline}, {name: spec}); a spec names the loop and its two limbs,
+    and its `on_ridge` is the limbs' ridge values averaged by length.
+    """
+    limbs = {}
+    for name, spec in specs.items():
+        if spec['kind'] == 'limb':
+            limbs.setdefault(spec['loop'], []).append(name)
+    loops, loop_specs = {}, {}
+    for loop, (first, second) in ((loop, names) for loop, names in limbs.items() if len(names) == 2):
+        name = f'{loop}, whole loop'
+        loops[name] = Centreline.from_points(list(lines[first].points) + list(reversed(lines[second].points)))
+        lengths = (lines[first].length_px, lines[second].length_px)
+        loop_specs[name] = {'kind': 'loop', 'loop': loop, 'first_limb': first, 'second_limb': second,
+                            'apex_seen': specs[first].get('apex_seen', ''),
+                            'on_ridge': (on_ridge[first] * lengths[0] + on_ridge[second] * lengths[1]) / sum(lengths)}
+    return loops, loop_specs
+
+
+def arterial_limb(spec: dict, velocity: float) -> str:
+    """The limb of a whole loop the flow shows to be arterial: the first if it runs along the line, '' unresolved."""
+    check = pattern_shift.limb_from_direction(velocity)
+    return {'arterial': spec['first_limb'], 'venous': spec['second_limb']}.get(check, '')
+
+
 def measure(stem: str, specs: dict) -> tuple:
-    """One row per line of `specs` (a recording's entry in lines.json), measured over the rest window.
+    """One row per line of `specs` (a recording's entry in lines.json) and per whole loop, over the rest window.
 
     Returns the rows and a line of text per line, for `main` to print.
     """
     fps, (first, last) = rest_window(stem)
     lines, on_ridge = traced_lines(stem, specs)
+    loops, loop_specs = whole_loops(specs, lines, on_ridge)
+    lines, specs = {**lines, **loops}, {**specs, **loop_specs}
+    on_ridge.update({name: spec['on_ridge'] for name, spec in loop_specs.items()})
     samplers = {name: SpaceTimeSampler(line) for name, line in lines.items()}
 
     rows = {name: [] for name in lines}
@@ -258,18 +298,24 @@ def measure(stem: str, specs: dict) -> tuple:
             **slow,
             'slow_limb_check': (pattern_shift.limb_from_direction(slow['slow_pattern_shift_velocity_mm_s'])
                                 if spec['kind'] == 'limb' else ''),
+            'first_limb': spec.get('first_limb', ''), 'second_limb': spec.get('second_limb', ''),
+            'arterial_limb': (arterial_limb(spec, shift['pattern_shift_velocity_mm_s'])
+                              if spec['kind'] == 'loop' else ''),
+            'slow_arterial_limb': (arterial_limb(spec, slow['slow_pattern_shift_velocity_mm_s'])
+                                   if spec['kind'] == 'loop' else ''),
             'centre_line_blocks': blocks['blocks'], 'centre_line_resolved_fraction': blocks['resolved_fraction'],
             'centre_line_median_mm_s': blocks['median'], 'centre_line_q25_mm_s': blocks['q25'],
             'centre_line_q75_mm_s': blocks['q75'], 'centre_line_positive_fraction': blocks['positive_fraction'],
             'points': ';'.join(f'{x:.1f},{y:.1f}' for x, y in line.points),
         })
         row = results[-1]
+        check = row['limb_check'] or (f"art. {row['arterial_limb']}" if row['arterial_limb'] else '-')
         report.append(
             f"{name:16s} {spec['kind']:6s} {row['length_px']:5.0f} px (ridge {row['on_ridge']:.2f})"
             f" | {shift['pattern_shift_speed_px_per_frame'] * fps * MM_PER_PIXEL:+.3f} mm/s,"
             f" snr {shift['pattern_shift_snr']:5.1f} {'OK' if shift['pattern_shift_resolved'] else '--'}"
             f" | halves {shift['pattern_shift_first_half_snr']:5.1f} {shift['pattern_shift_second_half_snr']:5.1f}"
-            f" | {row['limb_check'] or '-':8s} | blocks {blocks['resolved_fraction']:.0%}"
+            f" | {check:8s} | blocks {blocks['resolved_fraction']:.0%}"
             f" | slow {slow['slow_pattern_shift_speed_px_per_frame'] * fps * MM_PER_PIXEL:+.3f} mm/s,"
             f" snr {slow['slow_pattern_shift_snr']:5.1f} {'OK' if slow['slow_pattern_shift_resolved'] else '--'}")
     return pd.DataFrame(results), report

@@ -259,6 +259,15 @@ the 2026-10-05 GUI rebuild entry.
       - Of 8 participants, an arterial limb at both visits in 0–3 and any limb in 2–5, by rule.
       - A sub-pixel change of a line moves its score by about 5%, so limbs within about 1.5 of
         the threshold of 8 can fall either side of it.
+    - **Whole-loop lines** (2026-10-14, `analysis/whole_loop/`): one line up one limb, over the
+      apex and down the other, joined from the traced limbs (`measure.py`, kind `loop`).
+      - At the app's rule: 23 of 53 loops against 14 by their single limbs. 5 of 8 participants
+        have a loop at both visits, against 2 by limbs.
+      - The gain is signal (score a median 1.6 times the better limb's), not range: the limbs saw
+        the same flow too weakly.
+      - Not counted when both limbs run the same way (movement).
+      - In the occlusion: none of the 21 loops measured at rest shows flow.
+      - The app has no whole-loop mode yet.
   - **The pattern shift's slow range** (2026-10-14, `analysis/pattern_shift_slow_flow/`) replaces
     the combined rule's centre-line blocks in principle. On the same 109 limbs at rest:
     - it resolved 42 (17 below 1 px/frame);

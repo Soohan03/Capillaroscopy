@@ -111,7 +111,7 @@ def measure_recording(stem, folder=AIM1):
     cv2.setNumThreads(2)
     common.use(folder)
     lines = pd.read_csv(common.RESULTS)
-    lines = lines[lines.recording == stem]
+    lines = lines[(lines.recording == stem) & lines.kind.isin(['limb', 'tissue'])]   # not the whole loops
     windows = {'rest': {name: np.load(os.path.join(common.OUT, f'{stem}__{file_safe(name)}.npy'))
                         for name in lines.line}}
     occlusion = occlusion_diagrams(stem)
