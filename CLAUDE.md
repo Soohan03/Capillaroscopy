@@ -57,10 +57,15 @@ without asking:
      add one, right-click a point to remove it, Backspace removes the last, X reverses.
      The space-time preview (with the slope found, velocity and signal-to-noise ratio)
      fills in once there are two points; the panel shows what the line can measure.
-     For the resting velocity of an arterial limb: tick Arterial limb, click from the base
-     of the limb to the apex, press Rest and measure. The result gives the velocity pooled
-     over the range (pattern shift) and whether the flow runs towards the apex (arterial)
-     or away from it (venous).
+     For a capillary loop's resting velocity (the study's plan since 2026-10-14): choose
+     "Whole loop", click from the base of one limb over the apex to the base of the other,
+     press Rest and measure. The result gives the velocity pooled over the range (pattern
+     shift) and which end of the line lies on the arterial limb. ("Arterial limb" lines run
+     from a limb's base to the apex.) The recording's saved lines are drawn dashed.
+   - Blind placement (the header button): only the aims' recordings are listed, under
+     codes; the preview and every result are hidden; measuring uses the official rest;
+     Two boxes, Results and Validation are closed. It stays on until turned off.
+     `python3 -m capillary.aims` then gives each recording's mean and aim 1's statistics.
    - Two boxes page (the original method, kept for comparison): click places box 1
      (orange, downstream), the next click box 2 (blue, upstream); WASD nudges a box.
    - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
@@ -172,6 +177,24 @@ Tkinter classes.
     summary.
   - Every data set (both methods) also saves the official phase of its range as `phase`
     (`inventory.recording_phases`: rest, occlusion, after release, or several joined by ' + ').
+- **Whole loop (since 2026-10-14):** a line from the base of one limb, over the apex, to the base
+  of the other (`pattern_shift.WHOLE_LOOP`). The resting CBV of the study since 2026-10-14: the user
+  places the lines by hand (blind placement, `gui/blind.py`), and a recording's value is the mean
+  of its counted loops (`capillary/aims.py`).
+  - The sign tells which end lies on the arterial limb (`arterial_end`: start, end, unknown;
+    `pattern_shift.loop_from_direction`).
+  - Split at the apex (`Centreline.apex_arc_px`, the point farthest from both ends; on the aim-1
+    check's 53 loops a median 1.3 px from where the traced limbs met), each limb is measured on its
+    own (`pattern_shift.loop_limbs`). Limbs resolved with opposite signs along the line mean the
+    picture moved (`loop_movement`); such loops are not counted.
+  - The app's task reproduces `analysis/aim1_feasibility/measure.py`'s whole loops exactly (all 53,
+    velocities and scores identical), and the split marks the same one loop as separately traced
+    limbs did (DEVLOG 2026-10-14).
+- **The aims (since 2026-10-14):** `python3 -m capillary.aims [--data <folder>] [--observer XX]`. A
+  loop counts when it is a whole loop, within the official rest, resolved, without movement and on a
+  stabilized video; a recording's value is the mean of its counted loops (the count is kept); loops
+  on top of each other are listed for checking. Aim 1 per study: CV (typical error / mean, and on
+  the log scale), SDC (2.77 × typical error), Bland–Altman, ICC(A,1). Tables in `Reports/aims/`.
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.
@@ -212,7 +235,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (287 tests, ~50 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (300 tests, ~50 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -267,7 +290,13 @@ the 2026-10-05 GUI rebuild entry.
         the same flow too weakly.
       - Not counted when both limbs run the same way (movement).
       - In the occlusion: none of the 21 loops measured at rest shows flow.
-      - The app has no whole-loop mode yet.
+      - The app has measured whole loops since 2026-10-14 (Whole loop on the Centre line page).
+      - As a per-visit mean (`capillary.aims` on the app's measurement of the same loops): 13 of 15
+        recordings with loops have a mean, from 1–3 loops (median 2); 5 of 8 participants have one
+        at both visits. CV 26%, ICC(A,1) 0.12 (−0.15 to 0.73): too few participants to judge. Loops
+        of one recording differ up to 3.4-fold, so with about 2 per visit the choice of loops alone
+        moves the mean by roughly 40% between days. The W visit's mean was higher in all 5 (1.4–2.8×,
+        both before exposure; chance 1 in 16).
   - **The pattern shift's slow range** (2026-10-14, `analysis/pattern_shift_slow_flow/`) replaces
     the combined rule's centre-line blocks in principle. On the same 109 limbs at rest:
     - it resolved 42 (17 below 1 px/frame);

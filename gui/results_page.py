@@ -45,6 +45,17 @@ LIMB_TEXT = {
                'Warning.Panel.TLabel'),
     'unknown': ('Arterial limb not confirmed: the pooled flow was not resolved.', 'Muted.Panel.TLabel'),
 }
+#: Which end of a whole-loop line the direction of its flow puts on the arterial limb, as a card states it.
+LOOP_TEXT = {
+    'start': ('Whole loop: the flow runs along the line, so its start is on the arterial limb.',
+              'Success.Panel.TLabel'),
+    'end': ('Whole loop: the flow runs against the line, so its end is on the arterial limb.',
+            'Success.Panel.TLabel'),
+    'unknown': ('Whole loop: the pooled flow was not resolved, so the arterial limb is unknown.', 'Muted.Panel.TLabel'),
+}
+#: A whole loop whose two limbs moved opposite ways along the line.
+MOVEMENT_TEXT = ('The two limbs moved opposite ways along the line, as the picture moving does, not flow: the '
+                 'study summary does not count this loop.', 'Warning.Panel.TLabel')
 
 
 def _report_thumbnail(path, width):
@@ -498,6 +509,10 @@ def _line_summary_lines(summary):
         lines.append(('Few 3-s blocks were resolved, so their median is uncertain.', 'Warning.Panel.TLabel'))
     if summary.get('limb_check') in LIMB_TEXT:
         lines.append(LIMB_TEXT[summary['limb_check']])
+    if summary.get('arterial_end') in LOOP_TEXT:
+        lines.append(LOOP_TEXT[summary['arterial_end']])
+    if summary.get('loop_movement'):
+        lines.append(MOVEMENT_TEXT)
     phase = summary.get('phase') or ''
     if '+' in phase:
         lines.append((f'The range covers {phase.replace(" + ", ", ")}: the pooled velocity mixes them.',

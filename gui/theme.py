@@ -43,6 +43,7 @@ COLORS = {
     'box1': '#FF9F1C',          # box 1, downstream (orange)
     'box2': '#29B2FF',          # box 2, upstream (sky blue)
     'line': '#FFD24D',          # the centre line (yellow)
+    'saved_line': '#8FD3FF',    # lines of the recording's saved data sets (light blue)
     'marker': '#E5484D',        # time points, red like the lines in the report
     'brand': '#E5484D',         # the capillary loop of the logo in the header
 }
@@ -205,6 +206,12 @@ def apply(root):
                     focuscolor=c['header'], padding=(px(10), px(6)))
     header = [('pressed', c['header_active']), ('active', c['header_hover'])]
     style.map('Header.TButton', background=header, lightcolor=header, darkcolor=header, bordercolor=header)
+    # a header button that is switched on (blind placement): yellow like the centre line
+    style.configure('On.Header.TButton', background=c['line'], foreground='#111111', bordercolor=c['line'],
+                    lightcolor=c['line'], darkcolor=c['line'], focuscolor=c['line'], padding=(px(10), px(6)),
+                    font=FONTS['small_bold'])
+    lit = [('pressed', '#E8B92E'), ('active', '#FFDF7A')]
+    style.map('On.Header.TButton', background=lit, lightcolor=lit, darkcolor=lit, bordercolor=lit)
 
     # navigation tabs in the header and segmented toggles in panels (radio buttons drawn as buttons)
     style.configure('Nav.Toolbutton', background=c['header'], foreground=c['header_muted'],
@@ -215,7 +222,7 @@ def apply(root):
               lightcolor=[('selected', c['header_active']), ('active', c['header_hover'])],
               darkcolor=[('selected', c['header_active']), ('active', c['header_hover'])],
               bordercolor=[('selected', c['header_active']), ('active', c['header_hover'])],
-              foreground=[('selected', c['header_text']), ('active', c['header_text'])])
+              foreground=[('disabled', '#4F5B6B'), ('selected', c['header_text']), ('active', c['header_text'])])
     style.configure('Seg.Toolbutton', background=c['panel_alt'], foreground=c['muted'],
                     bordercolor=c['border'], lightcolor=c['panel_alt'], darkcolor=c['panel_alt'],
                     focuscolor=c['panel_alt'], padding=(px(10), px(4)), font=FONTS['small_bold'],

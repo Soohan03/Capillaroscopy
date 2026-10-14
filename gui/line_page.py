@@ -12,12 +12,21 @@ The measurement also pools the pattern shift over the whole range
 (`capillary.pattern_shift`), which measures flow too faint for single blocks,
 as at rest. A line can be marked as a capillary loop's arterial limb, drawn
 from its base to the apex: the direction of the pooled flow then shows
-whether it is the arterial limb (towards the apex) or the venous one.
+whether it is the arterial limb (towards the apex) or the venous one. Or it
+can go round a whole loop, from the base of one limb over the apex to the
+base of the other (since 2026-10-14), which measures resting flow in more
+loops: the direction then shows which end of the line lies on the arterial
+limb, and each limb is measured on its own as a check against movement.
+
+The lines of the recording's saved data sets are drawn faintly, so that a
+capillary is not measured twice. During blind placement (`gui.blind`) the
+preview and every result are hidden, and the range is the official rest.
 """
 
 from __future__ import annotations
 
 import math
+import re
 import tkinter as tk
 from functools import partial
 from tkinter import ttk
@@ -25,7 +34,7 @@ from tkinter import ttk
 import numpy as np
 from PIL import Image, ImageDraw, ImageTk
 
-from capillary import pattern_shift, spacetime
+from capillary import datasets, pattern_shift, spacetime
 
 from . import tasks
 from .jobs import LatestOnlyWorker
@@ -35,6 +44,24 @@ from .video_view import Tool
 from .widgets import InfoRow, Tooltip, section, separator
 
 PREVIEW_HEIGHT = 130
+ARTERIAL, WHOLE_LOOP = pattern_shift.ARTERIAL_LIMB, pattern_shift.WHOLE_LOOP
+#: What a line can follow: the role saved with its data set ('' for any stretch), the option's text, the
+#: start of the data set names suggested for it and the option's tooltip.
+ROLES = (
+    ('', 'Any stretch of a capillary', 'set',
+     'Click along the capillary in the direction of flow: positive velocity runs from the first point to the last.'),
+    (ARTERIAL, 'Arterial limb, from its base to the apex', 'limb',
+     'The line follows the arterial limb of a capillary loop: click at the base of the limb and follow it to the '
+     'apex, the tip of the loop. The measurement checks the direction of the flow pooled over the range: blood '
+     'flows up the arterial limb towards the apex and down the venous limb. Saved with the data set.'),
+    (WHOLE_LOOP, 'Whole loop, base to base over the apex', 'loop',
+     'The line goes round a whole capillary loop: click at the base of one limb, follow it up to the apex, over '
+     'the apex and down the other limb to its base. Flow runs one way round the loop, so the line collects the '
+     'signal of both limbs: at rest it measured more loops than single limbs did. The direction of the pooled '
+     'flow shows which limb is arterial, and each limb is measured on its own as a check against movement. '
+     'Saved with the data set.'),
+)
+ROLE_NAMES = {role: base for role, _, base, _ in ROLES}
 #: What the direction check of an arterial limb found (`capillary.pattern_shift.limb_from_direction`):
 #: the status icon and the text shown with a result.
 LIMB_CHECKS = {
@@ -44,6 +71,17 @@ LIMB_CHECKS = {
     'unknown': ('info', 'Arterial limb not confirmed: the pooled flow was not resolved, so its direction is '
                         'unknown.'),
 }
+#: Which end of a whole-loop line lies on the arterial limb (`capillary.pattern_shift.loop_from_direction`).
+LOOP_CHECKS = {
+    'start': ('ok', 'The flow runs along the line, so the limb where it starts is the arterial limb.'),
+    'end': ('ok', 'The flow runs against the line, so the limb where it ends is the arterial limb.'),
+    'unknown': ('info', 'The pooled flow was not resolved, so which limb is arterial is unknown.'),
+}
+#: A whole loop whose limbs moved opposite ways along the line (`capillary.pattern_shift.loop_limbs`).
+MOVEMENT_CHECK = ('warning', 'The two limbs moved opposite ways along the line, as the picture moving does, not '
+                             'flow. The study summary does not count this loop.')
+#: Names the page suggested itself, which a change of the line's role may replace.
+SUGGESTED_NAME = re.compile(r'^(set|limb|loop)\d+$')
 
 
 def format_velocity(value: float) -> str:
@@ -101,6 +139,9 @@ class LinePage(MeasurePage):
 
     def __init__(self, parent, app):
         self.points: list[tuple[float, float]] = []
+        #: the lines of the recording's saved data sets: (name, curve in video pixels), drawn faintly
+        self.saved_lines: list[tuple[str, np.ndarray]] = []
+        self._saved_key = None
         self.preview = None
         self._preview_token = 0
         self._preview_after = None
@@ -118,8 +159,9 @@ class LinePage(MeasurePage):
             'it to where it goes. Positive velocities mean flow from the first point towards the last. Every '
             'pixel along the line contributes, and a longer line can measure faster flow: the range it can '
             'measure is shown below. Drag a point to move it, click on the line to add a point there, '
-            'right-click a point to remove it. For the resting velocity of an arterial limb, tick Arterial limb, '
-            'draw the line from the base of the limb to the apex, and set the range to the official rest.'))
+            'right-click a point to remove it. For the resting velocity of a capillary loop, choose Whole loop, '
+            'click from the base of one limb over the apex to the base of the other, and set the range to the '
+            'official rest. The lines of data sets already saved for the recording are drawn faintly.'))
         self.points_row = InfoRow(frame, 'Points', tooltip='Clicked points; the line is a smooth curve through them.')
         self.points_row.pack(fill='x', pady=(0, px(2)))
         self.length_row = InfoRow(frame, 'Length', tooltip='Length of the curve through the points.')
@@ -136,14 +178,13 @@ class LinePage(MeasurePage):
             'is open: on simulated recordings with the shutter open the whole frame, a 120-px line measured up '
             'to about 8 px per frame within 1%, and a 300-px line round a loop up to 40.'))
         self.pooled_row.pack(fill='x')
-        self.arterial_var = tk.BooleanVar(master=frame, value=False)
-        arterial = ttk.Checkbutton(frame, text='Arterial limb, from its base to the apex', variable=self.arterial_var,
-                                   style='Panel.TCheckbutton', command=self._role_changed)
-        arterial.pack(anchor='w', pady=(px(10), 0))
-        Tooltip(arterial, 'The line follows the arterial limb of a capillary loop: click at the base of the limb and '
-                          'follow it to the apex, the tip of the loop. The measurement checks the direction of the '
-                          'flow pooled over the range: blood flows up the arterial limb towards the apex and down '
-                          'the venous limb. Saved with the data set.', wrap=340)
+        ttk.Label(frame, text='The line follows', style='Muted.Panel.TLabel').pack(anchor='w', pady=(px(10), px(2)))
+        self.role_var = tk.StringVar(master=frame, value='')
+        for role, text, _, tip in ROLES:
+            button = ttk.Radiobutton(frame, text=text, value=role, variable=self.role_var, style='Panel.TRadiobutton',
+                                     command=self._role_changed)
+            button.pack(anchor='w')
+            Tooltip(button, tip, wrap=340)
         actions = ttk.Frame(frame, style='Panel.TFrame')
         actions.pack(fill='x', pady=(px(10), 0))
         reverse = ttk.Button(actions, text='Reverse', image=icon('swap', 13, COLORS['text']), compound='left',
@@ -173,6 +214,7 @@ class LinePage(MeasurePage):
         self.preview_caption.pack(anchor='w', pady=(px(3), px(6)))
         numbers = ttk.Frame(preview, style='Panel.TFrame')
         numbers.pack(fill='x')
+        self._preview_parts = (self.preview_image, self.preview_caption, numbers)    # hidden during blind placement
         self.metric_labels = {}
         for column, (key, label) in enumerate((('velocity', 'Velocity (mm/s)'), ('snr', 'Signal-to-noise'))):
             cell = ttk.Frame(numbers, style='Panel.TFrame')
@@ -192,19 +234,44 @@ class LinePage(MeasurePage):
     def capture_state(self):
         state = super().capture_state()
         state['points'] = list(self.points)
-        state['arterial'] = self.arterial_var.get()
+        state['role'] = self.role_var.get()
         return state
 
     def restore_state(self, state):
         super().restore_state(state)
         self.points = list((state or {}).get('points', []))
-        if state and 'arterial' in state:          # a recording seen before keeps its line's role; others keep the last
-            self.arterial_var.set(state['arterial'])
+        if state and 'role' in state:              # a recording seen before keeps its line's role; others keep the last
+            self.role_var.set(state['role'])
         self.preview = None
         self._preview_center = None
         self._update_line_ui()
         self._update_preview_ui()
         self.schedule_preview(50)
+
+    def show_recording(self, recording):
+        super().show_recording(recording)
+        self._load_saved_lines()
+
+    def suggest_name(self, existing):
+        return datasets.suggest_dataset_name(existing, ROLE_NAMES.get(self.role_var.get(), 'set'))
+
+    def _load_saved_lines(self):
+        """Read the lines of the recording's saved data sets (once per recording and list of data sets)."""
+        recording = self.recording
+        key = (recording.stem, tuple(recording.line_sets)) if recording is not None else None
+        if key == self._saved_key:
+            return
+        self._saved_key = key
+        self.saved_lines = []
+        for name in (recording.line_sets if recording is not None else []):
+            record = datasets.read_provenance(
+                datasets.line_dataset_files(self.app.folder.statistics, recording.stem, name)['provenance'])
+            try:
+                curve = spacetime.Centreline.from_points(record['line']['points']).curve()
+            except (KeyError, TypeError, ValueError):
+                continue
+            self.saved_lines.append((name, curve))
+        self.draw_overlay()
 
     def apply_record(self, record):
         """Put the line, its role and the range of a saved data set's provenance back (Results page)."""
@@ -215,7 +282,8 @@ class LinePage(MeasurePage):
         if len(points) < 2:
             return False
         self.points = points
-        self.arterial_var.set(record['line'].get('role') == pattern_shift.ARTERIAL_LIMB)
+        role = record['line'].get('role') or ''
+        self.role_var.set(role if role in ROLE_NAMES else '')
         frames = record.get('frames', {})
         first, last = frames.get('first'), frames.get('last')
         if first is not None and last is not None and self.player.source is not None:
@@ -310,14 +378,20 @@ class LinePage(MeasurePage):
             self.line_changed()
             self.app.set_status('Line reversed: positive velocity now runs the other way along it.')
 
-    def is_arterial(self) -> bool:
-        return bool(self.arterial_var.get())
+    def role(self):
+        """The line's role as saved with the data set: `ARTERIAL`, `WHOLE_LOOP`, or None for any stretch."""
+        return self.role_var.get() or None
 
     def _role_changed(self):
+        if self.recording is not None and SUGGESTED_NAME.match(self.name_var.get().strip()):
+            self.name_var.set(self.suggest_name(self.existing_names()))
         self.draw_overlay()
         self._update_line_ui()
-        self.app.set_status('The line is an arterial limb, from its base (first point) to the apex (last point).'
-                            if self.is_arterial() else 'The line is no longer marked as an arterial limb.')
+        self.app.set_status({
+            ARTERIAL: 'The line is an arterial limb, from its base (first point) to the apex (last point).',
+            WHOLE_LOOP: 'The line goes round a whole loop, from the base of one limb (first point) over the apex '
+                        'to the base of the other (last point).',
+        }.get(self.role(), 'The line follows any stretch of a capillary.'))
 
     def _line_moved(self, preview=True):
         self.draw_overlay()
@@ -366,30 +440,42 @@ class LinePage(MeasurePage):
     def _hint_text(self, long):
         if self.player.source is None:
             return None if not long else ''
-        arterial = self.is_arterial()
+        role = self.role()
         if not self.points:
-            if arterial:
+            if role == ARTERIAL:
                 return ('Click at the base of the arterial limb, the end away from the loop\'s tip, then follow the '
                         'middle of the limb up to the apex.' if long else 'Click at the base of the arterial limb')
+            if role == WHOLE_LOOP:
+                return ('Click at the base of one limb of the loop, then follow the middle of that limb up to the '
+                        'apex, over it and down the other limb to its base.' if long
+                        else 'Click at the base of one limb of the loop')
             return ('Click on the video where the blood enters a capillary segment, then follow the middle of the '
                     'vessel in the direction of flow.' if long else 'Click where the blood enters a capillary')
         if len(self.points) == 1:
-            if arterial:
+            if role == ARTERIAL:
                 return ('Now click further up the limb, towards the apex. Add more points to follow its bends.'
                         if long else 'Click further up the limb, towards the apex')
+            if role == WHOLE_LOOP:
+                return ('Now click further up the limb, then round the apex and down the other limb. Add points to '
+                        'follow the bends.' if long else 'Follow the limb up, round the apex and down the other')
             return ('Now click further along the same capillary, in the direction of flow. Add more points to '
                     'follow its bends.' if long else 'Click further along the capillary, in the direction of flow')
         if not long:
             return None
-        if arterial:
+        if role == ARTERIAL:
             return ('End the line at the apex; drag points to keep it in the middle of the limb. Then set the range '
                     'to the official rest and measure: the pooled flow should run towards the apex.')
+        if role == WHOLE_LOOP:
+            return ('End the line at the base of the other limb; drag points to keep it in the middle of the vessel, '
+                    'round the apex too. Then set the range to the official rest and measure.')
         return ('Click beyond the end to extend the line, on the line to add a point there; drag points to keep '
                 'the line in the middle of the vessel. A longer straight-ish stretch measures faster flow.')
 
     def draw_overlay(self):
         canvas = self.view.canvas
         canvas.delete('overlay')
+        if self.view.frame_shape() is not None:
+            self._draw_saved_lines(canvas)
         if self.view.frame_shape() is None or not self.points:
             canvas.tag_raise('hint')
             return
@@ -411,18 +497,36 @@ class LinePage(MeasurePage):
             radius = px(5) if index == 0 else px(3.5)
             canvas.create_oval(cx - radius, cy - radius, cx + radius, cy + radius, outline='#000000',
                                fill=color if index == 0 else '#FFFFFF', width=1, tags=('overlay',))
-        tags = [(0, 'base' if self.is_arterial() else 'start')]
-        if self.is_arterial() and len(self.points) >= 2:
-            tags.append((len(self.points) - 1, 'apex'))
+        role = self.role()
+        tags = [(0, 'base' if role == ARTERIAL else 'start')]
+        if role in (ARTERIAL, WHOLE_LOOP) and len(self.points) >= 2:
+            tags.append((len(self.points) - 1, 'apex' if role == ARTERIAL else 'end'))
         for index, text in tags:
             cx, cy = self.view.to_canvas(*self.points[index])
-            label = canvas.create_text(cx + px(9), cy - px(9), text=text, anchor='sw', font=FONTS['small_bold'],
+            anchor, dx, dy = 'sw', px(9), -px(9)
+            if role == WHOLE_LOOP and len(self.points) >= 2:
+                # a loop's two bases lie side by side: each label goes outwards, away from the other base
+                other = self.points[-1 if index == 0 else 0]
+                anchor, dx, dy = ('e', -px(9), 0) if self.points[index][0] <= other[0] else ('w', px(9), 0)
+            label = canvas.create_text(cx + dx, cy + dy, text=text, anchor=anchor, font=FONTS['small_bold'],
                                        fill='#111111', tags=('overlay',))
             x0, y0, x1, y1 = canvas.bbox(label)
             canvas.create_rectangle(x0 - px(3), y0, x1 + px(3), y1, fill=color, outline='', tags=('overlay',))
             canvas.tag_raise(label)
         canvas.tag_raise('hint')
         canvas.tag_raise('readout')
+
+    def _draw_saved_lines(self, canvas):
+        """The lines of the recording's saved data sets: thin, dashed, with their names at the first point."""
+        color = COLORS['saved_line']
+        for name, curve in self.saved_lines:
+            points = [self.view.to_canvas(x, y) for x, y in curve[::4]] + [self.view.to_canvas(*curve[-1])]
+            coords = [value for point in points for value in point]
+            canvas.create_line(*coords, fill='#000000', width=px(3), tags=('overlay',))
+            canvas.create_line(*coords, fill=color, width=px(1.5), dash=(px(5), px(3)), tags=('overlay',))
+            x, y = points[0]
+            canvas.create_text(x - px(6), y + px(6), text=name, anchor='ne', font=FONTS['small_bold'], fill=color,
+                               tags=('overlay',))
 
     # ---------------------------------------------------------------------- preview
     def after_frame(self, index):
@@ -444,7 +548,7 @@ class LinePage(MeasurePage):
 
     def _request_preview(self):
         self._preview_after = None
-        if self.player.source is None or self._line_problem() is not None:
+        if self.player.source is None or self._line_problem() is not None or self.app.blind:
             self.preview = None
             self._update_preview_ui()
             return
@@ -480,10 +584,27 @@ class LinePage(MeasurePage):
         self._preview_photo = ImageTk.PhotoImage(image) if image is not None else None
         self.preview_image.configure(image=self._preview_photo or '')
 
+    def _show_preview_parts(self, show):
+        """Show the diagram, its caption and numbers, or hide them (blind placement)."""
+        image, caption, numbers = self._preview_parts
+        if show and not image.winfo_manager():
+            image.pack(fill='x', before=self.preview_status)
+            caption.pack(anchor='w', pady=(px(3), px(6)), before=self.preview_status)
+            numbers.pack(fill='x', before=self.preview_status)
+        elif not show and image.winfo_manager():
+            for part in self._preview_parts:
+                part.pack_forget()
+
     def _update_preview_ui(self):
         labels = self.metric_labels
         result = self.preview
         problem = self._line_problem() if self.player.source is not None else 'Select a recording with a video.'
+        self._show_preview_parts(not self.app.blind)
+        if self.app.blind:
+            self._set_status('info', problem if problem is not None and self.points else
+                             'Hidden during blind placement, so that lines are placed by the anatomy alone, not by '
+                             'what they measure.')
+            return
         if problem is not None or result is None or isinstance(result, Exception):
             for value in labels.values():
                 value.configure(text='–', fg=COLORS['text'])
@@ -543,9 +664,10 @@ class LinePage(MeasurePage):
         work = partial(tasks.measure_line_dataset, folder=self.app.folder, stem=recording.stem, name=name,
                        video_path=self.player.source.path, points=list(self.points), start=start, end=end,
                        mm_per_pixel=self.app.settings.mm_per_pixel, time_points=list(self.markers),
-                       observer=self.observer(), role=pattern_shift.ARTERIAL_LIMB if self.is_arterial() else None)
-        return self.app.jobs.submit(f'Centre line · {recording.stem} · {name}', work, lane='analysis', on_done=done,
-                                    on_error=failed, on_cancel=cancelled, key=('line', recording.stem))
+                       observer=self.observer(), role=self.role())
+        return self.app.jobs.submit(f'Centre line · {self.app.display_name(recording.stem)} · {name}', work,
+                                    lane='analysis', on_done=done, on_error=failed, on_cancel=cancelled,
+                                    key=('line', recording.stem))
 
     def empty_chart_message(self, result):
         if _finite(result['summary'].get('pattern_shift_velocity_mm_s')):
@@ -564,15 +686,25 @@ class LinePage(MeasurePage):
         check = summary.get('limb_check')
         if check:
             parts.append({'arterial': 'arterial limb confirmed', 'venous': 'the flow shows the venous limb',
-                          'unknown': 'limb not confirmed'}[check])
+                          'unknown': 'limb not confirmed'}.get(check, check))
+        end = summary.get('arterial_end')
+        if end:
+            parts.append({'start': 'arterial limb at the start of the loop', 'end': 'arterial limb at the end of the loop',
+                          'unknown': 'arterial limb unknown'}.get(end, end))
+        if summary.get('loop_movement'):
+            parts.append('the limbs moved opposite ways: not counted')
         return f' ({"; ".join(parts)})' if parts else ''
 
     def describe_result(self, frame, result):
         summary = result['summary']
         nan = float('nan')
         check = summary.get('limb_check')
-        if check in LIMB_CHECKS:
-            kind, text = LIMB_CHECKS[check]
+        checks = [LIMB_CHECKS[check]] if check in LIMB_CHECKS else []
+        if summary.get('arterial_end') in LOOP_CHECKS:
+            checks.append(LOOP_CHECKS[summary['arterial_end']])
+        if summary.get('loop_movement'):
+            checks.append(MOVEMENT_CHECK)
+        for kind, text in checks:
             row = tk.Frame(frame, bg=COLORS['panel'])
             row.pack(fill='x', pady=(0, px(8)))
             colors = {'ok': COLORS['success'], 'warning': COLORS['warning'], 'info': COLORS['muted']}
@@ -642,7 +774,8 @@ class LinePage(MeasurePage):
             notes.append('Few 3-s blocks were resolved, so their median is uncertain.')
         if _finite(median) and _finite(fastest) and abs(median) > 0.85 * fastest:
             notes.append('The blocks are close to the fastest this line can measure; a longer line would be safer.')
-        if not check and ((_finite(pooled) and pooled < 0) or (not _finite(pooled) and _finite(median) and median < 0)):
+        if not check and not summary.get('arterial_end') and (
+                (_finite(pooled) and pooled < 0) or (not _finite(pooled) and _finite(median) and median < 0)):
             notes.append('Negative: the flow runs from the last point towards the first.')
         for note in notes:
             ttk.Label(frame, text=note, style='Warning.Panel.TLabel', wraplength=px(INSPECTOR_WIDTH - 40),

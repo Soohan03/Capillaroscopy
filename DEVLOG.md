@@ -6,6 +6,198 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — Whole loops and blind placement in the app; the aims from the saved data sets
+
+**Branch:** `feature/blind-whole-loop`, from `main` at `ec877bc` (PR #22, whole-loop lines in the
+analysis, merged). Commit `3726237` (code, tests, README, CLAUDE.md, this entry).
+
+The user decided to place the study's lines by hand ("as much manually as possible") and asked
+whether the PI's idea, a mean over the capillaries visible in a video, is feasible. A check in the
+session's scratchpad (below) found that it is, as the mean of the loops that can be measured. The
+user then asked for the three pieces this needs:
+1. blind placement, so that nothing but the anatomy decides where a line goes;
+2. whole-loop lines on the Centre line page;
+3. a script that turns the saved lines into one value per visit and computes aim 1's statistics.
+
+**In short:**
+- **Centre line page:** "The line follows" now offers any stretch, an arterial limb or a **whole
+  loop** (base of one limb, over the apex, base of the other). A whole loop's result says which end
+  lies on the arterial limb, and each limb is measured on its own as a check against movement. The
+  recording's saved lines are drawn dashed, so that no loop is drawn twice.
+- **Blind placement** (header button): only the aims' recordings are listed, under codes. The
+  preview and every result are hidden, measuring uses the official rest, and Two boxes, Results
+  and Validation are closed.
+- **`python3 -m capillary.aims`:** one resting velocity per recording (the mean of its counted
+  whole loops), then aim 1 per study: CV, smallest detectable change, Bland–Altman, ICC(A,1).
+- **On real data** the app's measurement reproduces the analysis scripts' whole loops exactly, and
+  the script reproduces the scratch check's per-visit means and statistics.
+
+### Is a mean over the visible capillaries feasible? (the scratch check)
+
+On the aim-1 rerun (`analysis/aim1_feasibility/restabilized/`, 16 recordings of 8 ESMOKE
+participants, lines placed by Claude Code), at the app's rule. One value per capillary: the whole
+loop where it is counted, else its measured limbs; a loop whose limbs ran the same way was left out.
+- **Visible (traced) capillaries:** 62, about 4 per recording (1–8).
+- **Measurable at rest:** 26 (42%). The other 36 show no moving pattern. It cannot be told whether
+  their blood moves, so they cannot enter the mean, and counting them as 0 would be a guess.
+- **Per visit:** 1–3 measurable capillaries (median 2). 13 of 16 visits have a mean, and 5 of 8
+  participants have one at both visits. Requiring at least 2 per visit leaves 2–3 of 8 participants.
+- **Spread:** within a recording the fastest capillary is 1.1–3.4 times the slowest (median 2.0; SD
+  of the logs 0.46). With about 2 capillaries per visit, which ones are measurable alone moves a
+  visit's mean by roughly 40% from day to day.
+- **Agreement:** in the 5 participants the day-to-day CV was about 26% (typical error / mean) and
+  ICC(A,1) 0.12–0.20. Five participants are too few to estimate either.
+- **The W visit:** its mean was higher than the Q visit's in all 5 (1.4–2.8 times), though both
+  recordings are before exposure. That happens by chance 1 time in 16; it needs a look in the full
+  data.
+- **The combined rule** (centre-line blocks for slow limbs) gives 7 of 8 participants, but its very
+  slow block values raise the CV on the log scale to 118%.
+- **Told the user:** feasible as the mean of the measurable loops, not of all visible ones. Keep the
+  measuring automatic: at rest most loops' streaks are too faint to read by eye in a 3-s piece,
+  while the pattern shift pools the whole minute. Fix with the PI, before measuring, which
+  capillaries count, the mean with its count, and blinding.
+
+### What changed
+
+- **`capillary/spacetime.py`:** `Centreline.apex_arc_px()` is the apex's distance along a line
+  drawn round a loop: the point farthest from both ends (the largest of the smaller of its two
+  distances), searched in the middle 80% of the line.
+  - Four rules were compared on the 53 loops, against where the two traced limbs met (scratch
+    `apex_check.py`), as median / 90th percentile / largest error in px:
+    - farthest from both ends: 1.3 / 6.7 / 17.5;
+    - farthest from the bases' midpoint: 1.5 / 5.7 / 25.2;
+    - farthest from the chord between the bases: 2.3 / 12.9 / 24.7;
+    - half the line's length: 3.0 / 14.5 / 34.9.
+- **`capillary/pattern_shift.py`:**
+  - `WHOLE_LOOP` ('whole loop'), the role of such a line.
+  - `loop_from_direction`: 'start' when the pooled flow runs along the line (the limb where the
+    line starts is arterial), 'end' against it, 'unknown' when not resolved.
+  - `loop_limbs`: the pattern shift of the diagram's positions up to the apex and from it, each on
+    its own and pooled over the range, as velocities along the line.
+    - Flow round the loop reads the same sign in both limbs. The picture moving along the loop's
+      axis reads opposite signs.
+    - So both limbs resolved with opposite signs give `loop_movement`. A limb shorter than 24 px
+      is not measured.
+- **`gui/tasks.py`:**
+  - `summarize_line` takes the apex. For a whole loop it adds `arterial_end`, the limbs'
+    `pattern_shift_start_limb_...` and `pattern_shift_end_limb_...`, and `loop_movement`.
+  - `measure_line_dataset` and `regenerate_line_report` (from the provenance's points) pass the
+    apex, and the provenance's description of the roles names the whole loop.
+  - `Caper.py`'s report title and `capillary/datasets.py`'s docstring know the whole loop too.
+- **`gui/line_page.py`:**
+  - "The line follows" (three radio buttons) replaces the Arterial limb checkbox. Each role has its
+    own hints and end labels: start and end on a whole loop, set outwards since a loop's bases lie
+    side by side.
+  - The result says which end lies on the arterial limb, and warns when the limbs moved opposite
+    ways. A negative velocity no longer counts as a warning on a whole loop.
+  - The suggested data set name follows the role: set1, limb1 or loop1 (`suggest_name`).
+  - The lines of the recording's saved data sets are drawn dashed in light blue with their names,
+    read once per recording and list of data sets.
+  - During blind placement the preview is neither computed nor shown: a note takes its place.
+- **`gui/measure_page.py`:**
+  - The recording's code is used in the title, messages and job titles.
+  - During blind placement, the range is set to the official rest when a recording opens, and
+    measuring is refused unless the range is exactly the rest (`rest_window`). The last result is
+    hidden, the saved message has no velocity, and the name hint does not show the file name.
+- **`gui/blind.py`** (new):
+  - `code(stem)`: the recording's name, NFC-normalized, hashed (SHA-256) into 5 characters from
+    an alphabet without 0/O and 1/I. The same on every computer and every day. A code two names
+    share gets -2, -3 (`codes`).
+  - `aim_recordings()`: the recordings `capillary.inventory` assigns to the aims.
+  - `listed()`: those recordings, in the order of their codes. Every recording is listed when the
+    official times cannot be read.
+- **`gui/app.py`:**
+  - The header button "Blind placement", yellow while on. Switching it on or off asks first (off
+    in red), and the state is kept in settings.csv as `blind_placement`.
+  - `display_name` gives the code during blind placement. The list, the window title and the
+    stabilization messages use it.
+  - Two boxes, Results and Validation are greyed out and refused (also by Ctrl + 2/3/4), with a
+    message in the status bar.
+  - Switching it on sets the open recording's range to the rest at once.
+- **`gui/library_view.py`:** the list shows display names and filters by them. During blind
+  placement the context menu's Two boxes, Results, Show in folder and Move to trash are disabled.
+- **`gui/results_page.py`:** cards state a whole loop's arterial end and warn of movement.
+- **`gui/theme.py`:** the saved lines' colour, the yellow "on" header button, and a dim colour
+  for disabled tabs.
+- **`capillary/aims.py`** (new), `python3 -m capillary.aims [--data] [--observer] [--out]`:
+  - `collect` reads every centre-line provenance.
+  - `loops` counts a whole loop when it lies within the official rest (`phase` 'rest'), is
+    resolved, shows no `loop_movement` and was measured on a stabilized video. Otherwise
+    `why_not` gives the reason.
+  - Loops of one recording that lie on top of each other are listed (half of the shorter within
+    6 px of the other): one capillary probably drawn twice. They are not removed; that is the
+    observer's call.
+  - `per_recording`: the mean of the counted loops' speeds (the velocity's size), with the
+    numbers of loops placed and counted.
+  - `aim1_recordings` takes each participant's before-exposure recordings from the inventory, and
+    `aim1_pairs` and `aim1` give per observer and study:
+    - the participants with a mean at both visits and at one only;
+    - the typical error (SD of the differences / sqrt 2), the CV (typical error / grand mean) and
+      the CV on the log scale;
+    - the smallest detectable change, 2.77 × the typical error;
+    - Bland–Altman bias and limits (`agreement.bland_altman`), and ICC(A,1) with its 95% interval
+      (`agreement.icc`).
+  - The tables go to `Reports/aims/`. The data folder comes from settings.csv unless `--data` is
+    given.
+- **Tests** (13 new, 300 in all):
+  - `test_spacetime`: the apex on the simulated hairpin and on a loop with uneven limbs.
+  - `test_pattern_shift`: a whole loop names its arterial end and measures each limb at the true
+    speed, both ways round. Limbs moving opposite ways are movement, while a still limb or one too
+    short is not.
+  - `test_line_tasks`: a whole loop measured, saved and regenerated as the page does it.
+  - `test_blind`: codes stable and the same for NFD names, collisions told apart, the listing and
+    its order, and the inventory's choice.
+  - `test_aims`: which loops count and why not, duplicates, the per-recording mean, aim 1 against
+    hand computation, and the command's tables and summary.
+- **Docs:** README (Centre line, blind placement, the whole loop, `capillary.aims`, code table) and
+  CLAUDE.md.
+
+### How it was verified
+
+- **Tests and lint:** 300 tests pass. flake8 is clean on CI's selection, and the touched files add
+  no warnings (the remaining ones are in code unchanged from `main`).
+- **The app's measurement on real data** (scratch `e2e_loops.py`):
+  - `gui.tasks.measure_line_dataset`, with role whole loop and the official rest from
+    `inventory.recording_phases`, measured the 53 whole loops of the aim-1 rerun (points as
+    `measure.py` joins them) into a scratch data folder.
+  - The rest frames are the same for all 53, and both resolve the same 24 loops. Velocities and
+    scores are identical.
+  - The arterial end agrees with `measure.py`'s arterial limb in 24 of 24.
+  - The apex split marks one loop as movement, FP06_Qföre_försök2 H (limbs −0.047 and +0.049 mm/s
+    along the line). It is the same loop the separately traced limbs marked.
+- **`capillary.aims` on those data sets:**
+  - 23 loops counted (29 not resolved, 1 movement); 13 of 15 recordings with loops have a mean,
+    from 1–3 loops (median 2).
+  - ESMOKE aim 1: 5 of 14 participants with a mean at both visits, 3 at one only. Mean
+    0.118 mm/s (W 0.151, Q 0.085).
+  - Typical error 0.031 mm/s, CV 26% (log scale 26%), smallest detectable change 0.086 mm/s.
+  - Bland–Altman bias 0.066 mm/s (95% CI 0.011 to 0.120), limits −0.020 to 0.152. ICC(A,1) 0.12
+    (−0.15 to 0.73).
+  - These are the scratch check's numbers.
+- **The window** (scripted under WSLg, on a scratch data folder with links to the 16 videos; no
+  window took focus):
+  - Without blind placement: the list, the saved lines (6 of FP13_Wföre) and the name loop1
+    suggested for a whole loop.
+  - Blind placement on: 16 recordings by code, the code in the panel and the window title, the
+    three pages greyed out, and Results refused with its message. The range was set to the rest at
+    once, and the preview was hidden.
+  - A whole loop was measured and saved (role whole loop, phase rest, frames 60–1622) with no
+    result shown, and a seventh dashed line appeared. Measuring the whole video was refused.
+  - Blind placement off: names, the result and the preview came back. There were no Tk errors.
+  - Screenshots were checked: the start and end labels lie apart, and the options fit the panel.
+
+### Still open
+
+- **Snap-to-vessel** (tracing along the vessel's ridge as the line is clicked) was proposed as an
+  optional fourth piece and not built.
+- **Aim 2's statistics:** `recordings.csv` already has every recording's mean.
+- **The protocol to agree with the PI before placing:**
+  - which loops count (for example every loop whose two limbs and apex show in the resting image,
+    chosen before measuring);
+  - the mean with its count;
+  - at least one loop per visit;
+  - what to do with flagged duplicates.
+
 ## 2026-10-14 — Whole-loop lines: resting flow measured in more loops
 
 **Branch:** `analysis/whole-loop`, from `main` at `0984a7f` (PR #21, the aim-1 rerun, merged).

@@ -47,6 +47,22 @@ def diagram(speed, frames=90, positions=120, seed=0, cells_sd=2.5, same_moment_s
 
 # ------------------------------------------------------------------------------ the line
 
+def test_the_apex_of_a_line_round_a_capillary_loop():
+    def top(line):                      # these loops open downwards: the apex is the curve's highest point
+        curve = line.curve()
+        arc = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(curve, axis=0).T))])
+        return arc[np.argmin(curve[:, 1])], arc[-1]
+
+    over = np.linspace(np.pi, 0.0, 9)[1:-1]
+    uneven = Centreline.from_points([(0, y) for y in range(100, -1, -10)]           # a long limb and a short one
+                                    + [(10 + 10 * np.cos(a), -10 * np.sin(a)) for a in over]
+                                    + [(20, y) for y in range(0, 41, 10)])
+    for line in (simulate.hairpin(), uneven):
+        apex, total = top(line)
+        assert line.apex_arc_px() == pytest.approx(apex, abs=6)
+        assert line.reversed().apex_arc_px() == pytest.approx(total - apex, abs=6)
+
+
 def test_line_from_points_drops_repeated_points_and_needs_two():
     line = Centreline.from_points([(0, 0), (0, 0), (10, 0)])
     assert line.points == ((0.0, 0.0), (10.0, 0.0))

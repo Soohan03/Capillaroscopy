@@ -13,7 +13,7 @@ video's name: raw recording, stabilized copy, data sets) and four pages:
 
 | Page | What you do there |
 | --- | --- |
-| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range (for a recording of the study, **Rest**, **Occlusion** or **After release** from its official times), name the data set, press **Measure velocity and save**. The result gives the velocity pooled over the range (pattern shift) and that of the 3-s blocks. For the resting velocity of an arterial limb, tick **Arterial limb** and draw the line from the base of the limb to the apex: the direction of the flow then shows whether it is the arterial limb. |
+| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range (for a recording of the study, **Rest**, **Occlusion** or **After release** from its official times), name the data set, press **Measure velocity and save**. The result gives the velocity pooled over the range (pattern shift) and that of the 3-s blocks. Choose what the line follows: any stretch; an **Arterial limb**, drawn from its base to the apex (the direction of the flow then shows whether it is the arterial limb); or a **Whole loop**, from the base of one limb over the apex to the base of the other, which measures resting flow in more loops (the direction shows which end lies on the arterial limb, and each limb is measured on its own as a check against movement). The lines of the recording's saved data sets are drawn dashed. |
 | **Two boxes** | The original method: place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary; the velocity comes from the delay between their brightness signals. Kept for comparison and for the data sets made with it (see below). |
 | **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the line or boxes of a data set restored on its page. |
 | **Validation** | Checks the centre-line velocity on real recordings, where there is no ground truth. A *reading set* draws 3-s blocks from centre-line data sets; observers read them by hand, blinded, by drawing lines along the streaks; the agreement with the estimator, between observers and between two sessions of one observer is computed with Bland–Altman limits, intraclass correlation and kappa. *Line placement* compares data sets of the same capillary measured by different observers (or twice by one). |
@@ -29,6 +29,15 @@ name.
 Stabilizing runs in the background (right-click a recording, or the **⋯** menu
 above the list for all at once); you can keep working meanwhile. Press **F1**
 for all keyboard and mouse controls.
+
+**Blind placement** (the button in the header, since 2026-10-14) is for placing
+the study's lines without anything but the anatomy deciding where they go. The
+list then shows only the recordings the aims use, each under a code (a hash of
+its name) instead of its name, in the order of the codes; the Centre line page
+hides the space-time preview and every result and measures the official rest
+only; Two boxes, Results and Validation are closed. It stays on between
+sessions until turned off. The data sets are saved under the real names, and
+`python3 -m capillary.aims` (below) summarizes them.
 
 Nothing is deleted outright: replaced or removed videos and data sets go to
 `.trash/` in the data folder, keeping their subfolders, so they can be put back
@@ -127,6 +136,18 @@ marked as an arterial limb saves this check with its data set
 and the range's official phase (`phase`: rest, occlusion, after release, or
 several).
 
+**The whole loop (since 2026-10-14).** At rest most single limbs gave too
+little signal: a line from the base of one limb, over the apex, to the base
+of the other collects both limbs' signal, since the flow runs one way round
+the loop. On the aim-1 check it measured 23 of 53 loops at rest against 14 by
+their single limbs (`analysis/whole_loop/`). The direction of its pooled flow
+says which end of the line lies on the arterial limb (`arterial_end`: start,
+end or unknown). The line is also split at its apex (the point farthest from
+both ends) and each limb measured on its own: flow runs the same way along the
+line in both, while the picture moving along the loop runs opposite ways, so
+such a loop is marked (`loop_movement`) and not counted by `capillary.aims`.
+On the aim-1 check this marked the same one loop as separately traced limbs.
+
 **Two boxes (the original method).** The delay between the brightness signals
 of two boxes on the vessel, found by cross-correlation in windows of
 201–301 frames, gives the velocity as distance ÷ delay. In the 2019
@@ -209,8 +230,9 @@ changed later with the gear button. Inside the folder it uses:
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
 | `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
 | `gui/library.py`, `gui/settings.py`, `gui/media.py` | Finding recordings, settings, frames for display |
+| `gui/blind.py` | Blind placement: the codes recordings show under, and which recordings it lists |
 | `Caper.py` | The report plots of both methods, and the agreement plots of the Validation page |
-| `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), and the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`) |
+| `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`), the study's recordings (`inventory.py`) and the aims from the saved data sets (`aims.py`) |
 | `tests/` | Unit tests |
 | `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README); the measure pages take their Rest, Occlusion and After release ranges from them |
 
@@ -259,6 +281,25 @@ box centres and the frames of a data set made in the app are in its
 `…_provenance.json`. The spatial calibration comes from `settings.csv`
 (`mm_per_pixel`) unless `--mm-per-pixel` overrides it.
 `python3 -m capillary.cli --help` lists the rest.
+
+## The aims from the saved data sets
+
+```bash
+python3 -m capillary.aims [--data <data folder>] [--observer SJ]
+```
+
+collects the centre-line data sets into one resting velocity per recording:
+the mean over its whole loops measured within the official rest, counting a
+loop when its pooled pattern shift is resolved (signal-to-noise 8 or more),
+its limbs did not move opposite ways along the line (the picture moving) and
+it was measured on a stabilized video. Loops lying on top of each other in one
+recording are listed for checking. Then aim 1, per study: each participant's
+before-exposure recordings of both visits (`capillary.inventory` chooses them),
+the within-subject CV (typical error / mean), the smallest detectable change
+(2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval. The
+tables go to `Reports/aims/` (`loops.csv`, `recordings.csv`, `aim1_pairs.csv`,
+`aim1.csv`); each observer is summarized on their own. The data folder comes
+from `settings.csv` unless `--data` gives one.
 
 Recordings can be stabilized the same way, for example one after another on
 a computer without a display:

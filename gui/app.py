@@ -5,7 +5,7 @@ Two boxes (velocity from the delay between two boxes), Results (saved data
 sets and reports) and Validation (observers reading blocks by hand, and their
 agreement with the estimator). The window owns the selected recording, the
 background jobs and the application-wide actions (stabilize, move to trash,
-settings).
+settings, blind placement: `gui.blind`).
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from functools import partial
 from tkinter import ttk
 from typing import Optional
 
-from . import library, tasks, theme
+from . import blind, library, tasks, theme
 from .analyze_page import AnalyzePage
 from .dialogs import SettingsDialog, ShortcutsDialog, confirm, show_error
 from .jobs import JobManager
@@ -78,6 +78,7 @@ class App:
 
         self.jobs = JobManager(root)
         self.recordings: list[library.Recording] = []
+        self._codes: dict = {}                    # recording codes during blind placement
         self.selected_stem: Optional[str] = None
         self.current_key: Optional[str] = None
         self._status_after = None
@@ -114,15 +115,13 @@ class App:
                           fill=COLORS['brand'], width=px(3.2), smooth=True, capstyle='round')
         ttk.Label(header, text='Capillaroscopy', style='Brand.Header.TLabel').pack(side='left', padx=(0, px(26)))
         self.nav = tk.StringVar(value=START_PAGE)
+        self.nav_buttons = {}
         for key, page in PAGES:
             button = ttk.Radiobutton(header, text=page.title, value=key, variable=self.nav, style='Nav.Toolbutton',
                                      command=lambda k=key: self.show_page(k))
             button.pack(side='left')
-            Tooltip(button, {'line': 'Velocity along a line drawn on a capillary (Ctrl + 1)',
-                             'analyze': 'Velocity between two boxes on a capillary: the original method (Ctrl + 2)',
-                             'results': 'Saved data sets and their reports (Ctrl + 3)',
-                             'validation': 'Observers read blocks by hand, blinded; their agreement with the '
-                                           'estimator (Ctrl + 4)'}[key])
+            self.nav_buttons[key] = button
+            Tooltip(button, lambda k=key: self._nav_tip(k))
         help_button = ttk.Button(header, text='?', style='Header.TButton', command=self.show_shortcuts, width=2)
         help_button.pack(side='right')
         Tooltip(help_button, 'Keyboard and mouse (F1)')
@@ -130,6 +129,12 @@ class App:
                                      command=self.open_settings)
         settings_button.pack(side='right', padx=(0, px(4)))
         Tooltip(settings_button, 'Settings: data folder, calibration, box size')
+        self.blind_button = ttk.Button(header, command=self.toggle_blind)
+        self.blind_button.pack(side='right', padx=(0, px(10)))
+        Tooltip(self.blind_button, 'Blind placement: place lines on coded recordings without seeing what they '
+                                   'measure. Only the recordings the aims use are listed, under codes; the preview '
+                                   'and every result are hidden; measuring uses the official rest; Two boxes, '
+                                   'Results and Validation are closed.', wrap=340)
 
         self.paned = ttk.Panedwindow(root, orient='horizontal')
         self.paned.grid(row=1, column=0, sticky='nsew')
@@ -163,6 +168,7 @@ class App:
         self.job_cancel.pack(side='left', padx=(px(4), px(6)))
         Tooltip(self.job_cancel, 'Cancel this job')
         self._update_folder_label()
+        self._update_blind_ui()
 
     def _update_folder_label(self):
         root = self.folder.root
@@ -177,7 +183,21 @@ class App:
     def current_page(self):
         return self.pages.get(self.current_key)
 
+    def _nav_tip(self, key):
+        if self.blind and key in blind.LOCKED_PAGES:
+            return 'Closed during blind placement: it shows what lines measure.'
+        return {'line': 'Velocity along a line drawn on a capillary (Ctrl + 1)',
+                'analyze': 'Velocity between two boxes on a capillary: the original method (Ctrl + 2)',
+                'results': 'Saved data sets and their reports (Ctrl + 3)',
+                'validation': 'Observers read blocks by hand, blinded; their agreement with the estimator '
+                              '(Ctrl + 4)'}[key]
+
     def show_page(self, key):
+        if self.blind and key in blind.LOCKED_PAGES:
+            self.nav.set(self.current_key or START_PAGE)
+            self.set_status(f'{self.pages[key].title} is closed during blind placement, since it shows what lines '
+                            'measure. Turn blind placement off in the header when every line is placed.')
+            return
         if key == self.current_key:
             self.nav.set(key)
             return
@@ -209,7 +229,66 @@ class App:
     def update_title(self):
         page = self.current_page
         stem = self.selected_stem if page is not None and page.uses_library else None
-        self.root.title(f'{stem} — Capillaroscopy' if stem else 'Capillaroscopy')
+        self.root.title(f'{self.display_name(stem)} — Capillaroscopy' if stem else 'Capillaroscopy')
+
+    # -------------------------------------------------------------- blind placement
+    @property
+    def blind(self) -> bool:
+        """Whether blind placement is on (`gui.blind`)."""
+        return self.settings.extra.get(blind.SETTING) == '1'
+
+    def display_name(self, stem: Optional[str]) -> str:
+        """How a recording is named on screen: its code during blind placement, else its name."""
+        if not stem or not self.blind:
+            return stem or ''
+        return self._codes.get(stem) or blind.code(stem)
+
+    def toggle_blind(self):
+        self.set_blind(not self.blind)
+
+    def set_blind(self, on: bool, ask: bool = True):
+        if on == self.blind:
+            return
+        if ask and on and not confirm(
+                self.root, 'Start blind placement?', 'Only the recordings the aims use are listed, under codes instead '
+                'of their names. The space-time preview and every result are hidden, measuring uses the official '
+                'rest, and Two boxes, Results and Validation are closed.',
+                'Choose the capillaries and place the lines by the anatomy alone. Turn it off when every line is '
+                'placed.', ok='Start blind placement'):
+            return
+        if ask and not on and not confirm(
+                self.root, 'End blind placement?', 'Recording names, the preview and the results of the lines '
+                'measured so far will show again.', 'End it only when every line is placed.',
+                ok='End blind placement', danger=True):
+            return
+        if on:
+            self.settings.extra[blind.SETTING] = '1'
+        else:
+            self.settings.extra.pop(blind.SETTING, None)
+        try:
+            self.settings.save()
+        except OSError:
+            log.warning('Could not save blind placement in the settings', exc_info=True)
+        self._update_blind_ui()
+        if on and self.current_key in blind.LOCKED_PAGES:
+            self.show_page(START_PAGE)
+        for page in self.pages.values():           # blind placement measures the official rest
+            rest = page.rest_window() if on and hasattr(page, 'rest_window') else None
+            if rest is not None:
+                page.range = rest
+        self.refresh_library()
+        page = self.current_page
+        if page is not None and hasattr(page, 'refresh'):
+            page.refresh()
+        self.set_status('Blind placement is on: recordings are coded and results hidden.' if on else
+                        'Blind placement is off.')
+
+    def _update_blind_ui(self):
+        on = self.blind
+        self.blind_button.configure(text='Blind placement: on' if on else 'Blind placement',
+                                    style='On.Header.TButton' if on else 'Header.TButton')
+        for key, button in self.nav_buttons.items():
+            button.state(['disabled'] if on and key in blind.LOCKED_PAGES else ['!disabled'])
 
     # -------------------------------------------------------------------- recordings
     def recording_by_stem(self, stem) -> Optional[library.Recording]:
@@ -223,6 +302,9 @@ class App:
 
     def refresh_library(self, select=None):
         self.recordings = library.scan(self.folder)
+        if self.blind:
+            self.recordings = blind.listed(self.recordings)
+            self._codes = blind.codes(recording.stem for recording in self.recordings)
         stems = [recording.stem for recording in self.recordings]
         if select in stems:
             self.selected_stem = select
@@ -249,8 +331,8 @@ class App:
         if not recording.raw:
             return
         if recording.is_stabilized and not confirm(
-                self.root, 'Stabilize again?', f'{recording.stem} already has a stabilized video. Stabilizing it again '
-                'replaces it; the current one is moved to the .trash folder.',
+                self.root, 'Stabilize again?', f'{self.display_name(recording.stem)} already has a stabilized video. '
+                'Stabilizing it again replaces it; the current one is moved to the .trash folder.',
                 'Data sets measured on the current video keep their numbers, but their box positions may not fit '
                 'the new video.', ok='Stabilize again'):
             return
@@ -258,16 +340,17 @@ class App:
 
     def _submit_stabilize(self, recording):
         stem = recording.stem
-        job = self.jobs.submit(f'Stabilize · {stem}', partial(tasks.stabilize, folder=self.folder,
-                                                              raw_path=recording.raw),
+        shown = self.display_name(stem)
+        job = self.jobs.submit(f'Stabilize · {shown}', partial(tasks.stabilize, folder=self.folder,
+                                                               raw_path=recording.raw),
                                lane='processing', key=('stabilize', stem),
-                               on_done=lambda path: self._processing_done(f'Stabilized {stem}.', stem),
-                               on_error=lambda exc: self._processing_failed('Stabilization failed', stem, exc),
-                               on_cancel=lambda: self.set_status(f'Stabilization of {stem} cancelled.'))
+                               on_done=lambda path: self._processing_done(f'Stabilized {shown}.', stem),
+                               on_error=lambda exc: self._processing_failed('Stabilization failed', shown, exc),
+                               on_cancel=lambda: self.set_status(f'Stabilization of {shown} cancelled.'))
         if job is None:
-            self.set_status(f'{stem} is already being stabilized.')
+            self.set_status(f'{shown} is already being stabilized.')
         else:
-            self.set_status(f'Stabilizing {stem} in the background; you can keep working.')
+            self.set_status(f'Stabilizing {shown} in the background; you can keep working.')
 
     def stabilize_many(self, recordings):
         if recordings and confirm(self.root, 'Stabilize all raw recordings?',

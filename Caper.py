@@ -274,7 +274,9 @@ def generate_line_report(report_prefix, diagram, blocks, fps, mm_per_pixel, firs
         ax.axvline(x=float(point), c='r', linewidth=1)
     limb = {'arterial': 'arterial limb, flow towards the apex',
             'venous': 'drawn as the arterial limb, but the flow runs towards the base: venous',
-            'unknown': 'arterial limb, direction of flow not resolved'}.get(summary.get('limb_check'))
+            'unknown': 'arterial limb, direction of flow not resolved'}.get(summary.get('limb_check')) or {
+        'start': 'whole loop, arterial limb at its start', 'end': 'whole loop, arterial limb at its end',
+        'unknown': 'whole loop, direction of flow not resolved'}.get(summary.get('arterial_end'))
     ax.set_title('Velocity along the centre line' + (f' ({limb})' if limb else ''))
     ax.set_ylabel('mm/s (positive: from the first point towards the last)')
     ax.set_xlabel('Seconds')

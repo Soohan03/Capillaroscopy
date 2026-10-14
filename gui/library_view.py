@@ -90,9 +90,11 @@ class ThumbnailLoader:
 class RecordingList(tk.Canvas):
     """A scrolling list drawn on a canvas: thumbnail, name, length and status chips per row."""
 
-    def __init__(self, parent, on_select: Callable, on_context: Callable, on_activate: Callable):
+    def __init__(self, parent, on_select: Callable, on_context: Callable, on_activate: Callable,
+                 label: Callable = lambda item: item.stem):
         super().__init__(parent, bg=COLORS['panel'], highlightthickness=0, bd=0, takefocus=1, width=px(300))
         self.on_select, self.on_context, self.on_activate = on_select, on_context, on_activate
+        self.label = label                  # the name shown for a recording (its code during blind placement)
         self.items: list[Recording] = []
         self.selected: Optional[str] = None
         self.hover: Optional[str] = None
@@ -211,8 +213,8 @@ class RecordingList(tk.Canvas):
                                       outline='')
             x = tx + px(THUMB_W) + px(12)
             available = width - x - px(10)
-            self.create_text(x, top + px(14), text=_ellipsize(item.stem, self._name_font, available), anchor='nw',
-                             font=name_font, fill=COLORS['text'])
+            self.create_text(x, top + px(14), text=_ellipsize(self.label(item), self._name_font, available),
+                             anchor='nw', font=name_font, fill=COLORS['text'])
             info = self.meta.get(item.stem)
             if info is not None:
                 details = f'{format_time(info.duration_s, precise=False)}  ·  {info.frame_count} frames'
@@ -290,7 +292,8 @@ class LibraryPanel(ttk.Frame):
         body = ttk.Frame(self, style='Panel.TFrame')
         body.pack(fill='both', expand=True)
         self.list = RecordingList(body, on_select=self._select, on_context=self._context,
-                                  on_activate=lambda item: app.show_page('line'))
+                                  on_activate=lambda item: app.show_page('line'),
+                                  label=lambda item: app.display_name(item.stem))
         scrollbar = ttk.Scrollbar(body, orient='vertical', command=self.list.yview, style='Slim.Vertical.TScrollbar')
         self.list.configure(yscrollcommand=scrollbar.set)
         self.list.pack(side='left', fill='both', expand=True)
@@ -317,7 +320,8 @@ class LibraryPanel(ttk.Frame):
 
     def _apply_filter(self):
         text = self.filter.get().strip().lower()
-        items = [r for r in self.recordings if text in r.stem.lower()] if text else self.recordings
+        items = ([r for r in self.recordings if text in self.app.display_name(r.stem).lower()] if text
+                 else self.recordings)
         if self.recordings:
             empty = f'No recording matches "{self.filter.get()}".'
         else:
@@ -336,16 +340,19 @@ class LibraryPanel(ttk.Frame):
     def _context(self, recording, event):
         menu = tk.Menu(self, tearoff=False)
         app = self.app
+        # during blind placement, what shows results or the recording's name is closed
+        shown = 'disabled' if app.blind else 'normal'
         menu.add_command(label='Measure velocity along a centre line', command=lambda: app.show_page('line'))
-        menu.add_command(label='Measure velocity with two boxes', command=lambda: app.show_page('analyze'))
-        menu.add_command(label='Results', command=lambda: app.show_page('results'))
+        menu.add_command(label='Measure velocity with two boxes', command=lambda: app.show_page('analyze'),
+                         state=shown)
+        menu.add_command(label='Results', command=lambda: app.show_page('results'), state=shown)
         menu.add_separator()
         menu.add_command(label='Re-stabilize…' if recording.is_stabilized else 'Stabilize',
                          command=lambda: app.stabilize(recording),
                          state='normal' if recording.raw else 'disabled')
         menu.add_separator()
-        menu.add_command(label='Show in folder', command=lambda: app.open_folder(recording.video))
-        menu.add_command(label='Move to trash…', command=lambda: app.trash_recording(recording))
+        menu.add_command(label='Show in folder', command=lambda: app.open_folder(recording.video), state=shown)
+        menu.add_command(label='Move to trash…', command=lambda: app.trash_recording(recording), state=shown)
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:

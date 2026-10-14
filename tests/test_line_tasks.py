@@ -134,6 +134,32 @@ def test_an_arterial_limb_is_checked_by_the_direction_of_its_flow(recording, mon
     assert regenerated['summary']['limb_check'] == 'arterial'           # the role is kept from the provenance
 
 
+def test_a_whole_loop_names_its_arterial_end_and_measures_each_limb(recording):
+    folder, path, clip, _ = recording
+    total = clip.centreline.length_px
+    results = {}
+    for name, (start, end) in (('loop', (20, total - 20)), ('loop_back', (total - 20, 20))):
+        points = [tuple(p) for p in clip.drawn_line(start, end, seed=2).points]
+        results[name] = tasks.measure_line_dataset(
+            FakeJob(), folder=folder, stem=STEM, name=name, video_path=path, points=points, start=10, end=229,
+            mm_per_pixel=MM_PER_PIXEL, role=pattern_shift.WHOLE_LOOP)
+    summary = results['loop']['summary']
+    truth = clip.true_velocity_mm_s(MM_PER_PIXEL)
+    assert summary['pattern_shift_velocity_mm_s'] == pytest.approx(truth, rel=0.05)
+    assert (summary['line_role'], summary['arterial_end'], summary['limb_check']) == ('whole loop', 'start', '')
+    for limb in ('start_limb', 'end_limb'):                    # each limb on its own, along the line
+        assert summary[f'pattern_shift_{limb}_mm_s'] == pytest.approx(truth, rel=0.1)
+    assert summary['loop_movement'] is False
+    assert results['loop_back']['summary']['arterial_end'] == 'end'
+    record = datasets.read_provenance(datasets.line_dataset_files(folder.statistics, STEM, 'loop')['provenance'])
+    assert record['line']['role'] == 'whole loop' and record['summary']['arterial_end'] == 'start'
+    regenerated = tasks.regenerate_line_report(FakeJob(), folder=folder, stem=STEM, name='loop', fps=clip.fps,
+                                               mm_per_pixel=MM_PER_PIXEL)
+    assert regenerated['summary']['arterial_end'] == 'start'           # the role and the line from the provenance
+    assert regenerated['summary']['pattern_shift_start_limb_mm_s'] == pytest.approx(
+        summary['pattern_shift_start_limb_mm_s'], rel=1e-4)
+
+
 def test_the_preview_measures_the_frames_around_the_playhead(recording):
     _, path, clip, points = recording
     preview = tasks.line_preview(path, points, 60, 120, MM_PER_PIXEL)

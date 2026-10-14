@@ -35,6 +35,12 @@ role (``line_role``: 'arterial limb' for a line drawn from a capillary loop's
 base to its apex, else empty), the direction check of an arterial limb
 (``limb_check``: arterial, venous or unknown) and the official phase of the
 range (``phase``: rest, occlusion, after release, or several joined by ' + ').
+Since 2026-10-14 a line can also be a 'whole loop' (from the base of one limb
+over the apex to the base of the other): ``arterial_end`` says which end of it
+lies on the arterial limb (start, end or unknown), and each limb's own pattern
+shift (``pattern_shift_start_limb_...``, ``pattern_shift_end_limb_...``) with
+``loop_movement`` whether they ran opposite ways along the line, as the
+picture moving does (`capillary.pattern_shift.loop_limbs`).
 
 Versions before 2026-10-06 also had an optical-flow measurement, saved as
 ``___flow.pickle`` and ``___mask.pickle`` (plus ``___flow_provenance.json``)
