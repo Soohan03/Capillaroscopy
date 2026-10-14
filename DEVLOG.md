@@ -6,6 +6,39 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — The 28 new ESMOKE recordings stabilized
+
+**Branch:** `feature/blind-whole-loop`. No code changed; this entry and CLAUDE.md's data notes.
+
+The user copied the remaining ESMOKE recordings into `RecordedVideos/` from OneDrive, and asked
+for the new ones to be stabilized: 28 raw videos of FP15–FP22. Each came with a Windows
+`:Zone.Identifier` file beside it, which the app ignores.
+
+**How:**
+- The app's own job (`gui.tasks.stabilize`, the stabilizer as re-made on 2026-10-14) ran from a
+  scratch script, 7 videos at a time, the aims' recordings first.
+- The unfinished output went to `StabilizedVideos/.partial_batch/`, since the app empties
+  `.partial/` when it starts. The folder was removed afterwards.
+- It took 14.5 min: about 3.5 min per video, 0.5 min for the two short clips.
+
+**Results:** all 28 videos were written with their shift files and provenance; none failed.
+- **The 24 the aims use** (FP15, FP16, FP18, FP20, FP21 and FP22, four each):
+  - median match over the official rest 0.69–0.94, and no frame lost in any rest;
+  - the picture moved 8–84 px during the rest (FP16_Wefter most).
+- **FP21_Qföre** jumps 103 px at 74.9 s, 13 s after the cuff went on (62.2 s). One frame is lost
+  at 77.1 s, and 6 frames were carried from their neighbours. Its rest (11 px of movement, match
+  0.88) is unaffected.
+- **FP21_Wefter** has a median match of 0.47 over the whole recording (0.74 at rest), and 11
+  frames were carried from their neighbours.
+- **Not used by the aims:**
+  - FP17_Qföre and FP17_Qefter_försök2 (FP17's W före has no official times);
+  - FP17_Wföre and FP19_Wföre, clips of 26 and 24 s without official times.
+- `FP21Wföre_20-Nov-2019_09-08-03` lacks the underscore after FP21, as in the official times. The
+  inventory reads it.
+- **On the desktop now:** 61 stabilized videos, among them all 54 ESMOKE recordings the aims use.
+  The two raw FP09 efter recordings, which the aims do not use, are still unstabilized. The 36
+  ISMOKE recordings are not on the desktop yet.
+
 ## 2026-10-14 — Whole loops and blind placement in the app; the aims from the saved data sets
 
 **Branch:** `feature/blind-whole-loop`, from `main` at `ec877bc` (PR #22, whole-loop lines in the
