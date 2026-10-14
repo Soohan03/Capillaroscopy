@@ -9,7 +9,8 @@ it was verified. Newest entries first.
 ## 2026-10-14 — Lines must stay in the picture: the stabilizer's black strip
 
 **Branch:** `fix/line-picture-edge`, from `feature/blind-whole-loop` at `98bcf76` (the note on the
-first ISMOKE recordings, not yet on `main`, so this branch's pull request carries it too).
+first ISMOKE recordings, not yet on `main`, so this branch's pull request carries it too). Commit
+`d0e0778` (code, tests, README, CLAUDE.md, this entry).
 
 The user asked what limits the tool now and then to "fix the edge bug". This was an open item
 from the slow-range work: where the picture moved, the stabilizer moves the frame back and leaves
