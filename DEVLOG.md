@@ -6,6 +6,62 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — 30 more ISMOKE recordings stabilized
+
+**Branch:** `fix/line-picture-edge`. No code changed; this entry and CLAUDE.md's data notes.
+
+The user copied more ISMOKE recordings into `RecordedVideos/` and asked for some of the newest to
+be stabilized. Some came from a second OneDrive zip (`OneDrive_2_2026-10-14.zip`, 12 videos of
+FP19, FP20 and FP21) that was still being extracted.
+
+**How:**
+- The app's own job (`gui.tasks.stabilize`) ran from a scratch script, 7 videos at a time, the
+  aims' recordings first.
+- A video started only once fully written. For a video of the zip, its file had the size the zip
+  lists; for one copied earlier, its size had held and it had not changed for a minute.
+- Unfinished output went to `StabilizedVideos/.partial_batch/`, removed afterwards.
+- 30 videos in 18.8 min (a median 3.25 min each). None failed.
+- Left as before: the two raw FP09 efter recordings, which the aims do not use.
+
+**Results:**
+- **The 26 recordings the aims use** (FP08 Cföre and Sföre, and the four of each of FP09, FP15,
+  FP16, FP19, FP20 and FP21):
+  - no frame lost in any rest;
+  - median match over the official rest 0.79 (0.58–0.93; FP09_Cföre 0.58 and FP16_Cföre 0.63
+    lowest);
+  - the picture moved 15–217 px during the rest (median 70).
+- **Where lines can go** (`stabilize.picture_area` over the rest): a median 82% of the frame
+  (49–94%), less than on the 60 recordings checked in the previous entry (a median 92%). Below
+  75% on 8:
+  - FP08_Sföre 49% (it moved 217 px);
+  - FP16_Cföre 62%, and FP16_Sföre, FP19_Cefter and FP20_Sefter 64% each;
+  - FP21_Sföre2 70%, and FP09_Cföre and FP16_Sefter 72%.
+- **Outside the rest:**
+  - FP21_Cföre: 1189 of its 1698 occlusion frames were carried along the path from their
+    neighbours. The picture changes under the cuff (match 0.30 there). Its rest is placed by the
+    references throughout (match 0.82).
+  - FP21_Sefter lost 90 frames and FP20_Sefter 17, all in the occlusion. FP19_Sföre lost 5,
+    outside the rest.
+- **Not used by the aims:**
+  - FP08_Sefter, FP10_Sföre and FP11_Cföre. FP11_Cföre has no official rest and lost 453 frames.
+  - FP18_Sföre, 11900 frames (6.6 min). Its picture could mostly not be followed: 9421 frames
+    were lost.
+- **Now:** 103 stabilized videos. All 54 ESMOKE recordings the aims use and 32 of the 36 ISMOKE
+  ones. Missing: ISMOKE FP23's four (Sföre and Sefter of 02-Dec-2020, Cföre and Cefter2 of
+  09-Dec-2020), in neither `RecordedVideos/` nor the zip.
+
+**Also this session (scratch, nothing in the repository):** asked to place lines on one recording
+and give its velocities, Claude Code placed whole loops on ISMOKE_FP02_Sföre_02-Nov-2020. That
+recording is not used by the aims, so the study's recordings stay blind for the user's own
+placement.
+- Three loops had both limbs and the apex visible on the rest's mean image. They were traced along
+  the vessel (as in `analysis/aim1_feasibility/measure.py`) and measured over the official rest
+  with `gui.tasks.measure_line_dataset`.
+- Results: 0.044, 0.083 and 0.051 mm/s (signal-to-noise 79.6, 34.9 and 8.5), a mean of
+  0.059 mm/s.
+- Four more loops were seen but not placed: two narrow ones whose limbs merge into one band, one
+  at the frame's edge, and one too faint.
+
 ## 2026-10-14 — Lines must stay in the picture: the stabilizer's black strip
 
 **Branch:** `fix/line-picture-edge`, from `feature/blind-whole-loop` at `98bcf76` (the note on the
