@@ -280,10 +280,14 @@ the 2026-10-05 GUI rebuild entry.
   - FP03_Qföre moves about 500 px when the cuff goes on, to a view that shares almost nothing
     with the rest. From then on it is lost; its rest is as before, now centred.
   - Building the references in the rest lowers the match in later phases where the old
-    references lay there (FP03_Wföre's occlusion 0.66 → 0.57, shifts within 1 px).
-  - Videos stabilized before 2026-10-14 may be centred differently: re-stabilizing moves their
-    picture, so lines placed on them (`analysis/aim1_feasibility/lines.json`, data sets) no
-    longer fit.
+    references lay there, though the frames stay where they were (median within 1 px). In
+    the occlusion: FP03_Wföre 0.66 → 0.57, FP06_Qföre 0.75 → 0.36, the four FP12 about
+    0.85 → 0.50. At rest the match rose in 16 of 18 such recordings (FP12_Wföre
+    0.42 → 0.87).
+  - All 33 videos in `StabilizedVideos/` were re-made with it on 2026-10-14; the old ones are in
+    `.trash/`. The new centring moved their picture by 2–169 px (median 25), so lines placed
+    on the old videos (`analysis/aim1_feasibility/lines.json`, the slow-range validation's)
+    no longer fit (DEVLOG).
 - **The two-box method failed on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box
@@ -304,7 +308,7 @@ the 2026-10-05 GUI rebuild entry.
     - FP03_Wföre is dark, with low contrast, and swings by about 200 px with breathing.
       It stays aligned throughout, with a median match of about 0.6.
   - Any video stabilized before the new registration is off by up to 5.6 px where the
-    image had moved far; re-stabilize it.
+    image had moved far; re-stabilize it. (All of the desktop's were re-made on 2026-10-14.)
   - Translation only: local deformation is not corrected. The match falls during the
     occlusion on FP01_Qföre (0.92 at rest with the earlier references, 0.75 in occlusion);
     changed content or deformation, not told apart.
