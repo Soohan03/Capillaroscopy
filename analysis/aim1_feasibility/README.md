@@ -7,12 +7,18 @@ recording show measurable flow at rest, how many of those are arterial, and in h
 many participants does each visit give an arterial limb. What was found is in the
 DEVLOG entry of 2026-10-12.
 
+On 2026-10-14 the check was repeated on the re-stabilized videos, with the same lines
+moved onto them, FP01_W added and the slow range measured too: `restabilized/` (its
+README). The results barely changed. The files of this folder are the record of the
+first run, on the videos as stabilized on 2026-10-11/12, which are now in `.trash/`.
+
 ## Recordings
 
 The 16 före recordings of the 8 ESMOKE participants with both visits on the desktop
 (FP01, FP03, FP05, FP06, FP07, FP09, FP12, FP13), stabilized by `capillary.stabilize`.
 FP01_W (`FP01_W_14-Oct-2019_08-36-26`) is left out because the stabilizer cannot follow
-its drift of about 200 px (DEVLOG 2026-10-08). That leaves 15.
+its drift of about 200 px (DEVLOG 2026-10-08). That leaves 15. (The new stabilizer of
+2026-10-14 follows it; the rerun in `restabilized/` includes it.)
 
 ## How the lines were placed
 
@@ -62,7 +68,9 @@ Over the official rest window, as a centre-line data set of the app keeps it
   towards the apex is the arterial limb, flow away from it the venous limb, and an
   unresolved line is unknown;
 - the centre-line method's 3-s blocks: the share resolved, their median and quartiles,
-  and the share running along the line.
+  and the share running along the line;
+- since 2026-10-14 (the rerun only), the pattern shift with its slow range, from
+  0.1 px/frame (keys `slow_pattern_shift_...`), which the app does not offer.
 
 ## When a limb counts as measured (`summarize.py`)
 
@@ -99,8 +107,9 @@ moves both limbs the same way.
 | `summary_participants.csv` | Per participant, visit and level: limbs and arterial limbs measured; whether both visits give an arterial limb, or any limb |
 | `common.py` | Paths, the recordings aim 1 uses (`capillary.inventory`), the rest window, the band-pass |
 | `rest_image.py`, `zoom.py` | The resting image with a grid, and zoomed parts of it, to place points |
-| `measure.py` | Traces and measures the lines (`--trace-only` only traces and draws them) |
+| `measure.py` | Traces and measures the lines (`--trace-only` only traces and draws them; `--jobs N` measures N recordings at once) |
 | `summarize.py` | The two summaries, printed as Markdown tables |
+| `restabilized/` | The rerun on the re-stabilized videos (2026-10-14), with its own lines, results, summaries and README |
 
 `out/` (not tracked) holds the resting images, the lines drawn on them
 (`<recording>_lines.png`, an arrowhead at the apex end) and each line's space-time
@@ -116,3 +125,8 @@ python analysis/aim1_feasibility/rest_image.py <recording> ...   # about 10 s ea
 python analysis/aim1_feasibility/measure.py <recording> ...      # about a minute each
 python analysis/aim1_feasibility/summarize.py
 ```
+
+The scripts work on this folder's run unless given `--dir <folder>`, for example
+`--dir restabilized` for the rerun. This folder's lines belong to the videos as stabilized
+on 2026-10-11/12. Measuring them again needs those videos back in `StabilizedVideos/`
+(they are in `.trash/`); `summarize.py` runs from the saved results.

@@ -252,12 +252,21 @@ the 2026-10-05 GUI rebuild entry.
     - An arterial limb at both visits in 1 of 7 participants (any limb in 4). Arterial-only
       resting CBV looks infeasible with these videos. The choice (any limb? the combined rule?)
       is for the supervisors.
+    - **Rerun on the re-stabilized videos** (2026-10-14, `analysis/aim1_feasibility/restabilized/`):
+      the same lines moved onto them, FP01_W added (none of its 6 limbs resolved).
+      - Almost nothing changed: 23 of 115 limbs resolved (3 limbs near the threshold changed,
+        both ways), and velocities agree within 0.005 mm/s.
+      - Of 8 participants, an arterial limb at both visits in 0–3 and any limb in 2–5, by rule.
+      - A sub-pixel change of a line moves its score by about 5%, so limbs within about 1.5 of
+        the threshold of 8 can fall either side of it.
   - **The pattern shift's slow range** (2026-10-14, `analysis/pattern_shift_slow_flow/`) replaces
     the combined rule's centre-line blocks in principle. On the same 109 limbs at rest:
     - it resolved 42 (17 below 1 px/frame);
     - loops with both limbs resolved: 14 opposite, 4 the same way;
     - it agreed in direction with all 16 limbs whose blocks qualified (median ratio 0.96);
-    - a limb at both visits in 3 of 7 participants, an arterial one in 2.
+    - a limb at both visits in 3 of 7 participants, an arterial one in 2;
+    - on the re-stabilized videos (rerun above) 41 of 115. Below 1 px/frame its speed can change
+      by up to 2.6 times with a sub-pixel change of the line.
   - **Movement of the picture looks like slow flow** (found 2026-10-14). Below 1 px/frame a line
     cannot tell the blood moving from the picture moving along it.
     - FP03_Wföre's loops E and F move the same way in all four limbs at rest (signal-to-noise
@@ -271,6 +280,8 @@ the 2026-10-05 GUI rebuild entry.
       as flow in 2–4 of 10, a steady drift always, and 2-px movements never.
     - From 1 px/frame up none of this reached the threshold. A check that the picture held still
       near the line (for example the tissue beside it) would make the slow range usable.
+    - The re-stabilized videos did not remove it: in the occlusion, 22 of the same 91 limbs
+      against 23 before.
 - **Large movements** (found 2026-10-08, fixed 2026-10-14 by following the movement frame to
   frame).
   - FP01_W (references were built in its darkening last seconds) and FP03_Wefter
@@ -287,7 +298,9 @@ the 2026-10-05 GUI rebuild entry.
   - All 33 videos in `StabilizedVideos/` were re-made with it on 2026-10-14; the old ones are in
     `.trash/`. The new centring moved their picture by 2–169 px (median 25), so lines placed
     on the old videos (`analysis/aim1_feasibility/lines.json`, the slow-range validation's)
-    no longer fit (DEVLOG).
+    no longer fit (DEVLOG). They were moved onto the new videos in
+    `analysis/aim1_feasibility/restabilized/` (`--dir restabilized` for the aim-1 scripts and
+    `validate_real.py`).
 - **The two-box method failed on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box

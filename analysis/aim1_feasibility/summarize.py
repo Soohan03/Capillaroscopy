@@ -1,10 +1,11 @@
 """Aim 1's feasibility from results.csv: what each recording and each participant gives at rest.
 
-python analysis/aim1_feasibility/summarize.py
+python analysis/aim1_feasibility/summarize.py [--dir <folder>]
 
 Lists the recordings aim 1 uses (`capillary.inventory`) of every participant
-with at least one measured recording, measured or not. A limb's velocity is
-counted at three levels:
+with at least one measured recording, measured or not. --dir works on another
+run of the check (common.py). A limb's velocity is counted at three levels, and
+a fourth where results.csv has the slow range:
 
 - `resolved`: the app's rule, the pooled pattern shift resolved (signal-to-noise
   ratio 8 or more).
@@ -18,21 +19,27 @@ counted at three levels:
   them are resolved and at least `CL_MIN_ONE_WAY` of those run the same way;
   the velocity is then their median. Many limbs scored high at the pattern
   shift's slowest speed, and the centre-line method measures slower flow.
+- `slow` (measured since 2026-10-14): the pooled pattern shift with its slow
+  range, from 0.1 px/frame (`min_speed=SLOW_MIN_SPEED`, keys `slow_...`),
+  resolved. It is not the app's rule: below 1 px/frame a line cannot tell flow
+  from the picture moving along it (CLAUDE.md, Known issues).
 
 The check (arterial or venous) comes from the direction of the velocity along a
 line drawn from the base to the apex (`limb_from_direction`). A loop with both
 limbs measured must show one of each, since the blood goes up one limb and down
 the other: `loops_both` counts such loops and `loops_opposite` those that do.
 
-Writes summary_recordings.csv and summary_participants.csv (every level) and
-prints compact Markdown tables.
+Writes summary_recordings.csv and summary_participants.csv (every level) into
+the run's folder and prints compact Markdown tables.
 """
 import os
+import sys
 
 import numpy as np
 import pandas as pd
 
-from common import HERE, MM_PER_PIXEL, RESULTS, aim1_recordings
+import common
+from common import MM_PER_PIXEL, aim1_recordings
 from capillary.pattern_shift import limb_from_direction
 
 #: Resolved speeds below this (px/frame) may be drift rather than flow: at 1-1.5 px/frame band-passed
@@ -44,6 +51,13 @@ CL_MIN_RESOLVED = 0.25
 #: ... and at least this share of the resolved blocks runs the same way (jitter splits them both ways).
 CL_MIN_ONE_WAY = 0.9
 LEVELS = ('resolved', 'robust', 'combined')
+#: The slow range's level, counted where results.csv has the slow range.
+SLOW = 'slow'
+
+
+def levels_of(table: pd.DataFrame) -> tuple:
+    """The levels `table` (results, or a summary of them) is counted at: `LEVELS`, and `SLOW` where it has it."""
+    return LEVELS + ((SLOW,) if 'slow_pattern_shift_resolved' in table or SLOW in table else ())
 
 
 def mark_levels(results: pd.DataFrame) -> pd.DataFrame:
@@ -61,7 +75,10 @@ def mark_levels(results: pd.DataFrame) -> pd.DataFrame:
     results['robust_mm_s'] = ps.where(robust)
     results['combined_mm_s'] = ps.where(robust, results['centre_line_median_mm_s'].where(blocks))
     results['combined_method'] = np.where(robust, 'pattern shift', np.where(blocks, 'centre line', ''))
-    for level in LEVELS:
+    if SLOW in levels_of(results):
+        results['slow_mm_s'] = results['slow_pattern_shift_velocity_mm_s'].where(
+            results['slow_pattern_shift_resolved'].astype(bool))
+    for level in levels_of(results):
         results[f'{level}_check'] = [limb_from_direction(v) if kind == 'limb' else ''
                                      for v, kind in zip(results[f'{level}_mm_s'], results['kind'])]
     return results
@@ -80,7 +97,9 @@ def per_recording(results: pd.DataFrame, wanted: pd.DataFrame) -> pd.DataFrame:
         row = {'study': item.study, 'subject': item.subject, 'role': item.role, 'recording': item.name,
                'measured': bool(len(part)), 'limbs': len(limbs), 'loops': limbs['loop'].nunique(),
                'tissue_max_snr': tissue['pattern_shift_snr'].max() if len(tissue) else np.nan}
-        for level in LEVELS:
+        if SLOW in levels_of(results):
+            row['tissue_max_slow_snr'] = tissue['slow_pattern_shift_snr'].max() if len(tissue) else np.nan
+        for level in levels_of(results):
             measured = limbs[limbs[f'{level}_mm_s'].notna()]
             arterial = measured[measured[f'{level}_check'] == 'arterial']
             venous = measured[measured[f'{level}_check'] == 'venous']
@@ -104,7 +123,7 @@ def per_participant(recordings: pd.DataFrame) -> pd.DataFrame:
         visits = {role: part[part['role'] == role] for role in ('active', 'control')}
         measured = {role: len(visit) == 1 and bool(visit['measured'].iloc[0]) for role, visit in visits.items()}
         row['both_measured'] = all(measured.values())
-        for level in LEVELS:
+        for level in levels_of(recordings):
             for role, visit in visits.items():
                 for key in ('', '_arterial', '_arterial_mean_mm_s'):
                     row[f'{role}_{level}{key}'] = visit[f'{level}{key}'].iloc[0] if measured[role] else np.nan
@@ -114,7 +133,8 @@ def per_participant(recordings: pd.DataFrame) -> pd.DataFrame:
                 row[f'active_{level}'], row[f'control_{level}']) >= 1
         rows.append(row)
     table = pd.DataFrame(rows)
-    counts = [f'{role}_{level}{key}' for role in ('active', 'control') for level in LEVELS for key in ('', '_arterial')]
+    counts = [f'{role}_{level}{key}' for role in ('active', 'control') for level in levels_of(recordings)
+              for key in ('', '_arterial')]
     return table.astype({column: 'Int64' for column in counts})
 
 
@@ -140,7 +160,8 @@ def compact(recordings: pd.DataFrame, participants: pd.DataFrame) -> tuple:
         'Recording': recordings['recording'].str.replace(r'_\d\d-\w{3}-\d{4}_.*$', '', regex=True),
         'Limbs (loops)': [f'{n} ({m})' if measured else 'not measured' for n, m, measured
                           in zip(recordings['limbs'], recordings['loops'], recordings['measured'])]})
-    for level in LEVELS:
+    levels = levels_of(recordings)
+    for level in levels:
         shown[f'{level.capitalize()}: art/ven'] = [
             f'{a}/{v}' if measured else '' for a, v, measured
             in zip(recordings[f'{level}_arterial'], recordings[f'{level}_venous'], recordings['measured'])]
@@ -148,27 +169,32 @@ def compact(recordings: pd.DataFrame, participants: pd.DataFrame) -> tuple:
         recordings['combined_loops_both'], recordings['combined_loops_opposite'], recordings['measured'])]
     shown['Arterial, combined (mm/s)'] = recordings['combined_arterial_mm_s']
     shown['Tissue score'] = recordings['tissue_max_snr']
+    if SLOW in levels:
+        shown['Tissue score, slow'] = recordings['tissue_max_slow_snr']
     people = pd.DataFrame({'Participant': participants['subject'],
                            'Both visits measured': participants['both_measured']})
-    for level in LEVELS:
+    for level in levels:
         people[f'{level.capitalize()}: arterial W / Q'] = [
             f'{a} / {c}' if both else '' for a, c, both in zip(
                 participants[f'active_{level}_arterial'].astype(object),
                 participants[f'control_{level}_arterial'].astype(object), participants['both_measured'])]
         people[f'{level.capitalize()}: both'] = participants[f'{level}_arterial_both_visits']
     people['Combined: any limb in both'] = participants['combined_any_both_visits']
+    if SLOW in levels:
+        people['Slow: any limb in both'] = participants['slow_any_both_visits']
     return shown, people
 
 
-def main() -> None:
-    results = mark_levels(pd.read_csv(RESULTS))
+def main(args) -> None:
+    common.run_args(args)
+    results = mark_levels(pd.read_csv(common.RESULTS))
     wanted = aim1_recordings()
     measured = set(zip(results['study'], results['subject']))
     wanted = wanted[[key in measured for key in zip(wanted['study'], wanted['subject'])]]
     recordings = per_recording(results, wanted)
     participants = per_participant(recordings)
-    recordings.to_csv(os.path.join(HERE, 'summary_recordings.csv'), index=False)
-    participants.to_csv(os.path.join(HERE, 'summary_participants.csv'), index=False)
+    recordings.to_csv(os.path.join(common.FOLDER, 'summary_recordings.csv'), index=False)
+    participants.to_csv(os.path.join(common.FOLDER, 'summary_participants.csv'), index=False)
     shown, people = compact(recordings, participants)
     print(markdown(shown))
     print()
@@ -176,7 +202,7 @@ def main() -> None:
     print()
     limbs = results[results['kind'] == 'limb']
     tissue = results[results['kind'] == 'tissue']
-    for level in LEVELS:
+    for level in levels_of(results):
         both = participants[participants['both_measured']]
         print(f"{level}: {int(limbs[f'{level}_mm_s'].notna().sum())} of {len(limbs)} limbs "
               f"({int((limbs[f'{level}_check'] == 'arterial').sum())} arterial, "
@@ -195,7 +221,16 @@ def main() -> None:
     edge = limbs[~limbs['pattern_shift_resolved'].astype(bool) & (limbs['pattern_shift_snr'] >= 8)]
     print(f"unresolved limbs scoring 8 or more at the pattern shift's slowest speed "
           f"({MM_PER_PIXEL * 30:.3f} mm/s at 30 fps): {len(edge)} in {edge['recording'].nunique()} recordings")
+    if SLOW in levels_of(results):
+        slow = limbs[limbs['slow_mm_s'].notna()]
+        clear = slow['slow_pattern_shift_ci95_low_mm_s'] * slow['slow_pattern_shift_ci95_high_mm_s'] > 0
+        below = slow['slow_pattern_shift_speed_px_per_frame'].abs() < 1
+        print(f"slow range: {len(slow)} limbs resolved, {int(clear.sum())} with a 95% interval clear of zero, "
+              f"{int(below.sum())} below 1 px/frame ({slow['slow_mm_s'].abs().min():.3f}-"
+              f"{slow['slow_mm_s'].abs().max():.3f} mm/s); tissue lines resolved "
+              f"{int(tissue['slow_pattern_shift_resolved'].astype(bool).sum())} of {len(tissue)} (highest score "
+              f"{tissue['slow_pattern_shift_snr'].max():.1f})")
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

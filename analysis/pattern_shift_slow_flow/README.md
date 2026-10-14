@@ -33,7 +33,7 @@ Every script measures the same diagrams with each variant (`VARIANTS` in
 | File | What it is |
 | --- | --- |
 | `validate_synthetic.py` | 222 simulated 60-s clips: 11 speeds from 0.1 to 3 px/frame (4 clips each) and 30 clips without flow, under the disturbances as measured, strong and faint. Writes `synthetic_results.csv`, and `null_bands.csv` (the highest score of each clip without flow in each speed band) |
-| `validate_real.py` | The 124 lines of the aim-1 check (109 limbs, 15 through tissue) at rest, from the diagrams `../aim1_feasibility/measure.py` saved, and in the occlusion, from 15 s after the cuff went up until 2 s before its release (sampled again from the videos). Whole window and each half. Writes `real_results.csv` |
+| `validate_real.py` | The 124 lines of the aim-1 check (109 limbs, 15 through tissue) at rest, from the diagrams `../aim1_feasibility/measure.py` saved, and in the occlusion, from 15 s after the cuff went up until 2 s before its release (sampled again from the videos). Whole window and each half. Writes `real_results.csv`, or with `--dir restabilized` `real_results_restabilized.csv` (the lines moved onto the re-stabilized videos, 2026-10-14) |
 | `validate_wobble.py` | Synthetic clips with the cells standing still or flowing at 0.3 px/frame, while the whole picture moves along the line: sines, sawtooths, bows and steady drifts. Writes `wobble_results.csv` |
 | `*_results.csv` | One row per clip or line, window and variant: the estimate (px/frame), its signal-to-noise ratio and 95% interval, whether it lay inside the searched range and whether it counts as resolved |
 
@@ -43,15 +43,18 @@ Every script measures the same diagrams with each variant (`VARIANTS` in
 
 From the repository. `validate_real.py` needs the aim-1 check's diagrams in
 `../aim1_feasibility/out/` (its `measure.py` writes them), and for the occlusion
-the stabilized videos in `StabilizedVideos/`:
+the stabilized videos in `StabilizedVideos/`. Since the videos were made again on
+2026-10-14, the occlusion needs `--dir restabilized` (see below):
 
 ```
 python analysis/pattern_shift_slow_flow/validate_synthetic.py    # about a minute on 14 cores
-python analysis/pattern_shift_slow_flow/validate_real.py         # about 1.5 minutes
+python analysis/pattern_shift_slow_flow/validate_real.py --dir restabilized   # about 1.5 minutes
 python analysis/pattern_shift_slow_flow/validate_wobble.py       # about 30 s
 ```
 
-Each prints its summary tables; `--summary` prints them again from the saved CSV.
+Each prints its summary tables; `--summary` prints them again from the saved CSV
+(`validate_real.py --summary` that of the first run, with `--dir restabilized` that of the
+rerun).
 
 ## What was found
 
@@ -80,3 +83,21 @@ In short (the numbers are in the DEVLOG):
     from the uncovered edge of the stabilized frame crossing the line: FP13_Qföre G
     left. Some look like real residual flow: FP05_Qföre's loop B.
   - From 1 px/frame up these movements stayed below the threshold.
+- **On the re-stabilized videos (2026-10-14, `--dir restabilized`,
+  `real_results_restabilized.csv`).** The same lines were moved onto the videos made again
+  by the new stabilizer, and FP01_W was added (`../aim1_feasibility/restabilized/`).
+  - At rest, `stretched` resolved 41 of 115 limbs.
+  - In the occlusion, it resolved 22 of 97. FP03_Qföre's occlusion is left out, since the
+    stabilizer lost those frames, and FP01_W's comes in.
+  - On the 91 limbs whose occlusion both runs measured: 23 before, 22 after. The one
+    difference sat at the threshold (score 8.01 → 7.99).
+  - So the slow "flow" in the occlusion is not the movement of the whole picture that the
+    new stabilizer follows.
+
+## The re-stabilized videos
+
+The occlusion is sampled from `StabilizedVideos/`, which was made again on 2026-10-14. The
+first run's lines (`../aim1_feasibility/lines.json`) do not fit the new videos. Run
+`validate_real.py --dir restabilized` to use the lines moved onto them, from the aim-1
+check's rerun. It writes `real_results_restabilized.csv` and `out/restabilized/`, and leaves
+out the occlusion of any recording whose occlusion frames the stabilizer lost.

@@ -1,8 +1,9 @@
 """The resting image of a stabilized recording, to place lines on.
 
-python analysis/aim1_feasibility/rest_image.py [--again] <recording> [<recording> ...]
+python analysis/aim1_feasibility/rest_image.py [--dir <folder>] [--again] <recording> [<recording> ...]
 
-A mean saved before is reused; --again reads the video again.
+A mean saved before is reused; --again reads the video again. --dir works on
+another run of the check (common.py).
 
 The mean of the official rest window (`capillary.inventory.recording_phases`:
 2 s after the start to 2 s before the occlusion), band-passed
@@ -16,7 +17,8 @@ import sys
 import cv2
 import numpy as np
 
-from common import OUT, rest_window, to_uint8, vessel_image, video_path
+import common
+from common import rest_window, to_uint8, vessel_image, video_path
 from capillary.video import iter_frames
 
 SCALE = 1.5
@@ -33,8 +35,8 @@ def rest_mean(stem: str) -> np.ndarray:
         total = frame.astype(np.float64) if total is None else total + frame
         count += 1
     mean = (total / count).astype(np.float32)
-    os.makedirs(OUT, exist_ok=True)
-    np.save(os.path.join(OUT, f'{stem}_rest_mean.npy'), mean)
+    os.makedirs(common.OUT, exist_ok=True)
+    np.save(os.path.join(common.OUT, f'{stem}_rest_mean.npy'), mean)
     return mean
 
 
@@ -57,9 +59,10 @@ def grid_image(mean: np.ndarray, scale: float = SCALE) -> np.ndarray:
 
 
 if __name__ == '__main__':
-    again = '--again' in sys.argv[1:]
-    for stem in (arg for arg in sys.argv[1:] if arg != '--again'):
-        saved = os.path.join(OUT, f'{stem}_rest_mean.npy')
+    args = common.run_args(sys.argv[1:])
+    again = '--again' in args
+    for stem in (arg for arg in args if arg != '--again'):
+        saved = os.path.join(common.OUT, f'{stem}_rest_mean.npy')
         mean = np.load(saved) if os.path.exists(saved) and not again else rest_mean(stem)
-        cv2.imwrite(os.path.join(OUT, f'{stem}_rest_grid.png'), grid_image(mean))
+        cv2.imwrite(os.path.join(common.OUT, f'{stem}_rest_grid.png'), grid_image(mean))
         print('saved', stem)

@@ -1,9 +1,11 @@
 """Measure the lines of lines.json over the official rest window, as a centre-line data set would.
 
-python analysis/aim1_feasibility/measure.py [--trace-only] <recording> [<recording> ...]
+python analysis/aim1_feasibility/measure.py [--dir <folder>] [--jobs N] [--trace-only] <recording> [...]
 
 With --trace-only the lines are traced and drawn, nothing is measured: the
-lines are checked and corrected this way before any velocity is seen.
+lines are checked and corrected this way before any velocity is seen. --dir
+works on another run of the check (common.py); --jobs measures N recordings at
+once.
 
 A limb is given by points placed by eye on the resting image, from the limb's
 base to its apex (`points`: at least those two, with points between them where
@@ -15,7 +17,10 @@ measured over the official rest window with what a centre-line data set keeps
 each half (`capillary.pattern_shift.summarize`), the limb the direction of the
 pooled flow shows (`limb_from_direction`), and the 3-s blocks of the
 centre-line method (share resolved, median and quartiles, and the share running along the
-line). Needs out/<recording>_rest_mean.npy (rest_image.py).
+line). Since 2026-10-14 the pattern shift is also measured with its slow range
+(`min_speed=pattern_shift.SLOW_MIN_SPEED`, which the app does not offer): the
+same keys starting with ``slow_``, and `slow_limb_check`. Needs
+out/<recording>_rest_mean.npy (rest_image.py).
 
 Writes out/<recording>_lines.png (the lines on the resting image, an arrowhead
 at the apex end) and out/<recording>__<line>.npy (each space-time diagram), and
@@ -25,6 +30,7 @@ import json
 import os
 import re
 import sys
+from concurrent.futures import ProcessPoolExecutor
 
 import cv2
 import numpy as np
@@ -32,7 +38,8 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import dijkstra
 
-from common import LINES, MM_PER_PIXEL, OUT, RESULTS, rest_window, to_uint8, vessel_image, video_path
+import common
+from common import MM_PER_PIXEL, rest_window, to_uint8, vessel_image, video_path
 from capillary import inventory, pattern_shift
 from capillary.spacetime import Centreline, SpaceTimeSampler, analyze_space_time, space_time_summary
 from capillary.video import iter_frames
@@ -197,7 +204,7 @@ def overlay(mean: np.ndarray, lines: dict, path: str, scale: int = 2) -> None:
 
 def traced_lines(stem: str, specs: dict) -> tuple:
     """The centre lines of `specs` (a recording's entry in lines.json) and their mean ridge values; draws them."""
-    mean = np.load(os.path.join(OUT, f'{stem}_rest_mean.npy'))
+    mean = np.load(os.path.join(common.OUT, f'{stem}_rest_mean.npy'))
     ridge = ridge_map(mean)
     traced = {}
     loops = {spec['loop'] for spec in specs.values() if spec['kind'] == 'limb'}
@@ -208,15 +215,18 @@ def traced_lines(stem: str, specs: dict) -> tuple:
     for name, spec in specs.items():
         points, on_ridge[name] = traced[name] if spec['kind'] == 'limb' else (spec['points'], float('nan'))
         lines[name] = Centreline.from_points(points)
-    overlay(mean, lines, os.path.join(OUT, f'{stem}_lines.png'))
+    overlay(mean, lines, os.path.join(common.OUT, f'{stem}_lines.png'))
     outside = [name for name, line in lines.items() if not SpaceTimeSampler(line).inside(mean.shape)]
     if outside:
         raise ValueError(f'{stem}: lines leave the frame: {outside}')
     return lines, on_ridge
 
 
-def measure(stem: str, specs: dict) -> pd.DataFrame:
-    """One row per line of `specs` (a recording's entry in lines.json), measured over the rest window."""
+def measure(stem: str, specs: dict) -> tuple:
+    """One row per line of `specs` (a recording's entry in lines.json), measured over the rest window.
+
+    Returns the rows and a line of text per line, for `main` to print.
+    """
     fps, (first, last) = rest_window(stem)
     lines, on_ridge = traced_lines(stem, specs)
     samplers = {name: SpaceTimeSampler(line) for name, line in lines.items()}
@@ -227,12 +237,14 @@ def measure(stem: str, specs: dict) -> pd.DataFrame:
             rows[name].append(sampler.row(frame))
 
     recording = inventory.parse_name(stem)
-    results = []
+    results, report = [], []
     for name, line in lines.items():
         spec = specs[name]
         diagram = np.asarray(rows[name], dtype=np.float32)
-        np.save(os.path.join(OUT, f'{stem}__{file_safe(name)}.npy'), diagram)
+        np.save(os.path.join(common.OUT, f'{stem}__{file_safe(name)}.npy'), diagram)
         shift = pattern_shift.summarize(diagram, fps, MM_PER_PIXEL)
+        slow = {f'slow_{key}': value for key, value in pattern_shift.summarize(
+            diagram, fps, MM_PER_PIXEL, min_speed=pattern_shift.SLOW_MIN_SPEED).items()}
         blocks = space_time_summary(analyze_space_time(diagram, fps, MM_PER_PIXEL, first_frame=first))
         results.append({
             'recording': stem, 'study': recording.study, 'subject': recording.subject,
@@ -243,24 +255,44 @@ def measure(stem: str, specs: dict) -> pd.DataFrame:
             **shift,
             'limb_check': (pattern_shift.limb_from_direction(shift['pattern_shift_velocity_mm_s'])
                            if spec['kind'] == 'limb' else ''),
+            **slow,
+            'slow_limb_check': (pattern_shift.limb_from_direction(slow['slow_pattern_shift_velocity_mm_s'])
+                                if spec['kind'] == 'limb' else ''),
             'centre_line_blocks': blocks['blocks'], 'centre_line_resolved_fraction': blocks['resolved_fraction'],
             'centre_line_median_mm_s': blocks['median'], 'centre_line_q25_mm_s': blocks['q25'],
             'centre_line_q75_mm_s': blocks['q75'], 'centre_line_positive_fraction': blocks['positive_fraction'],
             'points': ';'.join(f'{x:.1f},{y:.1f}' for x, y in line.points),
         })
         row = results[-1]
-        print(f"{name:16s} {spec['kind']:6s} {row['length_px']:5.0f} px (ridge {row['on_ridge']:.2f})"
-              f" | {shift['pattern_shift_speed_px_per_frame'] * fps * MM_PER_PIXEL:+.3f} mm/s,"
-              f" snr {shift['pattern_shift_snr']:5.1f} {'OK' if shift['pattern_shift_resolved'] else '--'}"
-              f" | halves {shift['pattern_shift_first_half_snr']:5.1f} {shift['pattern_shift_second_half_snr']:5.1f}"
-              f" | {row['limb_check'] or '-':8s} | blocks {blocks['resolved_fraction']:.0%}", flush=True)
-    return pd.DataFrame(results)
+        report.append(
+            f"{name:16s} {spec['kind']:6s} {row['length_px']:5.0f} px (ridge {row['on_ridge']:.2f})"
+            f" | {shift['pattern_shift_speed_px_per_frame'] * fps * MM_PER_PIXEL:+.3f} mm/s,"
+            f" snr {shift['pattern_shift_snr']:5.1f} {'OK' if shift['pattern_shift_resolved'] else '--'}"
+            f" | halves {shift['pattern_shift_first_half_snr']:5.1f} {shift['pattern_shift_second_half_snr']:5.1f}"
+            f" | {row['limb_check'] or '-':8s} | blocks {blocks['resolved_fraction']:.0%}"
+            f" | slow {slow['slow_pattern_shift_speed_px_per_frame'] * fps * MM_PER_PIXEL:+.3f} mm/s,"
+            f" snr {slow['slow_pattern_shift_snr']:5.1f} {'OK' if slow['slow_pattern_shift_resolved'] else '--'}")
+    return pd.DataFrame(results), report
+
+
+def _measured(task) -> tuple:
+    """`measure` of one recording, in a worker process when there are several: (stem, rows, report)."""
+    folder, stem, specs = task
+    common.use(folder)
+    rows, report = measure(stem, specs)
+    return stem, rows, report
 
 
 def main(args) -> None:
+    args = common.run_args(args)
+    jobs = 1
+    if '--jobs' in args:
+        at = args.index('--jobs')
+        jobs = int(args[at + 1])
+        del args[at:at + 2]
     trace_only = '--trace-only' in args
     stems = [arg for arg in args if arg != '--trace-only']
-    with open(LINES, encoding='utf-8') as handle:
+    with open(common.LINES, encoding='utf-8') as handle:
         specs = json.load(handle)
     if trace_only:
         for stem in stems:
@@ -269,14 +301,18 @@ def main(args) -> None:
             for name, line in lines.items():
                 print(f'{name:18s} {line.length_px:5.0f} px, ridge {on_ridge[name]:.2f}')
         return
-    table = pd.read_csv(RESULTS) if os.path.exists(RESULTS) else pd.DataFrame()
-    for stem in stems:
-        print(f'== {stem}', flush=True)
-        rows = measure(stem, specs[stem])
+    table = pd.read_csv(common.RESULTS) if os.path.exists(common.RESULTS) else pd.DataFrame()
+    tasks = [(common.FOLDER, stem, specs[stem]) for stem in stems]
+    pool = (ProcessPoolExecutor(max_workers=jobs, initializer=cv2.setNumThreads, initargs=(2,))
+            if jobs > 1 else None)
+    for stem, rows, report in (pool.map(_measured, tasks) if pool else map(_measured, tasks)):
+        print(f'== {stem}', *report, sep='\n', flush=True)
         if len(table):
             table = table[table['recording'] != stem]
         table = pd.concat([table, rows], ignore_index=True)
-        table.to_csv(RESULTS, index=False)
+        table.to_csv(common.RESULTS, index=False)
+    if pool:
+        pool.shutdown()
 
 
 if __name__ == '__main__':
