@@ -124,6 +124,11 @@ def build_parser() -> argparse.ArgumentParser:
         '--legacy-lag', action='store_true',
         help='reproduce the pre-fix off-by-one lag, for comparison with old reports',
     )
+    parser.add_argument(
+        '--slow-flow', action='store_true',
+        help='let the pattern shift search below 1 px/frame (from 0.1); movement of the picture along the line '
+             'can look like slow flow there',
+    )
     parser.add_argument('--quiet', action='store_true', help='suppress the summary on stdout')
     return parser
 
@@ -188,7 +193,8 @@ def _measure_line(args, line: spacetime.Centreline, mm_per_pixel: float) -> int:
         diagram = spacetime.space_time_diagram(iter_frames(args.video, max_frames=args.max_frames, start=args.start),
                                                line)
         blocks = spacetime.analyze_space_time(diagram, fps, mm_per_pixel, first_frame=args.start)
-        pooled = pattern_shift.summarize(diagram, fps, mm_per_pixel)
+        pooled = pattern_shift.summarize(diagram, fps, mm_per_pixel, min_speed=(
+            pattern_shift.SLOW_MIN_SPEED if args.slow_flow else pattern_shift.MIN_SPEED))
     except (FileNotFoundError, ValueError) as exc:
         print(f'error: {exc}', file=sys.stderr)
         return 1

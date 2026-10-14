@@ -153,6 +153,17 @@ Tkinter classes.
   - On synthetic recordings (120-px line, shutter open the whole frame): within about 1% from
     1.5 to 8 px/frame, about 5% low at 12, unresolved above. On a 300-px line round the loop:
     12–40 px/frame (0.48–1.6 mm/s) within about 1%.
+  - **Slow range (2026-10-14, not the default):** `min_speed=pattern_shift.SLOW_MIN_SPEED`
+    (`summarize` too) or `--slow-flow` in the batch CLI searches from 0.1 px/frame (0.004 mm/s)
+    instead of 1.
+    - A slow speed is scored as 1 px/frame is, on a time axis stretched by 1/speed, then refined
+      with the frame distances held fixed. The default gives exactly the old results, and the
+      slow range leaves results from 1 px/frame up unchanged.
+    - Synthetic: 0.15–1 px/frame within 5% (median 1%), no false positives in 90 no-flow clips.
+    - Real: 42 of the aim-1 check's 109 limbs at rest instead of 24.
+    - But a single line cannot tell slow flow from the picture moving along it (drift, or
+      uneven back-and-forth movements of 10–20 px). The recordings show both, so it is not the
+      default (Known issues). Validation: `analysis/pattern_shift_slow_flow/`.
 - **Arterial limb (since 2026-10-11):** the user's PI wants resting CBV from the arterial limb
   only, since velocity changes towards the venous side. A line marked as an arterial limb runs
   from the limb's base to the apex. The sign of its pooled pattern shift tells the limb
@@ -193,7 +204,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (265 tests, ~30 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (281 tests, ~40 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -233,6 +244,25 @@ the 2026-10-05 GUI rebuild entry.
     - An arterial limb at both visits in 1 of 7 participants (any limb in 4). Arterial-only
       resting CBV looks infeasible with these videos. The choice (any limb? the combined rule?)
       is for the supervisors.
+  - **The pattern shift's slow range** (2026-10-14, `analysis/pattern_shift_slow_flow/`) replaces
+    the combined rule's centre-line blocks in principle. On the same 109 limbs at rest:
+    - it resolved 42 (17 below 1 px/frame);
+    - loops with both limbs resolved: 14 opposite, 4 the same way;
+    - it agreed in direction with all 16 limbs whose blocks qualified (median ratio 0.96);
+    - a limb at both visits in 3 of 7 participants, an arterial one in 2.
+  - **Movement of the picture looks like slow flow** (found 2026-10-14). Below 1 px/frame a line
+    cannot tell the blood moving from the picture moving along it.
+    - FP03_Wföre's loops E and F move the same way in all four limbs at rest (signal-to-noise
+      23–63).
+    - In the occlusion, when the blood should stand still, 24 of 97 limbs gave a slow speed:
+      - FP13_Qföre's loop E bows sideways and back in both limbs;
+      - FP13_Qföre G left is crossed by the stabilized frame's uncovered edge, which
+        `SpaceTimeSampler.inside` does not check;
+      - FP05_Qföre's loop B looks like real residual flow.
+    - In synthetic clips with still cells, uneven movements of 10–20 px over a few seconds read
+      as flow in 2–4 of 10, a steady drift always, and 2-px movements never.
+    - From 1 px/frame up none of this reached the threshold. A check that the picture held still
+      near the line (for example the tissue beside it) would make the slow range usable.
 - **Large movements defeat the stabilizer** (found 2026-10-08). On FP01_W (a steady drift of about
   200 px), FP03_Qföre (after the cuff) and FP03_Wefter (jumps of 100–200 px at rest) the match
   falls to 0.1–0.3. Planned fix: follow the movement outwards from the reference frame in both

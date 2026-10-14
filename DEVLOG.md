@@ -6,6 +6,281 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — The pattern shift below 1 px/frame: a slow range, validated, and not the default
+
+**Branch:** `feature/pattern-shift-slow-flow`, from `main` at `d292ef7` (PR #17 merged).
+
+**Commits:** the slow range with its tests, validation and this entry; then a follow-up noting the
+commit here.
+
+The user asked to continue. I proposed three tasks:
+
+- slow flow with the pattern shift;
+- the stabilizer for large movements;
+- the line-placement comparison on the pooled resting velocity.
+
+The user chose the first.
+
+### The question
+
+The aim-1 check (2026-10-12) found much resting flow slower than the pattern shift's slowest
+speed, 1 px/frame (0.04 mm/s at 30 fps and 1.33 µm/px).
+
+- 18 limbs scored 8 or more at that edge, which is never reported.
+- The exploratory "combined" rule measured slower limbs from the centre-line method's 3-s blocks
+  instead.
+
+The aim: measure slower flow with the pattern shift itself, with the same signal-to-noise ratio
+and jackknife interval, first on synthetic recordings, then on the aim-1 lines.
+
+Below 1 px/frame the pattern moves less than 2 px over frame distances 1–8. That is too little to
+compare: close to zero shift the backward correlation subtracted holds part of the peak's own tail
+(`MIN_SHIFT_PX`). So slower flow has to be compared over more frames.
+
+### Designs tried, in order
+
+Synthetic recordings throughout (`analysis/pattern_shift_slow_flow/validate_synthetic.py`):
+
+- the simulated loop's arterial limb, a 120-px line, 60-s clips (the official rest is 52–77 s);
+- 11 speeds from 0.1 to 3 px/frame, 4 clips each, and 30 clips without flow;
+- the disturbances as measured, strong, and faint (a third of the contrast);
+- 222 clips.
+
+The final numbers of every design kept in the script are in its table below. The steps between
+come from versions of the code that no longer exist; their numbers are from this session's runs.
+
+1. **The search simply continued below 1 px/frame** (frame distances 1–8, `floor only`).
+   - It read 39–53% high at 0.3 px/frame: at shifts of a few pixels the tail of the peak
+     dominates.
+   - 10 of 90 clips without flow were resolved.
+2. **Every frame distance over which the pattern moves 2–8 px** (`all lags`): up to 80 frames
+   at 0.1 px/frame, each read at frame distance × speed as the method does from 1 px/frame up.
+   - It read 2–11% low at 0.3–0.7 px/frame. The score (sum ÷ √n) grows with the number of frame
+     distances, and that number grows as 1/speed, so the score leans towards slower speeds.
+   - Choosing the speed by the frame distances' mean contrast instead (`all lags, mean`)
+     removed most of that (median error 3.8%).
+   - Neither fixed the false positives: 15 and 11 of the 90 clips without flow were resolved,
+     with scores up to 12.5 (the method from 1 px/frame: 6.2). Below 1 px/frame, neighbouring
+     frame distances are read at nearly the same shift and share their noise, so √n overstates
+     the signal-to-noise ratio.
+3. **A stretched time axis.** A speed v is scored exactly as 1 px/frame is, on a time axis
+   stretched by 1/v (`_stretched_scores`).
+   - Term j = 1..8 compares rows j / v frames apart (between the two nearest frame distances,
+     linearly), where the pattern has moved j px.
+   - Every slow speed is then scored from the same number of terms at the same shifts as
+     1 px/frame, and the false positives went: no clip without flow resolved, highest score 7.2.
+   - But the estimates snapped to speeds where several stretched frame distances are whole
+     frames (0.500 and 0.750 px/frame exactly).
+   - And they leaned towards faster speeds, because the longer frame distances correlate less
+     (fewer row pairs in a 3-s block): +20% at 0.1 px/frame in a first test.
+4. **Two steps.** The stretched score finds the flow and is its signal-to-noise ratio. The speed
+   is then refined with the frame distances held fixed (`_slow_lags`: the whole frames nearest to
+   j / v), each read at frame distance × speed, so nothing changes with the speed but the shift
+   read.
+   - A first version reported the refining score as the signal-to-noise ratio. Searching again
+     with other frame distances fits the noise a second time: clips without flow reached 9.0. So
+     the score stays the one that found the flow.
+   - At 0.1 px/frame the estimates were still 7–12% high (median per condition), the frame
+     distances (10–80) approaching the 90-frame block. Taking the rows compared beyond 8 frames
+     about their own mean (`CENTRED`) removed it. Taking every frame distance's rows about their
+     own mean had made no difference at 0.15–2 px/frame. Centring only beyond 8 frames leaves
+     the method from 1 px/frame up bit-identical.
+5. **On the recordings** (below), 12 limbs at rest and 10 in the occlusion stopped at exactly
+   1.000 px/frame, where the slow range meets the faster one. The stretched score falls with
+   longer frame distances, since real blood rearranges, while the faster range's fixed frame
+   distances do not. So:
+   - a speed found at that point is refined too;
+   - the choice of frame distances is repeated from each refined speed until it stays the same
+     (at most 5 rounds);
+   - the refinement searches 0.1–1.5 px/frame on an even grid of 0.002 px/frame. Where the grid
+     spacing changes, the parabolic interpolation is skipped, and one estimate had stopped
+     there.
+
+**Synthetic results** of the design kept (`stretched`):
+
+| Variant | Resolved below 1 px/frame (of 84) | Median error | Worst error | Truth in 95% interval | Clips without flow resolved (of 90) | Highest score without flow |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| before (from 1 px/frame) | 0 | – | – | – | 0 | 6.2 |
+| floor only | 80 | 46% | 331% | 16% | 10 | 12.2 |
+| all lags | 84 | 5.9% | 19.5% | 57% | 15 | 12.5 |
+| all lags, mean | 84 | 3.8% | 25.3% | 67% | 11 | 12.4 |
+| stretched, uncentred | 84 | 1.2% | 16.2% | 67% | 0 | 7.2 |
+| **stretched** | 76 | 1.0% | 6.6% | 72% | 0 | 7.2 |
+| stretched, 6-s blocks | 76 | 1.0% | 5.1% | 80% | 0 | 7.5 |
+
+- From 0.15 to 1 px/frame `stretched` resolved all 72 clips, within 4.6% of the truth (median
+  1.0%). At 0.1 px/frame, the floor, it resolved 4 of 12; the others stopped at the edge.
+- From 1 px/frame up all variants but `all lags` give the method's old results (median error
+  0.56%, worst 3.2%).
+- The interval holds the truth less often than 95% (72–75%). It covers the statistical scatter
+  only, and from 1 px/frame up the figure is 65%.
+- Blocks of 6 s were a little better below 1 px/frame. They would change the method from
+  1 px/frame up and halve the blocks the jackknife leaves out, so blocks stay at 3 s.
+
+### The recordings (`validate_real.py`)
+
+- **At rest:** the 124 lines of the aim-1 check (109 limbs, 15 through tissue), from the
+  diagrams its `measure.py` saved over the official rest.
+- **In the occlusion:** the same lines, traced again from its `lines.json`, sampled from 15 s
+  after the cuff went up until 2 s before its release, when the blood should stand still.
+  - This covers 13 recordings: FP07_Qföre and FP09_Wföre have no release time.
+- Each window is measured whole and in halves.
+
+| | Before | Slow range (`stretched`) |
+| --- | ---: | ---: |
+| Limbs resolved at rest (of 109) | 24 | 42 (17 below 1 px/frame) |
+| … with the interval clear of zero | 22 | 38 |
+| Tissue lines resolved at rest (of 15) | 0 (highest 4.4) | 0 (highest 4.4) |
+| Loops with both limbs resolved: opposite / same way | 7 / 1 | 14 / 4 |
+| Participants with a limb at both visits (of 7) | 2 | 3 (FP06, FP07, FP13) |
+| … with a limb towards the apex at both | 1 | 2 |
+| Limbs whose aim-1 centre-line blocks qualified, resolved (of 21) | 8 | 16, all in the blocks' direction, median ratio 0.96 (IQR 0.72–1.06) |
+| Limbs resolved in the occlusion (of 97) | 2 | 24 (21 below 1 px/frame) |
+| Tissue lines resolved in the occlusion (of 13) | 0 | 0 (highest 5.6) |
+
+The combined rule of the aim-1 check gave a limb at both visits in 4 participants, an arterial
+one in 1.
+
+**The 18 limbs newly resolved at rest:**
+
+- **12 look like flow.** Their loop's other limb runs the opposite way, or the centre-line
+  blocks agree on the direction, and their space-time pictures show streaks that way: FP06_Qföre
+  D, E and K left; FP09_Wföre B; FP12_Qföre E left; FP13_Qföre D left and F left; FP13_Wföre D.
+- **4 are drift:** FP03_Wföre's loops E and F, all four limbs towards the base at
+  0.5–0.8 px/frame, with signal-to-noise ratios of 23–63. The aim-1 check had already called
+  them drift. The method before saw them only at its edge.
+- **2 are doubtful:** FP06_Qföre's loop I, both limbs towards the base.
+
+**The occlusion:**
+
+- Of the loops with both limbs resolved, 6 run opposite ways and 2 the same way (FP03_Wföre E
+  and F).
+- The space-time pictures (a scratch script) show three things:
+  - **The picture moving.** In FP13_Qföre's loop E the streaks stand still but bow sideways and
+    back in both limbs together (7–11 s). The pattern-shift estimates of the two limbs still came
+    out opposite (−0.17 and +0.10 px/frame), so the loop rule does not catch it. FP01_Qföre's
+    tall loop shows still streaks that meander.
+  - **The stabilized frame's uncovered edge** crossing the line in FP13_Qföre G left (the first
+    6 s). `SpaceTimeSampler.inside` checks the frame's bounds, not where the moved frame left
+    no picture.
+  - **Real movement:** FP05_Qföre's loop B shows streaks moving towards the apex at
+    0.4–0.8 px/frame under the cuff.
+- So the occlusion is not a clean null below 1 px/frame, and not all of what moves there is
+  blood.
+
+**Where each frame distance's contrast peaks** (a scratch script) tells whether the pattern
+moves steadily:
+
+- A steady movement peaks further away the more frames apart the rows are: synthetic
+  0.3 px/frame at 0.25–0.31 px/frame over frame distances 12–64; FP12_Qföre E left at
+  0.31–0.38 over 12–64; FP13_Wföre D at 0.7–1.1 over 3–32 (all but one frame distance).
+- At short frame distances every slow pattern peaks at about 3 px, since it has moved less
+  than the peak is wide. Only the longer frame distances show the speed.
+- In FP06_Qföre's loop E, FP09_Wföre B left and the occlusion cases the peak stays at a fixed
+  2–4 px over frame distances 3–24.
+  - That is what movement below a pixel (the correlation's own slope), small jumps, or
+    stop-and-go flow advancing a few pixels per heartbeat would give.
+  - The speed reported there depends on how long the pattern stays recognisable, not only on
+    how fast it moves.
+
+### Movement of the picture (`validate_wobble.py`)
+
+Synthetic clips with the cells standing still or flowing at 0.3 px/frame, while the whole picture
+moves along the limb (10 clips each):
+
+| Movement of the picture | Still cells: resolved before / slow range | Highest score, slow range | Flow at 0.3 px/frame: median estimate, slow range |
+| --- | ---: | ---: | ---: |
+| none | 0 / 0 | 5.0 | 0.30 |
+| sine, 2 px | 0 / 0 | 6.3 | 0.25 |
+| sine, 10 px | 0 / 2 | 12.4 | 0.83 |
+| sawtooth, 2 px (out 2.5 s, back 0.5 s) | 0 / 0 | 5.7 | 0.32 |
+| sawtooth, 10 px | 0 / 3 | 8.8 | 0.43 |
+| sawtooth, 20 px | 0 / 4 | 13.2 | 0.58 |
+| bows of 15 px, out faster than back, every 15 s | 0 / 4 | 10.7 | 0.29 |
+| steady drift, 0.05 px/frame | 0 / 0 | 3.3 | 0.36 |
+| steady drift, 0.3 px/frame | 0 / 10 | 17.7 | 0.60 |
+
+- A single line cannot tell slow flow from the picture moving along it.
+- Movements of a few pixels are harmless.
+- Uneven movements of 10–20 px over a few seconds read as slow flow in 2–4 of 10 clips, and
+  bias real slow flow.
+- A steady drift is flow, as far as one line can tell.
+- The method before resolved none of these. Its scores reached up to 9.5 at its edge, which it
+  never reports. It was protected by its range, not by its design.
+
+### What was decided
+
+- **The slow range is in the package but not the default.** `MIN_SPEED` stays 1 px/frame, so
+  the app, its data sets and the batch command measure exactly as before. Compared on 45
+  diagrams (synthetic and from the aim-1 check), the largest difference from the code at
+  `d292ef7` is 2 × 10⁻¹³.
+- It is asked for with `pattern_shift(..., min_speed=SLOW_MIN_SPEED)` (also in `summarize` and
+  `shift_time_course`) or `python -m capillary.cli ... --slow-flow`.
+- The app does not offer it. Its results need a check that the picture held still near the
+  line, for example the loop's other limb running the opposite way, and that check does not yet
+  exist.
+
+### Changes
+
+- **`capillary/pattern_shift.py`**
+  - Below 1 px/frame: `_stretched_scores` finds the flow; `_slow_lags` and `_fixed_lag_scores`
+    refine the speed (`REFINE_TOP`, `REFINE_ROUNDS`); `_contrasts` normalizes each frame
+    distance.
+  - `_block_sums` takes the rows compared beyond `centre_beyond` frames about their own mean. It
+    now sums the cross-spectra over the rows before one inverse transform per frame distance, and
+    takes the energies from cumulative sums: the same numbers, faster.
+  - The speed grid is 0.002 px/frame apart below 1 px/frame (`_speed_grid`). `_best` refines
+    between any evenly spaced neighbours.
+  - New constants `SLOW_MIN_SPEED`, `CENTRED`, `REFINE_TOP`, `REFINE_ROUNDS`,
+    `SLOW_SPEED_STEP`. `min_speed` and `centred` are arguments of `pattern_shift`, and
+    `min_speed` of `summarize` and `shift_time_course`.
+  - The docstring has a section on the slow range.
+- **`capillary/cli.py`:** `--slow-flow`.
+- **`gui/tasks.py`:** a data set's provenance also records `centred_beyond_max_lag` and
+  `slow_refine_top_px_per_frame`. With the default these change nothing in the measurement.
+- **Tests (16 new, 281 in all):**
+  - the centred correlation sums against a direct computation;
+  - slow flow at 0.15, 0.3 and 0.6 px/frame within 4%, with the interval around the estimate;
+  - slow flow the other way;
+  - no snapping at 0.48, 0.52, 0.73 or 0.98 px/frame;
+  - no flow in four clips;
+  - flow below the slow range not reported;
+  - faster flow unchanged by the slow range;
+  - the batch command's `--slow-flow` leaving faster flow as it was.
+- **`analysis/pattern_shift_slow_flow/`:** the three validation scripts, their results and a
+  README.
+- **`README.md`, `CLAUDE.md`:** the slow range; the movement of the picture under Known issues.
+
+### Verification
+
+- `python -m pytest`: 281 passed.
+- The default against the code at `d292ef7`: identical to 2 × 10⁻¹³ on 45 diagrams.
+- flake8: the CI's error selection is clean on the whole repository, and the full set on the
+  changed files, except one warning in `tests/test_datasets.py` that was there before.
+- The three validations were rerun on the final code. The tables above are from those runs.
+- Looked at: space-time pictures of 21 limbs, at rest and in the occlusion. The per-frame-distance
+  peaks of 14 lines and three synthetic clips were also checked.
+- **Scratch scripts** (in the session's scratchpad, not in the repository):
+  - the comparison with the old code;
+  - the space-time pictures;
+  - the per-frame-distance peaks.
+
+### Open
+
+- **A check that the picture held still near a line** would make the slow range usable. For
+  example: the tissue beside the vessel measured the same way, or a local registration of the
+  stabilized video around the line. Then decide whether the slow range becomes the default and
+  whether it replaces the combined rule.
+- **The stabilized frame's uncovered edge** can cross a line (FP13_Qföre in the occlusion). The
+  line check should use the area every frame covers, from the shift file.
+- **For the supervisors:**
+  - much resting flow in these videos is slow, and often not a steady movement;
+  - under the cuff some loops still move (FP05_Qföre B);
+  - with the slow range a limb is measured at both visits in 3 of the 7 participants, an
+    arterial one in 2.
+
+---
+
 ## 2026-10-12 — Aim 1 feasibility: resting flow on the arterial limb in 15 before-exposure recordings
 
 **Branch:** `analysis/aim1-feasibility`, from `main` at `17a2770` (after PR #16, the arterial limb on

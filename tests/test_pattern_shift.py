@@ -9,6 +9,7 @@ from capillary.pattern_shift import (
     BLOCK_FRAMES,
     MIN_SNR,
     MIN_SPEED,
+    SLOW_MIN_SPEED,
     _block_sums,
     _prepared,
     limb_from_direction,
@@ -23,16 +24,19 @@ from .test_spacetime import diagram, smooth
 FPS, MM_PER_PIXEL = 30.0, 0.002
 
 
-@pytest.mark.parametrize('bandpass_px', [BANDPASS_PX, None])
-def test_the_correlation_sums_equal_a_direct_computation(bandpass_px):
+@pytest.mark.parametrize('bandpass_px, centre_beyond', [(BANDPASS_PX, None), (None, None), (BANDPASS_PX, 1)])
+def test_the_correlation_sums_equal_a_direct_computation(bandpass_px, centre_beyond):
     block = np.random.default_rng(1).normal(size=(40, 30))
     lags, max_shift = np.array([1, 3]), 6
-    sums = _block_sums(block, lags, max_shift, bandpass_px)
+    sums = _block_sums(block, lags, max_shift, bandpass_px, centre_beyond)
     b = _prepared(block, bandpass_px)
     n = b.shape[1]
     for i, k in enumerate(lags):
+        early, late = b[:-k], b[k:]
+        if centre_beyond is not None and k > centre_beyond:          # each set of rows about its own mean
+            early, late = early - early.mean(axis=0), late - late.mean(axis=0)
         for j, d in enumerate(range(-max_shift, max_shift + 1)):
-            x, y = (b[:-k, :n - d], b[k:, d:]) if d >= 0 else (b[:-k, -d:], b[k:, :n + d])
+            x, y = (early[:, :n - d], late[:, d:]) if d >= 0 else (early[:, -d:], late[:, :n + d])
             np.testing.assert_allclose(sums[i, :, j], [(x * y).sum(), (x * x).sum(), (y * y).sum()], rtol=1e-9)
 
 
@@ -100,10 +104,50 @@ def test_a_pattern_flickering_in_place_is_not_flow():
 
 
 def test_flow_slower_than_the_method_measures_is_not_reported():
-    # the centre-line method measures this; the search starts at MIN_SPEED
+    # by default the search starts at MIN_SPEED (1 px/frame); slow flow ends at the edge, which is never reported
     estimate = pattern_shift(diagram(0.3, frames=900, seed=6))
     assert MIN_SPEED > 0.3 and not estimate.resolved
     assert abs(estimate.speed_px_per_frame) == pytest.approx(MIN_SPEED, abs=0.02)     # the edge, nothing beyond it
+
+
+@pytest.mark.parametrize('speed, seed', [(0.15, 20), (0.3, 21), (0.6, 22)])
+def test_slow_flow_is_measured_in_the_slow_range(speed, seed):
+    # below 1 px/frame rows are compared over the frames the pattern takes to move 2-8 px (a minute, as at rest)
+    estimate = pattern_shift(diagram(speed, frames=1800, seed=seed), min_speed=SLOW_MIN_SPEED)
+    assert estimate.resolved
+    assert estimate.speed_px_per_frame == pytest.approx(speed, rel=0.04)
+    assert estimate.ci95[0] < estimate.speed_px_per_frame < estimate.ci95[1]
+
+
+def test_slow_flow_the_other_way_reads_negative():
+    estimate = pattern_shift(diagram(0.4, frames=1800, seed=23)[:, ::-1], min_speed=SLOW_MIN_SPEED)
+    assert estimate.resolved and estimate.speed_px_per_frame == pytest.approx(-0.4, rel=0.04)
+
+
+@pytest.mark.parametrize('speed', [0.48, 0.52, 0.73, 0.98])
+def test_no_slow_speed_attracts_the_estimate(speed):
+    # The rough search reads rows j / speed frames apart, between two frame distances. Where all of them are whole
+    # frames (0.5 px/frame; at 0.75 two of them) it scored a little higher and the estimate snapped there, and on the
+    # recordings many estimates stopped at exactly 1 px/frame, where it meets the faster range. The speed found is
+    # now refined with the frame distances held fixed.
+    estimate = pattern_shift(diagram(speed, frames=1800, seed=24), min_speed=SLOW_MIN_SPEED)
+    assert estimate.resolved and estimate.speed_px_per_frame == pytest.approx(speed, rel=0.03)
+
+
+@pytest.mark.parametrize('seed', range(4))
+def test_no_flow_is_not_resolved_in_the_slow_range(seed):
+    estimate = pattern_shift(diagram(0.0, frames=1800, seed=seed), min_speed=SLOW_MIN_SPEED)
+    assert not estimate.resolved and estimate.snr < MIN_SNR
+
+
+def test_flow_slower_than_the_slow_range_is_not_reported():
+    estimate = pattern_shift(diagram(0.03, frames=1800, seed=6), min_speed=SLOW_MIN_SPEED)
+    assert SLOW_MIN_SPEED > 0.03 and not estimate.resolved
+
+
+def test_the_slow_range_leaves_faster_flow_as_it_was():
+    fast = diagram(4.0, frames=900, seed=3)
+    assert pattern_shift(fast, min_speed=SLOW_MIN_SPEED) == pattern_shift(fast)
 
 
 def test_pooling_makes_a_faint_pattern_measurable():

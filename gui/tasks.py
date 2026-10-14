@@ -369,10 +369,12 @@ def _estimator_record() -> dict:
 
 def _pattern_shift_record() -> dict:
     return {'method': 'capillary.pattern_shift: the shift of the pattern along the line between a frame and the '
-                      f'next 1-{pattern_shift.MAX_LAG}, pooled over all 3-s blocks of the range, and of each half',
+                      f'next 1-{pattern_shift.MAX_LAG} (below 1 px/frame, the frames the pattern takes to move '
+                      f'1-{pattern_shift.MAX_LAG} px), pooled over all 3-s blocks of the range, and of each half',
             'block_frames': pattern_shift.BLOCK_FRAMES, 'max_lag': pattern_shift.MAX_LAG,
             'bandpass_px': list(pattern_shift.BANDPASS_PX), 'min_snr': pattern_shift.MIN_SNR,
             'min_speed_px_per_frame': pattern_shift.MIN_SPEED, 'min_shift_px': pattern_shift.MIN_SHIFT_PX,
+            'centred_beyond_max_lag': pattern_shift.CENTRED, 'slow_refine_top_px_per_frame': pattern_shift.REFINE_TOP,
             'min_half_blocks': pattern_shift.MIN_HALF_BLOCKS}
 
 

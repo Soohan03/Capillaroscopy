@@ -181,6 +181,16 @@ def test_cli_measures_along_a_line(video_file, tmp_path, capsys):
     assert 'centre line' in printed and 'pattern shift' in printed
 
 
+def test_cli_searches_the_slow_range_when_asked(video_file, capsys):
+    argv = [str(video_file), '--line', f'60,{UPSTREAM_Y - 20}; 60,{DOWNSTREAM_Y + 30}',
+            '--mm-per-pixel', str(MM_PER_PIXEL), '--start', '20']
+    printed = []
+    for extra in ([], ['--slow-flow']):
+        assert main(argv + extra) == 0
+        printed.append([line for line in capsys.readouterr().out.splitlines() if 'pattern shift' in line])
+    assert printed[0] and printed[0] == printed[1]          # flow faster than 1 px/frame reads the same either way
+
+
 def test_cli_wants_a_line_or_two_boxes(video_file):
     for argv in ([], ['--roi1', '10,10'], ['--line', '1,1;9,9', '--roi1', '1,1', '--roi2', '2,2'],
                  ['--line', 'nonsense']):
