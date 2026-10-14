@@ -9,6 +9,7 @@ it was verified. Newest entries first.
 ## 2026-10-14 — Whole-loop lines: resting flow measured in more loops
 
 **Branch:** `analysis/whole-loop`, from `main` at `0984a7f` (PR #21, the aim-1 rerun, merged).
+Commit `9498265` (scripts, results, READMEs, this entry, CLAUDE.md).
 
 The user asked whether the program could be changed to give better readings. A test in the
 session's scratchpad suggested measuring along the whole capillary loop instead of one limb at
