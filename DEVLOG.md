@@ -6,6 +6,185 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — The stabilizer follows large movements frame to frame
+
+**Branch:** `fix/stabilizer-large-movements`, from `main` at `99aa56c` (PR #18, the pattern
+shift's slow range, merged by the user).
+
+**Commits:** the stabilizer and this entry; then a follow-up with the two recordings stabilized
+into `StabilizedVideos/` and the commit noted here.
+
+The user chose the stabilizer as the next task. On the slow range's occlusion results (the entry
+below), the user said the blood probably still moves under the cuff, which the PI had thought
+likely when looking at the videos.
+
+### What failed, and why
+
+The registration of 2026-10-08 failed on three recordings: FP01_W, FP03_Wefter, and FP03_Qföre
+after the cuff. To see why, every frame of five raw recordings was registered onto the frame
+before it (scratch script).
+
+- **FP01_W** drifts slowly and smoothly for 140 s; neighbouring frames match at 0.85–0.9.
+  - Then the picture goes dark (mean grey 70 → 9), and its last ~8 s are noise.
+  - The references were built around the sharpest frame of the whole recording, at 141 s, in
+    that darkening end, about 200 px from where the picture spends the recording. So no frame was
+    found (match 0.08).
+  - The occlusion (38 s) and release (102 s) lie in the good part.
+- **FP03_Wefter** makes excursions of 100–200 px at rest. Neighbouring frames still match
+  (lowest 0.45, steps up to 49 px), but the search against the references, led by the previous
+  frame's position, lost them.
+- **FP03_Qföre** moves about 500 px sideways and 300 px down within ~10 s of the cuff going on,
+  and stays there.
+  - From then on the camera sees a part of the finger that shares almost nothing with the resting
+    picture.
+  - No translation brings it back into the same 640 × 480 frame. Its rest was always fine.
+  - Its stabilized video had been centred on the median of all frames, which lay in the
+    post-cuff view, so its rest sat far off-centre.
+- **FP07_Qföre** (stabilized, 9 frames at the search limit) makes one excursion of about 400 px
+  at 135 s, after the rest.
+
+### The new procedure (`capillary/stabilize.py`; the module docstring has the details)
+
+1. **First reading: follow the movement.**
+   - Every frame is registered onto the frame before it, with the same coarse and fine search,
+     giving a path of the picture.
+   - A frame that matches the one before it below `STEP_MIN_MATCH` = 0.3, or only at the edge of
+     the search, breaks the path, and a new stretch begins.
+   - The sharpness and mean grey of every frame are kept.
+2. **The references' centre** is the sharpest frame among those that:
+   - lie within `REFERENCE_RADIUS_PX` = 40 px of the median position along the path, so as much
+     of the recording as possible overlaps the references;
+   - have a usual mean grey (within `BRIGHTNESS_FACTOR` = 1.5);
+   - lie on the stretch of path that holds most of them;
+   - come from the official rest when the recording has official times (`rest_window`, via
+     `capillary.inventory`), since resting velocity is measured there.
+
+   The references are built from it and its 24 neighbours as before (a second, short reading).
+3. **Third reading: register onto the references** as before. The fine search is now led by
+   where the frame should be: the frame before's position plus the step between them along the
+   path. Before any frame has been placed, it is led by the position along the path relative to
+   the references' centre.
+   - A frame is placed by the references (`placed_by` 'references') when it matches them at
+     least `MIN_MATCH` = 0.3, the two references agree within `MAX_DISAGREEMENT_PX` = 2 px, and
+     the match lies inside the search.
+4. **Frames the references miss** are carried along the path from the placed frames before and
+   after them on their stretch, the path's own drift spread evenly between the two (`bridge`;
+   'neighbours').
+   - A stretch with no placed frame is 'lost': no shift, written black.
+5. **Re-centring** is on the median shift over the official rest (else all frames), so the
+   picture sits where it is during the rest.
+6. **Writing** is unchanged. The video is now read four times.
+
+**The shift file** gains `placed_by`, `step_x_px`, `step_y_px`, `step_match` and `mean_grey`.
+The summary counts the frames placed from neighbours and those lost. The command line prints
+them, and the provenance describes the new steps.
+
+### Results on seven recordings
+
+All were stabilized into a scratch folder with the new code. Seven ran at once in about
+17 minutes (the frame-to-frame reading adds a third to the time).
+
+Per official phase: how the frames were placed, and the median match with the references.
+"Old" is the video in `StabilizedVideos/`, stabilized with the code of 2026-10-08.
+
+| Recording | Phase | Old: match | New: by references / neighbours / lost | New: match |
+| --- | --- | ---: | --- | ---: |
+| FP01_W | rest | (failed, 0.08 overall) | 1008 / 0 / 0 | 0.85 |
+| FP01_W | occlusion | | 1821 / 0 / 0 | 0.77 |
+| FP01_W | after release | | 1088 / 4 / 247 (the dark end) | 0.83 |
+| FP03_Wefter | rest | (failed, 0.24) | 2068 / 53 / 0 | 0.74 |
+| FP03_Wefter | occlusion and later (no release time) | | 3801 / 0 / 0 | 0.69 |
+| FP03_Qföre | rest | 0.68 | 1695 / 0 / 0 | 0.68 |
+| FP03_Qföre | occlusion | 0.14 (wrong) | 152 / 0 / 1612 | 0.12 |
+| FP03_Qföre | after release | 0.11 (wrong) | 0 / 0 / 1401 | 0.10 |
+| FP07_Qföre | rest | 0.76 | 1689 / 0 / 0 | 0.61 |
+| FP07_Qföre | occlusion and later | 0.75 | 3406 / 3 / 0 | 0.65 |
+| FP01_Qföre | rest / occlusion / after release | 0.88 / 0.70 / 0.74 | all by references | 0.88 / 0.70 / 0.74 |
+| FP03_Wföre | rest / occlusion / after release | 0.60 / 0.66 / 0.59 | all by references | 0.68 / 0.57 / 0.55 |
+| FP12_Wföre | rest / occlusion / after release | 0.42 / 0.80 / 0.39 | all by references | 0.87 / 0.50 / 0.83 |
+
+**New against old shifts** (a constant offset removed; the largest coordinate per frame):
+
+- **FP01_Qföre:** identical (at most 0.02 px).
+- **FP03_Qföre at rest:** identical (at most 0.13 px).
+- **FP03_Wföre:** median 0.3–0.5 px; 14 of 2040 rest frames differ by more than 1 px.
+- **FP07_Qföre at rest:** median 0.54 px, at most 1.34.
+- **FP12_Wföre at rest:** median 0.85 px, at most 10 px (the old registration's weak rest).
+- The references' centre moved into the rest wherever the old one lay elsewhere: FP03_Wföre
+  (frame 3002 → 91), FP12_Wföre, FP07_Qföre. The match is highest near where the references
+  come from, so the rest gained and later phases lost a little.
+
+**Movement left in the output** (scratch script). Each output frame, its central two thirds, was
+registered onto the frame before it; the table gives the steps over 1 px.
+
+| Recording | Old | New |
+| --- | --- | --- |
+| FP12_Wföre at rest | 515 | 0 |
+| FP03_Qföre at rest | 870 (its rest sat off-centre, mostly black) | 105 |
+| FP03_Wföre at rest | 157 | 85 |
+| FP03_Wföre, occlusion and after release | 333 and 283 | 474 and 380 |
+| FP07_Qföre at rest | 12 | 5 |
+
+The running sum of these steps drifts by tens of pixels even on FP01_Qföre, so it is not a
+measure of anything and is not reported.
+
+**Mean images** (band-passed, scratch script), where alignment shows directly:
+
+- The raw resting means of FP01_W and FP03_Wefter are a smear with no capillaries. The new
+  stabilized means show sharp loops, at rest and, for FP01_W, through the occlusion.
+- FP12_Wföre at rest, FP07_Qföre at rest and FP03_Wföre in the occlusion are equally sharp old
+  and new.
+
+### What it means
+
+- **FP01_W and FP03_Wefter can now be measured.** FP01's active visit enters aim 1 (both före
+  recordings), and FP03_Wefter aim 2.
+- **FP03_Qföre's occlusion and release are lost,** not misplaced. A separate stabilization of
+  the post-cuff view, in its own frame, would be possible but is not needed by the aims.
+- **Re-stabilizing the other 29 videos** would improve the rest where the old references lay
+  elsewhere (FP12_Wföre most).
+  - It would move their picture by the change of centring.
+  - Lines placed on the old videos would then no longer fit: `analysis/aim1_feasibility/
+    lines.json`, the slow-range validation's occlusion lines, and any data sets.
+  - So that is for the user to decide.
+
+### Changes
+
+- **`capillary/stabilize.py`:**
+  - new `rest_window`, `path_stretches`, `path_positions`, `choose_reference` and `bridge`;
+  - `stabilize_video` reads four times;
+  - new constants `STEP_MIN_MATCH`, `MIN_MATCH`, `MAX_DISAGREEMENT_PX`, `REFERENCE_RADIUS_PX`,
+    `BRIGHTNESS_FACTOR`;
+  - the summary counts frames placed from neighbours and lost (NaN-safe);
+  - the command line prints them;
+  - the provenance and docstring describe the new steps.
+- **`tests/test_stabilize.py`** (6 new, 287 tests in all):
+  - a 100-px drift where the coarse search reaches 40 px, with the sharpest frame at the far
+    end;
+  - dark frames at the end, which are lost and written black;
+  - a jump to a view that does not overlap, which is lost;
+  - the bridging arithmetic, the path's stretches and positions, and the choice of the
+    references' centre.
+
+  The shift file's column test was updated.
+- **`CLAUDE.md`:** the stabilizer notes; "Large movements" under Known issues.
+
+### Verification
+
+- `python -m pytest`: 287 passed. The stabilizer's old tests are unchanged apart from the
+  columns: the shifts still undo synthetic moves within 0.15 px, memory does not grow with
+  length, and no frame is silently wrong.
+- flake8: clean on the changed files at the CI's settings.
+- The seven recordings above, three ways: the stabilizer's own numbers, the movement left in
+  the output, and the mean images, looked at.
+- **Scratch scripts** (session scratchpad, not in the repository):
+  - the frame-to-frame registration of raw recordings and its plot;
+  - the batch stabilization;
+  - the evaluation;
+  - the mean images.
+
+---
+
 ## 2026-10-14 — The pattern shift below 1 px/frame: a slow range, validated, and not the default
 
 **Branch:** `feature/pattern-shift-slow-flow`, from `main` at `d292ef7` (PR #17 merged).

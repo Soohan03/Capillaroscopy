@@ -1,7 +1,21 @@
-"""Translation-only stabilization of a recording, read from disk three times.
+"""Translation-only stabilization of a recording, read from disk four times.
 
-1. Every frame gets a sharpness score (`quality.calculate_blur`). The
-   sharpest frame and the 12 frames on each side of it are kept.
+1. Following the movement (since 2026-10-14). Every frame is registered onto
+   the frame before it (step 4's search), which gives a path of the picture
+   through the recording. A frame that matches the one before it less than
+   `STEP_MIN_MATCH` (the picture went dark or blurred, or jumped too far)
+   breaks the path, and a new stretch of path begins there.
+   - Every frame also gets a sharpness score (`quality.calculate_blur`) and
+     its mean grey.
+   - The references (step 3) are built around the sharpest frame of those
+     that lie where the picture usually is (within `REFERENCE_RADIUS_PX` of
+     the median position along the path), whose mean grey is usual (within
+     `BRIGHTNESS_FACTOR`), taken from the official rest when the recording has
+     official times (`capillary.inventory`), since resting velocity is
+     measured there. Until 2026-10-14 it was the sharpest frame of the whole
+     recording: on FP01_W that lay in its last, darkening seconds, 200 px from
+     where the picture spends most of the recording, and no frame was found.
+   - The sharpest frame and the 12 frames on each side of it are read again.
 2. Registration works on a band-passed copy of each frame (difference of
    Gaussians, sigma 2 and 15 px): it removes pixel noise and the uneven
    lighting, which stays with the camera while the skin moves, and treats every
@@ -18,30 +32,46 @@
    - A coarse search on frames made 4 times smaller reaches about a third of
      the frame (±160 px in a 640 x 480 recording).
    - A fine search by normalized cross-correlation then looks within 12 px of
-     two candidates, the coarse result and the previous frame's position, and
+     two candidates, the coarse result and where the frame should be, and
      keeps the better match. A parabola through the best offset and its
      neighbours gives the fraction of a pixel.
-   - Following the previous frame lets the search track a recording that moves
-     further than the coarse search reaches; FP03_Wföre swings by about 200 px
-     with each breath. The coarse result finds the frame again if the previous
-     one was lost.
+   - Where the frame should be is the frame before's position plus the step
+     between them along the path (step 1); before any frame has been placed,
+     its position along the path relative to the references' centre. This
+     lets the search track a recording that moves further than the coarse
+     search reaches: FP03_Wföre swings by about 200 px with each breath, and
+     FP03_Wefter makes excursions of 100-200 px at rest. The coarse result
+     finds the frame again where the path broke.
    - The fine search compares the largest part of the frame that stays inside
      the reference.
    - The frame's shift is the mean of the two references' results, after
      removing the fixed offset between the two references.
-5. The shifts are measured from the sharpest frame, which may lie far from
-   where the recording usually is. They are re-centred on their median, so the
-   stabilized picture sits where the recording spends most of its time and
-   loses as little as possible at its edges.
-6. The original frame (not the band-passed one) is moved by its shift with
+   - The frame is placed by the references when it matches them at least
+     `MIN_MATCH`, the two agree within `MAX_DISAGREEMENT_PX` and the match lies
+     inside the search.
+5. A frame the references did not place (it shares too little of the picture
+   with them, or the picture changed) is carried along the path from the
+   placed frames before and after it on its stretch, the path's own drift
+   spread evenly between them (`bridge`). A stretch of path with no placed
+   frame is lost: its frames get no shift and are written black. FP03_Qföre
+   moves about 500 px when the cuff goes on, to a part of the finger the
+   references do not show.
+6. The shifts are measured from the references' centre. They are re-centred
+   on their median over the official rest (or the whole recording), so the
+   stabilized picture sits where it is during the rest and loses as little as
+   possible at its edges there.
+7. The original frame (not the band-passed one) is moved by its shift with
    bicubic interpolation, rounded to whole grey levels and written uncompressed
    as 8-bit grey. Edges the move uncovers are black.
 
-The video is read three times: for the sharpness, to register, and to write.
+The video is read four times: to follow the movement, for the reference
+frames, to register, and to write.
 Memory stays at a few dozen frames whatever the length. Output frame k is
 recorded frame k, losslessly.
 
-History (all on 2026-10-08, see the DEVLOG):
+History (see the DEVLOG; on 2026-10-14 the frame-to-frame path, the choice of
+the references' centre, the placing of frames the references miss, and the
+centring on the rest were added, all above; the rest from 2026-10-08):
 
 - The original `Caper.VideoStabilization` held the whole video in memory twice
   as float64 (22–37 GB for the 2019 recordings), wrote MPEG-4 (lossy), and wrote
@@ -63,8 +93,10 @@ Next to the stabilized video go the shift of every frame
 
 - ``frame``, ``time_s``: the frame and its time at the video's frame rate;
 - ``shift_x_px``, ``shift_y_px``: how far the frame was moved (right and down
-  positive). The image itself had moved by minus this from the recording's
-  median position;
+  positive). The image itself had moved by minus this from its median position
+  during the rest. Empty for a lost frame;
+- ``placed_by``: 'references' (registered onto them), 'neighbours' (carried
+  along the path from frames that were), or 'lost' (written black);
 - ``match``: how well the frame matches the references where it was found
   (normalized cross-correlation, 0 to 1, the mean over the two). It falls when
   the picture changes. On FP01_Qföre it is about 0.92 at rest and 0.75 during
@@ -76,7 +108,10 @@ Next to the stabilized video go the shift of every frame
 - ``at_search_limit``: the best match lay at the edge of the fine search, or
   too little of the frame overlapped the reference to search, so the shift may
   be wrong;
+- ``step_x_px``, ``step_y_px``, ``step_match``: the shift that moves the
+  frame onto the frame before it, and how well they match (empty for the first);
 - ``sharpness``: the score the reference frames were chosen by;
+- ``mean_grey``: the frame's mean grey level;
 - ``reference``: whether the frame was averaged into the references.
 
 Run from the command line:
@@ -89,7 +124,6 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from collections import deque
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -112,9 +146,24 @@ REFERENCE_NEIGHBOURS = 12
 COARSE_REDUCTION = 4
 #: How far the fine search looks around each candidate position (px).
 FINE_REACH_PX = 12
+#: A frame that matches the frame before it less than this (or only at the edge of the search) breaks the
+#: frame-to-frame path: the picture went dark or blurred, or jumped too far. On the recordings neighbouring frames
+#: match at 0.45-0.95; FP01_W's last, darkening seconds and FP03_Qföre's jump when the cuff went on fall to 0.05-0.4.
+STEP_MIN_MATCH = 0.3
+#: A frame is placed by the references when it matches them at least this well, they agree within
+#: MAX_DISAGREEMENT_PX and the match lies inside the fine search. Otherwise it is placed by the frame-to-frame path
+#: from the frames that were. Where the registration failed on 2026-10-08 the match was 0.08-0.15.
+MIN_MATCH = 0.3
+MAX_DISAGREEMENT_PX = 2.0
+#: The sharpest frame that becomes the references' centre is chosen among frames that lie within this distance
+#: (px) of where the picture usually is, so that as much as possible of the recording overlaps the references,
+#: and whose mean grey is within this factor of the usual (FP01_W's sharpest frame was in its darkening end).
+REFERENCE_RADIUS_PX = 40.0
+BRIGHTNESS_FACTOR = 1.5
 
-#: Shares of the progress bar for the three readings: sharpness, registration, writing.
-PROGRESS_SHARES = (0.1, 0.75, 0.15)
+#: Shares of the progress bar for the readings: following the frames, registration, writing (the reading that
+#: collects the reference frames is short).
+PROGRESS_SHARES = (0.35, 0.5, 0.15)
 
 ProgressCallback = Optional[Callable[[float, str], None]]
 CancelCheck = Optional[Callable[[], bool]]
@@ -234,6 +283,102 @@ def register(enhanced: np.ndarray, references: tuple, previous=None) -> tuple:
     return (a + b) / 2, (match_a + match_b) / 2, float(np.abs(a - b).max()), edge_a or edge_b
 
 
+def rest_window(source: str, fps: float, frame_count: int):
+    """The official rest of the recording `source` (its first and last frame), or None without official times.
+
+    The references are built and the picture centred there, since resting
+    velocity is measured there (`capillary.inventory`).
+    """
+    from . import inventory
+    phases = inventory.recording_phases(os.path.splitext(os.path.basename(source))[0], fps, frame_count)
+    return None if phases is None else phases.windows.get('rest')
+
+
+def path_stretches(step_ok: np.ndarray) -> np.ndarray:
+    """Which stretch of unbroken frame-to-frame path each frame lies on (numbered from 1).
+
+    A new stretch begins at the first frame and wherever a frame does not match
+    the frame before it (`step_ok` False).
+    """
+    ok = np.asarray(step_ok, dtype=bool).copy()
+    if ok.size:
+        ok[0] = False
+    return np.cumsum(~ok)
+
+
+def path_positions(steps: np.ndarray, stretches: np.ndarray) -> np.ndarray:
+    """The shift that moves each frame onto the first frame of its stretch, adding up the frame-to-frame steps.
+
+    ``steps[t]`` moves frame t onto frame t - 1.
+    """
+    steps = np.nan_to_num(np.asarray(steps, dtype=float))
+    out = np.zeros_like(steps)
+    for t in range(1, len(steps)):
+        out[t] = out[t - 1] + steps[t] if stretches[t] == stretches[t - 1] else 0.0
+    return out
+
+
+def choose_reference(sharpness, brightness, positions, stretches, window=None) -> int:
+    """The frame the references are built around: the sharpest of the frames where the picture usually is.
+
+    Frames are taken from `window` (first, last; the official rest when the
+    recording has official times) or else from the whole recording. Of those,
+    frames whose mean grey lies within `BRIGHTNESS_FACTOR` of the usual, on the
+    stretch of unbroken path that holds most of them (`path_stretches`), and
+    within `REFERENCE_RADIUS_PX` of their median position along that path.
+    """
+    sharpness, brightness = np.asarray(sharpness, dtype=float), np.asarray(brightness, dtype=float)
+    candidates = np.zeros(len(sharpness), dtype=bool)
+    if window is None:
+        candidates[:] = True
+    else:
+        candidates[window[0]:window[1] + 1] = True
+    usual = np.median(brightness[candidates])
+    good = candidates & (brightness <= usual * BRIGHTNESS_FACTOR) & (brightness >= usual / BRIGHTNESS_FACTOR)
+    if not good.any():
+        good = candidates
+    ids, counts = np.unique(stretches[good], return_counts=True)
+    good &= stretches == ids[np.argmax(counts)]
+    centre = np.median(positions[good], axis=0)
+    near = good & (np.abs(positions - centre).max(axis=1) <= REFERENCE_RADIUS_PX)
+    if near.any():
+        good = near
+    index = np.flatnonzero(good)
+    return int(index[np.argmax(sharpness[index])])
+
+
+def bridge(shifts, placed, positions, stretches) -> tuple:
+    """Shifts for the frames the references did not place, from the frame-to-frame path.
+
+    Each such frame is carried along its stretch of path from the nearest
+    placed frames before and after it, weighted by how near each is, so the
+    path's own drift is spread evenly between them; with a placed frame on one
+    side only, from that one. A stretch without any placed frame is lost (NaN).
+    Returns the shifts and, per frame, 'references', 'neighbours' or 'lost'.
+    """
+    shifts = np.array(shifts, dtype=float)
+    found_by = np.where(placed, 'references', 'neighbours').astype(object)
+    for stretch in np.unique(stretches):
+        members = np.flatnonzero(stretches == stretch)
+        anchors = members[placed[members]]
+        unplaced = members[~placed[members]]
+        if not unplaced.size:
+            continue
+        if not anchors.size:
+            shifts[unplaced] = np.nan
+            found_by[unplaced] = 'lost'
+            continue
+        after = np.searchsorted(anchors, unplaced)
+        a = anchors[np.clip(after - 1, 0, anchors.size - 1)]
+        b = anchors[np.clip(after, 0, anchors.size - 1)]
+        from_a = shifts[a] + positions[unplaced] - positions[a]
+        from_b = shifts[b] + positions[unplaced] - positions[b]
+        weight = np.where(a == b, 0.0, (unplaced - a) / np.maximum(b - a, 1))
+        weight = np.where(after == 0, 1.0, np.where(after == anchors.size, 0.0, weight))[:, None]
+        shifts[unplaced] = (1 - weight) * from_a + weight * from_b
+    return shifts, found_by
+
+
 def shift_frame(frame: np.ndarray, shift) -> np.ndarray:
     """`frame` moved by `shift` = (x, y) pixels: bicubic, rounded to uint8, uncovered edges black."""
     height, width = frame.shape
@@ -271,15 +416,18 @@ class Stabilization:
         jumps = np.hypot(*np.diff(shifts, axis=0).T) if len(shifts) > 1 else np.zeros(1)
         disagreement = self.frames['disagreement_px'].to_numpy()
         match = self.frames['match'].to_numpy()
-        return {'movement_range_x_px': float(np.ptp(shifts[:, 0])),
-                'movement_range_y_px': float(np.ptp(shifts[:, 1])),
-                'largest_jump_between_frames_px': float(jumps.max()),
+        placed_by = self.frames['placed_by'].to_numpy()
+        return {'movement_range_x_px': float(np.nanmax(shifts[:, 0]) - np.nanmin(shifts[:, 0])),
+                'movement_range_y_px': float(np.nanmax(shifts[:, 1]) - np.nanmin(shifts[:, 1])),
+                'largest_jump_between_frames_px': float(np.nanmax(jumps)) if np.isfinite(jumps).any() else 0.0,
                 'median_match': float(np.median(match)),
                 'lowest_match': float(match.min()),
                 'median_disagreement_px': float(np.median(disagreement)),
                 'largest_disagreement_px': float(disagreement.max()),
                 'frames_disagreeing_over_1px': int(np.sum(disagreement > 1.0)),
-                'frames_at_search_limit': int(self.frames['at_search_limit'].sum())}
+                'frames_at_search_limit': int(self.frames['at_search_limit'].sum()),
+                'frames_placed_by_neighbours': int(np.sum(placed_by == 'neighbours')),
+                'frames_lost': int(np.sum(placed_by == 'lost'))}
 
 
 def _report(progress: ProgressCallback, fraction: float, stage: str) -> None:
@@ -313,55 +461,84 @@ def stabilize_video(source: str, output: str, *, progress: ProgressCallback = No
     info = probe_video(source)
     expected = max(info.frame_count, 1)
 
-    sharpness_share, register_share, _ = PROGRESS_SHARES
+    follow_share, register_share, _ = PROGRESS_SHARES
 
-    # first reading: the sharpness of every frame, keeping the sharpest one and its neighbours
-    sharpness, before, window = [], deque(maxlen=REFERENCE_NEIGHBOURS), []
-    best_score, sharpest, still_to_keep = -np.inf, 0, 0
+    # first reading: sharpness, mean grey, and each frame registered onto the frame before it
+    sharpness, brightness, steps, step_match, step_ok = [], [], [], [], []
+    before = None
     for number, frame in enumerate(iter_frames(source)):
         if number % 25 == 0:
             _check(should_cancel)
-            _report(progress, sharpness_share * number / expected, 'Scoring sharpness')
-        score = float(calculate_blur(frame))
-        sharpness.append(score)
-        frame = frame.copy()
-        if score > best_score:
-            best_score, window = score, list(before) + [(number, frame)]
-            sharpest, still_to_keep = len(window) - 1, REFERENCE_NEIGHBOURS
-        elif still_to_keep:
-            window.append((number, frame))
-            still_to_keep -= 1
-        before.append((number, frame))
+            _report(progress, follow_share * number / expected, 'Following the movement')
+        sharpness.append(float(calculate_blur(frame)))
+        brightness.append(float(frame.mean()))
+        enhanced = enhance(frame)
+        if before is None:
+            steps.append(np.zeros(2))
+            step_match.append(np.nan)
+            step_ok.append(False)
+        else:
+            step, matched, at_edge = locate(enhanced, before, steps[-1])
+            steps.append(step)
+            step_match.append(matched)
+            step_ok.append(matched >= STEP_MIN_MATCH and not at_edge)
+        before = enhanced
     if not sharpness:
         raise ValueError(f'no frames could be read from {source}')
     count = len(sharpness)
-    height, width = window[sharpest][1].shape
-    reference_images, used = build_references([frame for _, frame in window], sharpest)
-    references = [window[index][0] for index in used]
-    sharpest = window[sharpest][0]
-    del before, window
+    steps, step_ok = np.array(steps), np.array(step_ok)
+    stretches = path_stretches(step_ok)
+    positions = path_positions(steps, stretches)
+    window = rest_window(source, info.fps, count)
+    sharpest = choose_reference(sharpness, brightness, positions, stretches, window)
 
-    # second reading: register every frame, following the one before
+    # second reading: the sharpest frame and its neighbours make the references
+    first = max(0, sharpest - REFERENCE_NEIGHBOURS)
+    last = min(count - 1, sharpest + REFERENCE_NEIGHBOURS)
+    neighbourhood = [frame.copy() for frame in iter_frames(source, start=first, max_frames=last - first + 1)]
+    height, width = neighbourhood[0].shape
+    reference_images, used = build_references(neighbourhood, sharpest - first)
+    references = [first + index for index in used]
+    del neighbourhood
+
+    # third reading: register every frame, the search led by the frame before it and the step between them
     shifts = np.full((count, 2), np.nan)
     match = np.full(count, np.nan)
     disagreement = np.full(count, np.nan)
     at_limit = np.zeros(count, dtype=bool)
-    previous = None
+    placed = np.zeros(count, dtype=bool)
+    estimate = None
     registered = 0
     for number, frame in enumerate(iter_frames(source, max_frames=count)):
         _check(should_cancel)
         if number % 25 == 0:
-            _report(progress, sharpness_share + register_share * number / count, 'Aligning frames')
+            _report(progress, follow_share + register_share * number / count, 'Aligning frames')
+        if step_ok[number] and estimate is not None:
+            guide = estimate + steps[number]
+        elif stretches[number] == stretches[sharpest]:
+            guide = positions[number] - positions[sharpest]
+        else:
+            guide = None
         shifts[number], match[number], disagreement[number], at_limit[number] = register(
-            enhance(frame), reference_images, previous)
-        previous = shifts[number]
+            enhance(frame), reference_images, guide)
+        placed[number] = (not at_limit[number] and match[number] >= MIN_MATCH
+                          and disagreement[number] <= MAX_DISAGREEMENT_PX)
+        estimate = shifts[number] if placed[number] else guide
         registered += 1
     if registered != count:
-        raise OSError(f'{source} gave {count} frames on the first reading but {registered} on the second')
-    centre = np.median(shifts, axis=0)
+        raise OSError(f'{source} gave {count} frames on the first reading but {registered} on the third')
+    shifts, found_by = bridge(shifts, placed, positions, stretches)
+    lost = found_by == 'lost'
+    if lost.all():
+        raise ValueError(f'no frame of {source} could be placed')
+    centred = ~lost
+    if window is not None and centred[window[0]:window[1] + 1].any():
+        centred[:window[0]] = False
+        centred[window[1] + 1:] = False
+    centre = np.median(shifts[centred], axis=0)
     shifts -= centre
 
-    # third reading: move every frame and write it
+    # fourth reading: move every frame and write it; a lost frame is written black
     writer = cv2.VideoWriter(output, 0, info.fps, (width, height), isColor=False)
     if not writer.isOpened():
         writer.release()
@@ -371,13 +548,13 @@ def stabilize_video(source: str, output: str, *, progress: ProgressCallback = No
         for number, frame in enumerate(iter_frames(source, max_frames=count)):
             _check(should_cancel)
             if number % 25 == 0:
-                _report(progress, sharpness_share + register_share + (1 - sharpness_share - register_share)
+                _report(progress, follow_share + register_share + (1 - follow_share - register_share)
                         * number / count, 'Writing the stabilized video')
-            writer.write(shift_frame(frame, shifts[number]))
+            writer.write(np.zeros_like(frame) if lost[number] else shift_frame(frame, shifts[number]))
             written += 1
         writer.release()
         if written != count:
-            raise OSError(f'{source} gave {count} frames on the first reading but {written} on the third')
+            raise OSError(f'{source} gave {count} frames on the first reading but {written} on the fourth')
     except BaseException:
         writer.release()
         _remove(output)
@@ -386,9 +563,11 @@ def stabilize_video(source: str, output: str, *, progress: ProgressCallback = No
 
     numbers = np.arange(count)
     frames = pd.DataFrame({'frame': numbers, 'time_s': numbers / info.fps,
-                           'shift_x_px': shifts[:, 0], 'shift_y_px': shifts[:, 1],
+                           'shift_x_px': shifts[:, 0], 'shift_y_px': shifts[:, 1], 'placed_by': found_by,
                            'match': match, 'disagreement_px': disagreement, 'at_search_limit': at_limit,
-                           'sharpness': sharpness, 'reference': np.isin(numbers, references)})
+                           'step_x_px': steps[:, 0], 'step_y_px': steps[:, 1], 'step_match': step_match,
+                           'sharpness': sharpness, 'mean_grey': brightness,
+                           'reference': np.isin(numbers, references)})
     return Stabilization(source=source, output=output, fps=info.fps, width=width, height=height,
                          sharpest=sharpest, references=references, frames=frames,
                          centre=(float(centre[0]), float(centre[1])))
@@ -423,14 +602,23 @@ def save_record(result: Stabilization, video_path: Optional[str] = None) -> dict
                           '(1 px) left out',
             'enhancement_for_registration': {'band_pass': 'difference of Gaussians',
                                              'sigmas_px': list(BANDPASS_SIGMAS_PX)},
+            'following': f'every frame registered onto the frame before it (the same search); a match below '
+                         f'{STEP_MIN_MATCH} breaks the path. The references\' centre: the sharpest frame within '
+                         f'{REFERENCE_RADIUS_PX:g} px of the median position along the path and within '
+                         f'{BRIGHTNESS_FACTOR:g}x of the usual mean grey, from the official rest if there is one',
             'registration': f'a coarse search on frames reduced up to {COARSE_REDUCTION} times, reaching a third '
                             f'of the frame; then normalized cross-correlation within {FINE_REACH_PX} px of the '
-                            'coarse result and of the previous frame\'s position, the better match kept, refined '
-                            'by a parabola through the peak; the mean over the two references',
+                            'coarse result and of where the frame should be (the frame before\'s position plus '
+                            'the step between them), the better match kept, refined by a parabola through the '
+                            'peak; the mean over the two references',
+            'placing': f'by the references when the match is at least {MIN_MATCH}, they agree within '
+                       f'{MAX_DISAGREEMENT_PX:g} px and the match lies inside the search; otherwise carried along '
+                       'the frame-to-frame path from the placed frames before and after it; lost (written black) '
+                       'where the path holds no placed frame',
             'recentred_by_px': list(result.centre),
             'output': 'original frames moved with bicubic interpolation, rounded, uncompressed 8-bit grey AVI; '
-                      'uncovered edges black; shifts measured from the sharpest frame and re-centred on their '
-                      'median',
+                      'uncovered edges and lost frames black; shifts measured from the references\' centre and '
+                      're-centred on their median over the official rest (else the whole recording)',
         },
         'summary': result.summary(),
         'software': software_version(),
@@ -475,6 +663,9 @@ def main(argv=None) -> int:
           f'largest jump {summary["largest_jump_between_frames_px"]:.1f} px; the references disagree by a median '
           f'{summary["median_disagreement_px"]:.2f} px, over 1 px on {summary["frames_disagreeing_over_1px"]} frames')
     print(f'  match with the references: median {summary["median_match"]:.2f}, lowest {summary["lowest_match"]:.2f}')
+    if summary['frames_placed_by_neighbours'] or summary['frames_lost']:
+        print(f'  {summary["frames_placed_by_neighbours"]} frames placed from their neighbours along the path; '
+              f'{summary["frames_lost"]} lost (written black)')
     if summary['frames_at_search_limit']:
         print(f'  WARNING: on {summary["frames_at_search_limit"]} frames the image may have moved further than the '
               'search reaches; check their shifts')

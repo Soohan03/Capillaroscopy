@@ -183,15 +183,23 @@ Tkinter classes.
 - **Stabilization:** `capillary/stabilize.py` (rewritten 2026-10-08; its docstring has the
   method and history). Translation only. The registration works on a band-passed copy of
   each frame (difference of Gaussians, σ 2 and 15 px) against two references, each averaged
-  from alternate frames of the sharpest frame's 25-frame neighbourhood.
+  from alternate frames of a sharp frame's 25-frame neighbourhood.
+  - Since 2026-10-14 every frame is first registered onto the frame before it, giving a path
+    of the picture. A match below 0.3 breaks the path.
+  - The references' centre is the sharpest frame where the picture usually is: within 40 px
+    of the median path position and of usual mean grey, from the official rest when there is
+    one.
   - A coarse search on 4× reduced frames (±160 px), then a fine normalized
-    cross-correlation within 12 px of the coarse result and of the previous frame's
-    position, so it follows large movement.
-  - Shifts are re-centred on their median. The video is read from disk three times
-    (memory stays small) and written uncompressed 8-bit grey, frame for frame, with bicubic
-    interpolation.
-  - Every frame's shift, match, disagreement and search-limit flag go to
-    `___stabilization.csv`.
+    cross-correlation within 12 px of the coarse result and of where the frame should be (the
+    frame before plus the step between them), so it follows large movement.
+  - A frame the references do not place (match < 0.3, references disagreeing > 2 px, or at
+    the search limit) is carried along the path from placed frames (`placed_by`
+    'neighbours'). A stretch of path with none is 'lost', written black with no shift.
+  - Shifts are re-centred on their median over the official rest (else all frames). The video
+    is read from disk four times (memory stays small) and written uncompressed 8-bit grey,
+    frame for frame, with bicubic interpolation.
+  - Every frame's shift, how it was placed, match, disagreement, search-limit flag, step onto
+    the frame before and mean grey go to `___stabilization.csv`.
   - `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
 - Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
   known speed and the disturbances measured in the 2019 recordings (measured on video that
@@ -204,7 +212,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (281 tests, ~40 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (287 tests, ~50 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -263,10 +271,19 @@ the 2026-10-05 GUI rebuild entry.
       as flow in 2–4 of 10, a steady drift always, and 2-px movements never.
     - From 1 px/frame up none of this reached the threshold. A check that the picture held still
       near the line (for example the tissue beside it) would make the slow range usable.
-- **Large movements defeat the stabilizer** (found 2026-10-08). On FP01_W (a steady drift of about
-  200 px), FP03_Qföre (after the cuff) and FP03_Wefter (jumps of 100–200 px at rest) the match
-  falls to 0.1–0.3. Planned fix: follow the movement outwards from the reference frame in both
-  directions in time.
+- **Large movements** (found 2026-10-08, fixed 2026-10-14 by following the movement frame to
+  frame).
+  - FP01_W (references were built in its darkening last seconds) and FP03_Wefter
+    (excursions of 100–200 px at rest) now stabilize: the match at rest is 0.85 and 0.74, and
+    their resting mean images are sharp.
+  - FP01_W's last 8 s are dark and lost.
+  - FP03_Qföre moves about 500 px when the cuff goes on, to a view that shares almost nothing
+    with the rest. From then on it is lost; its rest is as before, now centred.
+  - Building the references in the rest lowers the match in later phases where the old
+    references lay there (FP03_Wföre's occlusion 0.66 → 0.57, shifts within 1 px).
+  - Videos stabilized before 2026-10-14 may be centred differently: re-stabilizing moves their
+    picture, so lines placed on them (`analysis/aim1_feasibility/lines.json`, data sets) no
+    longer fit.
 - **The two-box method failed on the 2019 recordings** (found 2026-10-06): about
   70% of a box's signal changes along the whole vessel at once, so the delay comes out
   as zero ("too fast to resolve") even where the flow is slow, and the existing two-box

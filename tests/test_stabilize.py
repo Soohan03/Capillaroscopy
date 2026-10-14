@@ -141,6 +141,119 @@ def test_following_the_previous_frame_reaches_beyond_the_coarse_search():
     assert abs(lost[1] + 130) > 10 or match < 0.6
 
 
+def drifting_frames(n: int, drift_y: float, seed: int = 0, size=(HEIGHT, WIDTH)):
+    """`n` frames of a scene drifting steadily `drift_y` px down over the clip, with a little jitter."""
+    rng = np.random.default_rng(seed + 1)
+    height, width = size
+    margin = int(np.ceil(abs(drift_y))) + 12
+    texture = scene(height, width, margin, seed)
+    movement = np.column_stack([rng.uniform(-1, 1, n), np.linspace(0, drift_y, n) + rng.uniform(-1, 1, n)])
+    frames = []
+    for dx, dy in movement:
+        matrix = np.float32([[1, 0, dx - margin], [0, 1, dy - margin]])
+        frame = cv2.warpAffine(texture, matrix, (width, height), flags=cv2.INTER_CUBIC)
+        frames.append(np.clip(np.rint(frame + rng.normal(0, 1.5, frame.shape)), 0, 255).astype(np.uint8))
+    return frames, movement
+
+
+def sharpen(frame: np.ndarray, seed: int = 1) -> np.ndarray:
+    """`frame` with added noise, which makes it the sharpest by `calculate_blur`."""
+    noise = np.random.default_rng(seed).normal(0, 6, frame.shape)
+    return np.clip(frame + noise, 0, 255).astype(np.uint8)
+
+
+def test_a_drift_far_beyond_the_coarse_search_is_followed(tmp_path):
+    # FP01_W drifts about 200 px, and its sharpest frame was at the far end: the frames far from it were never found
+    # (2026-10-08). In 160 x 120 the coarse search reaches 40 px; here the scene drifts 100 px.
+    frames, movement = drifting_frames(60, 100.0, seed=3)
+    frames[-1] = sharpen(frames[-1])
+    write_grey(tmp_path / 'source.avi', frames)
+    result = stabilize.stabilize_video(str(tmp_path / 'source.avi'), str(tmp_path / 'stabilized.avi'))
+    error = result.frames[['shift_x_px', 'shift_y_px']].to_numpy() + movement
+    error -= np.median(error, axis=0)
+    placed_by = result.frames['placed_by']
+    # the frame furthest from the references overlaps them too little and is carried along from its neighbour
+    assert (placed_by == 'references').sum() >= 57 and not (placed_by == 'lost').any()
+    assert np.abs(error).max() < 0.15
+    # the references are built where the picture usually is, not at the sharp far end
+    assert abs(movement[result.sharpest, 1] - np.median(movement[:, 1])) <= stabilize.REFERENCE_RADIUS_PX
+    # and the picture is centred there
+    assert abs(np.median(result.frames['shift_y_px'])) < 1.0
+
+
+def test_dark_frames_are_lost_not_misplaced(tmp_path):
+    # FP01_W goes dark in its last seconds (mean grey 70 -> 9); its sharpest frame was there
+    frames, movement = drifting_frames(50, 10.0, seed=4)
+    rng = np.random.default_rng(5)
+    for i in range(42, 50):
+        frames[i] = np.clip(rng.normal(8, 6, frames[i].shape), 0, 255).astype(np.uint8)   # dark, noisy, "sharp"
+    write_grey(tmp_path / 'source.avi', frames)
+    result = stabilize.stabilize_video(str(tmp_path / 'source.avi'), str(tmp_path / 'stabilized.avi'))
+    placed_by = result.frames['placed_by'].to_numpy()
+    assert result.sharpest < 42
+    assert (placed_by[:42] == 'references').all() and (placed_by[42:] == 'lost').all()
+    assert result.frames.loc[42:, 'shift_x_px'].isna().all()
+    written = list(iter_frames(result.output))
+    assert all(frame.max() == 0 for frame in written[42:])                   # written black
+    error = result.frames[['shift_x_px', 'shift_y_px']].to_numpy()[:42] + movement[:42]
+    assert np.abs(error - np.median(error, axis=0)).max() < 0.15
+    summary = result.summary()
+    assert summary['frames_lost'] == 8 and np.isfinite(summary['movement_range_x_px'])
+
+
+def test_a_jump_away_from_the_references_is_not_silently_wrong(tmp_path):
+    # FP03_Qföre moves about 500 px when the cuff goes on, to a part of the finger the references do not show
+    texture = scene(HEIGHT, WIDTH, margin=200, seed=7)
+    rng = np.random.default_rng(8)
+
+    def at(dx, dy):
+        matrix = np.float32([[1, 0, dx - 200], [0, 1, dy - 200]])
+        frame = cv2.warpAffine(texture, matrix, (WIDTH, HEIGHT), flags=cv2.INTER_CUBIC)
+        return np.clip(np.rint(frame + rng.normal(0, 1.5, frame.shape)), 0, 255).astype(np.uint8)
+    movement = [(rng.uniform(-1, 1), rng.uniform(-1, 1)) for _ in range(30)] + [(150.0, 110.0)] * 15
+    write_grey(tmp_path / 'source.avi', [at(*m) for m in movement])
+    result = stabilize.stabilize_video(str(tmp_path / 'source.avi'), str(tmp_path / 'stabilized.avi'))
+    placed_by = result.frames['placed_by'].to_numpy()
+    assert (placed_by[:30] == 'references').all()
+    assert (placed_by[30:] == 'lost').all()
+
+
+def test_frames_the_references_miss_are_carried_along_the_path():
+    # the path between placed frames 0 and 4 has drifted 0.4 px, which is spread evenly over the frames between
+    positions = np.array([[0.0, 0], [10, 0], [20, 0], [30, 0], [40.4, 0], [50.4, 0], [0, 0], [5, 0]])
+    stretches = np.array([1, 1, 1, 1, 1, 1, 2, 2])
+    placed = np.array([True, False, False, False, True, False, False, False])
+    shifts = np.full((8, 2), np.nan)
+    shifts[0], shifts[4] = (100.0, 5.0), (140.0, 5.0)
+    bridged, found_by = stabilize.bridge(shifts, placed, positions, stretches)
+    np.testing.assert_allclose(bridged[:6, 0], [100, 109.9, 119.8, 129.7, 140, 150])
+    np.testing.assert_allclose(bridged[:6, 1], 5.0)
+    assert list(found_by) == ['references', 'neighbours', 'neighbours', 'neighbours', 'references', 'neighbours',
+                              'lost', 'lost']
+    assert np.isnan(bridged[6:]).all()
+
+
+def test_the_path_breaks_where_neighbouring_frames_do_not_match():
+    stretches = stabilize.path_stretches(np.array([True, True, False, True, True]))
+    assert list(stretches) == [1, 1, 2, 2, 2]
+    steps = np.array([[9.0, 9], [1, 0], [50, 50], [1, 1], [1, 1]])
+    np.testing.assert_allclose(stabilize.path_positions(steps, stretches), [[0, 0], [1, 0], [0, 0], [1, 1], [2, 2]])
+
+
+def test_the_reference_is_the_sharpest_frame_where_the_picture_usually_is():
+    n = 100
+    positions = np.zeros((n, 2))
+    positions[80:, 1] = 200.0                             # the picture moved far away for the last 20 frames
+    stretches = np.ones(n, dtype=int)
+    brightness = np.full(n, 70.0)
+    brightness[60:70] = 9.0                               # dark
+    sharpness = np.arange(n, dtype=float)                 # the later, the sharper
+    assert stabilize.choose_reference(sharpness, brightness, positions, stretches) == 79
+    assert stabilize.choose_reference(sharpness, brightness, positions, stretches, window=(0, 50)) == 50
+    stretches[:40] = 2                                    # most usable frames are now on the first stretch... of 40
+    assert stabilize.choose_reference(sharpness, brightness, positions, stretches) == 79
+
+
 def test_every_frame_is_written_in_place_and_losslessly(jittered):
     frames, _, result = jittered
     shifts = result.frames[['shift_x_px', 'shift_y_px']].to_numpy()
@@ -195,8 +308,10 @@ def test_the_record_is_saved_next_to_the_video(jittered):
     paths = stabilize.save_record(result)
     assert paths == stabilize.record_paths(result.output)
     shifts = pd.read_csv(paths['shifts'])
-    assert list(shifts.columns) == ['frame', 'time_s', 'shift_x_px', 'shift_y_px', 'match', 'disagreement_px',
-                                    'at_search_limit', 'sharpness', 'reference']
+    assert list(shifts.columns) == ['frame', 'time_s', 'shift_x_px', 'shift_y_px', 'placed_by', 'match',
+                                    'disagreement_px', 'at_search_limit', 'step_x_px', 'step_y_px', 'step_match',
+                                    'sharpness', 'mean_grey', 'reference']
+    assert (shifts['placed_by'] == 'references').all()
     assert len(shifts) == 60 and shifts['reference'].sum() == len(result.references)
     assert shifts['time_s'].iloc[25] == pytest.approx(1.0)
     np.testing.assert_allclose(shifts['shift_x_px'], result.frames['shift_x_px'])
