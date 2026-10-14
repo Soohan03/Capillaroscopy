@@ -106,6 +106,16 @@ direction of the pooled flow then tells which limb it is
 (`limb_from_direction`): blood flows up the arterial limb to the apex and
 down the venous limb.
 
+Since 2026-10-14 a line can also go round a whole loop (`WHOLE_LOOP`), from
+the base of one limb over the apex to the base of the other. Flow runs one
+way round the loop, so the line collects the signal of both limbs: on the
+aim-1 check's 53 loops at rest it measured 23 against 14 by their single
+limbs, at a score a median 1.6 times the better limb's (analysis/whole_loop/).
+Its direction tells which end of the line lies on the arterial limb
+(`loop_from_direction`). Each limb is also measured on its own
+(`loop_limbs`): the picture moving along the loop's axis runs opposite ways
+along the line in the two limbs, while flow runs the same way.
+
 Nothing here imports a GUI toolkit.
 """
 
@@ -166,6 +176,9 @@ MIN_LENGTH_PX = 24
 MIN_HALF_BLOCKS = 3
 #: The role of a line drawn along a capillary loop's arterial limb, from its base to the apex.
 ARTERIAL_LIMB = 'arterial limb'
+#: The role of a line drawn round a whole capillary loop: from the base of one limb, over the apex, to the
+#: base of the other.
+WHOLE_LOOP = 'whole loop'
 
 
 @dataclass(frozen=True)
@@ -515,3 +528,50 @@ def limb_from_direction(velocity: float) -> str:
     if velocity is None or not np.isfinite(velocity) or velocity == 0:
         return 'unknown'
     return 'arterial' if velocity > 0 else 'venous'
+
+
+def loop_from_direction(velocity: float) -> str:
+    """Which end of a whole-loop line lies on the arterial limb, by the direction of its flow.
+
+    The line runs from the base of one limb, over the apex, to the base of the
+    other. Blood flows up the arterial limb and down the venous one, so flow
+    along the line (positive velocity) starts in the limb where the line
+    starts: 'start'; flow against it, 'end'. 'unknown' when the flow is not
+    resolved (NaN).
+    """
+    if velocity is None or not np.isfinite(velocity) or velocity == 0:
+        return 'unknown'
+    return 'start' if velocity > 0 else 'end'
+
+
+def loop_limbs(diagram: np.ndarray, apex_px: float, fps: float, mm_per_pixel: float, spacing_px: float = 1.0,
+               min_speed: float = MIN_SPEED) -> dict:
+    """The pattern shift of each limb of a whole-loop line, pooled over the range, and whether they agree.
+
+    `apex_px` is the apex's distance along the line
+    (`capillary.spacetime.Centreline.apex_arc_px`): the limb where the line
+    starts is the diagram's positions up to it, the other limb those from it.
+    Velocities are along the whole line, so flow round the loop reads the same
+    sign in both limbs. The picture moving along the loop's axis (towards the
+    apex or away from it) reads opposite signs: ``loop_movement`` is True when
+    both limbs are resolved with opposite signs, a whole loop that measured
+    movement rather than flow. On the aim-1 check, separately traced limbs
+    running this way removed 1 of 24 whole loops (DEVLOG 2026-10-14).
+
+    Keys: ``pattern_shift_start_limb_mm_s`` and ``pattern_shift_end_limb_mm_s``
+    (NaN unless resolved), ``pattern_shift_start_limb_snr`` and
+    ``pattern_shift_end_limb_snr`` (NaN when a limb is shorter than
+    `MIN_LENGTH_PX`), and ``loop_movement``.
+    """
+    diagram = np.asarray(diagram, dtype=float)
+    to_mm_s = spacing_px * fps * mm_per_pixel
+    split = int(round(apex_px / spacing_px))
+    out, velocities = {}, []
+    for label, part in (('start_limb', diagram[:, :split + 1]), ('end_limb', diagram[:, split:])):
+        estimate = pattern_shift(part, min_speed=min_speed) if diagram.ndim == 2 else _NO_ESTIMATE
+        velocity = estimate.speed_px_per_frame * to_mm_s if estimate.resolved else float('nan')
+        out[f'pattern_shift_{label}_mm_s'] = velocity
+        out[f'pattern_shift_{label}_snr'] = estimate.snr
+        velocities.append(velocity)
+    out['loop_movement'] = bool(np.all(np.isfinite(velocities)) and np.sign(velocities[0]) != np.sign(velocities[1]))
+    return out

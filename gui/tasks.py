@@ -345,17 +345,31 @@ def summarize_line_blocks(blocks: pd.DataFrame, length_px: float, fps: float, mm
 
 
 def summarize_line(diagram, blocks: pd.DataFrame, length_px: float, fps: float, mm_per_pixel: float,
-                   role: Optional[str] = None, phase: str = '') -> dict:
+                   role: Optional[str] = None, phase: str = '', apex_px: Optional[float] = None) -> dict:
     """Everything a centre-line data set reports: its 3-s blocks, the pattern shift pooled over the range
     (`capillary.pattern_shift.summarize`), what the line follows and, for an arterial limb, which limb the
-    direction of the pooled flow shows; `phase` is the official phase of the range ('' if unknown)."""
+    direction of the pooled flow shows; `phase` is the official phase of the range ('' if unknown).
+
+    For a whole loop (`apex_px` from `Centreline.apex_arc_px`): which end of the line lies on the arterial
+    limb (`arterial_end`), and each limb's own pattern shift with ``loop_movement``
+    (`capillary.pattern_shift.loop_limbs`)."""
     summary = summarize_line_blocks(blocks, length_px, fps, mm_per_pixel)
     summary.update(pattern_shift.summarize(diagram, fps, mm_per_pixel))
+    velocity = summary['pattern_shift_velocity_mm_s']
     summary['line_role'] = role or ''
-    summary['limb_check'] = (pattern_shift.limb_from_direction(summary['pattern_shift_velocity_mm_s'])
-                             if role == pattern_shift.ARTERIAL_LIMB else '')
+    summary['limb_check'] = pattern_shift.limb_from_direction(velocity) if role == pattern_shift.ARTERIAL_LIMB else ''
+    summary['arterial_end'] = pattern_shift.loop_from_direction(velocity) if role == pattern_shift.WHOLE_LOOP else ''
+    if role == pattern_shift.WHOLE_LOOP and apex_px is not None:
+        summary.update(pattern_shift.loop_limbs(diagram, apex_px, fps, mm_per_pixel))
     summary['phase'] = phase
     return summary
+
+
+def _apex_px(points, role: Optional[str]) -> Optional[float]:
+    """The apex's distance along a whole-loop line (None for other lines, or without points)."""
+    if role != pattern_shift.WHOLE_LOOP or not points or len(points) < 2:
+        return None
+    return spacetime.Centreline.from_points(points).apex_arc_px()
 
 
 def _estimator_record() -> dict:
@@ -384,7 +398,8 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
     """Measure frames ``start..end`` (inclusive) along the centre line, save the data set, write its report.
 
     `role` is `capillary.pattern_shift.ARTERIAL_LIMB` for a line drawn along a capillary loop's arterial
-    limb, from its base to the apex; None for any other line.
+    limb, from its base to the apex; `capillary.pattern_shift.WHOLE_LOOP` for a line round a whole loop,
+    from the base of one limb over the apex to the base of the other; None for any other line.
     """
     info = probe_video(video_path)
     line = spacetime.Centreline.from_points(points)
@@ -405,7 +420,7 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
     job.report(0.86, 'Pooling the pattern shift')
     last = start + len(rows) - 1
     summary = summarize_line(diagram, blocks, line.length_px, info.fps, mm_per_pixel, role,
-                             range_phase(stem, info.fps, info.frame_count, start, last))
+                             range_phase(stem, info.fps, info.frame_count, start, last), _apex_px(line.points, role))
     files = datasets.line_dataset_files(folder.statistics, stem, name)
     try:
         job.report(0.92, 'Saving the data set')
@@ -427,7 +442,9 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
                                     'corner; positive velocity runs from the first point towards the last',
                      'role': role,
                      'roles': f'"{pattern_shift.ARTERIAL_LIMB}": drawn along a capillary loop\'s arterial limb '
-                              'from its base to the apex; null: any other line'},
+                              f'from its base to the apex; "{pattern_shift.WHOLE_LOOP}": drawn round a whole loop, '
+                              'from the base of one limb over the apex to the base of the other; null: any '
+                              'other line'},
             'mm_per_pixel': mm_per_pixel,
             'resolvable_mm_per_s': {'slowest': summary['slowest_mm_s'], 'fastest': summary['fastest_mm_s']},
             'time_points_s': sorted(float(t) for t in time_points),
@@ -465,7 +482,8 @@ def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps
     job.report(0.82, 'Pooling the pattern shift')
     frame_count = ((record or {}).get('video') or {}).get('frame_count')
     summary = summarize_line(diagram, blocks, length, fps, mm_per_pixel, line.get('role'),
-                             range_phase(stem, fps, frame_count, first, first + diagram.shape[0] - 1))
+                             range_phase(stem, fps, frame_count, first, first + diagram.shape[0] - 1),
+                             _apex_px(line.get('points'), line.get('role')))
     job.report(0.9, 'Drawing the report')
     Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, fps,
                                mm_per_pixel, first, sorted(time_points), summary)

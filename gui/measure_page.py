@@ -11,6 +11,9 @@ its report written, and the result appears in the panel. `LinePage` and
 A recording with official occlusion and release times (`metadata/`) offers
 its rest, occlusion and the time after release as ranges
 (`capillary.inventory.recording_phases`); the timeline marks the occlusion.
+
+During blind placement (`gui.blind`) the recording shows under its code, the
+range is the official rest and no result is shown.
 """
 
 from __future__ import annotations
@@ -103,6 +106,10 @@ class MeasurePage(ttk.Frame):
 
     def describe_result(self, frame, result):
         """Fill `frame` with the page-specific numbers of a result."""
+
+    def suggest_name(self, existing) -> str:
+        """The name offered for the next data set, given the recording's `existing` names."""
+        return datasets.suggest_dataset_name(existing)
 
     def handle_page_key(self, event) -> bool:
         return False
@@ -289,7 +296,9 @@ class MeasurePage(ttk.Frame):
             self._open_video(path)
             self.phases = self._official_phases(recording)
             self.restore_state(self._saved_state.get(recording.stem) if recording else None)
-            self.name_var.set(datasets.suggest_dataset_name(self.existing_names()))
+            if self.app.blind and self.rest_window() is not None:
+                self.range = self.rest_window()
+            self.name_var.set(self.suggest_name(self.existing_names()))
         self.markers = (datasets.load_time_points(datasets.time_points_file(self.app.folder.statistics,
                                                                               recording.stem))
                         if recording is not None else [])
@@ -336,7 +345,7 @@ class MeasurePage(ttk.Frame):
             self.title_label.configure(text='No recording selected')
             self.subtitle_label.configure(text='')
         else:
-            self.title_label.configure(text=recording.stem)
+            self.title_label.configure(text=self.app.display_name(recording.stem))
             source = self.player.source
             if source is not None:
                 folder = os.path.basename(os.path.dirname(source.path))
@@ -406,6 +415,11 @@ class MeasurePage(ttk.Frame):
             return
         self.range = tuple(window)
         self._range_changed()
+
+    def rest_window(self):
+        """The official rest's frames (first, last), or None when the recording has none."""
+        window = (self.phases.windows if self.phases is not None else {}).get('rest')
+        return tuple(window) if window is not None and self.player.source is not None else None
 
     def range_phase(self) -> str:
         """The official phases the current range lies in ('rest', 'rest + occlusion', ...), '' if unknown."""
@@ -525,6 +539,12 @@ class MeasurePage(ttk.Frame):
         if self.player.source is None:
             return ['Select a recording with a video.']
         reasons += self.measure_blockers()
+        if self.app.blind:
+            rest = self.rest_window()
+            if rest is None:
+                reasons.append('This recording has no official rest, and blind placement measures only the rest.')
+            elif self.current_range() != rest:
+                reasons.append('Blind placement measures the official rest: press Rest.')
         start, end = self.current_range()
         if end - start + 1 < self.min_frames:
             reasons.append(f'The range must hold at least {self.min_frames} frames '
@@ -554,8 +574,9 @@ class MeasurePage(ttk.Frame):
                 self.name_message.configure(text='A data set with this name exists and will be replaced.',
                                             style='Warning.Panel.TLabel')
             elif name.strip():
-                prefix = f'{self.recording.stem}___{name.strip()}___…' if self.recording else ''
-                self.name_message.configure(text=f'Saved as {prefix} in Statistics/ and Reports/.',
+                prefix = f' as {self.recording.stem}___{name.strip()}___…' if self.recording and not self.app.blind \
+                    else ''
+                self.name_message.configure(text=f'Saved{prefix} in Statistics/ and Reports/.',
                                             style='Faint.Panel.TLabel')
             else:
                 self.name_message.configure(text='')
@@ -575,9 +596,10 @@ class MeasurePage(ttk.Frame):
             return
         name = self.name_var.get().strip()
         recording = self.recording
+        shown = self.app.display_name(recording.stem)
         if name in self.existing_names():
             if not confirm(self, 'Replace data set?', f'A data set named "{name}" already exists '
-                           f'for {recording.stem}.', 'Its files are moved to the .trash folder in the data folder, '
+                           f'for {shown}.', 'Its files are moved to the .trash folder in the data folder, '
                            'where you can restore them by hand.', ok='Replace', danger=True):
                 return
             folder = self.app.folder
@@ -594,11 +616,11 @@ class MeasurePage(ttk.Frame):
         def done(result):
             self.results[stem] = dict(result, saved=datetime.datetime.now())
             self.job = None
-            summary = self.result_status(result)
-            self.app.set_status(f'Saved data set "{name}" for {stem}{summary}.')
+            summary = '' if self.app.blind else self.result_status(result)
+            self.app.set_status(f'Saved data set "{name}" for {shown}{summary}.')
             self.app.refresh_library()
             if self.recording is not None and self.recording.stem == stem:
-                self.name_var.set(datasets.suggest_dataset_name(self.existing_names() + [name]))
+                self.name_var.set(self.suggest_name(self.existing_names() + [name]))
             self.update_measure_state()
             self._update_result_ui()
 
@@ -639,7 +661,7 @@ class MeasurePage(ttk.Frame):
     # ------------------------------------------------------------------------ result
     def _update_result_ui(self):
         result = self.results.get(self.recording.stem) if self.recording else None
-        if result is None:
+        if result is None or self.app.blind:
             self._result_outer.pack_forget()
             return
         self._result_outer.pack(fill='x')

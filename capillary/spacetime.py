@@ -172,6 +172,21 @@ class Centreline:
     def reversed(self) -> 'Centreline':
         return Centreline(tuple(reversed(self.points)))
 
+    def apex_arc_px(self) -> float:
+        """Distance along the curve (px from the first point) of the apex of a line drawn round a capillary loop.
+
+        The line runs from the base of one limb, over the apex, to the base of
+        the other: the apex is the point farthest from both ends (the largest
+        of the smaller of its two distances), searched in the middle 80% of the
+        line. On the 53 loops of the aim-1 check it lay a median 1.3 px (at most
+        17.5) from where the two separately traced limbs met (DEVLOG 2026-10-14).
+        """
+        curve = self.curve()
+        arc = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(curve, axis=0).T))])
+        nearer_end = np.minimum(np.hypot(*(curve - curve[0]).T), np.hypot(*(curve - curve[-1]).T))
+        middle = (arc >= 0.1 * arc[-1]) & (arc <= 0.9 * arc[-1])
+        return float(arc[np.argmax(np.where(middle, nearer_end, -1.0))])
+
 
 # ------------------------------------------------------------------- the space-time diagram
 

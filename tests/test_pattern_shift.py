@@ -13,6 +13,8 @@ from capillary.pattern_shift import (
     _block_sums,
     _prepared,
     limb_from_direction,
+    loop_from_direction,
+    loop_limbs,
     pattern_shift,
     shift_time_course,
     summarize,
@@ -231,6 +233,39 @@ def test_the_direction_of_flow_tells_the_limbs_of_a_loop_apart():
 
     assert limb(20, 140) == 'arterial'
     assert limb(320, 200) == 'venous'
+
+
+def test_a_whole_loop_line_names_its_arterial_end_and_measures_each_limb():
+    # a line round the loop: from the base of one limb, over the apex, to the base of the other
+    assert (loop_from_direction(0.1), loop_from_direction(-0.1)) == ('start', 'end')
+    assert loop_from_direction(float('nan')) == loop_from_direction(None) == 'unknown'
+    loop = simulate.simulate(simulate.hairpin(), 900, 4.0, seed=5)      # up the left limb, down the right one
+    total = loop.centreline.length_px
+    for start, end, arterial_end in ((20, total - 20, 'start'), (total - 20, 20, 'end')):
+        line = loop.drawn_line(start, end, seed=1)
+        data = space_time_diagram(loop.frames, line)
+        assert loop_from_direction(summarize(data, loop.fps, MM_PER_PIXEL)['pattern_shift_velocity_mm_s']) == arterial_end
+        limbs = loop_limbs(data, line.apex_arc_px(), loop.fps, MM_PER_PIXEL)
+        along = loop.true_velocity_mm_s(MM_PER_PIXEL) * (1 if arterial_end == 'start' else -1)
+        assert limbs['pattern_shift_start_limb_mm_s'] == pytest.approx(along, rel=0.05)
+        assert limbs['pattern_shift_end_limb_mm_s'] == pytest.approx(along, rel=0.05)
+        assert not limbs['loop_movement']
+
+
+def test_limbs_moving_opposite_ways_along_a_whole_loop_line_are_movement():
+    def limbs(first_speed, second_speed, apex_px=59.5):
+        data = np.hstack([diagram(first_speed, frames=270, positions=60, seed=1),
+                          diagram(second_speed, frames=270, positions=60, seed=2)])
+        return loop_limbs(data, apex_px, FPS, MM_PER_PIXEL)
+
+    # the picture moving along the loop's axis: towards the apex in the first limb, away from it in the second
+    moving = limbs(2.0, -2.0)
+    assert moving['pattern_shift_start_limb_mm_s'] > 0 > moving['pattern_shift_end_limb_mm_s'] and moving['loop_movement']
+    assert not limbs(2.0, 2.0)['loop_movement']                         # flow round the loop: the same way
+    still = limbs(2.0, 0.0)                                             # one limb without flow: no evidence
+    assert np.isnan(still['pattern_shift_end_limb_mm_s']) and not still['loop_movement']
+    short = limbs(2.0, -2.0, apex_px=10)                                # a limb too short to measure
+    assert np.isnan(short['pattern_shift_start_limb_snr']) and not short['loop_movement']
 
 
 def test_a_synthetic_recording_with_motion_blur():
