@@ -9,7 +9,7 @@ it was verified. Newest entries first.
 ## 2026-10-14 — Aim 1's feasibility, again on the re-stabilized videos
 
 **Branch:** `analysis/aim1-restabilized`, from `main` at `213f0c3` (PR #20, the re-stabilization,
-merged).
+merged). Commit `b2685a9` (scripts, results, READMEs, this entry, CLAUDE.md).
 
 The user asked to rerun the aim-1 check of 2026-10-12 on the videos the new stabilizer made.
 The check's numbers came from the old videos, and they are what goes to the supervisors.
