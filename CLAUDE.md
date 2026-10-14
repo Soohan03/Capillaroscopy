@@ -24,7 +24,8 @@ products".
 - **Who can be used** (`metadata/README.md`, from `capillary.inventory`): aim 1 has 14 ESMOKE and
   10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 8 ISMOKE. The
   aims use 90 recordings; 8 of them had been downloaded by 2026-10-09, 30 (all ESMOKE) were on
-  the desktop by 2026-10-12.
+  the desktop by 2026-10-12, and all 54 ESMOKE ones were on it, stabilized, by 2026-10-14. The 36
+  ISMOKE recordings are still to come.
 - **Resting CBV must come from the rest window before occlusion.**
 
 ## Change diary (mandatory)
@@ -89,7 +90,9 @@ If the user reports the app froze or crashed, check the task output file and
 - `RecordedVideos/` — raw recordings copied in to be stabilized. On the Mac: links to the 9
   ESMOKE recordings downloaded from DynCap into `Video_inventory/` (untracked, 2026-10-08).
   On the desktop: the raw recordings themselves, copied in from OneDrive (since 2026-10-11;
-  35 ESMOKE recordings by 2026-10-12, 30 of them used by the aims)
+  35 ESMOKE recordings by 2026-10-12, 30 of them used by the aims; 63 by 2026-10-14, among them
+  all 54 the aims use). Files copied from Windows bring `<video>:Zone.Identifier` files along;
+  the app ignores them
 - `StabilizedVideos/` — stabilized videos ready for analysis, made by `capillary.stabilize`.
   Each has `<stem>___stabilization.csv` (the shift of every frame) and
   `___stabilization_provenance.json` next to it; a video without them was not made by the
