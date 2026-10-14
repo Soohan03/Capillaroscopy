@@ -9,7 +9,7 @@ it was verified. Newest entries first.
 ## 2026-10-14 — Whole loops and blind placement in the app; the aims from the saved data sets
 
 **Branch:** `feature/blind-whole-loop`, from `main` at `ec877bc` (PR #22, whole-loop lines in the
-analysis, merged). Commit `COMMIT1` (code, tests, README, CLAUDE.md, this entry).
+analysis, merged). Commit `3726237` (code, tests, README, CLAUDE.md, this entry).
 
 The user decided to place the study's lines by hand ("as much manually as possible") and asked
 whether the PI's idea, a mean over the capillaries visible in a video, is feasible. A check in the
