@@ -10,8 +10,10 @@ it was verified. Newest entries first.
 
 **Branch:** `feature/pattern-shift-slow-flow`, from `main` at `d292ef7` (PR #17 merged).
 
-**Commits:** the slow range with its tests, validation and this entry; then a follow-up noting the
-commit here.
+**Commits:**
+
+- `9e3a4be` — the slow range with its tests, validation and this entry
+- a follow-up noting the commit here
 
 The user asked to continue. I proposed three tasks:
 
