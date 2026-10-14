@@ -11,8 +11,21 @@ it was verified. Newest entries first.
 **Branch:** `fix/stabilizer-large-movements`, from `main` at `99aa56c` (PR #18, the pattern
 shift's slow range, merged by the user).
 
-**Commits:** the stabilizer and this entry; then a follow-up with the two recordings stabilized
-into `StabilizedVideos/` and the commit noted here.
+**Commits:**
+
+- `f3bd7a1` — the stabilizer and this entry
+- a follow-up noting the commit and the two recordings stabilized with it
+
+**Stabilized into `StabilizedVideos/`** with `f3bd7a1` (clean tree, recorded in the provenance),
+two at once in about 8 minutes:
+
+- **FP01_W_14-Oct-2019_08-36-26:** the references around frame 1046. Median match 0.80;
+  4 frames from neighbours; 307 lost (the dark end, from about 141 s).
+- **FP03_Wefter_21-Oct-2019_10-21-58:** the references around frame 675. Median match 0.71;
+  53 frames from neighbours; none lost.
+
+The results are the same as the scratch runs below. `StabilizedVideos/` now holds 33 videos: all
+the aims use among the 35 raw ESMOKE recordings, plus FP02_Wföre and FP04's two.
 
 The user chose the stabilizer as the next task. On the slow range's occlusion results (the entry
 below), the user said the blood probably still moves under the cuff, which the PI had thought
