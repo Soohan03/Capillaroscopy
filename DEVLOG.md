@@ -6,6 +6,127 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — Whole-loop lines: resting flow measured in more loops
+
+**Branch:** `analysis/whole-loop`, from `main` at `0984a7f` (PR #21, the aim-1 rerun, merged).
+
+The user asked whether the program could be changed to give better readings. A test in the
+session's scratchpad suggested measuring along the whole capillary loop instead of one limb at
+a time, and the user asked for it in the analysis scripts. The app is not changed.
+
+**In short:** at the app's own rule (a pattern-shift score of 8 or more):
+- one line up one limb, over the apex and down the other measures 23 of 53 loops, against
+  14 by their single limbs;
+- 5 of 8 participants get a loop at both visits, against 2 of 8 by single limbs.
+
+### Why it should help
+
+- **More of the pattern.** Limb lines are short (36–172 px), and the pattern shift's score
+  grows with the pattern it can pool. Flow runs one way round a loop, up the arterial limb and
+  down the venous limb. A line round the loop therefore follows one moving pattern for about
+  twice the length.
+- **Movement partly cancels.** If the picture moves along the limbs, it moves the pattern
+  forward along one half of the line and backward along the other.
+
+### What changed
+
+- **`analysis/aim1_feasibility/measure.py`:**
+  - `whole_loops` joins the traced lines of each loop's two limbs: up the first limb as listed
+    in `lines.json`, then down the second. Nothing more is placed by hand.
+  - Each whole loop is measured with the limbs and written as kind `loop`, line
+    `<loop>, whole loop`, with the columns `first_limb`, `second_limb`, `arterial_limb` and
+    `slow_arterial_limb`.
+  - A positive velocity runs from the first limb's base to the second's, which names the first
+    limb arterial (`arterial_limb`).
+  - The limbs and tissue lines are measured as before.
+- **`analysis/aim1_feasibility/summarize.py`:**
+  - Whole loops are counted on their own at every level: per recording `whole_loops`,
+    `whole_<level>` with the speeds; per participant `whole_<level>_both_visits`.
+  - **The movement rule:** a whole loop is not counted at a level where both its limbs are
+    measured and run the same way, both towards the apex or both away (`<level>_contradicted`).
+    Blood goes up one limb and down the other, so that is the picture moving. The aim-1 check
+    already used it to judge loops.
+- **`analysis/whole_loop/`** (new): `validate.py` compares each whole loop with its limbs at
+  rest and samples the whole loops again over the occlusion as a null. With `README.md`,
+  `loops.csv` and `occlusion.csv`.
+- **`analysis/pattern_shift_slow_flow/validate_real.py`** now reads only limbs and tissue
+  lines. With whole loops in the results, its occlusion part would have failed on them.
+- **The rerun's results** (`analysis/aim1_feasibility/restabilized/`): `results.csv` gained 53
+  whole-loop rows, and the two summaries gained whole-loop columns.
+- **The READMEs** of `aim1_feasibility/` and `restabilized/` mention the whole loops.
+
+### Results
+
+All on the 16 before-exposure recordings of the rerun. The 53 loops with both limbs traced are
+in 15 of them (FP12_Qföre has none). The whole-loop lines are 72–357 px long (median 159).
+
+| Level | Whole loops measured (of 53) | The same loops by either limb |
+| --- | --- | --- |
+| Resolved (the app's rule) | 23 | 14 |
+| Robust | 17 | 10 |
+| Combined (exploratory) | 28 | 17 |
+| Slow range | 33 | 22 |
+
+**Per participant**, a value at both visits:
+- **Whole loops, app's rule:** 5 of 8. This is as many as the exploratory combined rule gives
+  on all 115 limbs; the app's rule on all limbs gives 2 of 8.
+- **Same loops only:** on the 7 participants with two-limb loops at both visits, whole loops give
+  5 and their limbs 2.
+- **Other levels (whole loops / those loops' limbs):** robust 5 / 1, combined 6 / 3, slow range 6 / 4.
+
+**Checks:**
+- **The score** of a whole loop is a median 1.6 times its better limb's (quartiles
+  1.16–1.91). It is lower in 8 of 53.
+- **Loop and limbs both measured** (11 loops): the whole loop's speed is a median 0.94 of its
+  measured limbs' mean (range 0.64–1.03). The flow's direction names the same arterial limb in
+  11 of 11.
+- **Measured only as a whole loop** (12 loops): the limbs had seen the same flow too weakly.
+  Their best speeds (unresolved, scores 2.5–15, median 5.1), taken round the loop, ran the same
+  way as the whole loop's in 23 of 24 limbs. They lay within 25% of it in 15, and at least one
+  limb did in 10 of the 12 loops.
+- **So the gain is signal, not range.**
+  - **A correction to what the user was told:** earlier in the session, I said about half of the
+    newly measured loops flowed faster than their limbs could follow. That used the reach of
+    the centre-line block method (about 0.045 × line length px/frame), not the pattern shift's.
+    The limbs' own best speeds show they saw the same flow.
+- **The movement rule** removed one loop at the app's rule: FP06_Qföre H. Both its limbs read
+  flow away from the apex (−0.046 and −0.048 mm/s), and the whole loop had followed the stronger
+  half. In the slow range it removed 4.
+- **The whole loops measured** (app's rule): 0.048–0.33 mm/s, median 0.092. The 95% interval is
+  clear of zero in 20 of 23, and both halves of the rest score 8 or more in 16.
+- **The occlusion as a null** (from 15 s after the cuff went up until 2 s before release; FP03_Qföre
+  lost, FP07_Qföre and FP09_Wföre without a release time):
+  - none of the 21 whole loops measured at rest shows flow (scores median 4.0);
+  - over all 46, three do: FP05_Wföre A and C and FP07_Wföre D, at 0.05–0.08 mm/s, none of them
+    measured at rest;
+  - single limbs show flow under the cuff in 2 of 97 at the same rule.
+
+### What it means
+
+- **For aim 1:** whole loops at the app's validated rule give as many participants a value at
+  both visits as the exploratory combined rule on limbs, without the combined rule.
+  - They cost the speed per limb: the arterial and venous speeds are pooled into one.
+  - They keep the arterial limb, named by the direction.
+- **Fix before the new recordings:** the line geometry and the movement rule should be set before
+  the 6 ESMOKE participants not yet measured, which are then their first test.
+- **The app** cannot draw such a line as one yet with its limb workflow. A whole-loop mode on the
+  Centre line page is the next part, if the user places lines in the app.
+
+### Verification
+
+- **First run reproduced:** after re-measuring the rerun, its 131 limb and tissue rows are
+  identical to before, and the first run's summaries are rewritten byte for byte.
+- **Other scripts reproduced:** `restabilized/compare_runs.csv` and
+  `pattern_shift_slow_flow/real_results_restabilized.csv` come out identical to the committed
+  files.
+- **The scratch test reproduced:** `whole_loop/validate.py` gives the same numbers as the
+  scratchpad test (24 whole loops before the movement rule, 3 of 46 in the occlusion).
+- **Tests and lint:** `python -m pytest` 287 passed. flake8 is clean on the CI selection for the
+  whole repository, and in full on `analysis/aim1_feasibility/`,
+  `analysis/pattern_shift_slow_flow/` and `analysis/whole_loop/`.
+
+---
+
 ## 2026-10-14 — Aim 1's feasibility, again on the re-stabilized videos
 
 **Branch:** `analysis/aim1-restabilized`, from `main` at `213f0c3` (PR #20, the re-stabilization,

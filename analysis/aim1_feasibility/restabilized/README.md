@@ -66,6 +66,10 @@ the same estimator on the first run's diagrams.
 
 ## What was found
 
+(Since 2026-10-14 the rerun also measures whole loops: 23 of 53 at the app's rule,
+against 14 by single limbs, and 5 participants with a loop at both visits instead
+of 2; see `../../whole_loop/`. What follows is about the limbs.)
+
 - **The results barely changed.**
   - Of the 109 limbs measured in both runs, the default rule resolved 22 in both. It
     resolved two only in the first run (FP01_Qföre's "2" loop, score 8.3 → 7.3; FP13_Qföre F
@@ -118,7 +122,7 @@ available in at most 3 of 8 participants, whichever rule is used.
 | `moves.csv` | Per recording: the move from the shift files and from the images, how far single rest frames lie from it, the stabilizer's median match at rest before and after |
 | `line_check.csv` | Per line: length, the mean and largest distance from its first-run trace, ridge value before and after |
 | `lines.json` | The lines on the re-stabilized videos: the 15 recordings moved, FP01_W placed (`source`) |
-| `results.csv` | One row per line, as `../results.csv`, plus the slow range |
+| `results.csv` | One row per line, as `../results.csv`, plus the slow range; since 2026-10-14 also one row per whole loop (kind `loop`, `../../whole_loop/`), the other rows unchanged |
 | `summary_recordings.csv`, `summary_participants.csv` | As in the first run, with the `slow` level |
 | `compare_runs.py`, `compare_runs.csv` | The two runs line by line: scores and velocities at every level |
 
@@ -133,7 +137,7 @@ also needs the old shift files in `.trash/` and the first run's resting images i
 ```
 python analysis/aim1_feasibility/rest_image.py --dir restabilized <recording> ...   # about 10 s each
 python analysis/aim1_feasibility/restabilized/move_lines.py                         # about a minute
-python analysis/aim1_feasibility/measure.py --dir restabilized --jobs 8 <recording> ...   # 84 s for all 16
+python analysis/aim1_feasibility/measure.py --dir restabilized --jobs 8 <recording> ...   # 162 s for all 16, with whole loops
 python analysis/aim1_feasibility/summarize.py --dir restabilized
 python analysis/aim1_feasibility/restabilized/compare_runs.py
 ```

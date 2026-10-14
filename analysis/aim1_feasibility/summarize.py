@@ -29,6 +29,13 @@ line drawn from the base to the apex (`limb_from_direction`). A loop with both
 limbs measured must show one of each, since the blood goes up one limb and down
 the other: `loops_both` counts such loops and `loops_opposite` those that do.
 
+Where results.csv has whole loops (kind `loop`, measure.py since 2026-10-14),
+they are counted on their own at every level: `whole_loops` per recording,
+`whole_<level>` of them measured, and per participant
+`whole_<level>_both_visits`, a whole loop measured at both visits. A whole loop
+is not counted at a level where both its limbs are measured and run the same
+way (`<level>_contradicted`): that is the picture moving, not flow.
+
 Writes summary_recordings.csv and summary_participants.csv (every level) into
 the run's folder and prints compact Markdown tables.
 """
@@ -81,6 +88,19 @@ def mark_levels(results: pd.DataFrame) -> pd.DataFrame:
     for level in levels_of(results):
         results[f'{level}_check'] = [limb_from_direction(v) if kind == 'limb' else ''
                                      for v, kind in zip(results[f'{level}_mm_s'], results['kind'])]
+    if (results['kind'] == 'loop').any():
+        # A whole loop whose two limbs are both measured and run the same way (both towards the apex, or both
+        # away) shows the picture moving, not flow: blood goes up one limb and down the other. It is not counted.
+        by_line = results.set_index(['recording', 'line'])
+        for level in levels_of(results):
+            speeds = by_line[f'{level}_mm_s']
+            contradicted = []
+            for row in results.itertuples(index=False):
+                limbs = ([speeds.get((row.recording, row.first_limb), np.nan),
+                          speeds.get((row.recording, row.second_limb), np.nan)] if row.kind == 'loop' else [np.nan, np.nan])
+                contradicted.append(bool(np.isfinite(limbs).all() and np.sign(limbs[0]) == np.sign(limbs[1])))
+            results[f'{level}_contradicted'] = contradicted
+            results.loc[results[f'{level}_contradicted'], f'{level}_mm_s'] = np.nan
     return results
 
 
@@ -90,6 +110,7 @@ def _speeds(part: pd.DataFrame, column: str) -> str:
 
 def per_recording(results: pd.DataFrame, wanted: pd.DataFrame) -> pd.DataFrame:
     rows = []
+    has_whole = bool((results['kind'] == 'loop').any())
     for item in wanted.itertuples(index=False):
         part = results[results['recording'] == item.name]
         limbs = part[part['kind'] == 'limb']
@@ -112,6 +133,13 @@ def per_recording(results: pd.DataFrame, wanted: pd.DataFrame) -> pd.DataFrame:
                 f'{level}_venous_mm_s': _speeds(venous, f'{level}_mm_s'),
                 f'{level}_arterial_mean_mm_s': arterial[f'{level}_mm_s'].abs().mean() if len(arterial) else np.nan,
             })
+        if has_whole:
+            whole = part[part['kind'] == 'loop']
+            row['whole_loops'] = len(whole)
+            for level in levels_of(results):
+                counted = whole[whole[f'{level}_mm_s'].notna()]
+                row.update({f'whole_{level}': len(counted), f'whole_{level}_mm_s': _speeds(counted, f'{level}_mm_s'),
+                            f'whole_{level}_mean_mm_s': counted[f'{level}_mm_s'].abs().mean() if len(counted) else np.nan})
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -131,10 +159,19 @@ def per_participant(recordings: pd.DataFrame) -> pd.DataFrame:
                 row[f'active_{level}_arterial'], row[f'control_{level}_arterial']) >= 1
             row[f'{level}_any_both_visits'] = row['both_measured'] and min(
                 row[f'active_{level}'], row[f'control_{level}']) >= 1
+        if 'whole_loops' in recordings:
+            for level in levels_of(recordings):
+                for role, visit in visits.items():
+                    for key in ('', '_mean_mm_s'):
+                        row[f'{role}_whole_{level}{key}'] = visit[f'whole_{level}{key}'].iloc[0] if measured[role] else np.nan
+                row[f'whole_{level}_both_visits'] = row['both_measured'] and min(
+                    row[f'active_whole_{level}'], row[f'control_whole_{level}']) >= 1
         rows.append(row)
     table = pd.DataFrame(rows)
     counts = [f'{role}_{level}{key}' for role in ('active', 'control') for level in levels_of(recordings)
               for key in ('', '_arterial')]
+    if 'whole_loops' in recordings:
+        counts += [f'{role}_whole_{level}' for role in ('active', 'control') for level in levels_of(recordings)]
     return table.astype({column: 'Int64' for column in counts})
 
 
@@ -171,6 +208,10 @@ def compact(recordings: pd.DataFrame, participants: pd.DataFrame) -> tuple:
     shown['Tissue score'] = recordings['tissue_max_snr']
     if SLOW in levels:
         shown['Tissue score, slow'] = recordings['tissue_max_slow_snr']
+    if 'whole_loops' in recordings:
+        shown['Whole loops: resolved of all'] = [f'{k} of {n}' if measured else '' for k, n, measured in zip(
+            recordings['whole_resolved'], recordings['whole_loops'], recordings['measured'])]
+        shown['Whole loops (mm/s)'] = recordings['whole_resolved_mm_s']
     people = pd.DataFrame({'Participant': participants['subject'],
                            'Both visits measured': participants['both_measured']})
     for level in levels:
@@ -182,6 +223,8 @@ def compact(recordings: pd.DataFrame, participants: pd.DataFrame) -> tuple:
     people['Combined: any limb in both'] = participants['combined_any_both_visits']
     if SLOW in levels:
         people['Slow: any limb in both'] = participants['slow_any_both_visits']
+    if 'whole_resolved_both_visits' in participants:
+        people['Resolved: whole loop in both'] = participants['whole_resolved_both_visits']
     return shown, people
 
 
@@ -230,6 +273,16 @@ def main(args) -> None:
               f"{slow['slow_mm_s'].abs().max():.3f} mm/s); tissue lines resolved "
               f"{int(tissue['slow_pattern_shift_resolved'].astype(bool).sum())} of {len(tissue)} (highest score "
               f"{tissue['slow_pattern_shift_snr'].max():.1f})")
+    whole = results[results['kind'] == 'loop']
+    if len(whole):
+        both = participants[participants['both_measured']]
+        for level in levels_of(results):
+            speeds = whole[f'{level}_mm_s'].dropna().abs()
+            print(f"whole loops, {level}: {len(speeds)} of {len(whole)} loops in "
+                  f"{int((recordings[f'whole_{level}'] > 0).sum())} of {int(recordings['measured'].sum())} recordings "
+                  f"({speeds.min():.3f}-{speeds.max():.3f} mm/s; {int(whole[f'{level}_contradicted'].sum())} not "
+                  f"counted, their limbs running the same way); participants with a whole loop at both visits: "
+                  f"{int(both[f'whole_{level}_both_visits'].sum())} of {len(both)}")
 
 
 if __name__ == '__main__':

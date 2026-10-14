@@ -70,7 +70,12 @@ Over the official rest window, as a centre-line data set of the app keeps it
 - the centre-line method's 3-s blocks: the share resolved, their median and quartiles,
   and the share running along the line;
 - since 2026-10-14 (the rerun only), the pattern shift with its slow range, from
-  0.1 px/frame (keys `slow_pattern_shift_...`), which the app does not offer.
+  0.1 px/frame (keys `slow_pattern_shift_...`), which the app does not offer;
+- since 2026-10-14 (the rerun only), every loop with two limbs also along one line
+  joined from them, up the first limb, over the apex and down the second (kind
+  `loop`). The flow's direction names its arterial limb. `summarize.py` counts these
+  whole loops on their own, except where both limbs are measured and run the same way.
+  The comparison with single limbs is in `../whole_loop/`.
 
 ## When a limb counts as measured (`summarize.py`)
 
