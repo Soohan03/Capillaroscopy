@@ -44,6 +44,8 @@ COLORS = {
     'box2': '#29B2FF',          # box 2, upstream (sky blue)
     'line': '#FFD24D',          # the centre line (yellow)
     'saved_line': '#8FD3FF',    # lines of the recording's saved data sets (light blue)
+    'picture_edge': '#E6EBF2',  # where every frame of the range has picture (dashed outline)
+    'picture_edge_crossed': '#FF8A3D',  # that outline while the centre line reaches beyond it (orange)
     'marker': '#E5484D',        # time points, red like the lines in the report
     'brand': '#E5484D',         # the capillary loop of the logo in the header
 }

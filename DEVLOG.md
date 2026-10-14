@@ -6,6 +6,185 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — Lines must stay in the picture: the stabilizer's black strip
+
+**Branch:** `fix/line-picture-edge`, from `feature/blind-whole-loop` at `98bcf76` (the note on the
+first ISMOKE recordings, not yet on `main`, so this branch's pull request carries it too).
+
+The user asked what limits the tool now and then to "fix the edge bug". This was an open item
+from the slow-range work: where the picture moved, the stabilizer moves the frame back and leaves
+a black strip along its edge, and nothing kept a line off it. `SpaceTimeSampler.inside` only
+checked that a line lies within the frame, the page used only that, and the measurement checked
+nothing. A line that reaches the strip sees the strip's edge move along the line as the picture
+moves: a strong pattern that reads as flow.
+
+**In short:**
+- A line on a stabilized video is measured only if its samples keep 3 px clear of the black strip
+  in every frame of the range, and no frame of the range was lost. The Centre line page, the
+  measurement job and the batch CLI refuse other lines and say why. The page outlines where every
+  frame of the range has picture.
+- On the aim-1 rerun's lines, 6 of 184 reach the strip at rest, all on FP03_Wföre. They are the
+  example the slow range's "movement of the picture" rested on: on the stretches of rest they keep
+  clear of the strip, their slow flow is gone. The app's own measurement (from 1 px/frame) was not
+  affected on these lines, so the aim-1, whole-loop and `capillary.aims` numbers stand.
+- On recordings that moved a lot at rest, lines must stay in the middle of the frame, and on
+  FP03_Wefter no line can be measured over its whole rest.
+
+### What changed
+
+- **`capillary/stabilize.py`** (a new section, and a paragraph in the module docstring):
+  - `read_shifts(video)`: a stabilized video's `___stabilization.csv`, indexed by frame; None
+    when there is none (a raw recording); ValueError when it holds no shifts.
+  - A frame moved by (dx, dy) shows the recorded picture from x = dx to dx + width - 1 and from
+    y = dy to dy + height - 1. `picture_area(shifts, shape, first, last)`: the part of the frame
+    that every placed frame of the range shows, `EDGE_MARGIN_PX` inside each frame's strip.
+  - `check_picture(shifts, shape, box, first, last)` gives a `PictureCheck`:
+    - the frames in which the samples' bounding box reaches a frame's strip or leaves the frame,
+      and the frames the stabilizer lost (written black) with where they lie;
+    - the clearance (how far the samples keep from the area's edge, negative when they reach
+      over it) and the side they come nearest;
+    - `problem()`, the sentence the user sees:
+      - lost frames: set the range to frames the stabilizer placed;
+      - a line that reaches the strip: move it at least so many px away from that edge;
+      - when no part of the frame shows the picture in every frame of the range, or the line is
+        larger than that part, it says so instead;
+    - `record()`, kept with a data set: the rule, the area and the clearance.
+  - `EDGE_MARGIN_PX = 3` (below).
+- **`capillary/spacetime.py`:** `SpaceTimeSampler.bounds`, the rectangle that holds every sample
+  (the line and 2 px to either side); `inside` uses it.
+- **`gui/tasks.py`:** `picture_check`; `measure_line_dataset` refuses a line that fails it before
+  reading any frame (ValueError with the sentence), and saves `picture` (the check's record, or
+  null for a video without a shift file) in the provenance.
+- **`capillary/cli.py`:** for a video with a shift file, a `--line` that fails the check over the
+  frames to be read is refused (`error: …`, exit code 1).
+- **`gui/line_page.py`:**
+  - The open video's shift file is read once each time a recording is shown.
+  - `_line_problem` adds the check over the current range, so a failing line blocks Measure and
+    the preview, and its sentence shows under the button and in the preview panel (also during
+    blind placement).
+  - A dashed outline shows where the line's middle may go: the area every frame of the range
+    shows, less the 2 px the line samples to either side. It is light grey, and orange while the
+    line reaches beyond it. It is not drawn without a shift file or when no area is left.
+  - `on_range_change` redraws the outline and the message when the range changes.
+  - The Centre line section's help text explains the outline.
+- **`gui/measure_page.py`:** the hook `on_range_change`, called when the user changes the range.
+- **`gui/theme.py`:** the outline's two colours.
+- **Tests** (6 new, 306 in all):
+  - `test_stabilize`:
+    - the shift file read back by frame, None without one, a file without shifts refused;
+    - the area of a range worked out by hand, with lost frames and the sentences;
+    - the margin against the stabilizer's own move (below).
+  - `test_spacetime`: the bounds.
+  - `test_line_tasks`: a synthetic stabilized video with a shift file whose picture moves for 10
+    frames is refused over a range holding them; a range without them is measured and its area
+    and clearance saved. A video without a shift file saves `picture` as null.
+  - `test_pipeline`: the CLI refuses the line over a range holding such frames and measures it
+    over a range without them.
+- **Docs:** README (the Centre line page, *How a recording is stabilized*, the slow range, the
+  batch command), CLAUDE.md (the Centre line reminder, Stabilization, Known issues).
+
+### The margin
+
+The stabilizer moves each frame with bicubic interpolation (`shift_frame`), which blends the
+black outside the recorded frame into the pixels beside the strip. The line is then read between
+pixels (bilinear).
+
+- The test moves a textured frame by known sub-pixel amounts with `shift_frame` and compares each
+  line's samples with those of the same move of a larger texture, which has no strip. Lines
+  10 px from the left and right edges are tested, one between pixels, under 83 moves from -12 to
+  +12 px. Wherever the check passes, the samples are identical (difference below 0.01). Without
+  the margin, frames whose blend reaches the line pass.
+- A finer scan (scratch `margin_check.py`, moves in steps of 0.01 px):
+  - Left side: lines whose samples start at 8.0–8.8 px are blended from a move of 7.02 px on. A
+    margin of 2 px refuses them from 6.01–6.81 px on, a margin of 1 px only from 7.01–7.81 px.
+  - Right side: samples ending at 151.0 px are blended from a move of -7.02 px. Samples ending
+    between pixels (151.3–151.8 px) are blended from -6.02 px, because the bilinear read takes
+    the next pixel. A margin of 2 px refuses them from -5.20 to -5.70 px on, a margin of 1 px from
+    -6.20 px.
+  - So 2 px is just enough on both sides, with as little as 0.3 px to spare, and 1 px is not.
+    `EDGE_MARGIN_PX` is 3, which always leaves at least a pixel.
+
+### On the recordings
+
+Scratch scripts `real_edge_check.py`, `slow_vs_strip.py`, `fp03_clean.py` and `rest_areas.py` use
+the lines of `analysis/aim1_feasibility/restabilized/results.csv` (limbs, whole loops and tissue
+lines, as measured) and the videos in `StabilizedVideos/`.
+
+- **At rest** (each recording's rest frames, as measured): 6 of 184 lines in 16 recordings reach
+  the strip. All are on FP03_Wföre, which swings 185 px up and down with breathing: both limbs of
+  loops E and F, and the two whole loops.
+  - They reach it in 82–258 of the 2040 rest frames.
+  - In 74–225 of those frames the line reads the strip itself (grey level 0). In the other
+    frames its darkest sample is 34–39.
+  - The other lines keep a median 99 px from the strip (the nearest 2.0 px).
+- **In the occlusion** (official times, 2 s margins): 22 of 164 lines reach the strip, among them
+  7 whole loops (FP03_Wföre A, B, E and F, FP05_Wföre L1, FP13_Qföre G, FP03_Qföre's curly loop).
+  FP03_Qföre's 8 lines also hold lost frames (1612 of its 1764 occlusion frames).
+- **The app's measurement** (pattern shift from 1 px/frame) was not affected on these lines.
+  None of the 23 limbs it resolved at rest nor the 23 whole loops it counted reach the strip. The
+  3 loops resolved in the whole-loop analysis's occlusion null (FP05_Wföre A and C, FP07_Wföre D)
+  keep clear of it too. The aim-1 feasibility, whole-loop and `capillary.aims` numbers stand.
+- **The slow range** (the slow-range validation's chosen variant, `stretched`, on the re-stabilized
+  videos):
+  - At rest, 4 of its 41 resolved limbs reach the strip: the four limbs of FP03_Wföre's loops E
+    and F.
+  - In the occlusion, 6 of its 22 resolved limbs reach it: FP03_Wföre A right, E left and right,
+    F left and right, and FP13_Qföre G left.
+- **FP03_Wföre's loops E and F were the strip.** This was CLAUDE.md's example of the picture
+  moving: four limbs "moving" the same way at rest. Each line was measured over the stretches of
+  rest that keep clear of the strip (at least 3 s each), against stretches of the same length
+  that hold strip frames. Signal-to-noise and speed:
+  - E left: whole rest 68.5 at -0.74 px/frame. Clear stretches 3.3 and 3.6 (2.0–8.9 s and
+    9.3–50.8 s). Stretches with the strip 29.1 and 62.7, at -0.67 and -0.81 px/frame.
+  - F left: 35.5 over the whole rest; clear 7.4, 3.0 and 4.8; with the strip 22–28.
+  - F right: 23.0; clear 2.3–3.5; with the strip 20–25.
+  - E right: 45.3 at -0.78 px/frame. Clear 10.4 and 9.4, but at -1.25 and -1.79 px/frame: a flow
+    of its own that the strip had swamped.
+  - F whole loop: 20.6 at -0.76 px/frame over the whole rest; 12.0 at -4.04 px/frame (0.16 mm/s)
+    over 2.0–53.8 s, which it keeps clear of.
+  - So the slow "flow" at -0.4 to -0.8 px/frame was the strip moving along the lines. The other
+    16 limbs that seemed to flow in the occlusion are not explained by it, and the slow range
+    still needs a check that the picture held still.
+- **How much of the frame a line can use over the rest** (`picture_area` over each aims
+  recording's official rest, 60 recordings):
+  - A median 92% of the frame (10th percentile 77%): at least 90% on 40 recordings, 75–90% on
+    14, below 75% on 6.
+  - The 6: FP03_Qföre 53%, FP03_Wföre 54%, FP06_Wföre 59%, FP06_Qefter_försök2 69%, FP07_Qföre 70%
+    and FP03_Wefter 0%.
+  - FP03_Wefter moved more than 250 px up and down during its rest (the area every frame shows
+    would run from y = 291.5 to 241.9). No line on it can be measured over its whole rest, which
+    blind placement requires. A line in its middle reaches the strip in only 125 of its 2121 rest
+    frames.
+
+### How it was verified
+
+- **Tests:** 306 pass. flake8's error selection is clean on the whole repository, and the touched
+  files have the same 7 warnings as on `origin/main`, all in code not changed here.
+- **The window** (scratch `gui_edge.py`, under WSLg on a scratch data folder with links to three
+  videos and their shift files; no window took focus):
+  - FP03_Wföre, E left over the rest: refused ("In 258 of the range's 2040 frames … Move it at
+    least 50 px away from the bottom edge. The dashed outline shows …"). The outline was orange,
+    Measure disabled, and the preview panel gave the same sentence.
+  - The range set to frames 60–266 (2.0–8.9 s, which E left keeps clear of): no blocker, and the
+    outline back to grey. So a change of range updates both.
+  - Loop A as a whole loop over the rest: measured and saved; its provenance has `picture` with
+    the area (30.4, 86.3)–(606.8, 374.5) and a clearance of 13.7 px.
+  - Blind placement, FP03_Wefter (listed as E8FYS): the range was its official rest, and a line in
+    the middle was refused ("… No part of the frame shows the picture in every frame of this
+    range: it moved too far."), with no outline.
+  - FP13_Qföre G left: clear over the rest. Over the occlusion it was refused (106 of 1734 frames;
+    move it 13 px away from the left edge).
+  - No Tk errors. The screenshots show the outline round the picture, grey or orange.
+
+### Still open
+
+- **Measuring only the frames in which a line lies in the picture** would recover lines near the
+  edge, and FP03_Wefter (a line in its middle is clear in 94% of its rest). It was not built:
+  which frames count is a methods decision for the PI, and the diagram, the blocks and the
+  reports would need to carry the frames left out.
+- The occlusion's slow "flow" in 16 limbs that keep clear of the strip still needs a check that
+  the picture held still near the line.
+
 ## 2026-10-14 — The 28 new ESMOKE recordings stabilized
 
 **Branch:** `feature/blind-whole-loop`. No code changed; this entry and CLAUDE.md's data notes.

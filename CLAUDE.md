@@ -63,6 +63,9 @@ without asking:
      press Rest and measure. The result gives the velocity pooled over the range (pattern
      shift) and which end of the line lies on the arterial limb. ("Arterial limb" lines run
      from a limb's base to the apex.) The recording's saved lines are drawn dashed.
+     On a stabilized video a dashed outline shows where every frame of the range has
+     picture: keep the line inside it (where the picture moved, the stabilized frame has a
+     black strip along its edge); a line that leaves it is refused, with how far to move it.
    - Blind placement (the header button): only the aims' recordings are listed, under
      codes; the preview and every result are hidden; measuring uses the official rest;
      Two boxes, Results and Validation are closed. It stays on until turned off.
@@ -227,6 +230,12 @@ Tkinter classes.
   - Every frame's shift, how it was placed, match, disagreement, search-limit flag, step onto
     the frame before and mean grey go to `___stabilization.csv`.
   - `python3 -m capillary.stabilize <raw> --out <stabilized.avi>`.
+  - **Lines stay in the picture** (since 2026-10-14): where the picture moved, a stabilized
+    frame has a black strip along its edge. `stabilize.check_picture` refuses a line whose
+    samples come within `EDGE_MARGIN_PX` (3 px; 2 is just enough for the bicubic blend and the
+    bilinear read) of the strip in any frame of the range, or a range with lost frames. The
+    Centre line page (dashed outline), the measurement job and the batch CLI use it, and a
+    data set's provenance keeps the area and the line's clearance (`picture`).
 - Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
   known speed and the disturbances measured in the 2019 recordings (measured on video that
   had not been stabilized; see Known issues);
@@ -238,7 +247,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (300 tests, ~50 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (306 tests, ~50 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -311,18 +320,34 @@ the 2026-10-05 GUI rebuild entry.
   - **Movement of the picture looks like slow flow** (found 2026-10-14). Below 1 px/frame a line
     cannot tell the blood moving from the picture moving along it.
     - FP03_Wföre's loops E and F move the same way in all four limbs at rest (signal-to-noise
-      23–63).
+      23–63). On the re-stabilized videos this was the stabilizer's black strip, not the picture
+      moving: all four limbs reach it at rest, and on the stretches they keep clear of it the
+      slow flow is gone (E left: signal-to-noise 3.3–3.6 against 68.5). Such lines have been
+      refused since 2026-10-14 (`stabilize.check_picture`, DEVLOG).
     - In the occlusion, when the blood should stand still, 24 of 97 limbs gave a slow speed:
       - FP13_Qföre's loop E bows sideways and back in both limbs;
-      - FP13_Qföre G left is crossed by the stabilized frame's uncovered edge, which
-        `SpaceTimeSampler.inside` does not check;
+      - FP13_Qföre G left is crossed by the stabilized frame's black strip (refused since
+        2026-10-14);
       - FP05_Qföre's loop B looks like real residual flow.
+      - On the re-stabilized videos 6 of the 22 such limbs read the black strip (FP03_Wföre A, E,
+        F; FP13_Qföre G left). The other 16 are not explained by it.
     - In synthetic clips with still cells, uneven movements of 10–20 px over a few seconds read
       as flow in 2–4 of 10, a steady drift always, and 2-px movements never.
     - From 1 px/frame up none of this reached the threshold. A check that the picture held still
       near the line (for example the tissue beside it) would make the slow range usable.
     - The re-stabilized videos did not remove it: in the occlusion, 22 of the same 91 limbs
       against 23 before.
+- **Lines near the edge of a picture that moved** (2026-10-14). A line must stay clear of the
+  stabilizer's black strip in every frame of its range, so on a recording that moved a lot at
+  rest it can only lie in the part of the frame every rest frame shows (the dashed outline).
+  - Over the official rest that part is a median 92% of the frame on the 60 aims recordings on
+    the desktop (10th percentile 77%); below 75% on 6: FP03_Qföre 53%, FP03_Wföre 54%, FP06_Wföre
+    59%, FP06_Qefter_försök2 69%, FP07_Qföre 70%, and FP03_Wefter 0%.
+  - FP03_Wefter moved more than 250 px up and down during its rest, so no line on it can be
+    measured over the whole rest (blind placement measures nothing else). A line in its middle
+    reaches the strip in only 125 of its 2121 rest frames.
+  - Not built: measuring only the frames in which a line lies in the picture. It would recover
+    such lines, but which frames count is a methods decision for the PI.
 - **Large movements** (found 2026-10-08, fixed 2026-10-14 by following the movement frame to
   frame).
   - FP01_W (references were built in its darkening last seconds) and FP03_Wefter

@@ -107,6 +107,11 @@ def test_sampler_knows_when_the_line_leaves_the_frame():
     assert not SpaceTimeSampler(Centreline.from_points([(10, 1), (90, 1)])).inside((60, 100))
 
 
+def test_sampler_bounds_hold_every_sample_across_the_line_too():
+    sampler = SpaceTimeSampler(Centreline.from_points([(10, 30), (90, 30)]), half_width_px=2)
+    assert sampler.bounds == pytest.approx((10, 28, 90, 32))
+
+
 # ----------------------------------------------------------------------------- the slope
 
 @pytest.mark.parametrize('speed', [0.25, 0.5, 1.0, 2.0, 3.0, 4.0])

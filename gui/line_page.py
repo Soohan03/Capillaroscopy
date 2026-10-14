@@ -21,10 +21,16 @@ limb, and each limb is measured on its own as a check against movement.
 The lines of the recording's saved data sets are drawn faintly, so that a
 capillary is not measured twice. During blind placement (`gui.blind`) the
 preview and every result are hidden, and the range is the official rest.
+
+On a stabilized video a dashed outline shows where every frame of the range
+has picture: where the picture moved, the stabilized frame has a black strip
+along its edge, and a line that reaches it is refused
+(`capillary.stabilize.check_picture`, since 2026-10-14).
 """
 
 from __future__ import annotations
 
+import logging
 import math
 import re
 import tkinter as tk
@@ -34,7 +40,7 @@ from tkinter import ttk
 import numpy as np
 from PIL import Image, ImageDraw, ImageTk
 
-from capillary import datasets, pattern_shift, spacetime
+from capillary import datasets, pattern_shift, spacetime, stabilize
 
 from . import tasks
 from .jobs import LatestOnlyWorker
@@ -42,6 +48,8 @@ from .measure_page import INSPECTOR_WIDTH, MeasurePage, stat
 from .theme import COLORS, FONTS, icon, px
 from .video_view import Tool
 from .widgets import InfoRow, Tooltip, section, separator
+
+log = logging.getLogger(__name__)
 
 PREVIEW_HEIGHT = 130
 ARTERIAL, WHOLE_LOOP = pattern_shift.ARTERIAL_LIMB, pattern_shift.WHOLE_LOOP
@@ -142,6 +150,9 @@ class LinePage(MeasurePage):
         #: the lines of the recording's saved data sets: (name, curve in video pixels), drawn faintly
         self.saved_lines: list[tuple[str, np.ndarray]] = []
         self._saved_key = None
+        #: the open video's shift file (`capillary.stabilize.read_shifts`) and the video it was read for
+        self._shifts = None
+        self._shifts_path = None
         self.preview = None
         self._preview_token = 0
         self._preview_after = None
@@ -161,7 +172,9 @@ class LinePage(MeasurePage):
             'measure is shown below. Drag a point to move it, click on the line to add a point there, '
             'right-click a point to remove it. For the resting velocity of a capillary loop, choose Whole loop, '
             'click from the base of one limb over the apex to the base of the other, and set the range to the '
-            'official rest. The lines of data sets already saved for the recording are drawn faintly.'))
+            'official rest. The lines of data sets already saved for the recording are drawn faintly. On a '
+            'stabilized video the dashed outline shows where every frame of the range has picture: where the '
+            'picture moved, stabilizing leaves a black strip along the frame\'s edge, so keep the line inside it.'))
         self.points_row = InfoRow(frame, 'Points', tooltip='Clicked points; the line is a smooth curve through them.')
         self.points_row.pack(fill='x', pady=(0, px(2)))
         self.length_row = InfoRow(frame, 'Length', tooltip='Length of the curve through the points.')
@@ -249,8 +262,29 @@ class LinePage(MeasurePage):
         self.schedule_preview(50)
 
     def show_recording(self, recording):
+        self._shifts, self._shifts_path = None, None     # read again: the video may have been stabilized anew
         super().show_recording(recording)
         self._load_saved_lines()
+
+    def _shift_table(self):
+        """The open video's shift file (`capillary.stabilize.read_shifts`), read once; None if it has none."""
+        source = self.player.source
+        path = source.path if source is not None else None
+        if path != self._shifts_path:
+            self._shifts, self._shifts_path = None, path
+            if path is not None:
+                try:
+                    self._shifts = stabilize.read_shifts(path)
+                except (OSError, ValueError):
+                    log.warning('Could not read the shift file of %s', path, exc_info=True)
+        return self._shifts
+
+    def _picture_check(self, sampler):
+        """Whether the line stays in the picture in every frame of the range; None for a video without shifts."""
+        shifts, selected, shape = self._shift_table(), self.current_range(), self.view.frame_shape()
+        if shifts is None or selected is None or shape is None:
+            return None
+        return stabilize.check_picture(shifts, shape, sampler.bounds, *selected)
 
     def suggest_name(self, existing):
         return datasets.suggest_dataset_name(existing, ROLE_NAMES.get(self.role_var.get(), 'set'))
@@ -412,8 +446,14 @@ class LinePage(MeasurePage):
         if line.length_px < spacetime.MIN_LENGTH_PX:
             return f'The line is too short; it needs at least {spacetime.MIN_LENGTH_PX} px.'
         shape = self.view.frame_shape()
-        if shape is not None and not spacetime.SpaceTimeSampler(line).inside(shape):
+        sampler = spacetime.SpaceTimeSampler(line)
+        if shape is not None and not sampler.inside(shape):
             return 'The line runs too close to the edge of the image.'
+        check = self._picture_check(sampler)
+        if check is not None and check.problem() is not None:
+            if check.off_picture and not check.lost and self._outline() is not None:
+                return f'{check.problem()} The dashed outline shows where every frame of the range has picture.'
+            return check.problem()
         return None
 
     def _update_line_ui(self):
@@ -475,6 +515,7 @@ class LinePage(MeasurePage):
         canvas = self.view.canvas
         canvas.delete('overlay')
         if self.view.frame_shape() is not None:
+            self._draw_picture_area(canvas)
             self._draw_saved_lines(canvas)
         if self.view.frame_shape() is None or not self.points:
             canvas.tag_raise('hint')
@@ -516,6 +557,31 @@ class LinePage(MeasurePage):
         canvas.tag_raise('hint')
         canvas.tag_raise('readout')
 
+    def _outline(self):
+        """Where the line's middle may go, (x0, y0, x1, y1) in video pixels: the part of the frame that every
+        frame of the range shows the picture in (`capillary.stabilize.picture_area`), less the half-width the
+        line also samples to either side. None for a video without shifts, or when no such part is left."""
+        shifts, selected, shape = self._shift_table(), self.current_range(), self.view.frame_shape()
+        if shifts is None or selected is None or shape is None:
+            return None
+        area = stabilize.picture_area(shifts, shape, *selected)
+        inset = spacetime.DEFAULT_HALF_WIDTH_PX
+        if area is None or area[0] + inset > area[2] - inset or area[1] + inset > area[3] - inset:
+            return None
+        return area[0] + inset, area[1] + inset, area[2] - inset, area[3] - inset
+
+    def _draw_picture_area(self, canvas):
+        """The outline of `_outline`, dashed; orange while the line reaches beyond the picture."""
+        outline = self._outline()
+        if outline is None:
+            return
+        line = self.centreline()
+        check = self._picture_check(spacetime.SpaceTimeSampler(line)) if line is not None else None
+        color = COLORS['picture_edge_crossed'] if check is not None and check.off_picture else COLORS['picture_edge']
+        x0, y0 = self.view.to_canvas(outline[0], outline[1])
+        x1, y1 = self.view.to_canvas(outline[2], outline[3])
+        canvas.create_rectangle(x0, y0, x1, y1, outline=color, width=px(1.5), dash=(px(6), px(4)), tags=('overlay',))
+
     def _draw_saved_lines(self, canvas):
         """The lines of the recording's saved data sets: thin, dashed, with their names at the first point."""
         color = COLORS['saved_line']
@@ -540,6 +606,12 @@ class LinePage(MeasurePage):
     def on_show(self):
         super().on_show()
         self.schedule_preview(50)
+
+    def on_range_change(self):
+        self.draw_overlay()                  # the outline of the picture follows the range
+        self._update_preview_ui()            # and whether the line stays inside it
+        if self.preview is None:
+            self.schedule_preview(50)
 
     def schedule_preview(self, delay_ms=220):
         if self._preview_after is not None:

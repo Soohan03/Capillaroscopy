@@ -392,6 +392,16 @@ def _pattern_shift_record() -> dict:
             'min_half_blocks': pattern_shift.MIN_HALF_BLOCKS}
 
 
+def picture_check(video_path: str, sampler: spacetime.SpaceTimeSampler, frame_shape, first: int,
+                  last: int) -> Optional[stabilizer.PictureCheck]:
+    """Whether the line of `sampler` stays in the picture in frames `first`..`last` of a stabilized video
+    (`capillary.stabilize.check_picture`); None for a video without a shift file."""
+    shifts = stabilizer.read_shifts(video_path)
+    if shifts is None:
+        return None
+    return stabilizer.check_picture(shifts, frame_shape, sampler.bounds, first, last)
+
+
 def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str, points,
                          start: int, end: int, mm_per_pixel: float, time_points=(), observer: str = '',
                          role: Optional[str] = None) -> dict:
@@ -400,10 +410,16 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
     `role` is `capillary.pattern_shift.ARTERIAL_LIMB` for a line drawn along a capillary loop's arterial
     limb, from its base to the apex; `capillary.pattern_shift.WHOLE_LOOP` for a line round a whole loop,
     from the base of one limb over the apex to the base of the other; None for any other line.
+
+    On a stabilized video the line must stay in the picture in every frame of the range (`picture_check`);
+    otherwise nothing is measured.
     """
     info = probe_video(video_path)
     line = spacetime.Centreline.from_points(points)
     sampler = spacetime.SpaceTimeSampler(line)
+    picture = picture_check(video_path, sampler, (info.height, info.width), start, end)
+    if picture is not None and picture.problem() is not None:
+        raise ValueError(picture.problem())
     wanted = end - start + 1
     rows = []
     job.report(0.0, 'Reading frames')
@@ -445,6 +461,7 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
                               f'from its base to the apex; "{pattern_shift.WHOLE_LOOP}": drawn round a whole loop, '
                               'from the base of one limb over the apex to the base of the other; null: any '
                               'other line'},
+            'picture': picture.record() if picture is not None else None,
             'mm_per_pixel': mm_per_pixel,
             'resolvable_mm_per_s': {'slowest': summary['slowest_mm_s'], 'fastest': summary['fastest_mm_s']},
             'time_points_s': sorted(float(t) for t in time_points),

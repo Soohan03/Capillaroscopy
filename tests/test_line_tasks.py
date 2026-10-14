@@ -6,12 +6,13 @@ into a scratch data folder; the measurement runs as the page would run it.
 
 import json
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from capillary import datasets, inventory, pattern_shift, simulate
+from capillary import datasets, inventory, pattern_shift, simulate, spacetime, stabilize
 from gui import library, tasks
 from gui.settings import DataFolder
 
@@ -83,6 +84,7 @@ def test_measurement_saves_the_data_set_and_its_report(recording, measured):
     assert record['observer'] == 'SJ'
     assert record['line']['role'] is None and record['summary']['limb_check'] == ''
     assert record['summary']['phase'] == ''                       # this recording has no official times
+    assert record['picture'] is None                              # nor a shift file: it was not stabilized here
     for path in datasets.line_report_files(folder.reports, STEM, 'line1').values():
         assert os.path.isfile(path)
     summary_row = pd.read_csv(datasets.line_report_files(folder.reports, STEM, 'line1')['summary'])
@@ -182,6 +184,32 @@ def test_a_failed_measurement_leaves_nothing_behind(recording):
         tasks.measure_line_dataset(Failing(), folder=folder, stem=STEM, name='broken', video_path=path,
                                    points=points, start=0, end=150, mm_per_pixel=MM_PER_PIXEL)
     assert datasets.dataset_paths(folder.statistics, folder.reports, STEM, 'broken', 'line') == []
+
+
+def test_a_line_that_reaches_the_black_strip_is_refused(recording):
+    """On a stabilized video, a line is measured only over frames that all show the picture under it."""
+    folder, path, clip, points = recording
+    stem = 'FP99_edge_06-Oct-2026_12-00-00'
+    video = os.path.join(folder.stabilized, stem + '.avi')
+    shutil.copyfile(path, video)
+    x0, y0, x1, y1 = spacetime.SpaceTimeSampler(spacetime.Centreline.from_points(points)).bounds
+    moves = np.zeros((len(clip.frames), 2))
+    moves[100:110, 0] = x0 - 1                     # the picture had moved left: a black strip up to x0 - 1
+    frames = np.arange(len(clip.frames))
+    pd.DataFrame({'frame': frames, 'time_s': frames / clip.fps, 'shift_x_px': moves[:, 0], 'shift_y_px': moves[:, 1],
+                  'placed_by': 'references'}).to_csv(stabilize.record_paths(video)['shifts'], index=False)
+    with pytest.raises(ValueError, match="In 10 of the range's 220 frames the line reaches the black strip"):
+        tasks.measure_line_dataset(FakeJob(), folder=folder, stem=stem, name='edge', video_path=video,
+                                   points=points, start=10, end=229, mm_per_pixel=MM_PER_PIXEL)
+    assert datasets.dataset_paths(folder.statistics, folder.reports, stem, 'edge', 'line') == []
+
+    tasks.measure_line_dataset(FakeJob(), folder=folder, stem=stem, name='clear', video_path=video, points=points,
+                               start=110, end=229, mm_per_pixel=MM_PER_PIXEL)
+    record = datasets.read_provenance(datasets.line_dataset_files(folder.statistics, stem, 'clear')['provenance'])
+    height, width = clip.frames[0].shape
+    assert record['picture']['area_px'] == [3.0, 3.0, width - 4.0, height - 4.0]   # no move: 3 px off the frame's edge
+    nearest = min(x0 - 3.0, y0 - 3.0, width - 4.0 - x1, height - 4.0 - y1)
+    assert record['picture']['clearance_px'] == pytest.approx(nearest, abs=0.01) and nearest > 0
 
 
 def test_too_short_a_range_is_refused(recording):
