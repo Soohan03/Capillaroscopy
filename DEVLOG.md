@@ -6,6 +6,75 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — Every stabilized video re-made with the new stabilizer
+
+**Branch:** `fix/stabilizer-large-movements` (no code changed; this entry only).
+
+The user asked to re-stabilize the 31 videos in `StabilizedVideos/` that the earlier
+stabilizer had made, knowing their picture would move. All 33 are now made by the
+stabilizer of the entry below. The 31 provenance files record commit `94b756d`, which has
+the same stabilizer code as `f3bd7a1`. All are clean.
+
+### How
+
+- Each video went through the app's own stabilize job (`gui.tasks.stabilize`), 14 at a time,
+  from its raw recording in `RecordedVideos/`. Each took 3–9 minutes.
+- The job moved each previous video, with its shift file and provenance, to `.trash/`, one
+  dated folder per recording: 31 folders, `2026-10-14_10-19-14_… previous stabilized video` to
+  `2026-10-14_10-28-23_…`. Nothing was deleted.
+- The new shift file of every recording was compared with its old one in `.trash/`, per
+  official phase. Scratch scripts in the session scratchpad: `restabilize_all.py` and
+  `compare_restab.py`.
+
+### Results
+
+- **The centring moved.** The new videos are centred on the median shift over the official
+  rest, not on the references' frame. So the picture moved, by the same amount in every
+  frame:
+  - 1.8–169 px (median 25 px; over 50 px in 9 recordings);
+  - the largest are FP05_Wföre 169 px, FP03_Qföre 114 px and FP07_Qföre 93 px.
+- **Where the references' frame stayed the same** (13 recordings), the shifts relative to each
+  other are unchanged: at most 0.14 px apart at rest, and so are the matches.
+- **Where the references moved into the rest** (18 recordings, from frames as late as 5530):
+  - **Rest:** the match rose in 16. The largest gains were FP12_Wföre 0.42 → 0.87,
+    FP12_Qföre 0.42 → 0.82, FP12_Wefter 0.50 → 0.83, FP12_Qefter 0.44 → 0.77 and FP09_Qföre
+    0.48 → 0.75.
+    - FP07_Qföre fell, 0.76 → 0.61, and FP07_Wefter is unchanged (0.91 → 0.90).
+    - Old and new placements agree within a median 0.1–0.9 px (relative to each other). The
+      largest single differences are in FP12_Wföre (up to 10 px), whose old match of 0.42 at
+      rest suggests the old placement was the wrong one.
+  - **Occlusion:** the match fell where the old references lay there:
+    - FP06_Qföre 0.75 → 0.36;
+    - FP09_Qföre 0.85 → 0.53;
+    - the four FP12 recordings about 0.85 → 0.50;
+    - FP06_Qefter 0.91 → 0.66.
+
+    The frames are still placed where they were (median 0.2–0.9 px apart, at most 6 px in
+    FP12_Wföre). So the lower number reflects references built in the rest, which look less
+    like the occlusion. It does not mean the frames are misplaced.
+  - **After release:** the match mostly rose (FP12_Wföre 0.39 → 0.83). It fell in FP05_Wföre
+    (0.81 → 0.66) and FP06_Qföre (0.85 → 0.62).
+- **Frames not placed by the references:** a few were carried from neighbours (FP02_Wföre 5,
+  FP07_Qföre 3, FP03_Qefter 2, FP05_Wefter 1). Only FP03_Qföre lost frames: 3193, everything
+  after the cuff, as in the entry below.
+- **Four recordings have a rest window but no occlusion window:** FP06_Wefter, FP07_Qefter,
+  FP07_Qföre and FP09_Wföre. So only their rest was compared.
+
+### What no longer fits
+
+- **The lines of the aim-1 check** (`analysis/aim1_feasibility/lines.json`) and of the
+  slow-range validation (`analysis/pattern_shift_slow_flow/`) were placed on the old videos.
+  On the new ones they are off by the recording's centring change.
+  - Their saved results and diagrams stay a valid record of the old videos.
+  - To rerun either check, the lines must be shifted (the median shift difference at rest,
+    from the two shift files) or placed again.
+- **Data sets:** the only one on a re-stabilized video is `set1` of FP01_Wefter 10-13-03, the
+  two-box set already known to be unreliable (Known issues). The FP01_Qefter 09-46-17 sets are
+  on a recording that is not in `StabilizedVideos/`.
+- `Validation/reading1` was drawn from video that had never been stabilized and is not affected.
+
+---
+
 ## 2026-10-14 — The stabilizer follows large movements frame to frame
 
 **Branch:** `fix/stabilizer-large-movements`, from `main` at `99aa56c` (PR #18, the pattern
