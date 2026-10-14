@@ -35,9 +35,20 @@ for the new ones to be stabilized: 28 raw videos of FP15–FP22. Each came with 
   - FP17_Wföre and FP19_Wföre, clips of 26 and 24 s without official times.
 - `FP21Wföre_20-Nov-2019_09-08-03` lacks the underscore after FP21, as in the official times. The
   inventory reads it.
-- **On the desktop now:** 61 stabilized videos, among them all 54 ESMOKE recordings the aims use.
-  The two raw FP09 efter recordings, which the aims do not use, are still unstabilized. The 36
-  ISMOKE recordings are not on the desktop yet.
+- **On the desktop after this batch:** 61 stabilized videos, among them all 54 ESMOKE recordings
+  the aims use. The two raw FP09 efter recordings, which the aims do not use, are still
+  unstabilized.
+
+**The first ISMOKE recordings, the same evening.** While the batch ran, the user began
+extracting a second zip into `RecordedVideos/`: 12 ISMOKE videos of FP02, FP04 and FP07.
+- **How:** a scratch script stabilized each video, with the same job, once its file had the size
+  the zip lists and had stopped changing.
+- **Result:** all 12 stabilized, none failed. Median match over the rest 0.66–0.94 (FP07_Cefter
+  lowest), and no frame lost anywhere.
+- **The aims use 6 of them:** FP04's two före recordings (aim 1), and FP07's four.
+  - FP02 is used by neither aim: its S was recorded on two days, one of them together with C.
+  - FP04_Sefter's rest is only 2 s.
+- **Now:** 73 stabilized videos; 60 of the 90 recordings the aims use (ISMOKE 6 of 36).
 
 ## 2026-10-14 — Whole loops and blind placement in the app; the aims from the saved data sets
 

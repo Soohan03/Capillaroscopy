@@ -24,8 +24,8 @@ products".
 - **Who can be used** (`metadata/README.md`, from `capillary.inventory`): aim 1 has 14 ESMOKE and
   10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 8 ISMOKE. The
   aims use 90 recordings; 8 of them had been downloaded by 2026-10-09, 30 (all ESMOKE) were on
-  the desktop by 2026-10-12, and all 54 ESMOKE ones were on it, stabilized, by 2026-10-14. The 36
-  ISMOKE recordings are still to come.
+  the desktop by 2026-10-12, and all 54 ESMOKE ones were on it, stabilized, by 2026-10-14, with
+  6 of the 36 ISMOKE ones (FP04, FP07).
 - **Resting CBV must come from the rest window before occlusion.**
 
 ## Change diary (mandatory)
