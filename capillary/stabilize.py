@@ -114,6 +114,11 @@ Next to the stabilized video go the shift of every frame
 - ``mean_grey``: the frame's mean grey level;
 - ``reference``: whether the frame was averaged into the references.
 
+A line measured on a stabilized video must stay in the picture in every frame
+of its range (`check_picture`, since 2026-10-14): where the picture moved, a
+frame shows a black strip along its edge, and a line that reaches the strip
+sees its edge move along the line, which reads as flow.
+
 Run from the command line:
 
     python -m capillary.stabilize RecordedVideos/clip.avi --out StabilizedVideos/clip.avi
@@ -624,6 +629,155 @@ def save_record(result: Stabilization, video_path: Optional[str] = None) -> dict
         'software': software_version(),
     })
     return paths
+
+
+# ------------------------------------------------------------- where every frame shows the picture
+
+#: How far (px) a line's samples must keep from the black strip a frame's move uncovers. The bicubic move
+#: (`shift_frame`) blends black into the pixels beside the strip, and a sample is read between two pixels:
+#: samples 2 px from the strip are just clear of it (DEVLOG 2026-10-14), and the third pixel is to spare.
+EDGE_MARGIN_PX = 3.0
+
+
+def read_shifts(video_path: str) -> Optional[pd.DataFrame]:
+    """The shift of every frame of a stabilized video (its ``___stabilization.csv``), indexed by frame.
+
+    None when the video has no shift file: it was not stabilized by this module (a raw recording, or a video
+    stabilized before 2026-10-08).
+    """
+    path = record_paths(video_path)['shifts']
+    if not os.path.isfile(path):
+        return None
+    shifts = pd.read_csv(path, index_col='frame')
+    if not {'shift_x_px', 'shift_y_px'} <= set(shifts.columns):
+        raise ValueError(f'{os.path.basename(path)} holds no shifts')
+    return shifts
+
+
+def _frame_areas(shifts: pd.DataFrame, frame_shape, first: int, last: int, margin_px: float) -> tuple:
+    """Where each placed frame of `first`..`last` shows the picture, and the frames the stabilizer lost.
+
+    A frame moved by (dx, dy) shows the recorded picture from x = dx to dx + width - 1 and from y = dy to
+    dy + height - 1; within the frame, `margin_px` inside that. Returns ``(areas, lost)``: the placed frames'
+    areas as rows of (x0, y0, x1, y1), and the numbers of the lost frames (written black).
+    """
+    height, width = frame_shape[0], frame_shape[1]
+    part = shifts.loc[first:last]
+    moves = part[['shift_x_px', 'shift_y_px']].to_numpy(dtype=float)
+    lost = ~np.isfinite(moves).all(axis=1)
+    if 'placed_by' in part:
+        lost |= (part['placed_by'] == 'lost').to_numpy()
+    dx, dy = moves[~lost, 0], moves[~lost, 1]
+    areas = np.column_stack([np.maximum(0.0, dx + margin_px), np.maximum(0.0, dy + margin_px),
+                             np.minimum(width - 1.0, dx + width - 1 - margin_px),
+                             np.minimum(height - 1.0, dy + height - 1 - margin_px)])
+    return areas, part.index.to_numpy()[lost]
+
+
+def picture_area(shifts: pd.DataFrame, frame_shape, first: int, last: int,
+                 margin_px: float = EDGE_MARGIN_PX) -> Optional[tuple]:
+    """(x0, y0, x1, y1): where every placed frame of `first`..`last` shows the picture (`check_picture`).
+
+    None when the stabilizer placed no frame of the range. x0 > x1 (or y0 > y1) when the picture moved
+    further than the frame is wide (high), so that no place shows it in every frame.
+    """
+    return _common_area(_frame_areas(shifts, frame_shape, first, last, margin_px)[0])
+
+
+def _common_area(areas: np.ndarray) -> Optional[tuple]:
+    """The part of every area (rows of x0, y0, x1, y1) that all share; None for none."""
+    if not len(areas):
+        return None
+    return (float(areas[:, 0].max()), float(areas[:, 1].max()), float(areas[:, 2].min()), float(areas[:, 3].min()))
+
+
+@dataclass(frozen=True)
+class PictureCheck:
+    """Whether a line's samples lie in the recorded picture in every frame of a range (`check_picture`).
+
+    A stabilized frame is the recorded frame moved back by its shift (`shift_frame`), which leaves a black
+    strip along the edge where the picture had moved; a frame the stabilizer lost is black all over. A line
+    that reaches the strip sees its edge move along the line as the picture moves, a strong pattern that
+    reads as flow (found on FP13_Qföre, DEVLOG 2026-10-14).
+    """
+
+    first: int                      # the range checked, frames first..last
+    last: int
+    box: tuple                      # (x0, y0, x1, y1), the smallest rectangle holding the line's samples
+    area: Optional[tuple]           # where every placed frame of the range shows the picture (`picture_area`)
+    off_picture: int                # placed frames in which the samples reach the strip or leave the frame
+    lost: int                       # frames of the range the stabilizer lost (written black)
+    lost_at: str                    # where they lie, e.g. '142.9–150.9 s' ('' when none)
+    margin_px: float = EDGE_MARGIN_PX
+
+    @property
+    def frames(self) -> int:
+        return self.last - self.first + 1
+
+    @property
+    def clearance_px(self) -> float:
+        """How far the samples keep from the edge of `area`; negative: how far they reach over it."""
+        if self.area is None:
+            return float('nan')
+        return float(min(self._sides().values()))
+
+    @property
+    def side(self) -> str:
+        """The edge of the picture the line comes nearest: 'left', 'top', 'right' or 'bottom' ('' without area)."""
+        sides = self._sides()
+        return min(sides, key=sides.get) if sides else ''
+
+    def _sides(self) -> dict:
+        if self.area is None:
+            return {}
+        (x0, y0, x1, y1), (a0, b0, a1, b1) = self.box, self.area
+        return {'left': x0 - a0, 'top': y0 - b0, 'right': a1 - x1, 'bottom': b1 - y1}
+
+    def problem(self) -> Optional[str]:
+        """Why the line cannot be measured over the range, or None."""
+        if self.lost:
+            several = self.lost != 1
+            return (f'The stabilizer lost {self.lost} frame{"s" if several else ""} of this range ({self.lost_at}), '
+                    f'which {"are" if several else "is"} black. Set the range to frames it placed.')
+        if self.off_picture:
+            reach = (f'In {self.off_picture} of the range\'s {self.frames} frames the line reaches the black strip '
+                     'that stabilizing leaves along the edge where the picture moved.')
+            (x0, y0, x1, y1), (a0, b0, a1, b1) = self.box, self.area
+            if a0 > a1 or b0 > b1:
+                return f'{reach} No part of the frame shows the picture in every frame of this range: it moved too far.'
+            if x1 - x0 > a1 - a0 or y1 - y0 > b1 - b0:
+                return (f'{reach} The line is larger than the part of the frame that shows the picture in every frame '
+                        f'of this range ({a1 - a0:.0f} × {b1 - b0:.0f} px).')
+            return (f'{reach} Move it at least {max(1, int(np.ceil(-self.clearance_px - 1e-9)))} px away from the '
+                    f'{self.side} edge.')
+        return None
+
+    def record(self) -> dict:
+        """The check as kept in a data set's provenance."""
+        return {'rule': ('every frame of the range shows the recorded picture under the line, its samples at least '
+                         f'{self.margin_px:g} px from the black strip stabilizing leaves where the picture moved '
+                         '(capillary.stabilize.check_picture)'),
+                'area_px': [round(value, 2) for value in self.area] if self.area is not None else None,
+                'clearance_px': round(self.clearance_px, 2) if self.area is not None else None}
+
+
+def check_picture(shifts: pd.DataFrame, frame_shape, box, first: int, last: int,
+                  margin_px: float = EDGE_MARGIN_PX) -> PictureCheck:
+    """Whether the rectangle `box` = (x0, y0, x1, y1) lies in the picture in every frame `first`..`last`.
+
+    `shifts` is the video's shift file (`read_shifts`), `frame_shape` its frames' (height, width), and `box`
+    holds the samples a line reads (`capillary.spacetime.SpaceTimeSampler.bounds`). In each frame the
+    samples must keep `margin_px` inside the moved picture, and lie in the frame; no frame may be lost.
+    """
+    areas, lost = _frame_areas(shifts, frame_shape, first, last, margin_px)
+    x0, y0, x1, y1 = (float(value) for value in box)
+    off = (x0 < areas[:, 0]) | (y0 < areas[:, 1]) | (x1 > areas[:, 2]) | (y1 > areas[:, 3])
+    lost_at = ''
+    if len(lost):
+        lost_at = (f'{shifts.at[lost[0], "time_s"]:.1f}–{shifts.at[lost[-1], "time_s"]:.1f} s' if 'time_s' in shifts
+                   else f'frames {lost[0]}–{lost[-1]}')
+    return PictureCheck(first=int(first), last=int(last), box=(x0, y0, x1, y1), area=_common_area(areas),
+                        off_picture=int(off.sum()), lost=int(len(lost)), lost_at=lost_at, margin_px=float(margin_px))
 
 
 # ------------------------------------------------------------------------------- CLI

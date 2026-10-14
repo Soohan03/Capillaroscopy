@@ -13,7 +13,7 @@ video's name: raw recording, stabilized copy, data sets) and four pages:
 
 | Page | What you do there |
 | --- | --- |
-| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range (for a recording of the study, **Rest**, **Occlusion** or **After release** from its official times), name the data set, press **Measure velocity and save**. The result gives the velocity pooled over the range (pattern shift) and that of the 3-s blocks. Choose what the line follows: any stretch; an **Arterial limb**, drawn from its base to the apex (the direction of the flow then shows whether it is the arterial limb); or a **Whole loop**, from the base of one limb over the apex to the base of the other, which measures resting flow in more loops (the direction shows which end lies on the arterial limb, and each limb is measured on its own as a check against movement). The lines of the recording's saved data sets are drawn dashed. |
+| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range (for a recording of the study, **Rest**, **Occlusion** or **After release** from its official times), name the data set, press **Measure velocity and save**. The result gives the velocity pooled over the range (pattern shift) and that of the 3-s blocks. Choose what the line follows: any stretch; an **Arterial limb**, drawn from its base to the apex (the direction of the flow then shows whether it is the arterial limb); or a **Whole loop**, from the base of one limb over the apex to the base of the other, which measures resting flow in more loops (the direction shows which end lies on the arterial limb, and each limb is measured on its own as a check against movement). The lines of the recording's saved data sets are drawn dashed. On a stabilized video a dashed outline shows where every frame of the range has picture; a line that leaves it is refused (see *How a recording is stabilized*). |
 | **Two boxes** | The original method: place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary; the velocity comes from the delay between their brightness signals. Kept for comparison and for the data sets made with it (see below). |
 | **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the line or boxes of a data set restored on its page. |
 | **Validation** | Checks the centre-line velocity on real recordings, where there is no ground truth. A *reading set* draws 3-s blocks from centre-line data sets; observers read them by hand, blinded, by drawing lines along the streaks; the agreement with the estimator, between observers and between two sessions of one observer is computed with Bland–Altman limits, intraclass correlation and kappa. *Line placement* compares data sets of the same capillary measured by different observers (or twice by one). |
@@ -70,6 +70,17 @@ the match lay at the edge of the search. The video is read from disk three
 times and never held in memory, so recordings of any length can be
 stabilized; a 3-minute recording takes about 2–3 minutes.
 
+Where the picture moved, the frame moved back into place leaves a black strip
+along its edge. A line that reaches it sees the strip's edge move along the
+line, which reads as flow. So a line on a stabilized video is measured only if
+its samples keep 3 px clear of the strip in every frame of the range
+(`stabilize.check_picture`, since 2026-10-14; 2 px is just enough for the
+bicubic move and the reading between pixels). The Centre line page outlines the
+part of the frame that every frame of the range shows and says how far to move
+a line that leaves it; the batch command refuses such a line too, and a data
+set's provenance keeps how far its line stayed from the strip. A range with
+frames the stabilizer lost is refused as well.
+
 ## How velocity is measured
 
 **Centre line (since 2026-10-06).** Along the drawn line the brightness is
@@ -125,6 +136,9 @@ steady drift, or a movement of 10–20 px over a few seconds that goes one way
 slower than the other, reads as slow flow. The recordings show both
 (`analysis/pattern_shift_slow_flow/`), so slow results need a check that the
 picture held still, such as the loop's other limb running the opposite way.
+Part of what first looked like such movement was the stabilized frame's black
+strip crossing the line (FP03_Wföre's loops E and F at rest); such lines are
+refused since 2026-10-14 (see *How a recording is stabilized*).
 
 **The arterial limb (since 2026-10-11).** Resting velocity is measured on the
 arterial limb of a capillary loop, since the velocity changes towards the
@@ -279,7 +293,9 @@ see above); `--roi1` is box 1 (downstream) and `--roi2` box 2
 (upstream), `--size` the box size for boxes given as just `x,y`. The points or
 box centres and the frames of a data set made in the app are in its
 `…_provenance.json`. The spatial calibration comes from `settings.csv`
-(`mm_per_pixel`) unless `--mm-per-pixel` overrides it.
+(`mm_per_pixel`) unless `--mm-per-pixel` overrides it. On a stabilized video
+(one with its shift file beside it) a line that reaches the black strip in a
+frame read is refused, as in the app.
 `python3 -m capillary.cli --help` lists the rest.
 
 ## The aims from the saved data sets

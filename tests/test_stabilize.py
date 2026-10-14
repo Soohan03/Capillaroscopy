@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from capillary import stabilize
+from capillary import spacetime, stabilize
 from capillary.measure import Cancelled
 from capillary.video import iter_frames, probe_video
 from gui import library, tasks
@@ -320,6 +320,96 @@ def test_the_record_is_saved_next_to_the_video(jittered):
     assert provenance['source_video'] == 'source.avi' and provenance['frames'] == 60
     assert provenance['method']['reference_frames'] == result.references
     assert provenance['summary']['movement_range_x_px'] > 5
+
+
+def test_the_shift_file_is_read_back_by_frame(jittered, tmp_path):
+    _, _, result = jittered
+    stabilize.save_record(result)
+    shifts = stabilize.read_shifts(result.output)
+    assert shifts.index.name == 'frame' and list(shifts.index) == list(range(60))
+    np.testing.assert_allclose(shifts['shift_x_px'], result.frames['shift_x_px'])
+    assert stabilize.read_shifts(str(tmp_path / 'raw.avi')) is None            # no shift file: not stabilized here
+    odd = stabilize.record_paths(str(tmp_path / 'odd.avi'))['shifts']
+    pd.DataFrame({'frame': [0], 'match': [0.9]}).to_csv(odd, index=False)
+    with pytest.raises(ValueError, match='no shifts'):
+        stabilize.read_shifts(str(tmp_path / 'odd.avi'))
+
+
+# ------------------------------------------------------------- where every frame shows the picture
+
+def shift_table(moves, fps: float = 30.0) -> pd.DataFrame:
+    """A shift file as `read_shifts` gives it: each frame's move (x, y), NaN for a frame the stabilizer lost."""
+    moves = np.asarray(moves, dtype=float)
+    frames = np.arange(len(moves))
+    return pd.DataFrame({'time_s': frames / fps, 'shift_x_px': moves[:, 0], 'shift_y_px': moves[:, 1],
+                         'placed_by': np.where(np.isnan(moves).any(axis=1), 'lost', 'references')},
+                        index=pd.Index(frames, name='frame'))
+
+
+def test_the_area_every_frame_of_a_range_shows():
+    shifts = shift_table([(5.0, -4.0), (-3.0, 2.0), (0.5, 0.5), (np.nan, np.nan)])
+    shape = (HEIGHT, WIDTH)
+    # moved right by 5: the strip covers x < 5, then 3 px; moved down by 2: y < 2 plus 3; and so on
+    assert stabilize.picture_area(shifts, shape, 0, 2) == pytest.approx((8, 5, WIDTH - 1 - 6, HEIGHT - 1 - 7))
+    assert stabilize.picture_area(shifts, shape, 1, 2) == pytest.approx((3.5, 5, WIDTH - 1 - 6, HEIGHT - 1 - 2.5))
+    assert stabilize.picture_area(shifts, shape, 3, 3) is None                  # lost: no picture at all
+
+    inside = stabilize.check_picture(shifts, shape, (10, 10, 150, 110), 0, 2)
+    assert (inside.off_picture, inside.lost, inside.problem()) == (0, 0, None)
+    assert inside.clearance_px == pytest.approx(2.0)                            # 10 - 8 on the left, 112 - 110 below
+    assert inside.record()['area_px'] == [8.0, 5.0, 153.0, 112.0] and inside.record()['clearance_px'] == 2.0
+
+    near = stabilize.check_picture(shifts, shape, (6, 10, 100, 50), 0, 2)
+    assert (near.off_picture, near.side, near.clearance_px) == (1, 'left', pytest.approx(-2.0))
+    assert near.problem() == ("In 1 of the range's 3 frames the line reaches the black strip that stabilizing leaves "
+                              'along the edge where the picture moved. Move it at least 2 px away from the left edge.')
+
+    lost = stabilize.check_picture(shifts, shape, (10, 10, 150, 110), 1, 3)
+    assert lost.lost == 1 and lost.problem() == ('The stabilizer lost 1 frame of this range (0.1–0.1 s), which is '
+                                                 'black. Set the range to frames it placed.')
+    nothing = stabilize.check_picture(shifts, shape, (10, 10, 150, 110), 3, 3)
+    assert nothing.area is None and np.isnan(nothing.clearance_px) and nothing.record()['area_px'] is None
+
+    # the picture moved so far that no place shows it in every frame, or too little for the line: no move helps
+    swing = stabilize.check_picture(shift_table([(0.0, 100.0), (0.0, -100.0)]), shape, (10, 50, 20, 60), 0, 1)
+    assert swing.problem().endswith('No part of the frame shows the picture in every frame of this range: it moved '
+                                    'too far.')
+    sway = stabilize.check_picture(shift_table([(0.0, 30.0), (0.0, -30.0)]), shape, (10, 30, 20, 90), 0, 1)
+    assert sway.problem().endswith('The line is larger than the part of the frame that shows the picture in every '
+                                   'frame of this range (153 × 53 px).')
+
+
+def test_a_line_passes_only_where_it_reads_the_recorded_picture():
+    """Where the check passes, a line near the edge of a stabilized frame reads exactly what it would read had
+    the camera seen beyond the frame: neither the black strip nor the pixels the bicubic move blends with it.
+    Without the margin, frames whose blend reaches the line would pass."""
+    margin = 24
+    texture = np.clip(np.rint(scene(HEIGHT, WIDTH, margin, seed=3)), 0, 255).astype(np.uint8)
+    recorded = texture[margin:margin + HEIGHT, margin:margin + WIDTH]
+    moves = [(dx, 0.37) for dx in np.arange(-12.0, 12.0, 0.29)]
+    shifts = shift_table(moves)
+    lines = {name: spacetime.Centreline.from_points([(x, 30.0), (x, 90.0)])
+             for name, x in (('left', 10.0), ('right', WIDTH - 11.0), ('right, between pixels', WIDTH - 10.7))}
+    for name, line in lines.items():
+        sampler = spacetime.SpaceTimeSampler(line)
+        x0, _, x1, _ = sampler.bounds
+        passed, needed = [], []
+        for frame, move in enumerate(moves):
+            stabilized = stabilize.shift_frame(recorded, move)
+            beyond = stabilize.shift_frame(texture, (move[0] - margin, move[1] - margin))[:HEIGHT, :WIDTH]
+            clean = np.abs(sampler.row(stabilized) - sampler.row(beyond)).max() < 0.01      # the same pixels
+            check = stabilize.check_picture(shifts, recorded.shape, sampler.bounds, frame, frame)
+            assert clean or check.off_picture, f'{name} line, move {move[0]:.2f} px: passed but reads the strip'
+            unguarded = stabilize.check_picture(shifts, recorded.shape, sampler.bounds, frame, frame, margin_px=0)
+            if not clean and not unguarded.off_picture:
+                needed.append(frame)
+            if not check.off_picture:
+                passed.append(move[0])
+        assert needed, f'{name} line: the margin was never needed'
+        # and no stricter than that: a move passes when the samples keep the margin inside the moved picture
+        margin_px = stabilize.EDGE_MARGIN_PX
+        assert passed == [dx for dx, _ in moves if dx + margin_px <= x0 and x1 <= dx + WIDTH - 1 - margin_px]
+        assert len(passed) > len(moves) / 2
 
 
 def test_a_cancelled_stabilization_leaves_nothing(tmp_path):

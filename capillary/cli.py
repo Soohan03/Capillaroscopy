@@ -12,6 +12,9 @@ Two boxes page). Running the same measurement from a script is what makes a
 result reproducible: the line or boxes, frames and calibration are all on the
 command line (and in a data set's provenance file), so a report can be
 regenerated months later without re-clicking on a canvas.
+
+As in the app, a line on a stabilized video (one with a shift file) is refused
+when it leaves the picture in a frame read (`capillary.stabilize.check_picture`).
 """
 
 from __future__ import annotations
@@ -24,7 +27,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from . import pattern_shift, spacetime
+from . import pattern_shift, spacetime, stabilize
 from .intensity import extract_traces
 from .roi import ROI
 from .velocity import DEFAULT_WINDOWS, analyze_trace
@@ -186,10 +189,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     return 0
 
 
+def _picture_problem(video: str, line: spacetime.Centreline, info, start: int,
+                     max_frames: Optional[int]) -> Optional[str]:
+    """Why `line` cannot be measured over the frames read from a stabilized `video`, or None
+    (`capillary.stabilize.check_picture`; a video without a shift file is not checked)."""
+    shifts = stabilize.read_shifts(video)
+    if shifts is None:
+        return None
+    last = info.frame_count - 1 if max_frames is None else min(info.frame_count, start + max_frames) - 1
+    check = stabilize.check_picture(shifts, (info.height, info.width), spacetime.SpaceTimeSampler(line).bounds,
+                                    start, last)
+    return check.problem()
+
+
 def _measure_line(args, line: spacetime.Centreline, mm_per_pixel: float) -> int:
     try:
         info = probe_video(args.video)
         fps = args.fps or info.fps
+        problem = _picture_problem(args.video, line, info, args.start, args.max_frames)
+        if problem is not None:
+            print(f'error: {problem}', file=sys.stderr)
+            return 1
         diagram = spacetime.space_time_diagram(iter_frames(args.video, max_frames=args.max_frames, start=args.start),
                                                line)
         blocks = spacetime.analyze_space_time(diagram, fps, mm_per_pixel, first_frame=args.start)

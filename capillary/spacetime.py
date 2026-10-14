@@ -212,11 +212,20 @@ class SpaceTimeSampler:
     def n_positions(self) -> int:
         return int(self.positions.shape[0])
 
+    @property
+    def bounds(self) -> tuple[float, float, float, float]:
+        """(x0, y0, x1, y1): the smallest rectangle holding every sample, in video pixels."""
+        return (float(self.map_x.min()), float(self.map_y.min()), float(self.map_x.max()), float(self.map_y.max()))
+
     def inside(self, frame_shape) -> bool:
-        """True if every sample lies inside a frame of `frame_shape`."""
+        """True if every sample lies inside a frame of `frame_shape`.
+
+        On a stabilized video the samples must also stay in the picture in every frame measured, clear of
+        the black strip the stabilizer leaves where the picture moved (`capillary.stabilize.check_picture`).
+        """
         height, width = frame_shape[0], frame_shape[1]
-        return bool(self.map_x.min() >= 0 and self.map_y.min() >= 0
-                    and self.map_x.max() <= width - 1 and self.map_y.max() <= height - 1)
+        x0, y0, x1, y1 = self.bounds
+        return bool(x0 >= 0 and y0 >= 0 and x1 <= width - 1 and y1 <= height - 1)
 
     def row(self, frame: np.ndarray) -> np.ndarray:
         frame = np.asarray(frame)

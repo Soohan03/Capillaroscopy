@@ -191,6 +191,27 @@ def test_cli_searches_the_slow_range_when_asked(video_file, capsys):
     assert printed[0] and printed[0] == printed[1]          # flow faster than 1 px/frame reads the same either way
 
 
+def test_cli_refuses_a_line_that_reaches_the_black_strip_of_a_stabilized_video(video_file, tmp_path, capsys):
+    import shutil
+
+    import numpy as np
+    import pandas as pd
+
+    from capillary import stabilize
+
+    video = tmp_path / 'stabilized.mp4'
+    shutil.copyfile(video_file, video)
+    frames = np.arange(probe_video(video).frame_count)
+    moves = np.where((frames >= 200) & (frames < 205), 57.0, 0.0)   # a strip up to x = 57 beside the line at 60
+    pd.DataFrame({'frame': frames, 'time_s': frames / FPS, 'shift_x_px': moves, 'shift_y_px': 0.0,
+                  'placed_by': 'references'}).to_csv(stabilize.record_paths(str(video))['shifts'], index=False)
+    argv = [str(video), '--line', f'60,{UPSTREAM_Y - 20}; 60,{DOWNSTREAM_Y + 30}', '--mm-per-pixel',
+            str(MM_PER_PIXEL)]
+    assert main(argv + ['--start', '20']) == 1
+    assert 'In 5 of the range' in capsys.readouterr().err
+    assert main(argv + ['--start', '20', '--max-frames', '180']) == 0     # frames 20-199 keep clear of it
+
+
 def test_cli_wants_a_line_or_two_boxes(video_file):
     for argv in ([], ['--roi1', '10,10'], ['--line', '1,1;9,9', '--roi1', '1,1', '--roi2', '2,2'],
                  ['--line', 'nonsense']):

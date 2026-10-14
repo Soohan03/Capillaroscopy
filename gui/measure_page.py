@@ -382,6 +382,9 @@ class MeasurePage(ttk.Frame):
     def on_hide(self):
         self.player.pause()
 
+    def on_range_change(self):
+        """The range to measure was changed by the user (the page is refreshed as a whole otherwise)."""
+
     # ------------------------------------------------------------------------- range
     def current_range(self):
         if self.player.source is None:
@@ -433,6 +436,7 @@ class MeasurePage(ttk.Frame):
             self.range = None
         self._update_range_ui()
         self.update_measure_state()
+        self.on_range_change()
 
     def _update_range_ui(self):
         self._update_phase_ui()
