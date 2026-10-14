@@ -1,6 +1,6 @@
 """Pattern shift below 1 px/frame on the recordings: the aim-1 lines at rest, and in occlusion as a null.
 
-python analysis/pattern_shift_slow_flow/validate_real.py [--summary]      (a few minutes)
+python analysis/pattern_shift_slow_flow/validate_real.py [--dir <folder>] [--summary]      (a few minutes)
 
 Rest: the space-time diagrams that the aim-1 feasibility check saved over the official rest window
 (../aim1_feasibility/out/, written by its measure.py): 109 limbs and 15 lines through tissue in 15
@@ -9,12 +9,18 @@ sampled from 15 s after the cuff was inflated until 2 s before its release, when
 still: a null on the same vessels. (Recordings without an official release time are left out of it.)
 Each diagram is measured with the variants of validate_synthetic.VARIANTS, over the whole window and over
 each half. Writes real_results.csv and out/<recording>__<line>__occlusion.npy (not tracked).
+
+The occlusion is sampled from the videos in StabilizedVideos/, which were made again on 2026-10-14; the
+first run's lines do not fit them. --dir restabilized works on the aim-1 check's rerun instead (its
+results, rest diagrams and lines, moved onto the new videos): it writes real_results_restabilized.csv
+and out/restabilized/.
 """
 import math
 import os
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 
 import numpy as np
 import pandas as pd
@@ -26,6 +32,7 @@ OUT = os.path.join(HERE, 'out')
 sys.path.insert(0, REPO)
 sys.path.insert(0, AIM1)
 sys.path.insert(0, HERE)
+import common  # noqa: E402  (the aim-1 check's paths: which run is worked on)
 from validate_synthetic import VARIANTS, estimate  # noqa: E402
 
 #: The occlusion is measured from this long after the cuff was inflated, when the flow has stopped.
@@ -38,8 +45,36 @@ def file_safe(name):
     return re.sub(r'[^A-Za-z0-9]+', '_', name).strip('_')
 
 
+def first_run() -> bool:
+    """Whether the aim-1 check's first run is worked on (no --dir)."""
+    return os.path.samefile(common.FOLDER, AIM1)
+
+
+def occlusion_folder() -> str:
+    """Where the occlusion diagrams go: out/, or out/<folder> for another run of the aim-1 check."""
+    return OUT if first_run() else os.path.join(OUT, os.path.basename(common.FOLDER))
+
+
+def results_path() -> str:
+    """real_results.csv, or real_results_<folder>.csv for another run of the aim-1 check."""
+    suffix = '' if first_run() else f'_{os.path.basename(common.FOLDER)}'
+    return os.path.join(HERE, f'real_results{suffix}.csv')
+
+
+def lost_frames(stem, first, last):
+    """How many frames from `first` to `last` the stabilizer lost (written black; `placed_by` in the shift file)."""
+    from common import video_path
+    shifts = pd.read_csv(os.path.splitext(video_path(stem))[0] + '___stabilization.csv', index_col='frame')
+    if 'placed_by' not in shifts:                          # written before 2026-10-14, when no frame was lost
+        return 0
+    return int((shifts.loc[first:last, 'placed_by'] == 'lost').sum())
+
+
 def occlusion_diagrams(stem):
-    """The occlusion diagram of every line of `stem` (traced as the aim-1 check traced them); None without times."""
+    """The occlusion diagram of every line of `stem` (traced as the aim-1 check traced them).
+
+    None without official times, or when the stabilizer lost frames of the window.
+    """
     import json
     import measure                                         # the aim-1 check's tracing; its main() is not run
     from common import LINES, video_path
@@ -52,6 +87,10 @@ def occlusion_diagrams(stem):
         return None
     first = math.ceil((phases.occlusion_s + SETTLE_S) * info.fps)
     last = math.ceil((phases.release_s - 2.0) * info.fps) - 1
+    lost = lost_frames(stem, first, last)
+    if lost:
+        print(f'{stem}: occlusion left out, the stabilizer lost {lost} of its {last - first + 1} frames', flush=True)
+        return None
     with open(LINES, encoding='utf-8') as handle:
         specs = json.load(handle)[stem]
     lines, _ = measure.traced_lines(stem, specs)
@@ -63,16 +102,17 @@ def occlusion_diagrams(stem):
     diagrams = {}
     for name in lines:
         diagrams[name] = np.asarray(rows[name], dtype=np.float32)
-        np.save(os.path.join(OUT, f'{stem}__{file_safe(name)}__occlusion.npy'), diagrams[name])
+        np.save(os.path.join(occlusion_folder(), f'{stem}__{file_safe(name)}__occlusion.npy'), diagrams[name])
     return diagrams
 
 
-def measure_recording(stem):
+def measure_recording(stem, folder=AIM1):
     import cv2
     cv2.setNumThreads(2)
-    lines = pd.read_csv(os.path.join(AIM1, 'results.csv'))
+    common.use(folder)
+    lines = pd.read_csv(common.RESULTS)
     lines = lines[lines.recording == stem]
-    windows = {'rest': {name: np.load(os.path.join(AIM1, 'out', f'{stem}__{file_safe(name)}.npy'))
+    windows = {'rest': {name: np.load(os.path.join(common.OUT, f'{stem}__{file_safe(name)}.npy'))
                         for name in lines.line}}
     occlusion = occlusion_diagrams(stem)
     if occlusion is not None:
@@ -129,8 +169,8 @@ def summarize(t):
         both = part.groupby(['recording', 'loop']).filter(lambda g: len(g) == 2)
         signs = both.groupby(['recording', 'loop']).speed.apply(lambda s: np.sign(s).prod())
         print(f'  {variant:32s} {int((signs < 0).sum())} / {int((signs > 0).sum())}')
-    print('\n== rest, participants with both visits (of 7): a limb measured at both visits; '
-          'one towards the apex (arterial) at both')
+    print(f'\n== rest, participants with both visits (of {int((rest.groupby("subject").condition.nunique() == 2).sum())}): '
+          'a limb measured at both visits; one towards the apex (arterial) at both')
     for variant in order:
         part = rest[rest.variant == variant]
         towards_apex = (part.speed > 0) & part.resolved
@@ -161,19 +201,20 @@ def summarize(t):
 
 
 def main():
-    os.makedirs(OUT, exist_ok=True)
-    stems = sorted(pd.read_csv(os.path.join(AIM1, 'results.csv')).recording.unique())
+    os.makedirs(occlusion_folder(), exist_ok=True)
+    stems = sorted(pd.read_csv(common.RESULTS).recording.unique())
     started = time.time()
     with ProcessPoolExecutor(max_workers=8) as pool:
-        rows = [row for rows in pool.map(measure_recording, stems) for row in rows]
+        rows = [row for rows in pool.map(partial(measure_recording, folder=common.FOLDER), stems) for row in rows]
     table = pd.DataFrame(rows)
-    table.to_csv(os.path.join(HERE, 'real_results.csv'), index=False)
+    table.to_csv(results_path(), index=False)
     print(f'{len(stems)} recordings in {time.time() - started:.0f} s')
     summarize(table)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--summary':
-        summarize(pd.read_csv(os.path.join(HERE, 'real_results.csv')))
+    args = common.run_args(sys.argv[1:])
+    if args and args[0] == '--summary':
+        summarize(pd.read_csv(results_path()))
     else:
         main()

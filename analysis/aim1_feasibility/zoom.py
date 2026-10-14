@@ -1,6 +1,6 @@
 """A zoomed part of a recording's resting image with a grid every 10 px, to place points.
 
-python analysis/aim1_feasibility/zoom.py <recording> x0 y0 x1 y1 [scale]
+python analysis/aim1_feasibility/zoom.py [--dir <folder>] <recording> x0 y0 x1 y1 [scale]
 
 Needs out/<recording>_rest_mean.npy (rest_image.py). Writes
 out/<recording>_zoom_<x0>_<y0>.png, `scale` (default 4) times enlarged,
@@ -12,15 +12,17 @@ import sys
 import cv2
 import numpy as np
 
-from common import OUT, to_uint8, vessel_image
+import common
+from common import to_uint8, vessel_image
 
 LABEL = (0, 200, 255)
 GRID = (0, 90, 0)
 
 if __name__ == '__main__':
-    stem, (x0, y0, x1, y1) = sys.argv[1], map(int, sys.argv[2:6])
-    scale = int(sys.argv[6]) if len(sys.argv) > 6 else 4
-    mean = np.load(os.path.join(OUT, f'{stem}_rest_mean.npy'))
+    args = common.run_args(sys.argv[1:])
+    stem, (x0, y0, x1, y1) = args[0], map(int, args[1:5])
+    scale = int(args[5]) if len(args) > 5 else 4
+    mean = np.load(os.path.join(common.OUT, f'{stem}_rest_mean.npy'))
     image = to_uint8(vessel_image(mean)[y0:y1, x0:x1], high=99.5, margin=0)
     image = cv2.cvtColor(cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC),
                          cv2.COLOR_GRAY2BGR)
@@ -35,5 +37,5 @@ if __name__ == '__main__':
         if y % 50 == 0:
             cv2.putText(image, str(y), (2, scale * (y - y0) + 12), cv2.FONT_HERSHEY_SIMPLEX, 0.4, colour, 1)
     name = f'{stem}_zoom_{x0}_{y0}.png'
-    cv2.imwrite(os.path.join(OUT, name), image)
+    cv2.imwrite(os.path.join(common.OUT, name), image)
     print(name)

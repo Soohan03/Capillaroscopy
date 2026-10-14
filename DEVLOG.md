@@ -6,6 +6,209 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-14 — Aim 1's feasibility, again on the re-stabilized videos
+
+**Branch:** `analysis/aim1-restabilized`, from `main` at `213f0c3` (PR #20, the re-stabilization,
+merged).
+
+The user asked to rerun the aim-1 check of 2026-10-12 on the videos the new stabilizer made.
+The check's numbers came from the old videos, and they are what goes to the supervisors.
+- The check's lines were moved onto the new videos, and FP01_W was added.
+- The slow range of the pattern shift was measured alongside the default.
+- Everything is in `analysis/aim1_feasibility/restabilized/` (with a README). The first run's
+  files stay as they were, as the record of the old videos (now in `.trash/`).
+
+**In short:** the re-stabilization changed almost nothing at rest. The first run's
+conclusion stands: resting CBV from an arterial limb at both visits is available in at most
+3 of 8 participants, whichever rule is used.
+
+### Why rerun
+
+- The new stabilizer centres each video on its official rest, so every picture moved
+  (1.8–169 px in these recordings) and the old lines no longer fit.
+- It also builds its references from the rest. The match at rest rose in most recordings
+  whose references moved there (FP12_Wföre 0.42 → 0.87, FP12_Qföre 0.42 → 0.82, FP09_Qföre
+  0.48 → 0.75). Would better-aligned rest frames give more measurable limbs?
+- FP01_W could be stabilized for the first time, so FP01 could have both visits.
+
+### How
+
+**The scripts can work on a second run** (`analysis/aim1_feasibility/`):
+- `common.py` gained `use(folder)` and `run_args(args)`. A script works on the first run's
+  folder (lines, results, `out/`) unless given `--dir <folder>`. `rest_image.py`, `zoom.py`,
+  `measure.py` and `summarize.py` take it.
+- `measure.py` also measures the pattern shift with its slow range
+  (`min_speed=SLOW_MIN_SPEED`). Its results are the keys `slow_pattern_shift_...` and
+  `slow_limb_check`.
+- `measure.py --jobs N` measures N recordings at once. All 16 took 84 s with 8.
+- `summarize.py` counts a fourth level, `slow` (resolved by the slow range), where the
+  results have it. It also reports each recording's tissue line's slow score.
+- Without `--dir` the scripts work as before. `summarize.py` rewrote the first run's two
+  summary files byte for byte.
+
+**Moving the lines** (`restabilized/move_lines.py`):
+- **The move:** the stabilizer's shift files record how far each frame was moved (what the
+  raw frame shows at p, the stabilized frame shows at p + shift). A point of the old video
+  therefore lies at p + (new shift − old shift) in the new one. Each recording's lines were
+  moved by the median of that difference over the official rest. The old shift files are in
+  `.trash/`; they were written on 2026-10-11, before the lines were placed.
+- **The moves:** 1.8–169 px (`moves.csv`).
+  - **Check:** registering the old resting image onto the new one (`cv2.phaseCorrelate` on
+    the band-passed images, its sign checked on a synthetic shift) gives the same move
+    within 0.4 px in all 15 recordings.
+  - In 5 recordings every rest frame moved by exactly the same amount.
+  - In the other 10 the stabilizer placed the rest frames differently relative to each
+    other: single frames lie a median 0.1–1.0 px off the median move (95th percentile up to
+    3.7 px, FP12_Wföre).
+- **Still on the vessel?** Each moved line was traced on the new resting image and compared
+  with its first-run trace, moved the same way (`line_check.csv`).
+  - All 109 limbs lie within a mean 0.85 px of it, and the ridge values are unchanged
+    (median difference 0.00).
+  - Four lines end 3–6 px from where they ended before: FP03_Qföre F, FP07_Wföre A right,
+    FP09_Wföre B left and FP13_Qföre A right. Close-ups with both traces drawn showed them on
+    the same vessel; an end point had snapped to a neighbouring pixel.
+  - No line was corrected.
+
+**FP01_W** (`FP01_W_14-Oct-2019_08-36-26`):
+- Placed by Claude Code (the AI assistant) by the first run's rules, from its resting image
+  only and before anything was measured. Close-ups at 4–6× were used to place the points, and
+  the traced lines were checked on a close-up sheet.
+- Loops A, C and E (6 limbs, 40–68 px), and a 110-px line through tissue between A and B.
+- Loops B and D were left out. They are figure-of-eight loops whose limbs cross about 30 px
+  below the apex, short of the rules' 40 px.
+- Its official rest is 33.6 s, against 52–77 s in the other 15 recordings. Its name has
+  neither före nor efter (`metadata/README.md`).
+
+**Measured:** every line over the official rest (`measure.py --dir restabilized --jobs 8`),
+then `summarize.py --dir restabilized` and `restabilized/compare_runs.py`.
+- `compare_runs.py` sets the two runs side by side, line by line, at every level.
+- The first run's slow range is the slow-range validation's `stretched` variant at rest
+  (`pattern_shift_slow_flow/real_results.csv`). It is the same estimator
+  (`pattern_shift(min_speed=0.1)`) on the first run's diagrams.
+
+**The slow-range validation on the moved lines** (`validate_real.py --dir restabilized`):
+- The script sampled its occlusion from `StabilizedVideos/` along the first run's lines,
+  which no longer fit. It now takes `--dir`, and writes `real_results_restabilized.csv` and
+  `out/restabilized/`.
+- It now leaves out the occlusion of a recording whose occlusion frames the stabilizer lost
+  (`placed_by` 'lost' in the shift file). All 1374 of FP03_Qföre's are lost (the 500-px jump
+  when the cuff goes on), and the first try failed on its blank diagrams.
+- Its "(of 7)" participants is now counted.
+
+### Results
+
+**At rest, the 109 limbs measured in both runs:**
+
+| Level | First run | Rerun | Both | First only | Rerun only |
+| --- | --- | --- | --- | --- | --- |
+| Resolved (the app's rule) | 24 | 23 | 22 | 2 | 1 |
+| Robust | 16 | 17 | 16 | 0 | 1 |
+| Combined (exploratory) | 30 | 30 | 29 | 1 | 1 |
+| Slow range | 42 | 41 | 40 | 2 | 1 |
+
+- **Velocities of limbs counted in both runs:** the same direction every time.
+  - Resolved, robust and combined: rerun/first 0.93–1.09 (median 1.00), at most 0.005 mm/s
+    apart.
+- **The three limbs that changed** all lay near the threshold, and moved both ways:
+  - FP01_Qföre's "2" loop: score 8.3 → 7.3;
+  - FP13_Qföre F right: 8.1 → 6.5;
+  - FP09_Qföre A right: 6.9 → 8.7. It is the only limb gained, in the recording whose match at
+    rest rose most after FP12's.
+- **FP12_Qföre and FP12_Wföre** (match at rest 0.42 → 0.82 and 0.87) gained nothing.
+- **The scores move by about 5% between two equally good placements of a line.**
+  - The scores changed by a median 5% (90th percentile 18%). They changed as much in the 5
+    recordings whose rest frames moved as a whole (33 limbs) as in the 10 whose frames were
+    placed differently (76 limbs).
+  - So the change comes from the line's sub-pixel position and the interpolation, not from
+    the registration.
+  - For limbs scoring 5–12, the change reached 1.4 (90th percentile). A limb within about
+    1.5 of the threshold of 8 can fall on either side of it.
+- **The slow range's speed below 1 px/frame is less repeatable.**
+  - From 1 px/frame (0.04 mm/s), all 22 limbs measured in both runs agree within 10%.
+  - Below it, 10 of 18 agree within 10% and 16 within 25%.
+  - Two changed much despite high scores (16–20): FP06_Qföre E right 0.015 → 0.025 mm/s and
+    FP09_Wföre B left 0.009 → 0.023 mm/s. This fits the earlier finding that real slow flow
+    is often not a steady translation (the slow-range entry below).
+- **FP01_W:** no limb resolved at any level. The best were E left (score 7.3) and E right
+  (5.6); its tissue line scored 2.0.
+- **Tissue lines:** none resolved at any level (16 lines, highest score 4.5).
+- **Loops with both limbs counted:**
+  - resolved: 8 (7 opposite);
+  - combined: 11 (all opposite);
+  - slow range: 17 (13 opposite, 4 the same way).
+
+**Per participant** (8 now have both visits measured; first run 7):
+
+| Rule | Arterial limb at both visits | Any limb at both visits | First run: arterial / any |
+| --- | --- | --- | --- |
+| Resolved | 1 (FP06) | 2 | 1 / 2 |
+| Robust | 0 | 2 | 0 / 2 |
+| Combined | 2 (FP09, FP13) | 5 | 1 / 4 |
+| Slow range | 3 (FP06, FP09, FP13) | 4 | 2 / 3 |
+
+FP09 enters the combined and slow rows through FP09_Qföre A right, the one limb that crossed
+the threshold.
+
+**The occlusion** (the slow-range validation, `stretched`):
+- On the 91 limbs both runs measured there, the slow range found slow "flow" in 23 before and
+  22 after. The one difference sat at the threshold (score 8.01 → 7.99).
+- Over all occlusion windows of the rerun: 22 of 97 limbs (FP03_Qföre out, FP01_W in).
+- So the slow speeds under the cuff do not come from the movement of the whole picture,
+  which the new stabilizer follows. They are local movement (FP13_Qföre's loop E bows),
+  the frame's uncovered edge, or real residual flow; the user and the PI think blood probably
+  still moves under the cuff.
+
+### What it means
+
+- **For aim 1:** the re-stabilization does not change the feasibility picture, and FP01's
+  W visit adds no limb.
+  - The questions for the supervisors stay as they were: arterial-only or any limb, and which
+    rule. Arterial at both visits is available in 0–3 of 8 participants; any limb in 2–5.
+- **Line placement matters near the threshold.** A sub-pixel change of a line moves a limb's
+  score by about 5%. In the real analysis, the observer's placement will decide limbs scoring
+  about 6.5–9.5.
+  - The rule must be fixed beforehand.
+  - The scores should be reported, not only resolved or not.
+  - A sensitivity analysis (for example a threshold of 7 or 9) would show how much the
+    results lean on it.
+- **The slow range** gives about as many limbs as before. Below 1 px/frame its speed can
+  change by a factor of 2 with the line.
+  - What it needs before it can be used is unchanged: a local check that the picture held
+    still near the line. The global re-stabilization did not reduce the slow "flow" in the
+    occlusion.
+
+### Verification
+
+- `python -m pytest`: 287 passed.
+- flake8: the CI selection (E9, F63, F7, F82) on the whole repository is clean. The full check
+  (`--max-line-length=127`) on `analysis/aim1_feasibility/` and
+  `analysis/pattern_shift_slow_flow/` is clean too.
+- The first run is reproduced:
+  - `summarize.py` without `--dir` rewrote `summary_recordings.csv` and
+    `summary_participants.csv` byte for byte;
+  - `validate_real.py --summary` prints the first run's tables as before;
+  - `compare_runs.py` finds the first run's 24 / 16 / 30 / 42 limbs.
+- The moves were checked by the image registration (within 0.4 px), and the moved lines by
+  their distance to the old traces and by close-ups.
+- Only analysis scripts changed; the app and the `capillary` package did not.
+
+### Files
+
+- Changed: `analysis/aim1_feasibility/` `common.py`, `measure.py`, `rest_image.py`,
+  `summarize.py`, `zoom.py` and `README.md` (the rerun, `--dir`, where the old videos are);
+  `analysis/pattern_shift_slow_flow/validate_real.py` and `README.md`.
+- New: `analysis/aim1_feasibility/restabilized/`:
+  - `README.md`, `move_lines.py`, `compare_runs.py`;
+  - `lines.json`, `moves.csv`, `line_check.csv`, `results.csv`, the two summaries and
+    `compare_runs.csv`.
+- New: `analysis/pattern_shift_slow_flow/real_results_restabilized.csv`.
+- Not tracked: `restabilized/out/` (resting images, lines drawn, diagrams) and
+  `pattern_shift_slow_flow/out/restabilized/` (occlusion diagrams).
+- The scratch scripts used to place and check FP01_W's lines (`sheet.py`, `checksheet.py`,
+  `addlines.py`, `place.sh`) are in the session scratchpad, adapted from those of 2026-10-12.
+
+---
+
 ## 2026-10-14 — Every stabilized video re-made with the new stabilizer
 
 **Branch:** `fix/stabilizer-large-movements` (no code changed; this entry only).

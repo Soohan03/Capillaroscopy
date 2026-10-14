@@ -1,4 +1,9 @@
-"""What the aim-1 feasibility scripts share: paths, the recordings aim 1 uses, the official rest window."""
+"""What the aim-1 feasibility scripts share: paths, the recordings aim 1 uses, the official rest window.
+
+Each run of the check has a folder of its own with its lines.json, results and out/: this one (the first
+run, 2026-10-12, on the videos as stabilized then) or restabilized/ (the rerun of 2026-10-14 on the
+re-stabilized videos). The scripts work on this folder's run unless given `--dir <folder>` (`run_args`).
+"""
 import os
 import sys
 
@@ -13,6 +18,8 @@ import numpy as np  # noqa: E402
 from capillary import inventory  # noqa: E402
 from capillary.video import probe_video  # noqa: E402
 
+#: The run worked on: its folder, its lines and results, and out/ for its images and diagrams (`use`).
+FOLDER = HERE
 OUT = os.path.join(HERE, 'out')
 LINES = os.path.join(HERE, 'lines.json')
 RESULTS = os.path.join(HERE, 'results.csv')
@@ -23,6 +30,25 @@ MM_PER_PIXEL = 0.001328903654
 #: stabilizer's (2 and 15 px), which merges the two limbs of a narrow loop; the mean of a minute of rest
 #: is smooth enough for it.
 VESSEL_SIGMAS_PX = (1.0, 8.0)
+
+
+def use(folder: str) -> None:
+    """Work on the run in `folder` (relative to this one): its lines.json and results.csv, and its out/."""
+    global FOLDER, OUT, LINES, RESULTS
+    FOLDER = os.path.join(HERE, folder)
+    OUT = os.path.join(FOLDER, 'out')
+    LINES = os.path.join(FOLDER, 'lines.json')
+    RESULTS = os.path.join(FOLDER, 'results.csv')
+
+
+def run_args(args) -> list:
+    """`args` without `--dir <folder>`; when that is given, the run in `folder` is worked on (`use`)."""
+    args = list(args)
+    if '--dir' in args:
+        at = args.index('--dir')
+        use(args[at + 1])
+        del args[at:at + 2]
+    return args
 
 
 def video_path(stem: str) -> str:
