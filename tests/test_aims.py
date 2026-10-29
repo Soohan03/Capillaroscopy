@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+from scipy import stats
 
 from capillary import agreement, aims, blinding, datasets
 
@@ -96,9 +97,39 @@ def test_each_recording_gets_the_mean_of_its_counted_loops(statistics):
     assert recordings.loc[('XY', 'A1'), 'mean_mm_s'] == pytest.approx(0.30)
 
 
+def test_each_recording_gets_its_reference_or_else_the_first_backup_that_counts(statistics):
+    save(statistics, 'A6', 'loop1', 0.10, resolved=False)
+    save(statistics, 'A6', 'loop2', 0.12, x=50)
+    save(statistics, 'A6', 'loop3', 0.20, x=100)
+    save(statistics, 'A7', 'loop1', 0.10, movement=True)
+    save(statistics, 'A7', 'loop2', 0.12, x=50, resolved=False)
+    save(statistics, 'A7', 'loop3', -0.20, x=100)
+    save(statistics, 'A8', 'loop1', 0.10, resolved=False)
+    save(statistics, 'A8', 'loop4', 0.30, x=50)                 # beyond the two backups
+    save(statistics, 'A8', 'extra', 0.40, x=100)                # not ranked
+    recordings = aims.per_recording(aims.loops(aims.collect(statistics)))
+    mine = recordings[recordings['observer'] == 'SJ'].set_index('recording')
+    assert (mine.at['A1', 'value_mm_s'], mine.at['A1', 'value_from']) == (pytest.approx(0.10), 'loop1')
+    assert mine.at['A1', 'mean_mm_s'] == pytest.approx(0.12)
+    assert (mine.at['A6', 'value_mm_s'], mine.at['A6', 'value_from']) == (pytest.approx(0.12), 'loop2')
+    assert (mine.at['A7', 'value_mm_s'], mine.at['A7', 'value_from']) == (pytest.approx(0.20), 'loop3')
+    assert np.isnan(mine.at['A8', 'value_mm_s']) and mine.at['A8', 'value_from'] == ''
+    assert mine.at['A8', 'mean_mm_s'] == pytest.approx(0.35)                 # the secondary value takes every loop
+    assert np.isnan(mine.at['A6', 'reference_only_mm_s']) and mine.at['A1', 'reference_only_mm_s'] == pytest.approx(0.1)
+    assert np.isnan(mine.at['C3', 'value_mm_s'])
+
+
+def test_aim_1_takes_the_value_asked_for(statistics, wanted):
+    recordings = aims.per_recording(aims.loops(aims.collect(statistics)))
+    pairs = aims.aim1_pairs(recordings, wanted).set_index(['observer', 'study', 'subject'])
+    assert pairs.loc[('SJ', 'ESMOKE', 'FP01'), ['active_mm_s', 'active_from']].tolist() == [pytest.approx(0.10), 'loop1']
+    pairs = aims.aim1_pairs(recordings, wanted, 'mean_mm_s').set_index(['observer', 'study', 'subject'])
+    assert pairs.loc[('SJ', 'ESMOKE', 'FP01'), ['active_mm_s', 'active_from']].tolist() == [pytest.approx(0.12), 'mean of 2']
+
+
 def test_aim_1_from_the_visits_of_each_participant(statistics, wanted):
     recordings = aims.per_recording(aims.loops(aims.collect(statistics)))
-    pairs = aims.aim1_pairs(recordings, wanted)
+    pairs = aims.aim1_pairs(recordings, wanted, 'mean_mm_s')
     stats = aims.aim1(pairs).set_index(['observer', 'study'])
     mine = stats.loc[('SJ', 'ESMOKE')]
     assert (mine['participants'], mine['participants_wanted'], mine['one_visit_only'], mine['neither_visit']) == \
@@ -124,6 +155,46 @@ def test_the_command_writes_the_tables(statistics, tmp_path, capsys):
     assert 'Observer SJ: 14 whole loops in 8 recordings, 9 counted' in printed
     assert 'check: C1 loop1 lies on loop2' in printed
     assert pd.read_csv(out / 'loops.csv')['observer'].eq('SJ').all()
+
+
+def test_aim_2_compares_the_change_on_the_active_visit_with_the_control_visit():
+    before_a, after_a = np.array([0.10, 0.08, 0.12, 0.09]), np.array([0.13, 0.08, 0.15, 0.10])
+    before_c, after_c = np.array([0.11, 0.09, 0.10, 0.10]), np.array([0.10, 0.10, 0.11, 0.09])
+    out = aims.response(np.r_[before_a, 0.1], np.r_[after_a, np.nan], np.r_[before_c, 0.1], np.r_[after_c, 0.1])
+    assert out['participants'] == 4                                          # the one without all four is out
+    difference = (after_a - before_a) - (after_c - before_c)
+    assert out['difference_mm_s'] == pytest.approx(difference.mean())
+    half = stats.t.ppf(0.975, 3) * difference.std(ddof=1) / 2
+    assert (out['difference_ci_low_mm_s'], out['difference_ci_high_mm_s']) == \
+        (pytest.approx(difference.mean() - half), pytest.approx(difference.mean() + half))
+    assert out['t_test_p'] == pytest.approx(stats.ttest_rel(after_a - before_a, after_c - before_c).pvalue)
+    assert out['wilcoxon_p'] == pytest.approx(stats.wilcoxon(difference).pvalue)
+    assert out['change_control_mm_s'] == pytest.approx(np.mean(after_c - before_c))
+    ratio = np.log(after_a / before_a) - np.log(after_c / before_c)
+    assert out['ratio_of_ratios'] == pytest.approx(math.exp(ratio.mean()))
+    assert out['ratio_active'] == pytest.approx(math.exp(np.log(after_a / before_a).mean()))
+    assert aims.response([], [], [], [])['participants'] == 0
+
+
+def test_aim_2_per_study_from_each_participants_four_recordings(statistics):
+    save(statistics, 'A1b', 'loop1', 0.13)
+    save(statistics, 'C1b', 'loop1', 0.07)
+    save(statistics, 'A2b', 'loop1', 0.22)
+    save(statistics, 'C2b', 'loop1', 0.16)
+    wanted = pd.DataFrame([('ESMOKE', 'FP01', 'A1', 'A1b', 'C1', 'C1b'), ('ESMOKE', 'FP02', 'A2', 'A2b', 'C2', 'C2b'),
+                           ('ESMOKE', 'FP03', 'A3', 'A3b', 'C3', 'C3b')],
+                          columns=['study', 'subject', *aims.AIM2_RECORDINGS])
+    values = aims.aim2_values(aims.per_recording(aims.loops(aims.collect(statistics))), wanted)
+    row = aims.aim2(values).set_index(['observer', 'study']).loc[('SJ', 'ESMOKE')]
+    assert (row['participants'], row['participants_wanted'], row['incomplete']) == (2, 3, 1)
+    assert row['difference_mm_s'] == pytest.approx(np.mean([(0.13 - 0.10) - (0.07 - 0.08), (0.22 - 0.20) - (0.16 - 0.15)]))
+
+
+def test_aim_2_uses_the_inventory_participants_with_all_four_recordings():
+    wanted = aims.aim2_recordings()
+    assert wanted.groupby('study').size().to_dict() == {'ESMOKE': 13, 'ISMOKE': 8}       # CLAUDE.md
+    assert (wanted[list(aims.AIM2_RECORDINGS)] != '').all().all()
+    assert (wanted['active_before_recording'] != wanted['control_before_recording']).all()
 
 
 def test_a_loop_ranks_by_its_name():

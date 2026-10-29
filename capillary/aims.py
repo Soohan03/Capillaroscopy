@@ -56,6 +56,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from . import agreement, blinding, datasets, inventory, pattern_shift
 from .spacetime import Centreline
@@ -70,6 +71,12 @@ BLIND_SETTING = 'blind_placement'
 #: reference capillary, loop2 and loop3 its backups.
 LOOP_NAME = re.compile(r'^loop(\d+)$')
 RANKED_LOOPS = 3
+#: What a recording's value can be (--value): the protocol's (the reference, else the first backup that
+#: counts), the reference capillary's alone, or the mean of all counted loops; columns of `per_recording`.
+VALUES = {'reference': 'value_mm_s', 'reference-only': 'reference_only_mm_s', 'mean': 'mean_mm_s'}
+#: Aim 2's recordings of a participant, as columns of `aim2_recordings`.
+AIM2_RECORDINGS = ('active_before_recording', 'active_after_recording', 'control_before_recording',
+                   'control_after_recording')
 #: The range a loop must lie in, as the data set's summary names its official phase.
 REST = 'rest'
 #: The folder of the stabilized videos (`gui.settings.DataFolder.stabilized`).
@@ -162,17 +169,32 @@ def loops(table: pd.DataFrame) -> pd.DataFrame:
 
 
 def per_recording(loop_table: pd.DataFrame) -> pd.DataFrame:
-    """One row per observer and recording: loops placed within the rest, counted, and the mean of the counted."""
+    """One row per observer and recording: loops placed within the rest and counted, and its values.
+
+    - ``value_mm_s``, the protocol's value (PROTOCOL.md): the reference capillary (``loop1``) if it counts,
+      else the first backup that counts in the order of the ranking (``loop2``, ``loop3``); ``value_from``
+      names the loop used;
+    - ``reference_only_mm_s``: the reference capillary's, without backups;
+    - ``mean_mm_s``: the mean of all counted loops (the plan before 2026-10-29), with their SD and speeds.
+    """
     rows = []
     rest = loop_table[loop_table['phase'] == REST]
     for (observer, recording), group in rest.groupby(['observer', 'recording'], sort=True):
         speeds = group.loc[group['counted'], 'speed_mm_s'].astype(float)
+        ranked = group.assign(rank=group['dataset'].map(rank))
+        ranked = ranked[ranked['rank'].between(1, RANKED_LOOPS)].sort_values('rank')
+        used = ranked[ranked['counted']]
+        reference = ranked[(ranked['rank'] == 1) & ranked['counted']]
         rows.append({'observer': observer, 'recording': recording, 'loops_placed': len(group),
-                     'loops_counted': len(speeds), 'mean_mm_s': speeds.mean() if len(speeds) else math.nan,
+                     'loops_counted': len(speeds),
+                     'value_mm_s': float(used['speed_mm_s'].iloc[0]) if len(used) else math.nan,
+                     'value_from': used['dataset'].iloc[0] if len(used) else '',
+                     'reference_only_mm_s': float(reference['speed_mm_s'].iloc[0]) if len(reference) else math.nan,
+                     'mean_mm_s': speeds.mean() if len(speeds) else math.nan,
                      'sd_mm_s': speeds.std(ddof=1) if len(speeds) > 1 else math.nan,
                      'speeds_mm_s': ', '.join(f'{v:.4f}' for v in sorted(speeds))})
-    return pd.DataFrame(rows, columns=['observer', 'recording', 'loops_placed', 'loops_counted', 'mean_mm_s',
-                                       'sd_mm_s', 'speeds_mm_s'])
+    return pd.DataFrame(rows, columns=['observer', 'recording', 'loops_placed', 'loops_counted', 'value_mm_s',
+                                       'value_from', 'reference_only_mm_s', 'mean_mm_s', 'sd_mm_s', 'speeds_mm_s'])
 
 
 def aim1_recordings(table: Optional[pd.DataFrame] = None) -> pd.DataFrame:
@@ -190,23 +212,41 @@ def aim1_recordings(table: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=['study', 'subject', 'active_recording', 'control_recording'])
 
 
-def aim1_pairs(recordings: pd.DataFrame, wanted: pd.DataFrame) -> pd.DataFrame:
-    """Per observer and participant of `wanted` (`aim1_recordings`): each visit's mean and its loops."""
+def _visit_values(recordings: pd.DataFrame, wanted: pd.DataFrame, columns: Sequence[str], value: str) -> pd.DataFrame:
+    """Per observer and participant of `wanted`: for each of its recording `columns` (``<prefix>_recording``)
+    the recording, its loops placed and counted, the loop its value comes from and the value (`value`)."""
     rows = []
     observers = sorted(recordings['observer'].unique()) if len(recordings) else []
     for observer in observers:
         mine = recordings[recordings['observer'] == observer].set_index('recording')
         for person in wanted.itertuples(index=False):
             row = {'observer': observer, 'study': person.study, 'subject': person.subject}
-            for role in ('active', 'control'):
-                name = getattr(person, f'{role}_recording')
-                found = name in mine.index
-                row.update({f'{role}_recording': name,
-                            f'{role}_loops_placed': int(mine.at[name, 'loops_placed']) if found else 0,
-                            f'{role}_loops_counted': int(mine.at[name, 'loops_counted']) if found else 0,
-                            f'{role}_mm_s': float(mine.at[name, 'mean_mm_s']) if found else math.nan})
+            for column in columns:
+                prefix, name = column[:-len('_recording')], getattr(person, column)
+                found = bool(name) and name in mine.index
+                speed = float(mine.at[name, value]) if found else math.nan
+                row.update({column: name,
+                            f'{prefix}_loops_placed': int(mine.at[name, 'loops_placed']) if found else 0,
+                            f'{prefix}_loops_counted': int(mine.at[name, 'loops_counted']) if found else 0,
+                            f'{prefix}_from': _source(mine.loc[name], value) if found and np.isfinite(speed) else '',
+                            f'{prefix}_mm_s': speed})
             rows.append(row)
     return pd.DataFrame(rows)
+
+
+def _source(recording: pd.Series, value: str) -> str:
+    """Where a recording's `value` comes from: the loop, or 'mean of N'."""
+    if value == 'value_mm_s':
+        return recording['value_from']
+    if value == 'reference_only_mm_s':
+        return 'loop1'
+    return f'mean of {int(recording["loops_counted"])}'
+
+
+def aim1_pairs(recordings: pd.DataFrame, wanted: pd.DataFrame, value: str = 'value_mm_s') -> pd.DataFrame:
+    """Per observer and participant of `wanted` (`aim1_recordings`): each visit's value (column `value` of
+    `per_recording`) and its loops."""
+    return _visit_values(recordings, wanted, ('active_recording', 'control_recording'), value)
 
 
 def reproducibility(active, control) -> dict:
@@ -240,6 +280,87 @@ def aim1(pairs: pd.DataFrame) -> pd.DataFrame:
         rows.append({'observer': observer, 'study': study, 'participants_wanted': len(group),
                      'one_visit_only': int(one.sum()), 'neither_visit': int((~both & ~one).sum()),
                      **reproducibility(group.loc[both, 'active_mm_s'], group.loc[both, 'control_mm_s'])})
+    return pd.DataFrame(rows)
+
+
+def _name(value) -> str:
+    return inventory.nfc(value) if isinstance(value, str) and value else ''
+
+
+def aim2_recordings(people: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """Each participant's four recordings that aim 2 uses (`capillary.inventory`), before and after exposure
+    on the active and the control visit."""
+    if people is None:
+        people = inventory.participants(inventory.recordings())
+    rows = [{'study': person['study'], 'subject': person['subject'],
+             **{f'{role}_{when}_recording': _name(person[f'{role}_{phase}'])
+                for role in ('active', 'control') for when, phase in (('before', 'före'), ('after', 'efter'))}}
+            for person in people.to_dict('records') if person.get('aim2', 'no') != 'no']
+    return pd.DataFrame(rows, columns=['study', 'subject', *AIM2_RECORDINGS])
+
+
+def aim2_values(recordings: pd.DataFrame, wanted: pd.DataFrame, value: str = 'value_mm_s') -> pd.DataFrame:
+    """Per observer and participant of `wanted` (`aim2_recordings`): the value of each of its four recordings
+    (column `value` of `per_recording`) and their loops."""
+    return _visit_values(recordings, wanted, AIM2_RECORDINGS, value)
+
+
+def _mean_ci(values) -> tuple:
+    """The mean of `values` and its 95% confidence interval (t distribution); NaN interval below 2 values."""
+    values = np.asarray(values, dtype=float)
+    if not values.size:
+        return math.nan, math.nan, math.nan
+    mean = float(values.mean())
+    if values.size < 2:
+        return mean, math.nan, math.nan
+    half = float(stats.t.ppf(0.975, values.size - 1) * values.std(ddof=1) / math.sqrt(values.size))
+    return mean, mean - half, mean + half
+
+
+def response(active_before, active_after, control_before, control_after) -> dict:
+    """Aim 2's statistics: the change after minus before on each visit and their difference, active minus
+    control (participants with all four values).
+
+    The difference: its mean with a 95% confidence interval, a paired t-test (one-sample on the differences)
+    and the Wilcoxon signed-rank test. On the log scale: each visit's ratio after / before (geometric mean)
+    and the ratio of the two, with its interval and t-test.
+    """
+    ab, aa, cb, ca = (np.asarray(v, dtype=float) for v in (active_before, active_after, control_before,
+                                                             control_after))
+    keep = np.isfinite(ab) & np.isfinite(aa) & np.isfinite(cb) & np.isfinite(ca)
+    ab, aa, cb, ca = ab[keep], aa[keep], cb[keep], ca[keep]
+    n = int(ab.size)
+    change_active, change_control = aa - ab, ca - cb
+    difference = change_active - change_control
+    out = {'participants': n}
+    for label, values in (('change_active', change_active), ('change_control', change_control),
+                          ('difference', difference)):
+        mean, low, high = _mean_ci(values)
+        out.update({f'{label}_mm_s': mean, f'{label}_ci_low_mm_s': low, f'{label}_ci_high_mm_s': high})
+    out['difference_sd_mm_s'] = float(difference.std(ddof=1)) if n >= 2 else math.nan
+    out['t_test_p'] = float(stats.ttest_1samp(difference, 0.0).pvalue) if n >= 2 else math.nan
+    out['wilcoxon_p'] = float(stats.wilcoxon(difference).pvalue) if np.any(difference != 0) else math.nan
+    positive = n >= 2 and bool(np.all(ab > 0) and np.all(aa > 0) and np.all(cb > 0) and np.all(ca > 0))
+    log_active = np.log(aa / ab) if positive else np.array([])
+    log_control = np.log(ca / cb) if positive else np.array([])
+    out['ratio_active'] = math.exp(log_active.mean()) if positive else math.nan
+    out['ratio_control'] = math.exp(log_control.mean()) if positive else math.nan
+    mean, low, high = _mean_ci(log_active - log_control) if positive else (math.nan,) * 3
+    out.update(ratio_of_ratios=math.exp(mean) if positive else math.nan,
+               ratio_of_ratios_ci_low=math.exp(low) if positive else math.nan,
+               ratio_of_ratios_ci_high=math.exp(high) if positive else math.nan,
+               log_t_test_p=float(stats.ttest_1samp(log_active - log_control, 0.0).pvalue) if positive else math.nan)
+    return out
+
+
+def aim2(values: pd.DataFrame) -> pd.DataFrame:
+    """`response` per observer and study, with how many participants miss a value."""
+    rows = []
+    columns = [f'{column[:-len("_recording")]}_mm_s' for column in AIM2_RECORDINGS]
+    for (observer, study), group in values.groupby(['observer', 'study'], sort=True):
+        complete = np.isfinite(group[columns].to_numpy(dtype=float)).all(axis=1)
+        rows.append({'observer': observer, 'study': study, 'participants_wanted': len(group),
+                     'incomplete': int((~complete).sum()), **response(*(group[column] for column in columns))})
     return pd.DataFrame(rows)
 
 
@@ -361,11 +482,18 @@ def _fmt(value, digits: int = 3) -> str:
     return '–' if value is None or not np.isfinite(value) else f'{value:.{digits}f}'
 
 
-def report(loop_table: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataFrame, stats: pd.DataFrame) -> str:
-    """The printed summary."""
+VALUE_TEXT = {'value_mm_s': 'the reference capillary, or its first backup that counts (PROTOCOL.md)',
+              'reference_only_mm_s': 'the reference capillary only (loop1)',
+              'mean_mm_s': 'the mean of all counted loops'}
+
+
+def report(loop_table: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataFrame, stats: pd.DataFrame,
+           value: str = 'value_mm_s', aim2_stats: Optional[pd.DataFrame] = None) -> str:
+    """The printed summary, with each recording's `value` (a column of `per_recording`)."""
     lines = []
     if not len(loop_table):
         return 'No whole-loop data sets found.'
+    lines.append(f"Each recording's value: {VALUE_TEXT[value]}")
     for observer, mine in loop_table.groupby('observer', sort=True):
         lines.append(f'Observer {observer or "(none)"}: {len(mine)} whole loops in {mine["recording"].nunique()} '
                      f'recordings, {int(mine["counted"].sum())} counted')
@@ -374,8 +502,13 @@ def report(loop_table: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataFra
         for row in mine[mine['duplicate_of'] != ''].itertuples(index=False):
             lines.append(f'  check: {row.recording} {row.dataset} lies on {row.duplicate_of}')
         values = recordings[recordings['observer'] == observer]
-        lines.append(f'  recordings with a mean: {int(np.isfinite(values["mean_mm_s"]).sum())} of {len(values)}, '
-                     f'from {_counts(values)} counted loops each')
+        has = np.isfinite(values[value].astype(float))
+        sources = values.loc[has, 'value_from'].value_counts().sort_index() if value == 'value_mm_s' else None
+        lines.append(f'  recordings with a value: {int(has.sum())} of {len(values)}' +
+                     (f' (from {", ".join(f"{name} in {count}" for name, count in sources.items())})'
+                      if sources is not None and len(sources) else ''))
+        lines.append(f'  recordings with a mean of counted loops: {int(np.isfinite(values["mean_mm_s"]).sum())}, '
+                     f'from {_counts(values)} loops each')
     for row in stats.itertuples(index=False):
         lines.append('')
         lines.append(f'Aim 1, {row.study}, observer {row.observer or "(none)"}: {row.participants} of '
@@ -390,6 +523,22 @@ def report(loop_table: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataFra
                          f'{_fmt(row.ba_bias_ci_low)} to {_fmt(row.ba_bias_ci_high)}), limits {_fmt(row.ba_loa_low)} '
                          f'to {_fmt(row.ba_loa_high)}; ICC(A,1) {_fmt(row.icc_a1, 2)} ({_fmt(row.icc_a1_ci_low, 2)} '
                          f'to {_fmt(row.icc_a1_ci_high, 2)})')
+    for row in (aim2_stats if aim2_stats is not None else pd.DataFrame()).itertuples(index=False):
+        lines.append('')
+        lines.append(f'Aim 2, {row.study}, observer {row.observer or "(none)"}: {row.participants} of '
+                     f'{row.participants_wanted} participants with a value in all four recordings')
+        if row.participants:
+            lines.append(f'  change after - before: active {_fmt(row.change_active_mm_s)} mm/s '
+                         f'({_fmt(row.change_active_ci_low_mm_s)} to {_fmt(row.change_active_ci_high_mm_s)}), '
+                         f'control {_fmt(row.change_control_mm_s)} mm/s ({_fmt(row.change_control_ci_low_mm_s)} '
+                         f'to {_fmt(row.change_control_ci_high_mm_s)})')
+            lines.append(f'  difference active - control: {_fmt(row.difference_mm_s)} mm/s (95% CI '
+                         f'{_fmt(row.difference_ci_low_mm_s)} to {_fmt(row.difference_ci_high_mm_s)}); paired '
+                         f't-test p {_fmt(row.t_test_p)}, Wilcoxon p {_fmt(row.wilcoxon_p)}')
+            lines.append(f'  as ratios after / before: active {_fmt(row.ratio_active, 2)}, control '
+                         f'{_fmt(row.ratio_control, 2)}; active / control {_fmt(row.ratio_of_ratios, 2)} (95% CI '
+                         f'{_fmt(row.ratio_of_ratios_ci_low, 2)} to {_fmt(row.ratio_of_ratios_ci_high, 2)}), '
+                         f'p {_fmt(row.log_t_test_p)}')
     return '\n'.join(lines)
 
 
@@ -409,6 +558,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         help="how far blind placement got, by code, without results (default observer: the app's)")
     parser.add_argument('--unblind', action='store_true',
                         help='show the results although blind placement is on in the app')
+    parser.add_argument('--value', choices=list(VALUES), default='reference',
+                        help="each recording's value: the protocol's (default), the reference capillary's alone, "
+                             'or the mean of all counted loops')
     args = parser.parse_args(argv)
     folder = args.data or default_data_folder()
     if not folder:
@@ -424,18 +576,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
               'Use --progress to see how far it got, or --unblind to show the results.', file=sys.stderr)
         return 2
     if args.observer is not None:
-        table = table[table['observer'] == args.observer]
+        table = table[table['observer'] == args.observer.upper()]
+    value = VALUES[args.value]
     loop_table = loops(table)
     recordings = per_recording(loop_table)
-    pairs = aim1_pairs(recordings, aim1_recordings())
-    stats = aim1(pairs) if len(pairs) else pd.DataFrame()
+    pairs = aim1_pairs(recordings, aim1_recordings(), value)
+    aim1_stats = aim1(pairs) if len(pairs) else pd.DataFrame()
+    aim2_table = aim2_values(recordings, aim2_recordings(), value)
+    aim2_stats = aim2(aim2_table) if len(aim2_table) else pd.DataFrame()
     out = args.out or os.path.join(folder, 'Reports', 'aims')
     os.makedirs(out, exist_ok=True)
     loop_table.drop(columns='points').to_csv(os.path.join(out, 'loops.csv'), index=False)
     recordings.to_csv(os.path.join(out, 'recordings.csv'), index=False)
     pairs.to_csv(os.path.join(out, 'aim1_pairs.csv'), index=False)
-    stats.to_csv(os.path.join(out, 'aim1.csv'), index=False)
-    print(report(loop_table, recordings, pairs, stats))
+    aim1_stats.to_csv(os.path.join(out, 'aim1.csv'), index=False)
+    aim2_table.to_csv(os.path.join(out, 'aim2_values.csv'), index=False)
+    aim2_stats.to_csv(os.path.join(out, 'aim2.csv'), index=False)
+    print(report(loop_table, recordings, pairs, aim1_stats, value, aim2_stats))
     print(f'\nTables in {out}')
     return 0
 
