@@ -14,8 +14,8 @@ it was verified. Newest entries first.
 ISMOKE, as agreed with the PI long before unblinding. The protocol said "for each study". Like aim 2's this
 afternoon, the correction comes after unblinding: the per-study results (ESMOKE 7 of 14 participants, CV 67%,
 ICC(A,1) 0.01; ISMOKE 2 of 10) had been computed and looked at. They stay in the reports, beside the pooled result.
-No document in the repository records the pooling; the user's notes of the progress report (2026-10-07) say
-"studies analysed separately", under aim 2.
+No document in the repository records the pooling. The notes Claude Code took of the progress report
+(2026-10-07) say "studies analysed separately", under aim 2; the report itself was not checked.
 
 **What changed.**
 - `capillary/aims.py`: `aim1` adds a pooled row (`POOLED`, 'ESMOKE + ISMOKE') after each observer's studies, as
