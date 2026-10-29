@@ -13,6 +13,7 @@ from typing import Callable, Optional
 
 from PIL import Image, ImageTk
 
+from . import blind
 from .library import Recording
 from .media import format_time, make_thumbnail
 from .theme import COLORS, FONTS, icon, px, rounded_rect
@@ -91,10 +92,11 @@ class RecordingList(tk.Canvas):
     """A scrolling list drawn on a canvas: thumbnail, name, length and status chips per row."""
 
     def __init__(self, parent, on_select: Callable, on_context: Callable, on_activate: Callable,
-                 label: Callable = lambda item: item.stem):
+                 label: Callable = lambda item: item.stem, aim1: Callable = lambda item: False):
         super().__init__(parent, bg=COLORS['panel'], highlightthickness=0, bd=0, takefocus=1, width=px(300))
         self.on_select, self.on_context, self.on_activate = on_select, on_context, on_activate
         self.label = label                  # the name shown for a recording (its code during blind placement)
+        self.aim1 = aim1                    # whether a recording gets the "Aim 1" chip
         self.items: list[Recording] = []
         self.selected: Optional[str] = None
         self.hover: Optional[str] = None
@@ -222,6 +224,8 @@ class RecordingList(tk.Canvas):
                 details = '…'
             self.create_text(x, top + px(34), text=details, anchor='nw', font=FONTS['small'], fill=COLORS['muted'])
             chips = []
+            if self.aim1(item):
+                chips.append(('Aim 1', COLORS['accent'], COLORS['accent_soft'] if not selected else COLORS['panel']))
             if item.is_stabilized:
                 chips.append(('Stabilized', COLORS['success'], COLORS['success_soft']))
             elif item.raw:
@@ -293,7 +297,8 @@ class LibraryPanel(ttk.Frame):
         body.pack(fill='both', expand=True)
         self.list = RecordingList(body, on_select=self._select, on_context=self._context,
                                   on_activate=lambda item: app.show_page('line'),
-                                  label=lambda item: app.display_name(item.stem))
+                                  label=lambda item: app.display_name(item.stem),
+                                  aim1=lambda item: blind.shows_aim1(item.stem, app.blind))
         scrollbar = ttk.Scrollbar(body, orient='vertical', command=self.list.yview, style='Slim.Vertical.TScrollbar')
         self.list.configure(yscrollcommand=scrollbar.set)
         self.list.pack(side='left', fill='both', expand=True)
@@ -318,10 +323,13 @@ class LibraryPanel(ttk.Frame):
         total = len(recordings)
         self.count.configure(text=str(total) if total else '')
 
+    def _searched(self, recording) -> str:
+        """What the filter matches: the name as shown, and "aim 1" for a recording with that chip."""
+        return f'{self.app.display_name(recording.stem)} {"aim 1" if self.list.aim1(recording) else ""}'.lower()
+
     def _apply_filter(self):
         text = self.filter.get().strip().lower()
-        items = ([r for r in self.recordings if text in self.app.display_name(r.stem).lower()] if text
-                 else self.recordings)
+        items = [r for r in self.recordings if text in self._searched(r)] if text else self.recordings
         if self.recordings:
             empty = f'No recording matches "{self.filter.get()}".'
         else:

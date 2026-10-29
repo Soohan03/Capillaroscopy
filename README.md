@@ -27,17 +27,23 @@ version it was made with, and the observer (initials) entered next to its
 name.
 
 Stabilizing runs in the background (right-click a recording, or the **⋯** menu
-above the list for all at once); you can keep working meanwhile. Press **F1**
+above the list for all at once); you can keep working meanwhile. The recordings
+aim 1 uses (each participant's before-exposure recording of both visits) carry an
+**Aim 1** chip in the list, and typing "aim 1" in the filter lists only them; the
+chip is hidden during blind placement, where it would tell the recordings before
+exposure from those after it. Press **F1**
 for all keyboard and mouse controls.
 
 **Blind placement** (the button in the header, since 2026-10-14) is for placing
 the study's lines without anything but the anatomy deciding where they go. The
 list then shows only the recordings the aims use, each under a code (a hash of
 its name) instead of its name, in the order of the codes; the Centre line page
-hides the space-time preview and every result and measures the official rest
-only; Two boxes, Results and Validation are closed. It stays on between
+hides the space-time preview and every result, measures the official rest
+only, and saves every line as a whole loop (the other roles are closed, since
+2026-10-29); Two boxes, Results and Validation are closed. It stays on between
 sessions until turned off. The data sets are saved under the real names, and
-`python3 -m capillary.aims` (below) summarizes them.
+`python3 -m capillary.aims` (below) summarizes them. The study's measurement
+and analysis are fixed in `PROTOCOL.md`.
 
 Nothing is deleted outright: replaced or removed videos and data sets go to
 `.trash/` in the data folder, keeping their subfolders, so they can be put back
@@ -244,9 +250,9 @@ changed later with the gear button. Inside the folder it uses:
 | `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
 | `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
 | `gui/library.py`, `gui/settings.py`, `gui/media.py` | Finding recordings, settings, frames for display |
-| `gui/blind.py` | Blind placement: the codes recordings show under, and which recordings it lists |
+| `gui/blind.py` | Blind placement: which recordings it lists, and the one role its lines take (the codes are `capillary/blinding.py`'s) |
 | `Caper.py` | The report plots of both methods, and the agreement plots of the Validation page |
-| `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`), the study's recordings (`inventory.py`) and the aims from the saved data sets (`aims.py`) |
+| `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`), the study's recordings (`inventory.py`), the blind codes (`blinding.py`) and the aims from the saved data sets (`aims.py`) |
 | `tests/` | Unit tests |
 | `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README); the measure pages take their Rest, Occlusion and After release ranges from them |
 
@@ -301,21 +307,34 @@ frame read is refused, as in the app.
 ## The aims from the saved data sets
 
 ```bash
-python3 -m capillary.aims [--data <data folder>] [--observer SJ]
+python3 -m capillary.aims [--data <data folder>] [--observer SJ] [--progress] [--unblind]
+                          [--value reference|reference-only|mean] [--min-snr 7]
 ```
 
-collects the centre-line data sets into one resting velocity per recording:
-the mean over its whole loops measured within the official rest, counting a
-loop when its pooled pattern shift is resolved (signal-to-noise 8 or more),
-its limbs did not move opposite ways along the line (the picture moving) and
-it was measured on a stabilized video. Loops lying on top of each other in one
-recording are listed for checking. Then aim 1, per study: each participant's
+collects the centre-line data sets into one resting velocity per recording, as
+`PROTOCOL.md` fixes it. A whole loop measured within the official rest counts
+when its pooled pattern shift is resolved (signal-to-noise 8 or more), its
+limbs did not move opposite ways along the line (the picture moving), it was
+measured on a stabilized video and its line does not cross itself (a twisted
+loop). A recording's value is its reference capillary (`loop1`) if it counts,
+else the first backup that counts (`loop2`, `loop3`); `--value` gives the
+reference alone or the mean of all counted loops instead, and `--min-snr`
+judges the loops at another threshold from their saved space-time diagrams
+(the protocol's sensitivity analyses). Then aim 1, per study: each participant's
 before-exposure recordings of both visits (`capillary.inventory` chooses them),
 the within-subject CV (typical error / mean), the smallest detectable change
-(2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval. The
-tables go to `Reports/aims/` (`loops.csv`, `recordings.csv`, `aim1_pairs.csv`,
-`aim1.csv`); each observer is summarized on their own. The data folder comes
-from `settings.csv` unless `--data` gives one.
+(2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval; and
+aim 2: each visit's change after minus before and their difference, active
+minus control, with its interval, a paired t-test, the Wilcoxon test and the
+same on the log scale. The tables go to `Reports/aims/`; each observer is
+summarized on their own. The data folder comes from `settings.csv` unless
+`--data` gives one.
+
+While the app is in blind placement the results stay hidden unless `--unblind`
+is passed; `--progress` shows instead how far placement got, under the codes the
+app lists the recordings by, without a single result. The report on the primary
+endpoint, with the quality of the lines and what the signal-to-noise threshold
+removes, is built by `analysis/primary_endpoint/` (its README).
 
 Recordings can be stabilized the same way, for example one after another on
 a computer without a display:
