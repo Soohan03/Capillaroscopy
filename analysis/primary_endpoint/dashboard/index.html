@@ -1,7 +1,7 @@
 <meta name="dash-one-writer">
 <style>
 /* Layout: a header with the takeaway and four tabs; each tab a column of cards, two to a row when wide.
-   Colour: the dashboard's theme tokens; series from dash.colors (control visit, active visit, counted). */
+   Colour: the dashboard's theme tokens; series from dash.colors (control visit, nicotine visit, counted). */
 .cbv{display:grid;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);color:var(--color-fg);max-width:80rem;margin-inline:auto}
 .cbv-head{display:grid;gap:var(--cds-gap-sm)}
 .cbv-head h1{margin:0;font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);text-wrap:balance}
@@ -68,7 +68,7 @@
 <div class="cbv">
   <header class="cbv-head" id="top">
     <h1>Inter-day CBV reproducibility</h1>
-    <p class="cbv-lede">Resting red-cell velocity round the whole capillary loop, measured blind: before exposure at the control and the active visit (aim 1), and before and after nicotine (aim 2). Within-subject CV, both studies pooled: <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</span> participants); ESMOKE <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>%, ISMOKE <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</span>%. Change after nicotine, pooled: <b data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary pooled" data-format="signed">—</b> mm/s (<span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary pooled" data-format="int">—</span> participants).</p>
+    <p class="cbv-lede">Resting red-cell velocity round the whole capillary loop, measured blind: before exposure at the control and the nicotine visit (aim 1), and before and after nicotine (aim 2). Within-subject CV, both studies pooled: <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</span> participants); ESMOKE <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>%, ISMOKE <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</span>%. Change after nicotine, pooled: <b data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary pooled" data-format="signed">—</b> mm/s (<span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary pooled" data-format="int">—</span> participants).</p>
     <p class="cbv-meta">Observer <span data-draw="n" data-source="summary" data-row="0" data-field="observer">—</span> · lines placed blind on <span data-draw="n" data-source="summary" data-row="0" data-field="placement_date">—</span> · <span data-draw="n" data-source="summary" data-row="0" data-field="loops_placed" data-format="int">—</span> whole loops on <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_with_lines" data-format="int">—</span> of <span data-draw="n" data-source="summary" data-row="0" data-field="recordings" data-format="int">—</span> recordings · signal-to-noise threshold <span data-draw="n" data-source="summary" data-row="0" data-field="snr_threshold" data-format="g">—</span></p>
     <nav class="cbv-tabs" role="tablist" aria-label="Report sections">
       <button type="button" role="tab" id="tab-endpoint" data-tab="endpoint" aria-controls="endpoint" aria-selected="true">Primary endpoint</button>
@@ -83,7 +83,7 @@
   <section class="cbv-page" id="endpoint" role="tabpanel" aria-labelledby="tab-endpoint">
     <div class="cbv-section">
       <h2>Aim 1: the same participant on two days</h2>
-      <p class="cbv-prose" id="endpoint-takeaway">The primary result is pooled over both studies, as the study progress report states; each study is also shown on its own. Each participant's value is the velocity of the reference capillary, or of the first backup that counts when the reference does not. Agreement is between the control and the active visit, both recorded before any exposure.</p>
+      <p class="cbv-prose" id="endpoint-takeaway">The primary result is pooled over both studies, as the study progress report states; each study is also shown on its own. Each participant's value is the velocity of the reference capillary, or of the first backup that counts when the reference does not. Agreement is between each participant's baselines at the control visit and the nicotine visit, both recorded before any exposure.</p>
       <p class="cbv-prose">Pooled, <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> participants have a value at both visits. Their typical error is <b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s on a mean of <span data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary pooled" data-format="mm">—</span> mm/s: a within-subject CV of <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary pooled" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary pooled" data-format="pct">—</span>%) and an ICC(A,1) of <b data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary pooled" data-format="r2">—</b> (95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary pooled" data-format="r2">—</span>). The protocol first said "for each study"; it was corrected to the pooling after the per-study results below had been seen (Methods and notes).</p>
       <p class="cbv-prose">In ESMOKE, <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span> participants have a value at both visits. Their typical error is <b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s on a mean of <span data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span> mm/s, and the smallest change one participant's value could show beyond measurement error is <b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>% of the mean. Whether the differences grow with the mean cannot be told from so few participants: the slope of the differences on the means is <span data-draw="n" data-source="aim1" data-field="ba_slope" data-where="key=primary ESMOKE" data-format="r2">—</span> (95% CI <span data-draw="n" data-source="aim1" data-field="ba_slope_ci_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_slope_ci_high" data-where="key=primary ESMOKE" data-format="r2">—</span>). The ratio limits and the log-scale CV cover the case that they do. In ISMOKE only <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span> participants have both visits, too few for its statistics to mean much: they are shown, with intervals to match.</p>
       <p class="cbv-prose">The numbers barely depend on the analysis. The mean of all counted loops gives an ESMOKE CV of <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=mean ESMOKE" data-format="pct">—</span>%, and thresholds of <span data-draw="n" data-source="summary" data-row="0" data-field="snr_low" data-format="g">—</span> and <span data-draw="n" data-source="summary" data-row="0" data-field="snr_high" data-format="g">—</span> keep the same participants (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=snr7 ESMOKE" data-format="int">—</span> and <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=snr9 ESMOKE" data-format="int">—</span> in ESMOKE). The reference capillary alone, without backups, leaves <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=reference_only ESMOKE" data-format="int">—</span> ESMOKE and <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=reference_only ISMOKE" data-format="int">—</span> ISMOKE participants.</p>
@@ -91,75 +91,75 @@
 
       <article class="cbv-card" id="card-pooled">
         <h3>Both studies pooled: the primary result</h3>
-        <p class="cbv-note">Every participant with a value at both visits, ESMOKE and ISMOKE together</p>
+        <p class="cbv-note">Every participant with a value at both visits, ESMOKE and ISMOKE together. Both values are baselines, recorded before any exposure.</p>
         <div class="cbv-kpis">
           <div class="cbv-kpi"><span class="cbv-label">Within-subject CV</span><span class="cbv-big"><span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary pooled" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary pooled" data-format="pct">—</span>%</span></div>
           <div class="cbv-kpi"><span class="cbv-label">ICC(A,1)</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary pooled" data-format="r2">—</span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary pooled" data-format="r2">—</span></span></div>
           <div class="cbv-kpi"><span class="cbv-label">Participants, both visits</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim1" data-field="one_visit_only" data-where="key=primary pooled" data-format="int">—</span> at one visit only</span></div>
         </div>
         <dl class="cbv-dl">
-          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s (control <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary pooled" data-format="mm">—</span>, active <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary pooled" data-format="mm">—</span>)</dd>
+          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s (control visit <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary pooled" data-format="mm">—</span>, nicotine visit <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary pooled" data-format="mm">—</span>)</dd>
           <dt>Typical error</dt><dd><b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="te_ci_low_mm_s" data-where="key=primary pooled" data-format="mm">—</span>–<span data-draw="n" data-source="aim1" data-field="te_ci_high_mm_s" data-where="key=primary pooled" data-format="mm">—</span>)</dd>
           <dt>CV on the log scale</dt><dd><b data-draw="n" data-source="aim1" data-field="cv_log_percent" data-where="key=primary pooled" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_log_ci_low" data-where="key=primary pooled" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_log_ci_high" data-where="key=primary pooled" data-format="pct">—</span>%)</dd>
           <dt>Smallest detectable change</dt><dd><b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary pooled" data-format="pct">—</span>% of the mean</dd>
-          <dt>Bias, active − control</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary pooled" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary pooled" data-format="signed">—</span>)</dd>
+          <dt>Bias, nicotine − control visit</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary pooled" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary pooled" data-format="signed">—</span>)</dd>
           <dt>Limits of agreement</dt><dd><span data-draw="n" data-source="aim1" data-field="ba_loa_low" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_loa_high" data-where="key=primary pooled" data-format="signed">—</span> mm/s</dd>
-          <dt>Active / control</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary pooled" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary pooled" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary pooled" data-format="r2">—</span>)</dd>
+          <dt>Nicotine / control visit</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary pooled" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary pooled" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary pooled" data-format="r2">—</span>)</dd>
         </dl>
       </article>
 
     <div class="cbv-grid" id="study-cards">
       <article class="cbv-card" id="card-esmoke">
         <h3>ESMOKE</h3>
-        <p class="cbv-note">E-cigarette with nicotine (active) or without (control), 2019–2020</p>
+        <p class="cbv-note">Nicotine visit: e-cigarette with nicotine; control visit: without nicotine. Both values are baselines, recorded before exposure. 2019–2020</p>
         <div class="cbv-kpis">
           <div class="cbv-kpi"><span class="cbv-label">Within-subject CV</span><span class="cbv-big"><span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary ESMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary ESMOKE" data-format="pct">—</span>%</span></div>
           <div class="cbv-kpi"><span class="cbv-label">ICC(A,1)</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary ESMOKE" data-format="r2">—</span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary ESMOKE" data-format="r2">—</span></span></div>
           <div class="cbv-kpi"><span class="cbv-label">Participants, both visits</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim1" data-field="one_visit_only" data-where="key=primary ESMOKE" data-format="int">—</span> at one visit only</span></div>
         </div>
         <dl class="cbv-dl">
-          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s (control <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>, active <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>)</dd>
+          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s (control visit <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>, nicotine visit <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>)</dd>
           <dt>Typical error</dt><dd><b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="te_ci_low_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>–<span data-draw="n" data-source="aim1" data-field="te_ci_high_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>)</dd>
           <dt>CV on the log scale</dt><dd><b data-draw="n" data-source="aim1" data-field="cv_log_percent" data-where="key=primary ESMOKE" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_log_ci_low" data-where="key=primary ESMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_log_ci_high" data-where="key=primary ESMOKE" data-format="pct">—</span>%)</dd>
           <dt>Smallest detectable change</dt><dd><b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>% of the mean</dd>
-          <dt>Bias, active − control</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary ESMOKE" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary ESMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary ESMOKE" data-format="signed">—</span>)</dd>
+          <dt>Bias, nicotine − control visit</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary ESMOKE" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary ESMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary ESMOKE" data-format="signed">—</span>)</dd>
           <dt>Limits of agreement</dt><dd><span data-draw="n" data-source="aim1" data-field="ba_loa_low" data-where="key=primary ESMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_loa_high" data-where="key=primary ESMOKE" data-format="signed">—</span> mm/s</dd>
-          <dt>Active / control</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary ESMOKE" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary ESMOKE" data-format="r2">—</span>)</dd>
+          <dt>Nicotine / control visit</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary ESMOKE" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary ESMOKE" data-format="r2">—</span>)</dd>
         </dl>
       </article>
 
       <article class="cbv-card" id="card-ismoke">
         <h3>ISMOKE</h3>
-        <p class="cbv-note">Heated tobacco (active) or no exposure (control), 2020</p>
+        <p class="cbv-note">Nicotine visit: heated tobacco; control visit: sham. Both values are baselines, recorded before exposure. 2020</p>
         <div class="cbv-kpis">
           <div class="cbv-kpi"><span class="cbv-label">Within-subject CV</span><span class="cbv-big"><span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary ISMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary ISMOKE" data-format="pct">—</span>%</span></div>
           <div class="cbv-kpi"><span class="cbv-label">ICC(A,1)</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary ISMOKE" data-format="r2">—</span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary ISMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary ISMOKE" data-format="r2">—</span></span></div>
           <div class="cbv-kpi"><span class="cbv-label">Participants, both visits</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim1" data-field="one_visit_only" data-where="key=primary ISMOKE" data-format="int">—</span> at one visit only</span></div>
         </div>
         <dl class="cbv-dl">
-          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s (control <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>, active <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>)</dd>
+          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s (control visit <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>, nicotine visit <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>)</dd>
           <dt>Typical error</dt><dd><b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="te_ci_low_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>–<span data-draw="n" data-source="aim1" data-field="te_ci_high_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>)</dd>
           <dt>CV on the log scale</dt><dd><b data-draw="n" data-source="aim1" data-field="cv_log_percent" data-where="key=primary ISMOKE" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_log_ci_low" data-where="key=primary ISMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_log_ci_high" data-where="key=primary ISMOKE" data-format="pct">—</span>%)</dd>
           <dt>Smallest detectable change</dt><dd><b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ISMOKE" data-format="pct">—</span>% of the mean</dd>
-          <dt>Bias, active − control</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary ISMOKE" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary ISMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary ISMOKE" data-format="signed">—</span>)</dd>
+          <dt>Bias, nicotine − control visit</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary ISMOKE" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary ISMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary ISMOKE" data-format="signed">—</span>)</dd>
           <dt>Limits of agreement</dt><dd><span data-draw="n" data-source="aim1" data-field="ba_loa_low" data-where="key=primary ISMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_loa_high" data-where="key=primary ISMOKE" data-format="signed">—</span> mm/s</dd>
-          <dt>Active / control</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary ISMOKE" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary ISMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary ISMOKE" data-format="r2">—</span>)</dd>
+          <dt>Nicotine / control visit</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary ISMOKE" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary ISMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary ISMOKE" data-format="r2">—</span>)</dd>
         </dl>
       </article>
     </div>
 
     <article class="cbv-card" id="card-visits">
-      <h3>Resting CBV at the two visits</h3>
+      <h3>Baseline resting CBV at the two visits</h3>
       <p class="cbv-note">One row per participant, ordered by their mean; the line joins the two visits. A single dot: the other visit has no loop that counts. One scale for both studies.</p>
-      <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Control visit</li><li><span class="cbv-key" data-series="1"></span>Active visit</li></ul>
+      <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Control visit</li><li><span class="cbv-key" data-series="1"></span>Nicotine visit</li></ul>
       <div class="cbv-pair">
-        <div class="cbv-facet"><h4>ESMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-visits-esmoke" data-draw="visits" data-study="ESMOKE" data-source="pairs" data-label="Resting CBV at the control and active visit, ESMOKE participants"></div></div>
-        <div class="cbv-facet"><h4>ISMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-visits-ismoke" data-draw="visits" data-study="ISMOKE" data-source="pairs" data-label="Resting CBV at the control and active visit, ISMOKE participants"></div></div>
+        <div class="cbv-facet"><h4>ESMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-visits-esmoke" data-draw="visits" data-study="ESMOKE" data-source="pairs" data-label="Baseline resting CBV at the control and the nicotine visit, ESMOKE participants"></div></div>
+        <div class="cbv-facet"><h4>ISMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-visits-ismoke" data-draw="visits" data-study="ISMOKE" data-source="pairs" data-label="Baseline resting CBV at the control and the nicotine visit, ISMOKE participants"></div></div>
       </div>
     </article>
 
     <article class="cbv-card" id="card-ba">
-      <h3>Bland–Altman: active minus control visit</h3>
+      <h3>Bland–Altman: nicotine-visit baseline minus control-visit baseline</h3>
       <p class="cbv-note">Each dot is a participant with values at both visits. The solid line is the bias; the dashed lines are the 95% limits of agreement (bias ± 1.96 SD of the differences).</p>
       <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Participant</li><li><span class="cbv-key line"></span>Bias</li><li><span class="cbv-key dash"></span>Limits of agreement</li></ul>
       <div class="cbv-pair">
@@ -190,14 +190,14 @@
           <thead><tr>
             <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
             <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
-            <th data-field="status"><button type="button" class="cbv-th-sort">Values</button></th>
-            <th data-field="control_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Control</button></th>
+            <th data-field="status" data-format="visit"><button type="button" class="cbv-th-sort">Values</button></th>
+            <th data-field="control_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Control visit</button></th>
             <th data-field="control_from"><button type="button" class="cbv-th-sort">From</button></th>
-            <th data-field="active_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Active</button></th>
+            <th data-field="active_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Nicotine visit</button></th>
             <th data-field="active_from"><button type="button" class="cbv-th-sort">From</button></th>
-            <th data-field="diff_mm_s" data-format="signed"><button type="button" class="cbv-th-sort">Active − control</button></th>
+            <th data-field="diff_mm_s" data-format="signed"><button type="button" class="cbv-th-sort">Nicotine − control</button></th>
             <th data-field="ratio" data-format="r2"><button type="button" class="cbv-th-sort">Ratio</button></th>
-            <th data-field="first_visit"><button type="button" class="cbv-th-sort">First visit</button></th>
+            <th data-field="first_visit" data-format="visit"><button type="button" class="cbv-th-sort">First visit</button></th>
             <th data-field="days_apart" data-format="int"><button type="button" class="cbv-th-sort">Days apart</button></th>
           </tr></thead>
           <tbody data-draw="rows"></tbody>
@@ -213,7 +213,7 @@
           <thead><tr>
             <th data-field="group">Studies</th>
             <th data-field="participants" data-format="int">Participants</th>
-            <th data-field="active_first" data-format="int">Active visit first</th>
+            <th data-field="active_first" data-format="int">Nicotine visit first</th>
             <th data-field="second_minus_first_mm_s" data-format="signed">Second − first</th>
             <th data-field="ci_low" data-format="signed">95% CI low</th>
             <th data-field="ci_high" data-format="signed">95% CI high</th>
@@ -231,7 +231,7 @@
       <h2>Aim 2: before and after nicotine</h2>
       <p class="cbv-prose">Resting red-cell velocity in the recording before and the recording after exposure on the nicotine visit: the e-cigarette with nicotine in ESMOKE, heated tobacco in ISMOKE. The control visit is not used. Each participant's change is after minus before, analysed for each study and, as a separate analysis, for both studies pooled, since the nicotine comes from a different product in each. The values come from the same blind loops and quality control as aim 1.</p>
       <p class="cbv-prose">Pooled, <b data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary pooled" data-format="int">—</b> of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> participants have a value both before and after, and <b data-draw="n" data-source="aim2" data-field="decreased" data-where="key=primary pooled" data-format="int">—</b> of them went down. Velocity changed by <b data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary pooled" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim2" data-field="change_ci_low_mm_s" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim2" data-field="change_ci_high_mm_s" data-where="key=primary pooled" data-format="signed">—</span>; paired t-test p <span data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary pooled" data-format="p">—</span>, Wilcoxon p <span data-draw="n" data-source="aim2" data-field="wilcoxon_p" data-where="key=primary pooled" data-format="p">—</span>), to <b data-draw="n" data-source="aim2" data-field="ratio" data-where="key=primary pooled" data-format="r2">—</b> times its value before (95% CI <span data-draw="n" data-source="aim2" data-field="ratio_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to <span data-draw="n" data-source="aim2" data-field="ratio_ci_high" data-where="key=primary pooled" data-format="r2">—</span>). In ESMOKE alone the change was <span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary ESMOKE" data-format="signed">—</span> mm/s (p <span data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary ESMOKE" data-format="p">—</span>, <span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span> participants), in ISMOKE <span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary ISMOKE" data-format="signed">—</span> mm/s (p <span data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary ISMOKE" data-format="p">—</span>, <span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span> participants).</p>
-      <p class="cbv-prose">This is aim 2 as the student and the PI agreed verbally before unblinding. The protocol's first text compared the change on the active visit with the control visit's; it was corrected after unblinding (Methods and notes). The recordings the correction added were then placed blind; none of their loops counted.</p>
+      <p class="cbv-prose">This is aim 2 as the student and the PI agreed verbally before unblinding. The protocol's first text compared the change on the nicotine visit with the control visit's; it was corrected after unblinding (Methods and notes). The recordings the correction added were then placed blind; none of their loops counted.</p>
     </div>
 
     <div class="cbv-grid" id="aim2-cards">
@@ -399,7 +399,7 @@
             <th data-field="snr" data-format="snr" aria-sort="ascending"><button type="button" class="cbv-th-sort">Signal-to-noise</button></th>
             <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
             <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
-            <th data-field="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
+            <th data-field="visit" data-format="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
             <th data-field="when"><button type="button" class="cbv-th-sort">Exposure</button></th>
             <th data-field="dataset"><button type="button" class="cbv-th-sort">Loop</button></th>
             <th data-field="outcome"><button type="button" class="cbv-th-sort">Outcome</button></th>
@@ -473,7 +473,7 @@
           <thead><tr>
             <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
             <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
-            <th data-field="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
+            <th data-field="visit" data-format="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
             <th data-field="when"><button type="button" class="cbv-th-sort">Exposure</button></th>
             <th data-field="aims"><button type="button" class="cbv-th-sort">Aims</button></th>
             <th data-field="loops_placed" data-format="int"><button type="button" class="cbv-th-sort">Loops</button></th>
@@ -498,7 +498,7 @@
           <thead><tr>
             <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
             <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
-            <th data-field="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
+            <th data-field="visit" data-format="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
             <th data-field="when"><button type="button" class="cbv-th-sort">Exposure</button></th>
             <th data-field="dataset"><button type="button" class="cbv-th-sort">Loop</button></th>
             <th data-field="outcome"><button type="button" class="cbv-th-sort">Outcome</button></th>
@@ -549,7 +549,7 @@
       <h3>Changed after unblinding</h3>
       <ul class="cbv-list">
         <li><b>Aim 1 is pooled over both studies,</b> as the study progress report states. The protocol first said "for each study"; it was corrected after the per-study results had been seen, and they are still shown beside the pooled one.</li>
-        <li><b>Aim 2 looks only at the nicotine visit,</b> as the student and the PI agreed verbally before unblinding. The protocol's first text took the participants with all four recordings and compared the change on the active visit with the control visit's. That analysis had been computed and seen at unblinding; its tables are kept with the data.</li>
+        <li><b>Aim 2 looks only at the nicotine visit,</b> as the student and the PI agreed verbally before unblinding. The protocol's first text took the participants with all four recordings and compared the change on the nicotine visit with the control visit's. That analysis had been computed and seen at unblinding; its tables are kept with the data.</li>
         <li>The correction added participants with a complete nicotine visit but no complete control visit. Their recordings without lines were placed blind, under codes and by the same rules, before aim 2 was computed again; none of their loops counted.</li>
         <li>The other tabs describe the loops and recordings as they stood at unblinding, including the recordings after the control visit, which aim 2 no longer uses.</li>
       </ul>
@@ -569,6 +569,9 @@ window.cbv = (() => {
   const AXIS = 'var(--cds-chart-axis)';
   const REF = 'var(--cds-chart-reference)';
   const SURFACE = 'var(--color-panel)';
+  /* The data name a visit by its role in the trials (active, control); the page names the active one for what
+     it was, the nicotine visit (W in ESMOKE, S in ISMOKE). */
+  const VISIT = {active: 'nicotine', 'active only': 'nicotine visit only', 'control only': 'control visit only'};
   const fmt = {
     text: (v) => String(v),
     int: d3.format(',.0f'),
@@ -583,6 +586,7 @@ window.cbv = (() => {
     signed: d3.format('+.3f'),
     p: (v) => (v < 0.001 ? '<0.001' : d3.format('.3f')(v)),
     bool: (v) => (v === true || v === 'true' ? 'yes' : 'no'),
+    visit: (v) => VISIT[v] ?? String(v),
   };
   const num = (v) => (v === null || v === undefined || v === '' ? NaN : Number(v));
   const has = (v) => Number.isFinite(num(v));
@@ -598,6 +602,7 @@ window.cbv = (() => {
     if (value === undefined || value === null || value === '') return '—';
     if (kind === 'text') return String(value);
     if (kind === 'bool') return fmt.bool(value);
+    if (kind === 'visit') return fmt.visit(String(value));
     return has(value) ? (fmt[kind] || fmt.text)(num(value)) : '—';
   };
   const cell = (el) => {
@@ -745,7 +750,7 @@ window.cbv = (() => {
     });
   }
   const who = (r) => `${r.study} ${r.subject}`;
-  const visitText = (r) => `${r.visit} visit, ${r.when} exposure, ${r.dataset}`;
+  const visitText = (r) => `${fmt.visit(r.visit)} visit, ${r.when} exposure, ${r.dataset}`;
   return {MUTED, GRID, AXIS, REF, SURFACE, STEPS, fmt, num, has, status, rows, find, show, cell, color, frame,
           measure, axis, gridX, gridY, refLine, dot, tooltip, pointer, nearest, chart, who, visitText};
 })();
@@ -832,7 +837,7 @@ dash.draw('rows', (body) => {
   }
   const sorted = columns.find((c) => c.sort === 'ascending' || c.sort === 'descending');
   if (sorted) {
-    const numeric = sorted.format && sorted.format !== 'text' && sorted.format !== 'bool';
+    const numeric = sorted.format && !['text', 'bool', 'visit'].includes(sorted.format);
     const value = (r) => (numeric ? (cbv.has(r[sorted.field]) ? +r[sorted.field] : null) : String(r[sorted.field] ?? ''));
     data.sort((a, b) => {
       const x = value(a), y = value(b);
@@ -893,8 +898,8 @@ dash.draw('rows', (body) => {
       if (Number.isFinite(a)) cbv.dot(svg, x(a), y, cbv.color(1), false, 5);
       const lines = [[cbv.who(r)],
         ['control visit', Number.isFinite(c) ? `${cbv.show(c, 'mm')} mm/s (${r.control_from})` : 'no value'],
-        ['active visit', Number.isFinite(a) ? `${cbv.show(a, 'mm')} mm/s (${r.active_from})` : 'no value']];
-      if (both) lines.push(['active − control', `${cbv.show(a - c, 'signed')} mm/s`]);
+        ['nicotine visit', Number.isFinite(a) ? `${cbv.show(a, 'mm')} mm/s (${r.active_from})` : 'no value']];
+      if (both) lines.push(['nicotine − control', `${cbv.show(a - c, 'signed')} mm/s`]);
       const hit = svg.append('rect').attr('x', 0).attr('y', y - rowH / 2).attr('width', width).attr('height', rowH)
         .style('fill', 'transparent').attr('tabindex', 0).attr('aria-label', lines.map((l) => l.join(' ')).join('; '));
       const at = () => (Number.isFinite(a) ? x(a) : Number.isFinite(c) ? x(c) : left);
@@ -932,7 +937,7 @@ dash.draw('rows', (body) => {
       .call(d3.axisBottom(x).ticks(4).tickSizeOuter(0)));
     cbv.axis(svg.append('g').attr('transform', `translate(${left},0)`)
       .call(d3.axisLeft(y).ticks(5).tickSizeOuter(0)));
-    svg.append('text').attr('class', 'cbv-tick').attr('x', left).attr('y', 10).text('Active − control, mm/s');
+    svg.append('text').attr('class', 'cbv-tick').attr('x', left).attr('y', 10).text('Nicotine − control visit, mm/s');
     svg.append('text').attr('class', 'cbv-tick').attr('x', width - right).attr('y', height - 4)
       .attr('text-anchor', 'end').text('Mean of the two visits, mm/s');
     svg.append('line').attr('x1', left).attr('x2', width - right).attr('y1', y(0)).attr('y2', y(0))
@@ -947,9 +952,9 @@ dash.draw('rows', (body) => {
         .text(`${label} ${cbv.show(value, 'signed')}`);
     }
     const points = mine.map((r) => ({x: x(+r.mean_mm_s), y: y(+r.diff_mm_s), lines: [[cbv.who(r)],
-      ['active − control', `${cbv.show(r.diff_mm_s, 'signed')} mm/s`],
+      ['nicotine − control', `${cbv.show(r.diff_mm_s, 'signed')} mm/s`],
       ['mean of the visits', `${cbv.show(r.mean_mm_s, 'mm')} mm/s`],
-      ['control, active', `${cbv.show(r.control_mm_s, 'mm')}, ${cbv.show(r.active_mm_s, 'mm')}`]]}));
+      ['control, nicotine', `${cbv.show(r.control_mm_s, 'mm')}, ${cbv.show(r.active_mm_s, 'mm')}`]]}));
     for (const p of points) cbv.dot(svg, p.x, p.y, cbv.color(0), false, 5);
     cbv.nearest(el, svg, width, height, points, 24);
   });

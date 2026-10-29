@@ -409,7 +409,8 @@ def method_rows() -> list:
         ('cv', 'Within-subject CV', 'Typical error / mean of all values; on the log scale exp(SD of the log '
                                     'differences / √2) - 1', "Its interval is the typical error's, over the same mean"),
         ('sdc', 'Smallest detectable change', f'{aims.SDC_FACTOR:g} × typical error (1.96 × √2)', ''),
-        ('ba', 'Bland-Altman', 'Active minus control visit: bias with its 95% interval, limits bias ± 1.96 SD',
+        ('ba', 'Bland-Altman', 'Nicotine-visit baseline minus control-visit baseline: bias with its 95% interval, '
+                               'limits bias ± 1.96 SD',
          'Intervals of the limits as Bland & Altman (1999); ratio limits on the log scale'),
         ('icc', 'ICC(A,1)', 'Two-way, absolute agreement, single measurement (McGraw & Wong 1996)',
          'With its 95% interval'),

@@ -6,6 +6,35 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — The report page names the nicotine visit, not the "active" one
+
+**Branch:** `feature/report-aim2` (on top of the entry below).
+
+**Why.** The user found "active" ambiguous. Aim 1's two values are both baselines recorded before exposure, so
+"active" read like "after nicotine", and "bias, active − control" like a nicotine effect. In ESMOKE the control
+visit is vaping without nicotine, not "no exposure". On the user's request the report page now says "nicotine
+visit" (W in ESMOKE, S in ISMOKE) and "control visit" (Q, C), and says once on each aim 1 card that both values
+are baselines. The walkthrough page, PROTOCOL.md and the code's internal names (`active_…` columns, the inventory's
+roles) are unchanged.
+
+**What changed.**
+- The page's own words: the header, aim 1's takeaway, the three aim 1 cards (labels and notes), the two-visits
+  chart (title, legend, tooltips), the Bland–Altman card (title "nicotine-visit baseline minus control-visit
+  baseline", axis, tooltips), aim 1's table headers, "Nicotine visit first", and the two sentences about the
+  protocol's first aim 2.
+- Words from the data: the tables store the role ("active", "active only"), so the page now shows them through a
+  label lookup (format `visit`: nicotine, nicotine visit only, control visit only), used by the Visit, First visit
+  and Values columns and every tooltip that names a visit. Sorting treats it as text.
+- `report.py`: the settings table's Bland–Altman row says "Nicotine-visit baseline minus control-visit baseline".
+  `method.json` was rewritten from `method_rows()` (only that row changed), uploaded, and the dashboard's `method`
+  source pointed at it.
+
+**Verified.** The relabel script stops unless each phrase occurs as often as expected (three times for the three
+cards). Afterwards, no line a reader sees names "active", only field names, keys and the lookup. The page was
+written pinned to the version read (3 → 4).
+
+---
+
 ## 2026-10-29 — The report page: aim 1 pooled and a Secondary endpoint tab
 
 **Branch:** `feature/report-aim2`, from `docs/agreement-sources` at 2ae2a7c (not merged yet; this branch holds it).
