@@ -191,5 +191,10 @@ These describe the results further; none changes a value or a statistic fixed ab
     (no ESMOKE participant has a complete W visit without being in aim 2 already). Their three
     recordings without lines (FP02 Sföre and Sefter, FP08 Sefter) are placed in blind placement,
     under codes, by the same rules, before aim 2 is computed again.
+  - They were placed in blind placement at 18:58–19:04, three loops each, and blind placement
+    was switched off after the last one. None of the nine loops counted (five scored 8 or more but
+    lay at the slowest speed searched; four scored below 8), so aim 2 gained no pair. Aim 2 was
+    then computed (19:05): ESMOKE 5 of 13 participants, ISMOKE 3 of 10. Tables in `Reports/aims/`;
+    aim 1 came out exactly as at unblinding.
   - The recordings after exposure on the control visit are no longer used; their lines stay on
     disk.

@@ -287,6 +287,10 @@ the 2026-10-05 GUI rebuild entry.
     check (no false flow in synthetic loops or the occlusion; same direction after release). ESMOKE 9
     participants, CV 69%, ICC 0.31 (−0.39 to 0.79). The added loops are faster (median 0.38 against 0.08 mm/s):
     the protocol counts mainly slow capillaries, but adding the fast ones doesn't make CBV more reproducible.
+  - Aim 2 as agreed (computed 2026-10-29 19:05, after the corrected protocol's three new recordings were placed
+    blind; none of their loops counted): the change after minus before nicotine, ESMOKE 5 of 13 participants
+    −0.087 mm/s (−0.204 to 0.030, p 0.11), ISMOKE 3 of 10 −0.042 (p 0.30), pooled 8 of 23 −0.070 (−0.137 to
+    −0.003, p 0.043; ratio 0.55). 7 of 8 decreased; no control visit, few pairs, three tests without correction.
   - Fixed before unblinding: returning to a recording seen before restored its earlier line's
     role, which carried over, so 29 lines were saved without the whole-loop role. They were
     re-saved from their own diagrams (`analysis/primary_endpoint/relabel_whole_loops.py`), and the

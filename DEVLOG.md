@@ -50,6 +50,26 @@ where no line is possible.
 the per-study and pooled rows, the inventory's 13 + 10 participants. The inventory tests now expect 72 recordings
 and the control-visit efter unused, and the blind list's test has the same change. `--progress` runs.
 
+**Afterwards: the three recordings placed, aim 2 computed.**
+- The user placed the three recordings in blind placement at 18:58–19:04 (confirmed by the user; `settings.csv`
+  was rewritten at 19:04:34, when blind placement was switched off), three whole loops each. `--progress` found
+  nothing to fix.
+- None of the nine counted:
+  - FP02 Sefter's three (signal-to-noise 31–42), FP02 Sföre loop1 (17.6) and FP08 Sefter loop2 (19.9) lay at the
+    slowest speed searched;
+  - the other four scored 2.7–7.1.
+- Aim 2 (19:05, `capillary.aims` and the four sensitivity runs):
+
+  | | Pairs | Change after − before, mm/s (95% CI) | t-test / Wilcoxon p | Ratio after/before |
+  |---|---|---|---|---|
+  | ESMOKE | 5 of 13 | −0.087 (−0.204 to 0.030) | 0.109 / 0.062 | 0.52 (0.23–1.15) |
+  | ISMOKE | 3 of 10 | −0.042 (−0.175 to 0.090) | 0.303 / 0.500 | 0.60 (0.12–3.11) |
+  | Pooled | 8 of 23 | −0.070 (−0.137 to −0.003) | 0.043 / 0.023 | 0.55 (0.33–0.91) |
+
+- 7 of 8 decreased. The sensitivity runs agree: signal-to-noise 7 and 9 give the same; the mean of the counted
+  loops gives pooled −0.071 (−0.137 to −0.005); the reference alone leaves 1 ESMOKE pair.
+- Aim 1 and its sensitivity tables came out identical to those of 13:07 (compared file by file).
+
 ---
 
 ## 2026-10-29 — Post hoc: a coarser filter for faster flow
