@@ -27,7 +27,11 @@ version it was made with, and the observer (initials) entered next to its
 name.
 
 Stabilizing runs in the background (right-click a recording, or the **⋯** menu
-above the list for all at once); you can keep working meanwhile. Press **F1**
+above the list for all at once); you can keep working meanwhile. The recordings
+aim 1 uses (each participant's before-exposure recording of both visits) carry an
+**Aim 1** chip in the list, and typing "aim 1" in the filter lists only them; the
+chip is hidden during blind placement, where it would tell the recordings before
+exposure from those after it. Press **F1**
 for all keyboard and mouse controls.
 
 **Blind placement** (the button in the header, since 2026-10-14) is for placing

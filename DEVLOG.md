@@ -6,6 +6,36 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — The recordings aim 1 uses are marked in the list
+
+**Branch:** `feature/reference-capillary` (after the entry below).
+
+The user, about to write the report, asked to see in the app which recordings aim 1 uses.
+
+- **The chip:** each of them gets an **Aim 1** chip in the recording list, first among its chips, in the
+  accent colour. These are the 48 recordings: each aim-1 participant's before-exposure recording of
+  both visits, 28 ESMOKE and 20 ISMOKE.
+- **The filter:** typing "aim 1" in the list's filter lists only them.
+- **Where the list comes from:** `gui.blind.aim1_recordings`, from the same `used_for` of
+  `capillary.inventory` that `capillary.aims.aim1_recordings` reads. The set is checked to be the
+  same as the analysis's.
+  - `gui.blind` now reads the inventory once (`_uses`) for both lists.
+- **Hidden during blind placement** (`gui.blind.shows_aim1`): aim 1 uses only recordings before
+  exposure, so the chip would tell those from the ones after it, which the protocol hides from the
+  observer.
+- Also this session: the baseline recordings listed per study with their values for the user
+  (`Reports/primary_endpoint/baseline_recordings.csv`, not in the repository). Asked whether the
+  highest-SNR loop should replace the reference, it was checked and not adopted:
+  - it gives the same 54 recordings and the same 7 + 2 participants;
+  - it picks another loop in 13 of 54 recordings;
+  - SNR falls with velocity among counted loops (Spearman ρ −0.46), so it would favour slow loops
+    (ESMOKE mean 0.122 instead of 0.130 mm/s);
+  - it would be a rule chosen after unblinding.
+
+**Verified:** `python3 -m pytest`, 318 passed (a new test for the marks and for hiding them).
+
+---
+
 ## 2026-10-29 — The protocol, the study's lines placed blind, and the primary endpoint
 
 **Branch:** `feature/reference-capillary`. Commits 6fd617d, 282387f, db39c70 and c195221 (the

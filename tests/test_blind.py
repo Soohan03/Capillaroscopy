@@ -82,6 +82,15 @@ def test_blind_placement_saves_every_line_as_a_whole_loop():
     assert not any(button.disabled for button in page.role_buttons.values())
 
 
+def test_the_recording_list_marks_aim_1_except_during_blind_placement():
+    marked = blind.aim1_recordings()
+    assert len(marked) == 48 and marked <= blind.aim_recordings()               # 24 participants, two visits each
+    assert {'FP01_Qföre_22-Oct-2019_08-16-35', 'FP01_W_14-Oct-2019_08-36-26'} <= marked
+    assert 'FP01_Wefter_14-Oct-2019_10-13-03' not in marked                      # after exposure: aim 2 only
+    assert blind.shows_aim1(unicodedata.normalize('NFD', 'FP01_Qföre_22-Oct-2019_08-16-35'), blind_on=False)
+    assert not blind.shows_aim1('FP01_Qföre_22-Oct-2019_08-16-35', blind_on=True)  # would tell before from after
+
+
 def test_the_aims_recordings_come_from_the_inventory():
     used = blind.aim_recordings()
     assert 'FP01_Qföre_22-Oct-2019_08-16-35' in used                         # aims 1 and 2, control before

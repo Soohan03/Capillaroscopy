@@ -56,7 +56,8 @@ without asking:
 3. Tell the user the app window should now be visible via WSLg, and remind them:
    - The list on the left shows the recordings (raw ones in `RecordedVideos/`, with their
      stabilized copies in `StabilizedVideos/`); right-click one to stabilize it or move it to
-     the trash.
+     the trash. The 48 recordings aim 1 uses carry an "Aim 1" chip (hidden during blind
+     placement); typing "aim 1" in the filter lists only them.
    - Centre line page (opens first): click points along the middle of one capillary,
      starting where the blood comes from; drag a point to move it, click on the line to
      add one, right-click a point to remove it, Backspace removes the last, X reverses.
@@ -256,7 +257,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (317 tests, ~50 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (318 tests, ~50 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
