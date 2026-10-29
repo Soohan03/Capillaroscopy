@@ -86,9 +86,10 @@ A loop counts when all of these hold (`capillary.aims`):
 ## Aim 1: inter-day reproducibility
 
 The participants with a value in both before-exposure recordings, pooled over both studies: the
-primary result, as agreed with the PI long before unblinding (written here on 2026-10-29, after
-unblinding: see "Changes after unblinding"). Each study is also reported on its own. The pooled
-analysis takes the two studies' participants as different people.
+primary result, as the study progress report states (written before unblinding; shared in this
+project on 2026-10-07). This protocol first said "for each study" and was corrected on
+2026-10-29, after unblinding: see "Changes after unblinding". Each study is also reported on its
+own. The pooled analysis takes the two studies' participants as different people.
 
 - within-subject CV: the typical error (SD of the differences / √2) over the mean of all
   values; also on the log scale;
@@ -98,8 +99,9 @@ analysis takes the two studies' participants as different people.
 
 ## Aim 2: response to nicotine
 
-As agreed with the PI about a month before unblinding (written here on 2026-10-29, after
-unblinding: see "Changes after unblinding"). The participants with a value before and after
+As the student and the PI agreed verbally about a month before unblinding; there is no written
+record of the agreement. Written here on 2026-10-29, after unblinding: see "Changes after
+unblinding". The participants with a value before and after
 exposure on the nicotine visit, W in ESMOKE and S in ISMOKE; the control visit (Q, C) is not
 used:
 
@@ -181,9 +183,10 @@ These describe the results further; none changes a value or a statistic fixed ab
 ## Changes after unblinding
 
 - **Aim 2 corrected to what had been agreed** (2026-10-29, afternoon).
-  - About a month before unblinding, the student and the PI agreed that aim 2 looks at each
-    participant's recordings before and after exposure on the nicotine visit, when both exist:
-    per study, and pooled as a separate analysis, without the control visit.
+  - About a month before unblinding, the student and the PI agreed verbally that aim 2 looks at
+    each participant's recordings before and after exposure on the nicotine visit, when both
+    exist: per study, and pooled as a separate analysis, without the control visit. There is no
+    written record of the agreement.
   - This protocol, written on the day of placement, recorded an older plan by mistake: the
     participants with a value in all four recordings, and the change on the active visit minus
     that on the control visit.
@@ -199,13 +202,14 @@ These describe the results further; none changes a value or a statistic fixed ab
     lay at the slowest speed searched; four scored below 8), so aim 2 gained no pair. Aim 2 was
     then computed (19:05): ESMOKE 5 of 13 participants, ISMOKE 3 of 10. Tables in `Reports/aims/`;
     aim 1 came out exactly as at unblinding.
-- **Aim 1 pooled over both studies, as had been agreed** (2026-10-29, evening).
-  - Long before unblinding, the student and the PI agreed that aim 1's result is pooled over
-    ESMOKE and ISMOKE. This protocol said "for each study" and left the pooling out.
+  - The recordings after exposure on the control visit are no longer used; their lines stay on
+    disk.
+- **Aim 1 pooled over both studies, as the study progress report states** (2026-10-29, evening).
+  - The study progress report, written before unblinding (shared in this project on 2026-10-07),
+    states that aim 1's result is pooled over ESMOKE and ISMOKE. This protocol said "for each
+    study" and left the pooling out.
   - The correction came after the per-study results had been computed and looked at: ESMOKE 7
     of 14 participants, CV 67%, ICC(A,1) 0.01; ISMOKE 2 of 10. They are still reported, beside
     the pooled result.
   - Pooled, from the same values: 9 of 24 participants, CV 63% (95% CI 43–121%), on the log
     scale 76%, smallest detectable change 0.211 mm/s, ICC(A,1) 0.05 (−0.55 to 0.65).
-  - The recordings after exposure on the control visit are no longer used; their lines stay on
-    disk.

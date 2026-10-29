@@ -6,6 +6,27 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — Where the two corrections come from
+
+**Branch:** `docs/agreement-sources`, from `main` at de14ab3 (PR #29 merged). No code changed.
+
+The user said where the two corrections of the protocol come from:
+- **Aim 1's pooling:** the study progress report, written before unblinding (shared here on 2026-10-07), states
+  that aim 1 is pooled over both studies.
+- **Aim 2's correction** (the nicotine visit only, per study and pooled): a verbal agreement between the user and
+  the PI about a month before unblinding, with no written record. The notes Claude Code took of the progress
+  report on 2026-10-07 give aim 2 as the difference in change, active minus control, with the studies analysed
+  separately: the older plan PROTOCOL.md first recorded.
+
+PROTOCOL.md now cites the report for aim 1 and says aim 2's agreement was verbal, both in the aims' sections and
+in "Changes after unblinding". CLAUDE.md and the primary endpoint's README say the same. The change log's last
+point on aim 2 (the control visit's recordings are no longer used) had ended up under aim 1's entry when that was
+added; it is back under aim 2.
+
+**Verified.** Documentation only: `git diff` checked; nothing the code or tests read was touched.
+
+---
+
 ## 2026-10-29 — Aim 1 pooled over both studies
 
 **Branch:** `feature/aim1-pooled`, from `main` at a69db38 (PR #28 merged).

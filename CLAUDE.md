@@ -21,11 +21,12 @@ products".
 - **Aim 1 (primary):** inter-day reproducibility of resting CBV from the two före
   recordings. Reported as the within-subject CV (typical error/mean), the smallest
   detectable change (2.77 × typical error), Bland–Altman and ICC(A,1). Pooled over both
-  studies (the primary result, agreed with the PI long before unblinding; `PROTOCOL.md` said
+  studies (the primary result, as the study progress report states; `PROTOCOL.md` said
   "for each study" and was corrected on 2026-10-29, after unblinding), and per study.
 - **Aim 2:** the before→after change on the nicotine visit (W, S) of each participant who has
-  both, per study and pooled as a separate analysis; the control visit is not used. Agreed with
-  the PI about a month before unblinding; `PROTOCOL.md` had recorded an older plan (all four
+  both, per study and pooled as a separate analysis; the control visit is not used. Agreed
+  verbally with the PI about a month before unblinding (no written record); `PROTOCOL.md` had
+  recorded an older plan (all four
   recordings, active minus control) and was corrected on 2026-10-29, after unblinding.
 - **Who can be used** (`metadata/README.md`, from `capillary.inventory`): aim 1 has 14 ESMOKE and
   10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 10 ISMOKE. The
