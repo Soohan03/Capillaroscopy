@@ -185,44 +185,49 @@ def test_the_command_writes_the_tables(statistics, tmp_path, capsys):
     assert pd.read_csv(out / 'loops.csv')['observer'].eq('SJ').all()
 
 
-def test_aim_2_compares_the_change_on_the_active_visit_with_the_control_visit():
-    before_a, after_a = np.array([0.10, 0.08, 0.12, 0.09]), np.array([0.13, 0.08, 0.15, 0.10])
-    before_c, after_c = np.array([0.11, 0.09, 0.10, 0.10]), np.array([0.10, 0.10, 0.11, 0.09])
-    out = aims.response(np.r_[before_a, 0.1], np.r_[after_a, np.nan], np.r_[before_c, 0.1], np.r_[after_c, 0.1])
-    assert out['participants'] == 4                                          # the one without all four is out
-    difference = (after_a - before_a) - (after_c - before_c)
-    assert out['difference_mm_s'] == pytest.approx(difference.mean())
-    half = stats.t.ppf(0.975, 3) * difference.std(ddof=1) / 2
-    assert (out['difference_ci_low_mm_s'], out['difference_ci_high_mm_s']) == \
-        (pytest.approx(difference.mean() - half), pytest.approx(difference.mean() + half))
-    assert out['t_test_p'] == pytest.approx(stats.ttest_rel(after_a - before_a, after_c - before_c).pvalue)
-    assert out['wilcoxon_p'] == pytest.approx(stats.wilcoxon(difference).pvalue)
-    assert out['change_control_mm_s'] == pytest.approx(np.mean(after_c - before_c))
-    ratio = np.log(after_a / before_a) - np.log(after_c / before_c)
-    assert out['ratio_of_ratios'] == pytest.approx(math.exp(ratio.mean()))
-    assert out['ratio_active'] == pytest.approx(math.exp(np.log(after_a / before_a).mean()))
-    assert aims.response([], [], [], [])['participants'] == 0
+def test_aim_2_is_the_change_from_before_to_after_nicotine():
+    before, after = np.array([0.10, 0.08, 0.12, 0.09]), np.array([0.13, 0.08, 0.15, 0.10])
+    out = aims.response(np.r_[before, 0.1, np.nan], np.r_[after, np.nan, 0.1])
+    assert out['participants'] == 4                                          # the ones without both are out
+    change = after - before
+    assert out['change_mm_s'] == pytest.approx(change.mean())
+    half = stats.t.ppf(0.975, 3) * change.std(ddof=1) / 2
+    assert (out['change_ci_low_mm_s'], out['change_ci_high_mm_s']) == \
+        (pytest.approx(change.mean() - half), pytest.approx(change.mean() + half))
+    assert out['t_test_p'] == pytest.approx(stats.ttest_rel(after, before).pvalue)
+    assert out['wilcoxon_p'] == pytest.approx(stats.wilcoxon(change).pvalue)
+    assert (out['mean_before_mm_s'], out['mean_after_mm_s']) == (pytest.approx(before.mean()),
+                                                                 pytest.approx(after.mean()))
+    ratio = np.log(after / before)
+    assert out['ratio'] == pytest.approx(math.exp(ratio.mean()))
+    assert out['log_t_test_p'] == pytest.approx(stats.ttest_1samp(ratio, 0.0).pvalue)
+    assert aims.response([], [])['participants'] == 0
 
 
-def test_aim_2_per_study_from_each_participants_four_recordings(statistics):
+def test_aim_2_per_study_and_pooled_from_each_participants_nicotine_visit(statistics):
     save(statistics, 'A1b', 'loop1', 0.13)
-    save(statistics, 'C1b', 'loop1', 0.07)
     save(statistics, 'A2b', 'loop1', 0.22)
-    save(statistics, 'C2b', 'loop1', 0.16)
-    wanted = pd.DataFrame([('ESMOKE', 'FP01', 'A1', 'A1b', 'C1', 'C1b'), ('ESMOKE', 'FP02', 'A2', 'A2b', 'C2', 'C2b'),
-                           ('ESMOKE', 'FP03', 'A3', 'A3b', 'C3', 'C3b')],
+    wanted = pd.DataFrame([('ESMOKE', 'FP01', 'A1', 'A1b'), ('ESMOKE', 'FP02', 'A2', 'A2b'),
+                           ('ESMOKE', 'FP03', 'A3', 'A3b'), ('ISMOKE', 'FP01', 'C1', 'C2')],
                           columns=['study', 'subject', *aims.AIM2_RECORDINGS])
     values = aims.aim2_values(aims.per_recording(aims.loops(aims.collect(statistics))), wanted)
-    row = aims.aim2(values).set_index(['observer', 'study']).loc[('SJ', 'ESMOKE')]
+    table = aims.aim2(values).set_index(['observer', 'study'])
+    row = table.loc[('SJ', 'ESMOKE')]
     assert (row['participants'], row['participants_wanted'], row['incomplete']) == (2, 3, 1)
-    assert row['difference_mm_s'] == pytest.approx(np.mean([(0.13 - 0.10) - (0.07 - 0.08), (0.22 - 0.20) - (0.16 - 0.15)]))
+    assert row['change_mm_s'] == pytest.approx(np.mean([0.13 - 0.10, 0.22 - 0.20]))
+    pooled = table.loc[('SJ', aims.POOLED)]                                  # C1 0.08 -> C2 0.15
+    assert (pooled['participants'], pooled['participants_wanted']) == (3, 4)
+    assert pooled['change_mm_s'] == pytest.approx(np.mean([0.03, 0.02, 0.07]))
+    assert list(table.loc['SJ'].index) == ['ESMOKE', 'ISMOKE', aims.POOLED]
 
 
-def test_aim_2_uses_the_inventory_participants_with_all_four_recordings():
-    wanted = aims.aim2_recordings()
-    assert wanted.groupby('study').size().to_dict() == {'ESMOKE': 13, 'ISMOKE': 8}       # CLAUDE.md
+def test_aim_2_uses_the_inventory_participants_with_both_recordings_of_the_nicotine_visit():
+    wanted = aims.aim2_recordings().set_index(['study', 'subject'])
+    assert wanted.groupby('study').size().to_dict() == {'ESMOKE': 13, 'ISMOKE': 10}      # CLAUDE.md
     assert (wanted[list(aims.AIM2_RECORDINGS)] != '').all().all()
-    assert (wanted['active_before_recording'] != wanted['control_before_recording']).all()
+    assert wanted.loc[('ESMOKE', 'FP05'), 'active_after_recording'] == 'FP05_Wefter_försök2_17-Oct-2019_11-12-45'
+    assert wanted.loc[('ISMOKE', 'FP08'), 'active_after_recording'] == 'ISMOKE_FP08_Sefter_17-Nov-2020_09-51-15'
+    assert ('ESMOKE', 'FP09') not in wanted.index                        # no efter on the W visit
 
 
 def test_a_threshold_sensitivity_recounts_the_loops_from_their_saved_diagrams(statistics):

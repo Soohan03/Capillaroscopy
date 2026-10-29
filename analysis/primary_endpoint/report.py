@@ -269,7 +269,7 @@ WANTED = {}
 
 def analysis(loop_table: pd.DataFrame, found: pd.DataFrame, threshold: float, value: str) -> tuple:
     """The loops judged at `threshold`, each recording's values, aim 1's pairs (`value`) and statistics, and aim 2's
-    values (only to count who has all four)."""
+    values (only to count who has both)."""
     if not WANTED:
         WANTED.update(aim1=aims.aim1_recordings(), aim2=aims.aim2_recordings())
     loops_ = judged(loop_table, found, threshold)
@@ -280,7 +280,8 @@ def analysis(loop_table: pd.DataFrame, found: pd.DataFrame, threshold: float, va
 
 
 def aim2_complete(values: pd.DataFrame) -> dict:
-    """How many participants of aim 2 have a value in all four recordings, per study (no results)."""
+    """How many participants of aim 2 have a value before and after exposure on the nicotine visit, per study
+    (no results)."""
     columns = [f'{column[:-len("_recording")]}_mm_s' for column in aims.AIM2_RECORDINGS]
     out = {}
     for study in STUDIES:
@@ -491,7 +492,7 @@ def report_files(loops_: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataF
     for key in ('primary',):
         complete = analyses[key]['aim2_complete']
         add('funnel', 'Aim 2 participants', 1, 'Wanted', {s: complete[s]['wanted'] for s in STUDIES})
-        add('funnel', 'Aim 2 participants', 2, 'A value in all four recordings',
+        add('funnel', 'Aim 2 participants', 2, 'A value before and after nicotine',
             {s: complete[s]['complete'] for s in STUDIES})
     for rank_ in (1, 2, 3):
         mine = loops_[loops_['rank'] == rank_]

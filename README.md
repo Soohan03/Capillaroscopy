@@ -324,9 +324,9 @@ judges the loops at another threshold from their saved space-time diagrams
 before-exposure recordings of both visits (`capillary.inventory` chooses them),
 the within-subject CV (typical error / mean), the smallest detectable change
 (2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval; and
-aim 2: each visit's change after minus before and their difference, active
-minus control, with its interval, a paired t-test, the Wilcoxon test and the
-same on the log scale. The tables go to `Reports/aims/`; each observer is
+aim 2, per study and pooled over both: the change after minus before exposure
+on the nicotine visit (W, S; the control visit is not used), with its
+interval, a paired t-test, the Wilcoxon test and the same on the log scale. The tables go to `Reports/aims/`; each observer is
 summarized on their own. The data folder comes from `settings.csv` unless
 `--data` gives one.
 

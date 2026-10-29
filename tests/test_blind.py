@@ -93,6 +93,7 @@ def test_the_recording_list_marks_aim_1_except_during_blind_placement():
 
 def test_the_aims_recordings_come_from_the_inventory():
     used = blind.aim_recordings()
-    assert 'FP01_Qföre_22-Oct-2019_08-16-35' in used                         # aims 1 and 2, control before
-    assert 'FP01_Qefter_försök2_22-Oct-2019_09-50-15' in used                # aim 2, control after: the last attempt
-    assert 'FP01_Qefter_22-Oct-2019_09-46-17' not in used                    # the attempt before it
+    assert 'FP01_Qföre_22-Oct-2019_08-16-35' in used                         # aim 1, control before
+    assert 'FP01_Wefter_14-Oct-2019_10-13-03' in used                        # aim 2, nicotine after: the last attempt
+    assert 'FP01_Wefter_14-Oct-2019_10-07-49' not in used                    # the attempt before it
+    assert 'FP01_Qefter_försök2_22-Oct-2019_09-50-15' not in used            # aim 2 leaves the control visit out

@@ -34,7 +34,13 @@ participant with a mean at both. Per study:
 Also the CV on the log scale (exp(SD of the log differences / sqrt 2) - 1),
 for velocities spread over several-fold.
 
-Writes loops.csv, recordings.csv, aim1_pairs.csv and aim1.csv into
+Aim 2, the response to nicotine, uses the before- and after-exposure
+recordings of the nicotine visit (W in ESMOKE, S in ISMOKE), for every
+participant with a value in both; the control visit is not used. Per study,
+and pooled over both as a separate analysis: the change after minus before
+(mean, 95% interval, paired t-test, Wilcoxon) and the ratio after / before.
+
+Writes loops.csv, recordings.csv, aim1_pairs.csv, aim1.csv, aim2_values.csv and aim2.csv into
 ``Reports/aims/`` of the data folder (or --out) and prints a summary.
 
 While the app is in blind placement the results stay hidden unless --unblind
@@ -74,9 +80,11 @@ RANKED_LOOPS = 3
 #: What a recording's value can be (--value): the protocol's (the reference, else the first backup that
 #: counts), the reference capillary's alone, or the mean of all counted loops; columns of `per_recording`.
 VALUES = {'reference': 'value_mm_s', 'reference-only': 'reference_only_mm_s', 'mean': 'mean_mm_s'}
-#: Aim 2's recordings of a participant, as columns of `aim2_recordings`.
-AIM2_RECORDINGS = ('active_before_recording', 'active_after_recording', 'control_before_recording',
-                   'control_after_recording')
+#: Aim 2's recordings of a participant, as columns of `aim2_recordings`: before and after exposure on the
+#: nicotine (active) visit. The control visit is not used (PROTOCOL.md).
+AIM2_RECORDINGS = ('active_before_recording', 'active_after_recording')
+#: Aim 2's analysis over both studies together, beside each study's own.
+POOLED = 'ESMOKE + ISMOKE'
 #: The range a loop must lie in, as the data set's summary names its official phase.
 REST = 'rest'
 #: The folder of the stabilized videos (`gui.settings.DataFolder.stabilized`).
@@ -325,19 +333,19 @@ def _name(value) -> str:
 
 
 def aim2_recordings(people: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-    """Each participant's four recordings that aim 2 uses (`capillary.inventory`), before and after exposure
-    on the active and the control visit."""
+    """Each participant's two recordings that aim 2 uses (`capillary.inventory`), before and after exposure
+    on the nicotine (active) visit."""
     if people is None:
         people = inventory.participants(inventory.recordings())
     rows = [{'study': person['study'], 'subject': person['subject'],
-             **{f'{role}_{when}_recording': _name(person[f'{role}_{phase}'])
-                for role in ('active', 'control') for when, phase in (('before', 'före'), ('after', 'efter'))}}
+             **{f'active_{when}_recording': _name(person[f'active_{phase}'])
+                for when, phase in (('before', 'före'), ('after', 'efter'))}}
             for person in people.to_dict('records') if person.get('aim2', 'no') != 'no']
     return pd.DataFrame(rows, columns=['study', 'subject', *AIM2_RECORDINGS])
 
 
 def aim2_values(recordings: pd.DataFrame, wanted: pd.DataFrame, value: str = 'value_mm_s') -> pd.DataFrame:
-    """Per observer and participant of `wanted` (`aim2_recordings`): the value of each of its four recordings
+    """Per observer and participant of `wanted` (`aim2_recordings`): the value of each of its two recordings
     (column `value` of `per_recording`) and their loops."""
     return _visit_values(recordings, wanted, AIM2_RECORDINGS, value)
 
@@ -354,50 +362,45 @@ def _mean_ci(values) -> tuple:
     return mean, mean - half, mean + half
 
 
-def response(active_before, active_after, control_before, control_after) -> dict:
-    """Aim 2's statistics: the change after minus before on each visit and their difference, active minus
-    control (participants with all four values).
+def response(before, after) -> dict:
+    """Aim 2's statistics: the change after minus before exposure on the nicotine visit (participants with
+    both values).
 
-    The difference: its mean with a 95% confidence interval, a paired t-test (one-sample on the differences)
-    and the Wilcoxon signed-rank test. On the log scale: each visit's ratio after / before (geometric mean)
-    and the ratio of the two, with its interval and t-test.
+    The change: its mean with a 95% confidence interval, a paired t-test (one-sample on the changes) and the
+    Wilcoxon signed-rank test. On the log scale: the ratio after / before (geometric mean), with its
+    interval and t-test.
     """
-    ab, aa, cb, ca = (np.asarray(v, dtype=float) for v in (active_before, active_after, control_before,
-                                                             control_after))
-    keep = np.isfinite(ab) & np.isfinite(aa) & np.isfinite(cb) & np.isfinite(ca)
-    ab, aa, cb, ca = ab[keep], aa[keep], cb[keep], ca[keep]
-    n = int(ab.size)
-    change_active, change_control = aa - ab, ca - cb
-    difference = change_active - change_control
-    out = {'participants': n}
-    for label, values in (('change_active', change_active), ('change_control', change_control),
-                          ('difference', difference)):
-        mean, low, high = _mean_ci(values)
-        out.update({f'{label}_mm_s': mean, f'{label}_ci_low_mm_s': low, f'{label}_ci_high_mm_s': high})
-    out['difference_sd_mm_s'] = float(difference.std(ddof=1)) if n >= 2 else math.nan
-    out['t_test_p'] = float(stats.ttest_1samp(difference, 0.0).pvalue) if n >= 2 else math.nan
-    out['wilcoxon_p'] = float(stats.wilcoxon(difference).pvalue) if np.any(difference != 0) else math.nan
-    positive = n >= 2 and bool(np.all(ab > 0) and np.all(aa > 0) and np.all(cb > 0) and np.all(ca > 0))
-    log_active = np.log(aa / ab) if positive else np.array([])
-    log_control = np.log(ca / cb) if positive else np.array([])
-    out['ratio_active'] = math.exp(log_active.mean()) if positive else math.nan
-    out['ratio_control'] = math.exp(log_control.mean()) if positive else math.nan
-    mean, low, high = _mean_ci(log_active - log_control) if positive else (math.nan,) * 3
-    out.update(ratio_of_ratios=math.exp(mean) if positive else math.nan,
-               ratio_of_ratios_ci_low=math.exp(low) if positive else math.nan,
-               ratio_of_ratios_ci_high=math.exp(high) if positive else math.nan,
-               log_t_test_p=float(stats.ttest_1samp(log_active - log_control, 0.0).pvalue) if positive else math.nan)
+    before, after = (np.asarray(v, dtype=float) for v in (before, after))
+    keep = np.isfinite(before) & np.isfinite(after)
+    before, after = before[keep], after[keep]
+    n = int(before.size)
+    change = after - before
+    mean, low, high = _mean_ci(change)
+    out = {'participants': n, 'mean_before_mm_s': float(before.mean()) if n else math.nan,
+           'mean_after_mm_s': float(after.mean()) if n else math.nan,
+           'change_mm_s': mean, 'change_ci_low_mm_s': low, 'change_ci_high_mm_s': high,
+           'change_sd_mm_s': float(change.std(ddof=1)) if n >= 2 else math.nan,
+           't_test_p': float(stats.ttest_1samp(change, 0.0).pvalue) if n >= 2 else math.nan,
+           'wilcoxon_p': float(stats.wilcoxon(change).pvalue) if np.any(change != 0) else math.nan}
+    positive = n >= 2 and bool(np.all(before > 0) and np.all(after > 0))
+    log_ratio = np.log(after / before) if positive else np.array([])
+    mean, low, high = _mean_ci(log_ratio) if positive else (math.nan,) * 3
+    out.update(ratio=math.exp(mean), ratio_ci_low=math.exp(low), ratio_ci_high=math.exp(high),
+               log_t_test_p=float(stats.ttest_1samp(log_ratio, 0.0).pvalue) if positive else math.nan)
     return out
 
 
 def aim2(values: pd.DataFrame) -> pd.DataFrame:
-    """`response` per observer and study, with how many participants miss a value."""
+    """`response` per observer and study, then over both studies together (`POOLED`, a separate analysis:
+    the nicotine comes from an e-cigarette in ESMOKE and from heated tobacco in ISMOKE), with how many
+    participants miss a value."""
     rows = []
     columns = [f'{column[:-len("_recording")]}_mm_s' for column in AIM2_RECORDINGS]
-    for (observer, study), group in values.groupby(['observer', 'study'], sort=True):
-        complete = np.isfinite(group[columns].to_numpy(dtype=float)).all(axis=1)
-        rows.append({'observer': observer, 'study': study, 'participants_wanted': len(group),
-                     'incomplete': int((~complete).sum()), **response(*(group[column] for column in columns))})
+    for observer, mine in values.groupby('observer', sort=True):
+        for study, group in [*mine.groupby('study', sort=True), (POOLED, mine)]:
+            complete = np.isfinite(group[columns].to_numpy(dtype=float)).all(axis=1)
+            rows.append({'observer': observer, 'study': study, 'participants_wanted': len(group),
+                         'incomplete': int((~complete).sum()), **response(*(group[column] for column in columns))})
     return pd.DataFrame(rows)
 
 
@@ -581,20 +584,17 @@ def report(loop_table: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataFra
                          f'to {_fmt(row.icc_a1_ci_high, 2)})')
     for row in (aim2_stats if aim2_stats is not None else pd.DataFrame()).itertuples(index=False):
         lines.append('')
-        lines.append(f'Aim 2, {row.study}, observer {row.observer or "(none)"}: {row.participants} of '
-                     f'{row.participants_wanted} participants with a value in all four recordings')
+        pooled = ' (pooled, a separate analysis)' if row.study == POOLED else ''
+        lines.append(f'Aim 2, {row.study}{pooled}, observer {row.observer or "(none)"}: {row.participants} of '
+                     f'{row.participants_wanted} participants with a value before and after exposure on the '
+                     f'nicotine visit')
         if row.participants:
-            lines.append(f'  change after - before: active {_fmt(row.change_active_mm_s)} mm/s '
-                         f'({_fmt(row.change_active_ci_low_mm_s)} to {_fmt(row.change_active_ci_high_mm_s)}), '
-                         f'control {_fmt(row.change_control_mm_s)} mm/s ({_fmt(row.change_control_ci_low_mm_s)} '
-                         f'to {_fmt(row.change_control_ci_high_mm_s)})')
-            lines.append(f'  difference active - control: {_fmt(row.difference_mm_s)} mm/s (95% CI '
-                         f'{_fmt(row.difference_ci_low_mm_s)} to {_fmt(row.difference_ci_high_mm_s)}); paired '
-                         f't-test p {_fmt(row.t_test_p)}, Wilcoxon p {_fmt(row.wilcoxon_p)}')
-            lines.append(f'  as ratios after / before: active {_fmt(row.ratio_active, 2)}, control '
-                         f'{_fmt(row.ratio_control, 2)}; active / control {_fmt(row.ratio_of_ratios, 2)} (95% CI '
-                         f'{_fmt(row.ratio_of_ratios_ci_low, 2)} to {_fmt(row.ratio_of_ratios_ci_high, 2)}), '
-                         f'p {_fmt(row.log_t_test_p)}')
+            lines.append(f'  before {_fmt(row.mean_before_mm_s)} mm/s, after {_fmt(row.mean_after_mm_s)} mm/s; change '
+                         f'after - before {_fmt(row.change_mm_s)} mm/s (95% CI {_fmt(row.change_ci_low_mm_s)} to '
+                         f'{_fmt(row.change_ci_high_mm_s)}); paired t-test p {_fmt(row.t_test_p)}, Wilcoxon p '
+                         f'{_fmt(row.wilcoxon_p)}')
+            lines.append(f'  as a ratio after / before: {_fmt(row.ratio, 2)} (95% CI {_fmt(row.ratio_ci_low, 2)} to '
+                         f'{_fmt(row.ratio_ci_high, 2)}), p {_fmt(row.log_t_test_p)}')
     return '\n'.join(lines)
 
 

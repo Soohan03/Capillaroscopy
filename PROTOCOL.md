@@ -11,10 +11,12 @@ unblinding", with its reason.
 
 ## Recordings
 
-- The 90 recordings the aims use, as `capillary.inventory` chooses them
-  (`metadata/derived/recordings.csv`): for each participant and visit, the recording before
-  exposure (före) and after it (efter), each the last attempt with 30 s of rest. ESMOKE 54,
-  ISMOKE 36.
+- The recordings the aims use, as `capillary.inventory` chooses them
+  (`metadata/derived/recordings.csv`), each the last attempt with 30 s of rest: the recording
+  before exposure (före) of both visits for aim 1, and the recordings before and after exposure
+  (efter) of the nicotine visit for aim 2. 72 recordings: ESMOKE 41, ISMOKE 31.
+  - Until aim 2 was corrected (2026-10-29, "Changes after unblinding") the list held 90: före and
+    efter of both visits (ESMOKE 54, ISMOKE 36). All 90 were placed blind.
 - All stabilized with `capillary.stabilize` (translation only), on 2026-10-14 and 2026-10-29.
 - Measured within the official rest: from 2 s after the video starts to 2 s before the cuff
   goes on (official times in `metadata/`).
@@ -22,7 +24,7 @@ unblinding", with its reason.
 ## Choosing the capillaries (blind)
 
 - **Blind placement** in the app:
-  - the list shows only these 90 recordings, under codes, in the order of the codes;
+  - the list shows only these recordings, under codes, in the order of the codes;
   - a line's result (velocity, signal-to-noise) is hidden;
   - the range is fixed to the official rest.
   - The observer does not know the participant, the visit, the exposure, or whether a
@@ -91,14 +93,19 @@ For each study, the participants with a value in both before-exposure recordings
 - Bland–Altman, active minus control visit: the bias and the 95% limits of agreement;
 - ICC(A,1) (two-way, absolute agreement, single measurement) with its 95% interval.
 
-## Aim 2: response to exposure
+## Aim 2: response to nicotine
 
-For each study, the participants with a value in all four recordings:
+As agreed with the PI about a month before unblinding (written here on 2026-10-29, after
+unblinding: see "Changes after unblinding"). The participants with a value before and after
+exposure on the nicotine visit, W in ESMOKE and S in ISMOKE; the control visit (Q, C) is not
+used:
 
-- each visit's change, after minus before;
-- the difference in change, active minus control: the mean with its 95% confidence interval
-  and a paired t-test, with the Wilcoxon signed-rank test as a check;
-- the same on the log scale (the ratio after / before).
+- the change, after minus before: the mean with its 95% confidence interval and a paired
+  t-test, with the Wilcoxon signed-rank test as a check;
+- the same on the log scale (the ratio after / before, as a geometric mean).
+- For each study, and pooled over both as a separate analysis, since the nicotine comes from
+  an e-cigarette in ESMOKE and from heated tobacco in ISMOKE. The pooled analysis takes the
+  two studies' participants as different people.
 - Skin temperature as a covariate, if DynCap has it (it is not in our data as of 2026-10-29).
 
 ## Sensitivity analyses
@@ -109,7 +116,8 @@ For each study, the participants with a value in all four recordings:
 
 ## Blinding
 
-- No result is looked at until all 90 recordings have their lines.
+- No result is looked at until all 90 recordings have their lines. After aim 2's correction
+  (below), aim 2 is not computed again until the three recordings it gained have theirs.
 - Progress is checked with `python3 -m capillary.aims --progress`. It shows the codes, the
   names of each recording's loops and what to fix (a loop placed twice, a missing
   reference), never a velocity or a score. Problems found this way are fixed before
@@ -169,4 +177,24 @@ These describe the results further; none changes a value or a statistic fixed ab
 
 ## Changes after unblinding
 
-None yet.
+- **Aim 2 corrected to what had been agreed** (2026-10-29, afternoon).
+  - About a month before unblinding, the student and the PI agreed that aim 2 looks at each
+    participant's recordings before and after exposure on the nicotine visit, when both exist:
+    per study, and pooled as a separate analysis, without the control visit.
+  - This protocol, written on the day of placement, recorded an older plan by mistake: the
+    participants with a value in all four recordings, and the change on the active visit minus
+    that on the control visit.
+  - The correction came after aim 2 by the old text had been computed at unblinding and looked
+    at: ESMOKE 5 of 13 participants, the difference in change −0.097 mm/s (95% CI −0.175 to
+    −0.019); ISMOKE none. Those tables are kept in `Reports/aims/aim2_as_first_written/`.
+  - Aim 2 gains ISMOKE FP02 and FP08, who have a complete S visit but not a complete C visit
+    (no ESMOKE participant has a complete W visit without being in aim 2 already). Their three
+    recordings without lines (FP02 Sföre and Sefter, FP08 Sefter) are placed in blind placement,
+    under codes, by the same rules, before aim 2 is computed again.
+  - They were placed in blind placement at 18:58–19:04, three loops each, and blind placement
+    was switched off after the last one. None of the nine loops counted (five scored 8 or more but
+    lay at the slowest speed searched; four scored below 8), so aim 2 gained no pair. Aim 2 was
+    then computed (19:05): ESMOKE 5 of 13 participants, ISMOKE 3 of 10. Tables in `Reports/aims/`;
+    aim 1 came out exactly as at unblinding.
+  - The recordings after exposure on the control visit are no longer used; their lines stay on
+    disk.

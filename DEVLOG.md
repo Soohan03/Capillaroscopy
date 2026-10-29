@@ -6,6 +6,72 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — Aim 2 corrected to the nicotine visit
+
+**Branch:** `feature/aim2-nicotine-visits`, from `feature/reference-capillary` at d44b8ea (not merged yet).
+
+**Why.** The user asked whether to run aim 2. It had already run at unblinding (13:07), by PROTOCOL.md's text:
+participants with a value in all four recordings, and the change on the active visit minus that on the control
+visit. The user then said that this was not what had been agreed. About a month before unblinding, the student and
+the PI agreed that aim 2 looks only at the nicotine visit (W in ESMOKE, S in ISMOKE), per participant with both its
+recordings before and after exposure. The analysis is per study, and pooled over both as a separate analysis, since
+the nicotine comes from an e-cigarette in one study and from heated tobacco in the other. The control visit is not
+used. PROTOCOL.md had recorded the older plan by mistake.
+
+On the way the user doubted, then confirmed, which letters carry nicotine: W and S do, Q and C (sham) don't, as
+the code had them. The labels came from the progress report shared on 2026-10-07.
+
+**Seen before the correction.** Aim 2 by the old text: ESMOKE 5 of 13 participants, difference in change
+−0.097 mm/s (95% CI −0.175 to −0.019), t-test p 0.026, Wilcoxon p 0.0625 (all 5 the same way); ISMOKE none. Its
+tables, and the sensitivity runs', were copied to `Reports/aims/aim2_as_first_written/` before anything was rerun.
+PROTOCOL.md's new "Changes after unblinding" entry says this.
+
+**What changed.**
+- `capillary/inventory.py`: aim 2 needs the före and efter of the active visit only (`participants`), and only
+  those recordings are marked as aim 2's (`mark_use`). Aim 2 now has 13 ESMOKE participants (the same 13) and 10
+  ISMOKE (8 + FP02 and FP08, who have a complete S visit but no complete C visit; FP02 is "check" for its odd
+  2 Nov names). The aims use 72 recordings instead of 90: the 21 control-visit efter recordings drop out, and 3
+  join (ISMOKE FP02 Sföre and Sefter, FP08 Sefter). `metadata/derived/` regenerated.
+- `capillary/aims.py`: `AIM2_RECORDINGS` holds the two nicotine-visit recordings. `response(before, after)` gives
+  the change (mean, 95% interval, paired t-test, Wilcoxon) and the ratio after / before (geometric mean, interval,
+  t-test on the logs). `aim2` adds a pooled row, `POOLED` ('ESMOKE + ISMOKE'), after the studies. The printed
+  report says so.
+- `analysis/primary_endpoint/report.py` and its dashboard: aim 2's funnel now counts participants with a value
+  before and after nicotine (wording only; the published report has not been regenerated).
+- PROTOCOL.md: the recordings, aim 2 (now "response to nicotine"), the blinding note and the change entry.
+  CLAUDE.md, README.md and metadata/README.md: aim 2 and the counts.
+
+**Blinding of the three new recordings.** They are stabilized but have no lines. The user places them in blind
+placement (reference + two backups, same rules), and aim 2 is not computed again until then. So nothing of the new
+aim 2 has been looked at. `capillary.aims --progress` lists 4 codes without lines: these 3 and ESMOKE FP03 Wefter,
+where no line is possible.
+
+**Verified.** `python3 -m pytest`: 318 passed. The aim 2 tests were rewritten: the change and ratio against scipy,
+the per-study and pooled rows, the inventory's 13 + 10 participants. The inventory tests now expect 72 recordings
+and the control-visit efter unused, and the blind list's test has the same change. `--progress` runs.
+
+**Afterwards: the three recordings placed, aim 2 computed.**
+- The user placed the three recordings in blind placement at 18:58–19:04 (confirmed by the user; `settings.csv`
+  was rewritten at 19:04:34, when blind placement was switched off), three whole loops each. `--progress` found
+  nothing to fix.
+- None of the nine counted:
+  - FP02 Sefter's three (signal-to-noise 31–42), FP02 Sföre loop1 (17.6) and FP08 Sefter loop2 (19.9) lay at the
+    slowest speed searched;
+  - the other four scored 2.7–7.1.
+- Aim 2 (19:05, `capillary.aims` and the four sensitivity runs):
+
+  | | Pairs | Change after − before, mm/s (95% CI) | t-test / Wilcoxon p | Ratio after/before |
+  |---|---|---|---|---|
+  | ESMOKE | 5 of 13 | −0.087 (−0.204 to 0.030) | 0.109 / 0.062 | 0.52 (0.23–1.15) |
+  | ISMOKE | 3 of 10 | −0.042 (−0.175 to 0.090) | 0.303 / 0.500 | 0.60 (0.12–3.11) |
+  | Pooled | 8 of 23 | −0.070 (−0.137 to −0.003) | 0.043 / 0.023 | 0.55 (0.33–0.91) |
+
+- 7 of 8 decreased. The sensitivity runs agree: signal-to-noise 7 and 9 give the same; the mean of the counted
+  loops gives pooled −0.071 (−0.137 to −0.005); the reference alone leaves 1 ESMOKE pair.
+- Aim 1 and its sensitivity tables came out identical to those of 13:07 (compared file by file).
+
+---
+
 ## 2026-10-29 — Post hoc: a coarser filter for faster flow
 
 **Branch:** `feature/reference-capillary`. Commits: 0b15b9c (the plan, 14:38, before any check), then the scripts
