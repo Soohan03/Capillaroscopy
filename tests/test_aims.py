@@ -7,7 +7,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from capillary import agreement, aims, datasets
+from capillary import agreement, aims, blinding, datasets
+
+
+@pytest.fixture(autouse=True)
+def app_settings(tmp_path, monkeypatch):
+    """The app's settings.csv, empty (blind placement off) unless a test writes it: never the real one."""
+    path = tmp_path / 'settings.csv'
+    monkeypatch.setattr(aims, 'SETTINGS', str(path))
+    return path
 
 
 def loop_points(x):
@@ -116,3 +124,49 @@ def test_the_command_writes_the_tables(statistics, tmp_path, capsys):
     assert 'Observer SJ: 14 whole loops in 8 recordings, 9 counted' in printed
     assert 'check: C1 loop1 lies on loop2' in printed
     assert pd.read_csv(out / 'loops.csv')['observer'].eq('SJ').all()
+
+
+def test_a_loop_ranks_by_its_name():
+    assert [aims.rank(name) for name in ('loop1', 'loop2', 'loop12')] == [1, 2, 12]
+    assert all(np.isnan(aims.rank(name)) for name in ('set1', 'ref', 'loop', 'Loop1', 'loop1b', ''))
+
+
+def test_progress_lists_codes_names_and_what_to_fix_but_no_result(statistics):
+    save(statistics, 'A5', 'loop1', 0.10)
+    save(statistics, 'A5', 'loop3', 0.12, x=50)                 # loop2 left out
+    save(statistics, 'C5', 'loop2', 0.10)                       # no reference
+    save(statistics, 'C5', 'ref', 0.10, x=50)                   # a name the protocol does not rank
+    studies = {'A1': 'ESMOKE', 'C1': 'ESMOKE', 'C2': 'ESMOKE', 'A5': 'ESMOKE', 'C5': 'ESMOKE', 'IA1': 'ISMOKE'}
+    table = aims.collect(statistics)
+    printed = aims.progress(table[table['observer'] == 'SJ'], studies)
+    lines = {line.split()[0]: line for line in printed.splitlines() if line.startswith('  ')}
+    code = blinding.codes(studies)
+    assert set(lines) == {code[name] for name in ('A1', 'C1', 'C2', 'A5', 'C5')}
+    assert lines[code['A1']].split() == [code['A1'], 'loop1', 'loop2']             # nothing to fix
+    assert 'loop1 and loop2 lie on the same capillary' in lines[code['C1']]
+    c2 = lines[code['C2']]
+    assert 'not a whole loop: limb1' in c2 and 'more than 3 loops: loop4, loop5' in c2
+    assert 'not over the official rest: loop4' in c2 and 'not on the stabilized video: loop5' in c2
+    assert 'loop2 missing' in lines[code['A5']]
+    assert 'no loop1 (the reference)' in lines[code['C5']] and 'not named loop1-loop3: ref' in lines[code['C5']]
+    assert 'ESMOKE: 5 of 5 recordings have lines' in printed and 'ISMOKE: 0 of 1' in printed
+    assert f'No lines yet (1): {code["IA1"]}' in printed
+    assert 'recordings with something to fix: 4' in printed
+    for hidden in ('0.', 'mm/s', 'snr', 'count', 'A1 ', 'C2 '):            # no result, no real name
+        assert hidden not in printed
+
+
+def test_results_stay_hidden_while_the_app_is_in_blind_placement(statistics, tmp_path, app_settings, capsys,
+                                                                 monkeypatch):
+    app_settings.write_text('Application_path,/somewhere\nobserver,sj\nblind_placement,1\n', encoding='utf-8')
+    monkeypatch.setattr(aims, 'aims_studies', lambda: {'A1': 'ESMOKE', 'C1': 'ESMOKE'})
+    data, out = os.path.dirname(statistics), str(tmp_path / 'aims')
+    assert aims.main(['--data', data, '--out', out]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == '' and '--unblind' in captured.err and not os.path.exists(out)
+    assert aims.main(['--data', data, '--progress']) == 0                   # the app's observer, upper case
+    printed = capsys.readouterr().out
+    assert printed.startswith('Observer SJ:') and 'ESMOKE: 2 of 2 recordings have lines' in printed
+    assert '0.' not in printed and not os.path.exists(out)
+    assert aims.main(['--data', data, '--out', out, '--unblind']) == 0
+    assert 'counted' in capsys.readouterr().out

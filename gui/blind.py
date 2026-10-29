@@ -13,49 +13,25 @@ hides what could steer it:
   measures the official rest only;
 - the pages that show results (Two boxes, Results, Validation) are closed.
 
-A code is the recording's name hashed (`code`): the same on every computer
-and every day, and the same name always gets it. The data sets are saved
-under the real names, as always.
+A code is the recording's name hashed (`capillary.blinding.code`): the same
+on every computer and every day, and the same name always gets it. The data
+sets are saved under the real names, as always.
 """
 
 from __future__ import annotations
 
 import functools
-import hashlib
 import logging
-from typing import Iterable
 
 from capillary import inventory
+from capillary.blinding import ALPHABET, LENGTH, code, codes  # noqa: F401 (the codes, as the app shows them)
 
 log = logging.getLogger(__name__)
 
-#: 32 characters without the ones that look alike (0/O, 1/I).
-ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-LENGTH = 5
 #: The pages closed during blind placement: they show what lines measure.
 LOCKED_PAGES = ('analyze', 'results', 'validation')
 #: The settings.csv row that keeps it on between sessions.
 SETTING = 'blind_placement'
-
-
-def code(stem: str) -> str:
-    """The recording's code: its name (Unicode-normalized, as file systems differ) hashed into `LENGTH` characters."""
-    number = int.from_bytes(hashlib.sha256(inventory.nfc(stem).encode('utf-8')).digest()[:8], 'big')
-    characters = []
-    for _ in range(LENGTH):
-        number, digit = divmod(number, len(ALPHABET))
-        characters.append(ALPHABET[digit])
-    return ''.join(characters)
-
-
-def codes(stems: Iterable[str]) -> dict:
-    """``{stem: code}`` for every stem; a code two names share gets -2, -3 ... on the later names (by name)."""
-    out, seen = {}, {}
-    for stem in sorted(set(stems), key=inventory.nfc):
-        base = code(stem)
-        seen[base] = seen.get(base, 0) + 1
-        out[stem] = base if seen[base] == 1 else f'{base}-{seen[base]}'
-    return out
 
 
 @functools.lru_cache(maxsize=1)

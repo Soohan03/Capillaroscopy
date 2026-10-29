@@ -2,6 +2,7 @@
 
 import unicodedata
 
+from capillary import blinding
 from gui import blind
 from gui.library import Recording
 
@@ -19,8 +20,12 @@ def test_a_code_hides_the_name_and_is_always_the_same():
 
 
 def test_a_code_two_names_share_is_told_apart(monkeypatch):
-    monkeypatch.setattr(blind, 'code', lambda stem: 'SAME1')
+    monkeypatch.setattr(blinding, 'code', lambda stem: 'SAME1')
     assert blind.codes(['b', 'a', 'c']) == {'a': 'SAME1', 'b': 'SAME1-2', 'c': 'SAME1-3'}
+
+
+def test_the_app_and_the_command_line_use_the_same_codes():
+    assert blind.code is blinding.code and blind.codes is blinding.codes
 
 
 def test_only_the_recordings_the_aims_use_are_listed_in_the_order_of_their_codes():

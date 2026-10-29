@@ -1,6 +1,6 @@
 """The aims from the saved centre-line data sets: each recording's resting velocity, and aim 1's statistics.
 
-python3 -m capillary.aims [--data <data folder>] [--observer <code>] [--out <folder>]
+python3 -m capillary.aims [--data <data folder>] [--observer <code>] [--out <folder>] [--progress] [--unblind]
 
 A recording's resting red-cell velocity is the mean over its capillary loops
 (the plan of 2026-10-14, DEVLOG):
@@ -36,6 +36,11 @@ for velocities spread over several-fold.
 
 Writes loops.csv, recordings.csv, aim1_pairs.csv and aim1.csv into
 ``Reports/aims/`` of the data folder (or --out) and prints a summary.
+
+While the app is in blind placement the results stay hidden unless --unblind
+is passed. ``--progress`` shows how far placement got instead, under the codes
+the app lists the recordings by: each one's loop names and what to fix, with
+no velocity or score.
 """
 
 from __future__ import annotations
@@ -45,16 +50,26 @@ import csv
 import glob
 import math
 import os
+import re
 import sys
 from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
 
-from . import agreement, datasets, inventory, pattern_shift
+from . import agreement, blinding, datasets, inventory, pattern_shift
 from .spacetime import Centreline
 
 REPOSITORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#: The app's settings: its data folder, the observer's code and whether blind placement is on.
+SETTINGS = os.path.join(REPOSITORY, 'settings.csv')
+#: The settings.csv row the app keeps blind placement in (`gui.blind.SETTING`).
+BLIND_SETTING = 'blind_placement'
+#: The data set names the app suggests for whole loops, in the order they are placed. By the protocol
+#: (PROTOCOL.md) the observer places a recording's loops in the order of their ranking: loop1 is the
+#: reference capillary, loop2 and loop3 its backups.
+LOOP_NAME = re.compile(r'^loop(\d+)$')
+RANKED_LOOPS = 3
 #: The range a loop must lie in, as the data set's summary names its official phase.
 REST = 'rest'
 #: The folder of the stabilized videos (`gui.settings.DataFolder.stabilized`).
@@ -228,16 +243,118 @@ def aim1(pairs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def default_data_folder(settings_path: str = os.path.join(REPOSITORY, 'settings.csv')) -> Optional[str]:
-    """The app's data folder from settings.csv (``Application_path``), if there is one."""
+def rank(dataset: str) -> float:
+    """The place of a loop in the observer's ranking, from its name: 1 for ``loop1`` (the reference); NaN for
+    a name the protocol does not rank."""
+    match = LOOP_NAME.match(dataset or '')
+    return float(match.group(1)) if match else math.nan
+
+
+def _in_ranking_order(dataset: str) -> tuple:
+    """Sort key: loop1, loop2, ... first, then any other name."""
+    place = rank(dataset)
+    return (place if np.isfinite(place) else math.inf, dataset)
+
+
+def aims_studies() -> dict:
+    """``{name: study}`` of the recordings the aims use (`capillary.inventory`), names NFC."""
+    table = inventory.recordings()
+    table = inventory.mark_use(table, inventory.participants(table))
+    used = table[table['used_for'].fillna('') != '']
+    return {inventory.nfc(name): study for name, study in zip(used['name'], used['study'])}
+
+
+def progress(table: pd.DataFrame, studies: dict) -> str:
+    """How far blind placement got, without a single result: the report of ``--progress``.
+
+    Per recording the aims use (`studies`, ``{name: study}``), under its code as the app lists it: the names
+    of its data sets and what the protocol asks to fix (no loop1, a gap or more than `RANKED_LOOPS` in the
+    ranking, a line that is not a whole loop or not over the official rest, one capillary drawn twice). No
+    velocity, score or count of loops that count is shown, so the observer can read it while placing.
+    """
+    codes = blinding.codes(studies)
+    mine = table[table['recording'].isin(studies)]
+    lines, waiting, placed = [], [], {}
+    problems = 0
+    for name in sorted(studies, key=codes.get):
+        group = mine[mine['recording'] == name]
+        if not len(group):
+            waiting.append(codes[name])
+            continue
+        loops_ = group[group['role'] == pattern_shift.WHOLE_LOOP]
+        ranked = [(name_, rank(name_)) for name_ in loops_['dataset']]
+        found = sorted(r for _, r in ranked if np.isfinite(r))
+        issues = []
+        other = group.loc[group['role'] != pattern_shift.WHOLE_LOOP, 'dataset']
+        if len(other):
+            issues.append(f'not a whole loop: {", ".join(sorted(other))}')
+        unranked = sorted(name_ for name_, r in ranked if not np.isfinite(r))
+        if unranked:
+            issues.append(f'not named loop1-loop{RANKED_LOOPS}: {", ".join(unranked)}')
+        if len(loops_) and 1 not in found:
+            issues.append('no loop1 (the reference)')
+        gaps = [f'loop{r}' for r in range(2, int(max(found, default=1))) if r not in found]
+        if gaps:
+            issues.append(f'{", ".join(gaps)} missing')
+        beyond = [f'loop{int(r)}' for r in found if r > RANKED_LOOPS]
+        if beyond:
+            issues.append(f'more than {RANKED_LOOPS} loops: {", ".join(beyond)}')
+        for mask, text in ((loops_['phase'] != REST, 'not over the official rest'),
+                           (loops_['video_folder'] != STABILIZED_FOLDER, 'not on the stabilized video')):
+            if mask.any():
+                issues.append(f'{text}: {", ".join(sorted(loops_.loc[mask, "dataset"]))}')
+        points = list(zip(loops_['dataset'], loops_['points']))
+        for i, (first, first_points) in enumerate(points):
+            for second, second_points in points[i + 1:]:
+                if _overlap(first_points, second_points) >= DUPLICATE_SHARE:
+                    issues.append(f'{first} and {second} lie on the same capillary')
+        problems += bool(issues)
+        placed[name] = len(loops_)
+        names = ' '.join(sorted(group['dataset'], key=_in_ranking_order))
+        lines.append(f'  {codes[name]}  {names}' + (f'   <- {"; ".join(issues)}' if issues else ''))
+    out = []
+    for study in sorted(set(studies.values())):
+        names = [n for n in studies if studies[n] == study]
+        out.append(f'{study}: {sum(n in placed for n in names)} of {len(names)} recordings have lines')
+    counts = pd.Series(list(placed.values()), dtype=int)
+    if len(counts):
+        tally = ', '.join(f'{int((counts == n).sum())} with {n}' for n in sorted(counts.unique()))
+        out.append(f'Whole loops per recording: {tally}; recordings with something to fix: {problems}')
+    out += lines
+    if waiting:
+        out.append(f'No lines yet ({len(waiting)}): {" ".join(waiting)}')
+    elsewhere = table.loc[~table['recording'].isin(studies), 'recording'].nunique()
+    if elsewhere:
+        out.append(f'(Also data sets on {elsewhere} recording{"s" if elsewhere > 1 else ""} the aims do not use.)')
+    return '\n'.join(out)
+
+
+def _setting(key: str, settings_path: Optional[str] = None) -> Optional[str]:
+    """A row of the app's settings.csv (`SETTINGS`), if it has one."""
     try:
-        with open(settings_path, newline='', encoding='utf-8') as handle:
+        with open(settings_path or SETTINGS, newline='', encoding='utf-8') as handle:
             for row in csv.reader(handle):
-                if len(row) >= 2 and row[0].strip() == 'Application_path' and row[1].strip():
+                if len(row) >= 2 and row[0].strip() == key and row[1].strip():
                     return row[1].strip()
     except (OSError, UnicodeDecodeError):
         pass
     return None
+
+
+def default_data_folder(settings_path: Optional[str] = None) -> Optional[str]:
+    """The app's data folder from settings.csv (``Application_path``), if there is one."""
+    return _setting('Application_path', settings_path)
+
+
+def default_observer(settings_path: Optional[str] = None) -> Optional[str]:
+    """The observer code the app last saved a data set with (settings.csv ``observer``), upper case."""
+    observer = _setting('observer', settings_path)
+    return observer.upper() if observer else None
+
+
+def blind_placement_on(settings_path: Optional[str] = None) -> bool:
+    """Whether the app is in blind placement (`gui.blind`)."""
+    return _setting(BLIND_SETTING, settings_path) == '1'
 
 
 def _fmt(value, digits: int = 3) -> str:
@@ -288,11 +405,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--data', default=None, help="the app's data folder (default: from settings.csv)")
     parser.add_argument('--observer', default=None, help='only this observer\'s data sets')
     parser.add_argument('--out', default=None, help='where to write the tables (default: Reports/aims/)')
+    parser.add_argument('--progress', action='store_true',
+                        help="how far blind placement got, by code, without results (default observer: the app's)")
+    parser.add_argument('--unblind', action='store_true',
+                        help='show the results although blind placement is on in the app')
     args = parser.parse_args(argv)
     folder = args.data or default_data_folder()
     if not folder:
         parser.error('no data folder: pass --data, or set one in the app (settings.csv)')
     table = collect(os.path.join(folder, 'Statistics'))
+    if args.progress:
+        observer = (args.observer or default_observer() or '').upper()
+        print(f'Observer {observer or "(any)"}:')
+        print(progress(table[table['observer'] == observer] if observer else table, aims_studies()))
+        return 0
+    if blind_placement_on() and not args.unblind:
+        print('Blind placement is on in the app, so the results stay hidden until every recording has its lines.\n'
+              'Use --progress to see how far it got, or --unblind to show the results.', file=sys.stderr)
+        return 2
     if args.observer is not None:
         table = table[table['observer'] == args.observer]
     loop_table = loops(table)
