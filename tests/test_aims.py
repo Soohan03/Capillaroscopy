@@ -6,9 +6,10 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from scipy import stats
+from scipy import ndimage, stats
 
-from capillary import agreement, aims, blinding, datasets
+from capillary import agreement, aims, blinding, datasets, pattern_shift
+from capillary.spacetime import Centreline
 
 
 @pytest.fixture(autouse=True)
@@ -35,6 +36,28 @@ def save(statistics, recording, name, velocity=0.1, *, x=0.0, role='whole loop',
                     'pattern_shift_snr': 12.0 if resolved else 5.0, 'pattern_shift_resolved': resolved,
                     'phase': phase, 'arterial_end': 'start' if velocity > 0 else 'end', 'loop_movement': movement}}
     datasets.write_provenance(datasets.line_dataset_files(statistics, recording, name)['provenance'], record)
+
+
+def save_measured(statistics, recording, name, speed_px, *, x=0.0, seed=0, frames=900, mm_per_pixel=0.00133):
+    """A whole loop measured as the app measures it: a space-time diagram whose pattern moves `speed_px`
+    px/frame along the line, the summary computed from it, and both saved."""
+    points = loop_points(x)
+    line = Centreline.from_points(points)
+    width = int(line.length_px) + 1
+    rng = np.random.default_rng(seed)
+    reach = int(abs(speed_px) * frames)
+    texture = ndimage.gaussian_filter1d(rng.normal(size=width + 2 * reach + 20), 1.5)
+    start = reach + 10
+    diagram = np.array([texture[start - int(round(speed_px * t)):][:width] for t in range(frames)])
+    diagram = (diagram + rng.normal(scale=0.2, size=diagram.shape)).astype(np.float32)
+    summary = pattern_shift.summarize(diagram, 30.0, mm_per_pixel)
+    summary.update(pattern_shift.loop_limbs(diagram, line.apex_arc_px(), 30.0, mm_per_pixel), phase='rest')
+    record = {'kind': 'line', 'dataset': name, 'recording': recording, 'observer': 'SJ', 'mm_per_pixel': mm_per_pixel,
+              'video': {'folder': 'StabilizedVideos', 'fps': 30.0}, 'frames': {'first': 60, 'last': 959, 'count': 900},
+              'line': {'points': points, 'role': 'whole loop', 'length_px': line.length_px}, 'summary': summary}
+    files = datasets.line_dataset_files(statistics, recording, name)
+    datasets.write_provenance(files['provenance'], record)
+    np.save(files['space_time'], diagram, allow_pickle=False)
 
 
 @pytest.fixture
@@ -195,6 +218,24 @@ def test_aim_2_uses_the_inventory_participants_with_all_four_recordings():
     assert wanted.groupby('study').size().to_dict() == {'ESMOKE': 13, 'ISMOKE': 8}       # CLAUDE.md
     assert (wanted[list(aims.AIM2_RECORDINGS)] != '').all().all()
     assert (wanted['active_before_recording'] != wanted['control_before_recording']).all()
+
+
+def test_a_threshold_sensitivity_recounts_the_loops_from_their_saved_diagrams(statistics):
+    save_measured(statistics, 'A9', 'loop1', 3.0)
+    save_measured(statistics, 'A9', 'loop2', -2.0, x=50, seed=1)
+    table = aims.loops(aims.collect(statistics))
+    mine = table[table['recording'] == 'A9'].sort_values('dataset')
+    assert mine['counted'].tolist() == [True, True]
+    assert mine['speed_mm_s'].tolist() == [pytest.approx(3 * 30 * 0.00133, rel=0.02),
+                                           pytest.approx(2 * 30 * 0.00133, rel=0.02)]
+    same = aims.recount(mine, statistics, pattern_shift.MIN_SNR)            # the app's threshold: as saved
+    assert same['counted'].tolist() == [True, True]
+    assert same['velocity_mm_s'].tolist() == pytest.approx(mine['velocity_mm_s'].tolist())
+    assert same['snr'].tolist() == pytest.approx(mine['snr'].tolist())
+    strict = aims.recount(mine, statistics, 1e9)
+    assert not strict['counted'].any() and set(strict['why_not']) == {'not resolved'}
+    lost = aims.recount(table[(table['recording'] == 'A1') & (table['observer'] == 'SJ')], statistics, 8.0)
+    assert set(lost['why_not']) == {'no space-time diagram saved'} and not lost['counted'].any()
 
 
 def test_a_loop_ranks_by_its_name():

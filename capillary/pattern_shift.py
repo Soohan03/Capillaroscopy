@@ -545,7 +545,7 @@ def loop_from_direction(velocity: float) -> str:
 
 
 def loop_limbs(diagram: np.ndarray, apex_px: float, fps: float, mm_per_pixel: float, spacing_px: float = 1.0,
-               min_speed: float = MIN_SPEED) -> dict:
+               min_speed: float = MIN_SPEED, min_snr: float = MIN_SNR) -> dict:
     """The pattern shift of each limb of a whole-loop line, pooled over the range, and whether they agree.
 
     `apex_px` is the apex's distance along the line
@@ -561,7 +561,8 @@ def loop_limbs(diagram: np.ndarray, apex_px: float, fps: float, mm_per_pixel: fl
     Keys: ``pattern_shift_start_limb_mm_s`` and ``pattern_shift_end_limb_mm_s``
     (NaN unless resolved), ``pattern_shift_start_limb_snr`` and
     ``pattern_shift_end_limb_snr`` (NaN when a limb is shorter than
-    `MIN_LENGTH_PX`), and ``loop_movement``.
+    `MIN_LENGTH_PX`), and ``loop_movement``. A limb is resolved at `min_snr` (the app's 8; other values for
+    a sensitivity analysis, `capillary.aims.recount`).
     """
     diagram = np.asarray(diagram, dtype=float)
     to_mm_s = spacing_px * fps * mm_per_pixel
@@ -569,7 +570,7 @@ def loop_limbs(diagram: np.ndarray, apex_px: float, fps: float, mm_per_pixel: fl
     out, velocities = {}, []
     for label, part in (('start_limb', diagram[:, :split + 1]), ('end_limb', diagram[:, split:])):
         estimate = pattern_shift(part, min_speed=min_speed) if diagram.ndim == 2 else _NO_ESTIMATE
-        velocity = estimate.speed_px_per_frame * to_mm_s if estimate.resolved else float('nan')
+        velocity = estimate.speed_px_per_frame * to_mm_s if estimate.is_resolved(min_snr) else float('nan')
         out[f'pattern_shift_{label}_mm_s'] = velocity
         out[f'pattern_shift_{label}_snr'] = estimate.snr
         velocities.append(velocity)

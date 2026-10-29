@@ -88,8 +88,8 @@ DUPLICATE_SHARE = 0.5
 #: The smallest detectable change in typical errors: 1.96 x sqrt(2).
 SDC_FACTOR = 2.77
 COLUMNS = ('observer', 'recording', 'dataset', 'created', 'role', 'phase', 'video_folder', 'first_frame',
-           'last_frame', 'seconds', 'length_px', 'velocity_mm_s', 'snr', 'resolved', 'ci95_low_mm_s',
-           'ci95_high_mm_s', 'arterial_end', 'loop_movement', 'points')
+           'last_frame', 'seconds', 'fps', 'mm_per_pixel', 'length_px', 'velocity_mm_s', 'snr', 'resolved',
+           'ci95_low_mm_s', 'ci95_high_mm_s', 'arterial_end', 'loop_movement', 'points')
 
 
 def _number(value) -> float:
@@ -117,7 +117,7 @@ def collect(statistics_dir: str) -> pd.DataFrame:
             'role': line.get('role') or '', 'phase': summary.get('phase') or '',
             'video_folder': video.get('folder') or '', 'first_frame': _number(frames.get('first')),
             'last_frame': _number(frames.get('last')), 'seconds': count / fps if fps > 0 else math.nan,
-            'length_px': _number(line.get('length_px')),
+            'fps': fps, 'mm_per_pixel': _number(record.get('mm_per_pixel')), 'length_px': _number(line.get('length_px')),
             'velocity_mm_s': _number(summary.get('pattern_shift_velocity_mm_s')),
             'snr': _number(summary.get('pattern_shift_snr')), 'resolved': bool(summary.get('pattern_shift_resolved')),
             'ci95_low_mm_s': _number(summary.get('pattern_shift_ci95_low_mm_s')),
@@ -139,13 +139,8 @@ def _overlap(first, second, spacing_px: float = 2.0) -> float:
     return float(np.mean(distances.min(axis=1) <= DUPLICATE_PX))
 
 
-def loops(table: pd.DataFrame) -> pd.DataFrame:
-    """The whole loops of `table` (`collect`), with whether each is counted, its speed, and possible duplicates.
-
-    Adds ``counted``; ``speed_mm_s``, the velocity's size where counted (else NaN); ``why_not``, why a loop
-    is not counted; and ``duplicate_of``, the other loops of the recording it lies on.
-    """
-    out = table[table['role'] == pattern_shift.WHOLE_LOOP].copy().reset_index(drop=True)
+def _judge(out: pd.DataFrame) -> pd.DataFrame:
+    """`out` (whole loops) with ``why_not``, ``counted`` and ``speed_mm_s`` (`loops`)."""
     finite = np.isfinite(out['velocity_mm_s'].astype(float))
     reasons = [
         (out['phase'] != REST, 'not within the official rest'),
@@ -156,6 +151,47 @@ def loops(table: pd.DataFrame) -> pd.DataFrame:
     out['why_not'] = [', '.join(text for mask, text in reasons if mask.iloc[i]) for i in range(len(out))]
     out['counted'] = out['why_not'] == ''
     out['speed_mm_s'] = out['velocity_mm_s'].abs().where(out['counted'])
+    return out
+
+
+def recount(loop_table: pd.DataFrame, statistics_dir: str, min_snr: float) -> pd.DataFrame:
+    """`loop_table` (`loops`) judged at another signal-to-noise threshold: a sensitivity analysis (PROTOCOL.md).
+
+    Each loop's pattern shift, and its limbs' for the movement check, is computed again from its saved
+    space-time diagram (``___space_time.npy``: the frames the app measured, as it measured them) and judged
+    at `min_snr`; at the app's 8 that gives the saved results. The other conditions stay. A loop whose
+    diagram is missing is not counted.
+    """
+    out = loop_table.copy()
+    missing = []
+    for i in out.index:
+        row = out.loc[i]
+        path = datasets.line_dataset_files(statistics_dir, row['recording'], row['dataset'])['space_time']
+        try:
+            diagram = np.load(path, allow_pickle=False)
+        except (OSError, ValueError):
+            missing.append(i)
+            out.loc[i, ['resolved', 'velocity_mm_s']] = [False, math.nan]
+            continue
+        whole = pattern_shift.pattern_shift(diagram)
+        resolved = whole.is_resolved(min_snr)
+        out.loc[i, ['resolved', 'snr', 'velocity_mm_s']] = [
+            resolved, whole.snr, whole.speed_px_per_frame * row['fps'] * row['mm_per_pixel'] if resolved else math.nan]
+        apex = Centreline.from_points(row['points']).apex_arc_px() if len(row['points']) >= 2 else None
+        out.loc[i, 'loop_movement'] = apex is not None and pattern_shift.loop_limbs(
+            diagram, apex, row['fps'], row['mm_per_pixel'], min_snr=min_snr)['loop_movement']
+    out = _judge(out)
+    out.loc[missing, 'why_not'] = 'no space-time diagram saved'
+    return out
+
+
+def loops(table: pd.DataFrame) -> pd.DataFrame:
+    """The whole loops of `table` (`collect`), with whether each is counted, its speed, and possible duplicates.
+
+    Adds ``counted``; ``speed_mm_s``, the velocity's size where counted (else NaN); ``why_not``, why a loop
+    is not counted; and ``duplicate_of``, the other loops of the recording it lies on.
+    """
+    out = _judge(table[table['role'] == pattern_shift.WHOLE_LOOP].copy().reset_index(drop=True))
     duplicates = [[] for _ in range(len(out))]
     for _, group in out.groupby(['observer', 'recording']):
         index = list(group.index)
@@ -561,6 +597,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--value', choices=list(VALUES), default='reference',
                         help="each recording's value: the protocol's (default), the reference capillary's alone, "
                              'or the mean of all counted loops')
+    parser.add_argument('--min-snr', type=float, default=None,
+                        help="count loops at another signal-to-noise threshold than the app's 8, recomputed from "
+                             'the saved space-time diagrams (a sensitivity analysis)')
     args = parser.parse_args(argv)
     folder = args.data or default_data_folder()
     if not folder:
@@ -579,6 +618,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         table = table[table['observer'] == args.observer.upper()]
     value = VALUES[args.value]
     loop_table = loops(table)
+    if args.min_snr is not None:
+        loop_table = recount(loop_table, os.path.join(folder, 'Statistics'), args.min_snr)
+        print(f'Loops counted at signal-to-noise {args.min_snr:g}, recomputed from the saved space-time diagrams')
     recordings = per_recording(loop_table)
     pairs = aim1_pairs(recordings, aim1_recordings(), value)
     aim1_stats = aim1(pairs) if len(pairs) else pd.DataFrame()
