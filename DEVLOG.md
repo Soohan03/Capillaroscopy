@@ -6,6 +6,74 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — The report page names the nicotine visit, not the "active" one
+
+**Branch:** `feature/report-aim2` (on top of the entry below).
+
+**Why.** The user found "active" ambiguous. Aim 1's two values are both baselines recorded before exposure, so
+"active" read like "after nicotine", and "bias, active − control" like a nicotine effect. In ESMOKE the control
+visit is vaping without nicotine, not "no exposure". On the user's request the report page now says "nicotine
+visit" (W in ESMOKE, S in ISMOKE) and "control visit" (Q, C), and says once on each aim 1 card that both values
+are baselines. The walkthrough page, PROTOCOL.md and the code's internal names (`active_…` columns, the inventory's
+roles) are unchanged.
+
+**What changed.**
+- The page's own words: the header, aim 1's takeaway, the three aim 1 cards (labels and notes), the two-visits
+  chart (title, legend, tooltips), the Bland–Altman card (title "nicotine-visit baseline minus control-visit
+  baseline", axis, tooltips), aim 1's table headers, "Nicotine visit first", and the two sentences about the
+  protocol's first aim 2.
+- Words from the data: the tables store the role ("active", "active only"), so the page now shows them through a
+  label lookup (format `visit`: nicotine, nicotine visit only, control visit only), used by the Visit, First visit
+  and Values columns and every tooltip that names a visit. Sorting treats it as text.
+- `report.py`: the settings table's Bland–Altman row says "Nicotine-visit baseline minus control-visit baseline".
+  `method.json` was rewritten from `method_rows()` (only that row changed), uploaded, and the dashboard's `method`
+  source pointed at it.
+
+**Verified.** The relabel script stops unless each phrase occurs as often as expected (three times for the three
+cards). Afterwards, no line a reader sees names "active", only field names, keys and the lookup. The page was
+written pinned to the version read (3 → 4).
+
+---
+
+## 2026-10-29 — The report page: aim 1 pooled and a Secondary endpoint tab
+
+**Branch:** `feature/report-aim2`, from `docs/agreement-sources` at 2ae2a7c (not merged yet; this branch holds it).
+
+**Why.** The user asked to see aim 2 on the report page (https://claude.ai/artifact/QJj6SkQsuMToHa3NkAEtAZ) and
+asked for a walkthrough of the statistics. The page showed aim 1 per study only, and aim 2 only as a count by the
+protocol's first text.
+
+**What changed.**
+- `analysis/primary_endpoint/secondary.py` (new): builds the page's three new tables from `capillary.aims`' tables:
+  - `aim1.json` again, now with each analysis pooled over both studies. It stops unless every per-study row equals
+    the one `report.py` wrote at 13:11 (it did);
+  - `aim2.json`: aim 2 for each analysis, per study and pooled, with the counts of values before and after and
+    how many went down;
+  - `aim2_pairs.json`: each aim 2 participant's values, by study and participant only.
+- It does not rerun `report.py`, whose other tables describe the 200 loops on the 90 recordings as they stood at
+  unblinding. A rerun now would take in the corrected aim 2's 72 recordings and the loops placed since.
+- `analysis/primary_endpoint/report.py`: its aim 1 rows are built by `aim1_records`, with the pooled rows
+  (key '<analysis> pooled'). `secondary.py` uses it too. A rerun into a scratch folder gave the same aim 1 rows to
+  the sixth significant digit.
+- The page (`dashboard/index.html`, written to the dashboard's store; the type's check runs when it is opened):
+  - the header leads with the pooled CV and aim 2's pooled change;
+  - Primary endpoint: a paragraph and a card for the pooled result before the studies' cards, a pooled facet in
+    the Bland–Altman plot, and the pooled rows first in the two forest plots;
+  - Secondary endpoint (new tab): the result in words, a card each for pooled, ESMOKE and ISMOKE, every
+    participant before and after, the change by analysis with intervals, a table of the participants, and how
+    to read the change (no control visit, few pairs, the capillary may differ, regression to the mean, several
+    tests, the pooling);
+  - Signal-to-noise: aim 2 by the protocol's first text is out (the threshold sweep's aim 2 chart, and the
+    funnel's aim 2 block);
+  - Methods and notes: a card listing the changes after unblinding.
+- The three files were uploaded to the dashboard and its `aim1` source pointed at the new one.
+
+**Verified.** `secondary.py`'s own check (per-study aim 1 rows equal `report.py`'s). The page builder stops unless
+every spot it changes appears exactly once; every number on the page is a drawing that holds only a dash, as the
+type requires. `report.py` reran cleanly into a scratch folder.
+
+---
+
 ## 2026-10-29 — Where the two corrections come from
 
 **Branch:** `docs/agreement-sources`, from `main` at de14ab3 (PR #29 merged). No code changed.

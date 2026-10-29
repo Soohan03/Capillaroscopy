@@ -26,8 +26,15 @@ story is in the DEVLOG entry of 2026-10-29.
     with 95% intervals for the typical error and CV (chi-square), the limits of
     agreement and the Bland–Altman slope, and the limits as ratios;
   - exploratory: the second visit against the first.
+- `secondary.py` — what the protocol's two corrections after unblinding added
+  to the report: aim 1 pooled over both studies, and aim 2 (the change before to
+  after nicotine, per study and pooled). It reads `capillary.aims`' tables and
+  rewrites only `aim1.json` (checking that every per-study row equals the one
+  `report.py` wrote), `aim2.json` and `aim2_pairs.json`. The other tables keep
+  describing the 200 loops as they stood at unblinding (written at 13:11 on
+  2026-10-29).
 - `dashboard/index.html` — the report's page. It reads only the tables
-  `report.py` writes and draws every number from them.
+  `report.py` and `secondary.py` write and draws every number from them.
 
 ## Rerun
 
@@ -44,6 +51,18 @@ about 40 s the first time, seconds after that. It writes into
   visit. No recording name, date or blind code is in them, so that a later blind
   placement of the same recordings (the protocol's reproducibility check) stays
   blind.
+
+Aim 1 pooled and aim 2 come from `capillary.aims` and its four sensitivity
+runs, then `secondary.py`:
+
+```bash
+python3 -m capillary.aims
+python3 -m capillary.aims --value reference-only --out Reports/aims/sensitivity_valuereferenceonly
+python3 -m capillary.aims --value mean --out Reports/aims/sensitivity_valuemean
+python3 -m capillary.aims --min-snr 7 --out Reports/aims/sensitivity_minsnr7
+python3 -m capillary.aims --min-snr 9 --out Reports/aims/sensitivity_minsnr9
+python3 analysis/primary_endpoint/secondary.py
+```
 
 The report is the Dashboard artifact https://claude.ai/artifact/QJj6SkQsuMToHa3NkAEtAZ
 (private until shared). To refresh it, ask Claude Code to upload the new
@@ -66,8 +85,11 @@ changed, to write `dashboard/index.html` as its page.
   63% (95% CI 43–121%), on the log scale 76%, smallest detectable change 0.211 mm/s, bias
   active − control +0.043 mm/s (−0.040 to 0.126), limits −0.169 to 0.255 mm/s, ICC(A,1) 0.05
   (−0.55 to 0.65). Sensitivity: thresholds 7 and 9 give the same; the mean of the counted loops
-  CV 62%, ICC(A,1) 0.11; the reference alone 4 participants. The report page shows the studies
-  only, until it is regenerated.
+  CV 62%, ICC(A,1) 0.11; the reference alone 4 participants. The report page shows it first, on the
+  Primary endpoint tab (since 2026-10-29, evening).
+- **Aim 2 (the Secondary endpoint tab):** the change before to after nicotine. Pooled 8 of 23
+  participants, −0.070 mm/s (95% CI −0.137 to −0.003, paired t-test p 0.043), ratio 0.55; ESMOKE 5
+  of 13, −0.087 mm/s (p 0.11); ISMOKE 3 of 10, −0.042 mm/s (p 0.30). 7 of the 8 went down.
 - **Aim 1, ESMOKE:** 7 of 14 participants with both visits. Mean 0.130 mm/s,
   typical error 0.086 mm/s, within-subject CV 67% (95% CI 43–147%), on the log
   scale 88%, smallest detectable change 0.239 mm/s, bias active − control
