@@ -96,11 +96,13 @@ use the rest before the occlusion.
 | --- | --- | --- |
 | Participants | 17 | 13 |
 | Aim 1: the före of both visits | 13, and 1 to check | 9, and 1 to check |
-| Aim 2: före and efter of both visits | 12, and 1 to check | 8 |
+| Aim 2: före and efter of the nicotine visit (W, S) | 12, and 1 to check | 9, and 1 to check |
 | Days between the visits (aim 1) | median 20, 6–68 | median 7, 7–16 |
 | Active visit first (aim 1) | 7 of 14 | 5 of 10 |
 
-The aims use 90 recordings, 48 of them for aim 1.
+The aims use 72 recordings, 48 of them for aim 1. Until 2026-10-29, when aim 2
+was corrected to the nicotine visit alone (`PROTOCOL.md`), they used 90: aim 2
+then took the före and efter of both visits.
 
 To check in DynCap:
 
@@ -108,8 +110,9 @@ To check in DynCap:
   was recorded before that day's efter recordings, so it is taken as the W
   visit's före; FP01 is "check" for both aims.
 - **ISMOKE FP02, 2 Nov 2020:** an `Sföre` and a `Cefter` on the same day,
-  while FP02's S visit is on 10 Nov. If the 2 Nov före is a C recording,
-  FP02 joins both aims.
+  while FP02's S visit is on 10 Nov. FP02 is in aim 2 with its 10 Nov S
+  visit ("check" for this); if the 2 Nov före is a C recording, FP02 joins
+  aim 1 as well.
 - **ISMOKE FP08, 10 Nov 2020:** two `Cföre`, 1 h 47 min apart; the second is
   probably the efter. If so, the C visit's före has only 22 s of rest
   (occlusion at 25.5 s), and FP08 drops out of aim 1 as well.

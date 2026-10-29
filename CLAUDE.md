@@ -11,7 +11,8 @@ products".
 
 - **Archive:** a retrospective archive of two crossover trials, stored in DynCap.
   - ESMOKE (2019–2020): W = e-cigarette with nicotine, Q = nicotine-free.
-  - ISMOKE (2020, names start `ISMOKE_`): S = heated tobacco, C = no exposure.
+  - ISMOKE (2020, names start `ISMOKE_`): S = heated tobacco, C = sham (no exposure).
+  - W and S are the nicotine (active) visits, Q and C the controls (confirmed by the user 2026-10-29).
 - **Recordings:** each visit has a recording före (before) and efter (after) the
   exposure. The FP codes restart per study.
 - **Every recording is rest → occlusion → release:** about 1 min rest, then 1 min
@@ -20,12 +21,15 @@ products".
 - **Aim 1 (primary):** inter-day reproducibility of resting CBV from the two före
   recordings. Reported as the within-subject CV (typical error/mean), the smallest
   detectable change (2.77 × typical error), Bland–Altman and ICC(A,1).
-- **Aim 2:** the difference in before→after change, active minus control.
+- **Aim 2:** the before→after change on the nicotine visit (W, S) of each participant who has
+  both, per study and pooled as a separate analysis; the control visit is not used. Agreed with
+  the PI about a month before unblinding; `PROTOCOL.md` had recorded an older plan (all four
+  recordings, active minus control) and was corrected on 2026-10-29, after unblinding.
 - **Who can be used** (`metadata/README.md`, from `capillary.inventory`): aim 1 has 14 ESMOKE and
-  10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 8 ISMOKE. The
-  aims use 90 recordings; 8 of them had been downloaded by 2026-10-09, 30 (all ESMOKE) were on
-  the desktop by 2026-10-12, and by the end of 2026-10-14 all 54 ESMOKE ones and 32 of the 36
-  ISMOKE ones were on it, stabilized; ISMOKE FP23's four followed on 2026-10-29, so all 90 are ready.
+  10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 10 ISMOKE. The
+  aims use 72 recordings (90 before aim 2's correction; all 90 were on the desktop, stabilized, by
+  2026-10-29). Aim 2's correction added ISMOKE FP02 Sföre and Sefter and FP08 Sefter, stabilized
+  but without lines on 2026-10-29.
 - **Resting CBV must come from the rest window before occlusion.**
 - **Protocol and results:** `PROTOCOL.md` fixes the measurement and the analysis, agreed with the PI
   on 2026-10-29: velocity round the whole loop at rest, signal-to-noise 8 or more, one reference
@@ -208,9 +212,10 @@ Tkinter classes.
   stabilized video and not crossing itself; a recording's value is its reference capillary (`loop1`)
   if it counts, else the first backup that counts (`PROTOCOL.md`; `--value reference-only|mean` and
   `--min-snr` for the sensitivity analyses, `--progress` and `--unblind` for blind placement, the
-  codes in `capillary/blinding.py`); loops on top of each other are listed for checking. Aim 2's
-  statistics are printed too. Aim 1 per study: CV (typical error / mean, and on
-  the log scale), SDC (2.77 × typical error), Bland–Altman, ICC(A,1). Tables in `Reports/aims/`.
+  codes in `capillary/blinding.py`); loops on top of each other are listed for checking. Aim 1 per
+  study: CV (typical error / mean, and on the log scale), SDC (2.77 × typical error), Bland–Altman,
+  ICC(A,1). Aim 2 per study and pooled (`aims.POOLED`): the change after minus before on the
+  nicotine visit, paired t-test, Wilcoxon, ratio after / before. Tables in `Reports/aims/`.
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
   (fixed boxes, an explicit frame range read straight from the file), saved in the
   file formats the report has always read.

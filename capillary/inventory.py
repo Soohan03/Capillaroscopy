@@ -17,8 +17,8 @@ does not matter.
 
 - **Aim 1** (inter-day reproducibility) needs the före recording of both
   visits: one active day, one control day.
-- **Aim 2** (before-to-after change, active minus control) needs the före and
-  efter recordings of both visits.
+- **Aim 2** (before-to-after change on the nicotine visit) needs the före and
+  efter recordings of the active visit; the control visit is not used.
 
 When a visit has several attempts of the same recording, the last usable one
 is chosen, on the assumption that a recording was repeated because the
@@ -279,7 +279,7 @@ def participants(table: pd.DataFrame) -> pd.DataFrame:
         else:
             row['days_apart'], row['first_visit'] = None, ''
         row['aim1'] = _status([chosen[('active', 'före')], chosen[('control', 'före')]])
-        row['aim2'] = _status([chosen[key] for key in chosen])
+        row['aim2'] = _status([chosen[('active', 'före')], chosen[('active', 'efter')]])
         row['issues'] = '; '.join(sorted({issue for issues in recs['issues'] if issues for issue in issues.split('; ')}))
         rows.append(row)
     return pd.DataFrame(rows)
@@ -294,8 +294,9 @@ def mark_use(table: pd.DataFrame, people: pd.DataFrame) -> pd.DataFrame:
         for role in ('active', 'control'):
             for phase in ('före', 'efter'):
                 name = getattr(person, f'{role}_{phase}')
-                aims = [aim for aim, status in (('1', person.aim1), ('2', person.aim2))
-                        if status != 'no' and (aim == '2' or phase == 'före')]
+                aims = [aim for aim, status, uses in (('1', person.aim1, phase == 'före'),
+                                                       ('2', person.aim2, role == 'active'))
+                        if status != 'no' and uses]
                 if name and aims:
                     label = f'aim{"s" if len(aims) > 1 else ""} {", ".join(aims)}'
                     table.loc[names == name, 'used_for'] = f'{label}: {role} {phase}'

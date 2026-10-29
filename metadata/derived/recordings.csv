@@ -3,13 +3,13 @@ FP01_W_14-Oct-2019_08-36-26,ESMOKE,FP01,W,active,före,True,1,2019-10-14,08:36:2
 FP01_Wefter_14-Oct-2019_10-04-19,ESMOKE,FP01,W,active,efter,False,1,2019-10-14,10:04:19,51.5,,47.5,True,,
 FP01_Wefter_14-Oct-2019_10-07-49,ESMOKE,FP01,W,active,efter,False,1,2019-10-14,10:07:49,158.5,230.1,154.5,True,,
 FP01_Wefter_14-Oct-2019_10-13-03,ESMOKE,FP01,W,active,efter,False,1,2019-10-14,10:13:03,62.5,147.4,58.5,True,,aim 2: active efter
-FP01_Qföre_22-Oct-2019_08-16-35,ESMOKE,FP01,Q,control,före,False,1,2019-10-22,08:16:35,68.3,130.5,64.3,True,,"aims 1, 2: control före"
+FP01_Qföre_22-Oct-2019_08-16-35,ESMOKE,FP01,Q,control,före,False,1,2019-10-22,08:16:35,68.3,130.5,64.3,True,,aim 1: control före
 FP01_Qefter_22-Oct-2019_09-46-17,ESMOKE,FP01,Q,control,efter,False,1,2019-10-22,09:46:17,66.5,,62.5,True,,
-FP01_Qefter_försök2_22-Oct-2019_09-50-15,ESMOKE,FP01,Q,control,efter,False,2,2019-10-22,09:50:15,65.9,125.7,61.900000000000006,True,,aim 2: control efter
+FP01_Qefter_försök2_22-Oct-2019_09-50-15,ESMOKE,FP01,Q,control,efter,False,2,2019-10-22,09:50:15,65.9,125.7,61.900000000000006,True,,
 FP02_Wföre_15-Oct-2019_08-29-10,ESMOKE,FP02,W,active,före,False,1,2019-10-15,08:29:10,72.9,130.1,68.9,True,,
-FP03_Qföre_15-Oct-2019_09-15-49,ESMOKE,FP03,Q,control,före,False,1,2019-10-15,09:15:49,60.5,123.3,56.5,True,,"aims 1, 2: control före"
+FP03_Qföre_15-Oct-2019_09-15-49,ESMOKE,FP03,Q,control,före,False,1,2019-10-15,09:15:49,60.5,123.3,56.5,True,,aim 1: control före
 FP03_Qefter_15-Oct-2019_11-01-13,ESMOKE,FP03,Q,control,efter,False,1,2019-10-15,11:01:13,62.4,124.2,58.4,True,,
-FP03_Qefter_försök2_15-Oct-2019_11-06-33,ESMOKE,FP03,Q,control,efter,False,2,2019-10-15,11:06:33,60.0,134.9,56.0,True,,aim 2: control efter
+FP03_Qefter_försök2_15-Oct-2019_11-06-33,ESMOKE,FP03,Q,control,efter,False,2,2019-10-15,11:06:33,60.0,134.9,56.0,True,,
 FP03_Wföre_21-Oct-2019_08-58-40,ESMOKE,FP03,W,active,före,False,1,2019-10-21,08:58:40,72.0,133.0,68.0,True,,"aims 1, 2: active före"
 FP03_Wefter_21-Oct-2019_10-21-58,ESMOKE,FP03,W,active,efter,False,1,2019-10-21,10:21:58,74.7,,70.7,True,,aim 2: active efter
 FP04_Qföre_22-Nov-2019_08-25-53,ESMOKE,FP04,Q,control,före,False,1,2019-11-22,08:25:53,64.2,125.8,60.2,True,,
@@ -20,106 +20,106 @@ FP05_Wefter_försök2_17-Oct-2019_11-12-45,ESMOKE,FP05,W,active,efter,False,2,20
 FP05_Qföre_23-Oct-2019_09-05-51,ESMOKE,FP05,Q,control,före,False,1,2019-10-23,09:05:51,62.3,,58.3,True,,
 FP05_Qföre_23-Oct-2019_09-07-21,ESMOKE,FP05,Q,control,före,False,1,2019-10-23,09:07:21,51.6,,47.6,True,,
 FP05_Qföre_försök3_23-Oct-2019_09-08-58,ESMOKE,FP05,Q,control,före,False,3,2019-10-23,09:08:58,48.7,,44.7,True,,
-FP05_Qföre_försök4_23-Oct-2019_09-24-22,ESMOKE,FP05,Q,control,före,False,4,2019-10-23,09:24:22,57.6,125.0,53.6,True,,"aims 1, 2: control före"
-FP05_Qefter_23-Oct-2019_10-43-11,ESMOKE,FP05,Q,control,efter,False,1,2019-10-23,10:43:11,63.3,124.1,59.3,True,,aim 2: control efter
+FP05_Qföre_försök4_23-Oct-2019_09-24-22,ESMOKE,FP05,Q,control,före,False,4,2019-10-23,09:24:22,57.6,125.0,53.6,True,,aim 1: control före
+FP05_Qefter_23-Oct-2019_10-43-11,ESMOKE,FP05,Q,control,efter,False,1,2019-10-23,10:43:11,63.3,124.1,59.3,True,,
 FP06_Wföre_18-Oct-2019_08-23-43,ESMOKE,FP06,W,active,före,False,1,2019-10-18,08:23:43,65.4,126.7,61.400000000000006,True,,
 FP06_Wföre_18-Oct-2019_08-28-30,ESMOKE,FP06,W,active,före,False,1,2019-10-18,08:28:30,80.5,146.7,76.5,True,,"aims 1, 2: active före"
 FP06_Wefter_18-Oct-2019_10-05-26,ESMOKE,FP06,W,active,efter,False,1,2019-10-18,10:05:26,65.9,,61.900000000000006,True,,aim 2: active efter
 FP06_Qföre_06-Nov-2019_08-17-11,ESMOKE,FP06,Q,control,före,False,1,2019-11-06,08:17:11,63.0,,59.0,True,,
-FP06_Qföre_försök2_06-Nov-2019_08-20-16,ESMOKE,FP06,Q,control,före,False,2,2019-11-06,08:20:16,77.8,137.8,73.8,True,,"aims 1, 2: control före"
+FP06_Qföre_försök2_06-Nov-2019_08-20-16,ESMOKE,FP06,Q,control,före,False,2,2019-11-06,08:20:16,77.8,137.8,73.8,True,,aim 1: control före
 FP06_Qefter_06-Nov-2019_09-45-29,ESMOKE,FP06,Q,control,efter,False,1,2019-11-06,09:45:29,54.0,128.0,50.0,True,,
-FP06_Qefter_försök2_06-Nov-2019_09-50-06,ESMOKE,FP06,Q,control,efter,False,2,2019-11-06,09:50:06,77.3,141.5,73.3,True,,aim 2: control efter
+FP06_Qefter_försök2_06-Nov-2019_09-50-06,ESMOKE,FP06,Q,control,efter,False,2,2019-11-06,09:50:06,77.3,141.5,73.3,True,,
 FP07_Qföre_18-Oct-2019_09-13-46,ESMOKE,FP07,Q,control,före,False,1,2019-10-18,09:13:46,57.8,,53.8,True,,
-FP07_Qföre_18-Oct-2019_09-18-37,ESMOKE,FP07,Q,control,före,False,1,2019-10-18,09:18:37,60.3,,56.3,True,,"aims 1, 2: control före"
-FP07_Qefter_18-Oct-2019_10-49-28,ESMOKE,FP07,Q,control,efter,False,1,2019-10-18,10:49:28,65.9,,61.900000000000006,True,,aim 2: control efter
+FP07_Qföre_18-Oct-2019_09-18-37,ESMOKE,FP07,Q,control,före,False,1,2019-10-18,09:18:37,60.3,,56.3,True,,aim 1: control före
+FP07_Qefter_18-Oct-2019_10-49-28,ESMOKE,FP07,Q,control,efter,False,1,2019-10-18,10:49:28,65.9,,61.900000000000006,True,,
 FP07_Wföre_07-Nov-2019_08-56-50,ESMOKE,FP07,W,active,före,False,1,2019-11-07,08:56:50,62.2,125.0,58.2,True,,"aims 1, 2: active före"
 FP07_Wefter_07-Nov-2019_10-26-29,ESMOKE,FP07,W,active,efter,False,1,2019-11-07,10:26:29,61.5,128.6,57.5,True,,aim 2: active efter
 FP09_Wföre_23-Oct-2019_08-20-37,ESMOKE,FP09,W,active,före,False,1,2019-10-23,08:20:37,62.3,,58.3,True,,aim 1: active före
 FP09_Qföre_12-Nov-2019_08-26-50,ESMOKE,FP09,Q,control,före,False,1,2019-11-12,08:26:50,55.7,116.7,51.7,True,,aim 1: control före
 FP09_Qefter_12-Nov-2019_09-55-10,ESMOKE,FP09,Q,control,efter,False,1,2019-11-12,09:55:10,60.2,121.0,56.2,True,,
-FP12_Qföre_08-Nov-2019_08-28-52,ESMOKE,FP12,Q,control,före,False,1,2019-11-08,08:28:52,57.5,121.5,53.5,True,,"aims 1, 2: control före"
-FP12_Qefter_08-Nov-2019_10-09-45,ESMOKE,FP12,Q,control,efter,False,1,2019-11-08,10:09:45,63.2,123.3,59.2,True,,aim 2: control efter
+FP12_Qföre_08-Nov-2019_08-28-52,ESMOKE,FP12,Q,control,före,False,1,2019-11-08,08:28:52,57.5,121.5,53.5,True,,aim 1: control före
+FP12_Qefter_08-Nov-2019_10-09-45,ESMOKE,FP12,Q,control,efter,False,1,2019-11-08,10:09:45,63.2,123.3,59.2,True,,
 FP12_Wföre_15-Nov-2019_08-31-17,ESMOKE,FP12,W,active,före,False,1,2019-11-15,08:31:17,60.9,123.6,56.9,True,,"aims 1, 2: active före"
 FP12_Wefter_15-Nov-2019_09-50-08,ESMOKE,FP12,W,active,efter,False,1,2019-11-15,09:50:08,68.7,128.6,64.7,True,,aim 2: active efter
 FP13_Wföre_08-Nov-2019_09-12-08,ESMOKE,FP13,W,active,före,False,1,2019-11-08,09:12:08,61.2,122.4,57.2,True,,
 FP13_Wföre_försök2_08-Nov-2019_09-15-44,ESMOKE,FP13,W,active,före,False,2,2019-11-08,09:15:44,56.1,117.5,52.1,True,,"aims 1, 2: active före"
 FP13_Wefter_08-Nov-2019_10-53-51,ESMOKE,FP13,W,active,efter,False,1,2019-11-08,10:53:51,61.8,124.0,57.8,True,,aim 2: active efter
-FP13_Qföre_10-Dec-2019_08-23-22,ESMOKE,FP13,Q,control,före,False,1,2019-12-10,08:23:22,58.6,120.4,54.6,True,,"aims 1, 2: control före"
-FP13_Qefter_10-Dec-2019_09-44-21,ESMOKE,FP13,Q,control,efter,False,1,2019-12-10,09:44:21,50.2,122.3,46.2,True,,aim 2: control efter
-FP15_Qföre_13-Nov-2019_08-26-17,ESMOKE,FP15,Q,control,före,False,1,2019-11-13,08:26:17,64.4,127.9,60.400000000000006,True,,"aims 1, 2: control före"
+FP13_Qföre_10-Dec-2019_08-23-22,ESMOKE,FP13,Q,control,före,False,1,2019-12-10,08:23:22,58.6,120.4,54.6,True,,aim 1: control före
+FP13_Qefter_10-Dec-2019_09-44-21,ESMOKE,FP13,Q,control,efter,False,1,2019-12-10,09:44:21,50.2,122.3,46.2,True,,
+FP15_Qföre_13-Nov-2019_08-26-17,ESMOKE,FP15,Q,control,före,False,1,2019-11-13,08:26:17,64.4,127.9,60.400000000000006,True,,aim 1: control före
 FP15_Qefter_13-Nov-2019_09-51-06,ESMOKE,FP15,Q,control,efter,False,1,2019-11-13,09:51:06,55.0,115.5,51.0,True,,
-FP15_Qefter_försök2_13-Nov-2019_09-58-12,ESMOKE,FP15,Q,control,efter,False,2,2019-11-13,09:58:12,60.4,120.8,56.4,True,,aim 2: control efter
+FP15_Qefter_försök2_13-Nov-2019_09-58-12,ESMOKE,FP15,Q,control,efter,False,2,2019-11-13,09:58:12,60.4,120.8,56.4,True,,
 FP15_Wföre_12-Dec-2019_08-21-16,ESMOKE,FP15,W,active,före,False,1,2019-12-12,08:21:16,76.3,138.6,72.3,True,,"aims 1, 2: active före"
 FP15_Wefter_12-Dec-2019_09-51-12,ESMOKE,FP15,W,active,efter,False,1,2019-12-12,09:51:12,60.3,121.2,56.3,True,,aim 2: active efter
-FP16_Qföre_13-Nov-2019_09-09-39,ESMOKE,FP16,Q,control,före,False,1,2019-11-13,09:09:39,54.4,117.9,50.4,True,,"aims 1, 2: control före"
-FP16_Qefter_13-Nov-2019_10-36-49,ESMOKE,FP16,Q,control,efter,False,1,2019-11-13,10:36:49,57.3,117.9,53.3,True,,aim 2: control efter
+FP16_Qföre_13-Nov-2019_09-09-39,ESMOKE,FP16,Q,control,före,False,1,2019-11-13,09:09:39,54.4,117.9,50.4,True,,aim 1: control före
+FP16_Qefter_13-Nov-2019_10-36-49,ESMOKE,FP16,Q,control,efter,False,1,2019-11-13,10:36:49,57.3,117.9,53.3,True,,
 FP16_Wföre_09-Dec-2019_08-59-58,ESMOKE,FP16,W,active,före,False,1,2019-12-09,08:59:58,52.0,112.9,48.0,True,,"aims 1, 2: active före"
 FP16_Wefter_09-Dec-2019_10-24-03,ESMOKE,FP16,W,active,efter,False,1,2019-12-09,10:24:03,72.7,133.7,68.7,True,,aim 2: active efter
 FP17_Qföre_21-Nov-2019_08-25-53,ESMOKE,FP17,Q,control,före,False,1,2019-11-21,08:25:53,73.3,134.5,69.3,True,,
 FP17_Qefter_försök2_21-Nov-2019_09-51-07,ESMOKE,FP17,Q,control,efter,False,2,2019-11-21,09:51:07,78.6,139.0,74.6,True,,
 FP18_Wföre_14-Nov-2019_09-27-43,ESMOKE,FP18,W,active,före,False,1,2019-11-14,09:27:43,60.6,120.7,56.6,True,,"aims 1, 2: active före"
 FP18_Wefter_14-Nov-2019_10-55-01,ESMOKE,FP18,W,active,efter,False,1,2019-11-14,10:55:01,61.5,121.8,57.5,True,,aim 2: active efter
-FP18_Qföre_11-Dec-2019_08-31-07,ESMOKE,FP18,Q,control,före,False,1,2019-12-11,08:31:07,58.9,121.7,54.9,True,,"aims 1, 2: control före"
-FP18_Qefter_11-Dec-2019_09-46-22,ESMOKE,FP18,Q,control,efter,False,1,2019-12-11,09:46:22,82.0,142.7,78.0,True,,aim 2: control efter
-FP20_Qföre_20-Nov-2019_08-21-09,ESMOKE,FP20,Q,control,före,False,1,2019-11-20,08:21:09,60.8,123.3,56.8,True,,"aims 1, 2: control före"
-FP20_Qefter_20-Nov-2019_09-43-22,ESMOKE,FP20,Q,control,efter,False,1,2019-11-20,09:43:22,62.8,129.4,58.8,True,,aim 2: control efter
+FP18_Qföre_11-Dec-2019_08-31-07,ESMOKE,FP18,Q,control,före,False,1,2019-12-11,08:31:07,58.9,121.7,54.9,True,,aim 1: control före
+FP18_Qefter_11-Dec-2019_09-46-22,ESMOKE,FP18,Q,control,efter,False,1,2019-12-11,09:46:22,82.0,142.7,78.0,True,,
+FP20_Qföre_20-Nov-2019_08-21-09,ESMOKE,FP20,Q,control,före,False,1,2019-11-20,08:21:09,60.8,123.3,56.8,True,,aim 1: control före
+FP20_Qefter_20-Nov-2019_09-43-22,ESMOKE,FP20,Q,control,efter,False,1,2019-11-20,09:43:22,62.8,129.4,58.8,True,,
 FP20_Wföre_09-Dec-2019_08-21-13,ESMOKE,FP20,W,active,före,False,1,2019-12-09,08:21:13,62.2,123.8,58.2,True,,"aims 1, 2: active före"
 FP20_Wefter_09-Dec-2019_09-45-49,ESMOKE,FP20,W,active,efter,False,1,2019-12-09,09:45:49,60.4,121.4,56.4,True,,aim 2: active efter
 FP21Wföre_20-Nov-2019_09-08-03,ESMOKE,FP21,W,active,före,False,1,2019-11-20,09:08:03,60.2,121.8,56.2,True,,"aims 1, 2: active före"
 FP21_Wefter_20-Nov-2019_10-28-19,ESMOKE,FP21,W,active,efter,False,1,2019-11-20,10:28:19,61.3,122.9,57.3,True,,aim 2: active efter
-FP21_Qföre_20-Jan-2020_08-37-32,ESMOKE,FP21,Q,control,före,False,1,2020-01-20,08:37:32,62.2,122.5,58.2,True,,"aims 1, 2: control före"
-FP21_Qefter_20-Jan-2020_10-03-15,ESMOKE,FP21,Q,control,efter,False,1,2020-01-20,10:03:15,63.3,126.0,59.3,True,,aim 2: control efter
-FP22_Qföre_21-Nov-2019_09-08-42,ESMOKE,FP22,Q,control,före,False,1,2019-11-21,09:08:42,67.2,128.0,63.2,True,,"aims 1, 2: control före"
-FP22_Qefter_21-Nov-2019_10-32-50,ESMOKE,FP22,Q,control,efter,False,1,2019-11-21,10:32:50,60.6,120.7,56.6,True,,aim 2: control efter
+FP21_Qföre_20-Jan-2020_08-37-32,ESMOKE,FP21,Q,control,före,False,1,2020-01-20,08:37:32,62.2,122.5,58.2,True,,aim 1: control före
+FP21_Qefter_20-Jan-2020_10-03-15,ESMOKE,FP21,Q,control,efter,False,1,2020-01-20,10:03:15,63.3,126.0,59.3,True,,
+FP22_Qföre_21-Nov-2019_09-08-42,ESMOKE,FP22,Q,control,före,False,1,2019-11-21,09:08:42,67.2,128.0,63.2,True,,aim 1: control före
+FP22_Qefter_21-Nov-2019_10-32-50,ESMOKE,FP22,Q,control,efter,False,1,2019-11-21,10:32:50,60.6,120.7,56.6,True,,
 FP22_Wföre_28-Jan-2020_08-49-44,ESMOKE,FP22,W,active,före,False,1,2020-01-28,08:49:44,61.4,122.8,57.4,True,,"aims 1, 2: active före"
 FP22_Wefter_28-Jan-2020_10-10-16,ESMOKE,FP22,W,active,efter,False,1,2020-01-28,10:10:16,60.1,121.7,56.1,True,,aim 2: active efter
 ISMOKE_FP02_Sföre_02-Nov-2020_09-19-10,ISMOKE,FP02,S,active,före,False,1,2020-11-02,09:19:10,68.3,130.3,64.3,True,"two conditions on one day: C, S; S recorded on 2 days",
 ISMOKE_FP02_Cefter_02-Nov-2020_10-44-28,ISMOKE,FP02,C,control,efter,False,1,2020-11-02,10:44:28,61.2,121.7,57.2,True,"two conditions on one day: C, S",
-ISMOKE_FP02_Sföre_10-Nov-2020_09-22-12,ISMOKE,FP02,S,active,före,False,1,2020-11-10,09:22:12,59.9,122.3,55.9,True,S recorded on 2 days,
-ISMOKE_FP02_Sefter_10-Nov-2020_10-51-21,ISMOKE,FP02,S,active,efter,False,1,2020-11-10,10:51:21,58.4,124.9,54.4,True,S recorded on 2 days,
+ISMOKE_FP02_Sföre_10-Nov-2020_09-22-12,ISMOKE,FP02,S,active,före,False,1,2020-11-10,09:22:12,59.9,122.3,55.9,True,S recorded on 2 days,aim 2: active före
+ISMOKE_FP02_Sefter_10-Nov-2020_10-51-21,ISMOKE,FP02,S,active,efter,False,1,2020-11-10,10:51:21,58.4,124.9,54.4,True,S recorded on 2 days,aim 2: active efter
 ISMOKE_FP04_Cföre_03-Nov-2020_09-24-54,ISMOKE,FP04,C,control,före,False,1,2020-11-03,09:24:54,50.9,111.8,46.9,True,,aim 1: control före
 ISMOKE_FP04_Cefter_03-Nov-2020_10-40-30,ISMOKE,FP04,C,control,efter,False,1,2020-11-03,10:40:30,52.0,112.8,48.0,True,,
 ISMOKE_FP04_Sföre_11-Nov-2020_08-58-47,ISMOKE,FP04,S,active,före,False,1,2020-11-11,08:58:47,57.0,118.1,53.0,True,,aim 1: active före
 ISMOKE_FP04_Sefter_11-Nov-2020_10-27-46,ISMOKE,FP04,S,active,efter,False,1,2020-11-11,10:27:46,6.4,61.4,2.4000000000000004,False,rest only 2 s,
-ISMOKE_FP07_Cföre_06-Nov-2020_09-05-00,ISMOKE,FP07,C,control,före,False,1,2020-11-06,09:05:00,62.4,123.8,58.4,True,,"aims 1, 2: control före"
-ISMOKE_FP07_Cefter_06-Nov-2020_10-15-50,ISMOKE,FP07,C,control,efter,False,1,2020-11-06,10:15:50,60.9,121.1,56.9,True,,aim 2: control efter
+ISMOKE_FP07_Cföre_06-Nov-2020_09-05-00,ISMOKE,FP07,C,control,före,False,1,2020-11-06,09:05:00,62.4,123.8,58.4,True,,aim 1: control före
+ISMOKE_FP07_Cefter_06-Nov-2020_10-15-50,ISMOKE,FP07,C,control,efter,False,1,2020-11-06,10:15:50,60.9,121.1,56.9,True,,
 ISMOKE_FP07_Sföre_13-Nov-2020_09-11-17,ISMOKE,FP07,S,active,före,False,1,2020-11-13,09:11:17,58.2,120.9,54.2,True,,"aims 1, 2: active före"
 ISMOKE_FP07_Sefter_13-Nov-2020_10-34-08,ISMOKE,FP07,S,active,efter,False,1,2020-11-13,10:34:08,56.3,116.7,52.3,True,,aim 2: active efter
 ISMOKE_FP08_Cföre_10-Nov-2020_08-20-24,ISMOKE,FP08,C,control,före,False,1,2020-11-10,08:20:24,25.5,85.2,21.5,False,rest only 22 s,
 ISMOKE_FP08_Cföre_10-Nov-2020_10-07-08,ISMOKE,FP08,C,control,före,False,1,2020-11-10,10:07:08,37.3,98.0,33.3,True,före 107 min after the day's first recording: probably an efter,aim 1: control före
-ISMOKE_FP08_Sföre_17-Nov-2020_08-19-12,ISMOKE,FP08,S,active,före,False,1,2020-11-17,08:19:12,59.1,121.6,55.1,True,,aim 1: active före
-ISMOKE_FP08_Sefter_17-Nov-2020_09-51-15,ISMOKE,FP08,S,active,efter,False,1,2020-11-17,09:51:15,65.5,125.8,61.5,True,,
+ISMOKE_FP08_Sföre_17-Nov-2020_08-19-12,ISMOKE,FP08,S,active,före,False,1,2020-11-17,08:19:12,59.1,121.6,55.1,True,,"aims 1, 2: active före"
+ISMOKE_FP08_Sefter_17-Nov-2020_09-51-15,ISMOKE,FP08,S,active,efter,False,1,2020-11-17,09:51:15,65.5,125.8,61.5,True,,aim 2: active efter
 ISMOKE_FP09_Sföre_11-Nov-2020_08-13-44,ISMOKE,FP09,S,active,före,False,1,2020-11-11,08:13:44,58.2,119.7,54.2,True,,"aims 1, 2: active före"
 ISMOKE_FP09_Sefter_11-Nov-2020_09-44-08,ISMOKE,FP09,S,active,efter,False,1,2020-11-11,09:44:08,58.0,118.7,54.0,True,,aim 2: active efter
 ISMOKE_FP09_Cföre_27-Nov-2020_09-21-37,ISMOKE,FP09,C,control,före,False,1,2020-11-27,09:21:37,80.0,,76.0,True,,
-ISMOKE_FP09_Cföre_27-Nov-2020_09-23-23,ISMOKE,FP09,C,control,före,False,1,2020-11-27,09:23:23,48.0,108.8,44.0,True,,"aims 1, 2: control före"
-ISMOKE_FP09_Cefter_27-Nov-2020_10-41-04,ISMOKE,FP09,C,control,efter,False,1,2020-11-27,10:41:04,55.7,115.7,51.7,True,,aim 2: control efter
+ISMOKE_FP09_Cföre_27-Nov-2020_09-23-23,ISMOKE,FP09,C,control,före,False,1,2020-11-27,09:23:23,48.0,108.8,44.0,True,,aim 1: control före
+ISMOKE_FP09_Cefter_27-Nov-2020_10-41-04,ISMOKE,FP09,C,control,efter,False,1,2020-11-27,10:41:04,55.7,115.7,51.7,True,,
 ISMOKE_FP10_Sföre_12-Nov-2020_09-19-42,ISMOKE,FP10,S,active,före,False,1,2020-11-12,09:19:42,51.7,112.6,47.7,True,,
 ISMOKE_FP15_Sföre_19-Nov-2020_08-38-33,ISMOKE,FP15,S,active,före,False,1,2020-11-19,08:38:33,52.0,,48.0,True,,"aims 1, 2: active före"
 ISMOKE_FP15_Sefter_19-Nov-2020_10-03-45,ISMOKE,FP15,S,active,efter,False,1,2020-11-19,10:03:45,62.0,123.0,58.0,True,,aim 2: active efter
-ISMOKE_FP15_Cföre_03-Dec-2020_08-14-18,ISMOKE,FP15,C,control,före,False,1,2020-12-03,08:14:18,56.7,117.3,52.7,True,,"aims 1, 2: control före"
-ISMOKE_FP15_Cefter_03-Dec-2020_09-25-33,ISMOKE,FP15,C,control,efter,False,1,2020-12-03,09:25:33,52.9,119.0,48.9,True,,aim 2: control efter
-ISMOKE_FP16_Cföre_19-Nov-2020_09-25-11,ISMOKE,FP16,C,control,före,False,1,2020-11-19,09:25:11,59.2,,55.2,True,,"aims 1, 2: control före"
-ISMOKE_FP16_Cefter_19-Nov-2020_10-51-20,ISMOKE,FP16,C,control,efter,False,1,2020-11-19,10:51:20,45.7,105.4,41.7,True,,aim 2: control efter
+ISMOKE_FP15_Cföre_03-Dec-2020_08-14-18,ISMOKE,FP15,C,control,före,False,1,2020-12-03,08:14:18,56.7,117.3,52.7,True,,aim 1: control före
+ISMOKE_FP15_Cefter_03-Dec-2020_09-25-33,ISMOKE,FP15,C,control,efter,False,1,2020-12-03,09:25:33,52.9,119.0,48.9,True,,
+ISMOKE_FP16_Cföre_19-Nov-2020_09-25-11,ISMOKE,FP16,C,control,före,False,1,2020-11-19,09:25:11,59.2,,55.2,True,,aim 1: control före
+ISMOKE_FP16_Cefter_19-Nov-2020_10-51-20,ISMOKE,FP16,C,control,efter,False,1,2020-11-19,10:51:20,45.7,105.4,41.7,True,,
 ISMOKE_FP16_Sföre_26-Nov-2020_08-53-52,ISMOKE,FP16,S,active,före,False,1,2020-11-26,08:53:52,59.9,,55.9,True,,
 ISMOKE_FP16_Sföre_26-Nov-2020_08-56-03,ISMOKE,FP16,S,active,före,False,1,2020-11-26,08:56:03,58.7,120.3,54.7,True,,"aims 1, 2: active före"
 ISMOKE_FP16_Sefter_26-Nov-2020_10-18-09,ISMOKE,FP16,S,active,efter,False,1,2020-11-26,10:18:09,58.7,121.3,54.7,True,,aim 2: active efter
 ISMOKE_FP19_Sföre_24-Nov-2020_09-04-50,ISMOKE,FP19,S,active,före,False,1,2020-11-24,09:04:50,57.7,117.8,53.7,True,,"aims 1, 2: active före"
 ISMOKE_FP19_Sefter_24-Nov-2020_10-28-01,ISMOKE,FP19,S,active,efter,False,1,2020-11-24,10:28:01,50.8,115.0,46.8,True,,aim 2: active efter
-ISMOKE_FP19_Cföre_01-Dec-2020_08-59-41,ISMOKE,FP19,C,control,före,False,1,2020-12-01,08:59:41,54.3,117.0,50.3,True,,"aims 1, 2: control före"
-ISMOKE_FP19_Cefter_01-Dec-2020_10-14-27,ISMOKE,FP19,C,control,efter,False,1,2020-12-01,10:14:27,56.8,122.1,52.8,True,,aim 2: control efter
-ISMOKE_FP20_Cföre_27-Nov-2020_08-36-16,ISMOKE,FP20,C,control,före,False,1,2020-11-27,08:36:16,54.9,116.0,50.9,True,,"aims 1, 2: control före"
-ISMOKE_FP20_Cefter_27-Nov-2020_10-00-47,ISMOKE,FP20,C,control,efter,False,1,2020-11-27,10:00:47,56.7,116.6,52.7,True,,aim 2: control efter
+ISMOKE_FP19_Cföre_01-Dec-2020_08-59-41,ISMOKE,FP19,C,control,före,False,1,2020-12-01,08:59:41,54.3,117.0,50.3,True,,aim 1: control före
+ISMOKE_FP19_Cefter_01-Dec-2020_10-14-27,ISMOKE,FP19,C,control,efter,False,1,2020-12-01,10:14:27,56.8,122.1,52.8,True,,
+ISMOKE_FP20_Cföre_27-Nov-2020_08-36-16,ISMOKE,FP20,C,control,före,False,1,2020-11-27,08:36:16,54.9,116.0,50.9,True,,aim 1: control före
+ISMOKE_FP20_Cefter_27-Nov-2020_10-00-47,ISMOKE,FP20,C,control,efter,False,1,2020-11-27,10:00:47,56.7,116.6,52.7,True,,
 ISMOKE_FP20_Sföre_08-Dec-2020_08-20-08,ISMOKE,FP20,S,active,före,False,1,2020-12-08,08:20:08,61.1,122.5,57.1,True,,"aims 1, 2: active före"
 ISMOKE_FP20_Sefter_08-Dec-2020_09-16-50,ISMOKE,FP20,S,active,efter,False,1,2020-12-08,09:16:50,60.4,121.1,56.4,True,,aim 2: active efter
 ISMOKE_FP21_Sföre2_30-Nov-2020_08-43-00,ISMOKE,FP21,S,active,före,False,2,2020-11-30,08:43:00,53.8,113.7,49.8,True,,"aims 1, 2: active före"
 ISMOKE_FP21_Sefter_30-Nov-2020_10-11-20,ISMOKE,FP21,S,active,efter,False,1,2020-11-30,10:11:20,54.6,114.8,50.6,True,,aim 2: active efter
-ISMOKE_FP21_Cföre_07-Dec-2020_08-24-25,ISMOKE,FP21,C,control,före,False,1,2020-12-07,08:24:25,56.7,117.3,52.7,True,,"aims 1, 2: control före"
-ISMOKE_FP21_Cefter_07-Dec-2020_09-33-41,ISMOKE,FP21,C,control,efter,False,1,2020-12-07,09:33:41,73.1,120.6,69.1,True,,aim 2: control efter
+ISMOKE_FP21_Cföre_07-Dec-2020_08-24-25,ISMOKE,FP21,C,control,före,False,1,2020-12-07,08:24:25,56.7,117.3,52.7,True,,aim 1: control före
+ISMOKE_FP21_Cefter_07-Dec-2020_09-33-41,ISMOKE,FP21,C,control,efter,False,1,2020-12-07,09:33:41,73.1,120.6,69.1,True,,
 ISMOKE_FP22_Cföre_30-Nov-2020_09-29-30,ISMOKE,FP22,C,control,före,False,1,2020-11-30,09:29:30,58.4,118.9,54.4,True,,
 ISMOKE_FP22_Cefter_30-Nov-2020_10-56-17,ISMOKE,FP22,C,control,efter,False,1,2020-11-30,10:56:17,59.2,121.2,55.2,True,,
 ISMOKE_FP23_Sföre_02-Dec-2020_08-29-03,ISMOKE,FP23,S,active,före,False,1,2020-12-02,08:29:03,59.1,120.4,55.1,True,,"aims 1, 2: active före"
 ISMOKE_FP23_Sefter_02-Dec-2020_10-03-12,ISMOKE,FP23,S,active,efter,False,1,2020-12-02,10:03:12,54.8,114.6,50.8,True,,aim 2: active efter
-ISMOKE_FP23_Cföre_09-Dec-2020_08-26-58,ISMOKE,FP23,C,control,före,False,1,2020-12-09,08:26:58,59.4,120.8,55.4,True,,"aims 1, 2: control före"
+ISMOKE_FP23_Cföre_09-Dec-2020_08-26-58,ISMOKE,FP23,C,control,före,False,1,2020-12-09,08:26:58,59.4,120.8,55.4,True,,aim 1: control före
 ISMOKE_FP23_Cefter_09-Dec-2020_09-49-08,ISMOKE,FP23,C,control,efter,False,1,2020-12-09,09:49:08,54.6,114.5,50.6,True,,
-ISMOKE_FP23_Cefter2_09-Dec-2020_09-52-09,ISMOKE,FP23,C,control,efter,False,2,2020-12-09,09:52:09,54.3,115.4,50.3,True,,aim 2: control efter
+ISMOKE_FP23_Cefter2_09-Dec-2020_09-52-09,ISMOKE,FP23,C,control,efter,False,2,2020-12-09,09:52:09,54.3,115.4,50.3,True,,

@@ -67,19 +67,22 @@ def test_who_the_aims_can_use(tables):
     assert counts.loc['ESMOKE', 'aim1'] == {'yes': 13, 'check': 1, 'no': 3}
     assert counts.loc['ESMOKE', 'aim2'] == {'yes': 12, 'check': 1, 'no': 4}
     assert counts.loc['ISMOKE', 'aim1'] == {'yes': 9, 'check': 1, 'no': 3}
-    assert counts.loc['ISMOKE', 'aim2'] == {'yes': 8, 'no': 5}
+    assert counts.loc['ISMOKE', 'aim2'] == {'yes': 9, 'check': 1, 'no': 3}
     assert tuple(status.loc[('ESMOKE', 'FP09')]) == ('yes', 'no')        # no efter on the active day
-    assert tuple(status.loc[('ESMOKE', 'FP02')]) == ('no', 'no')         # one visit only
+    assert tuple(status.loc[('ESMOKE', 'FP02')]) == ('no', 'no')         # one visit only, without an efter
+    assert tuple(status.loc[('ISMOKE', 'FP08')]) == ('check', 'yes')     # aim 2 needs only the S visit
 
 
 def test_each_recording_is_marked_with_its_use(tables):
     table, _ = tables
     use = table.set_index('name')['used_for']
-    assert use['FP03_Qföre_15-Oct-2019_09-15-49'] == 'aims 1, 2: control före'
+    assert use['FP03_Qföre_15-Oct-2019_09-15-49'] == 'aim 1: control före'
+    assert use['FP03_Wföre_21-Oct-2019_08-58-40'] == 'aims 1, 2: active före'
     assert use['FP03_Wefter_21-Oct-2019_10-21-58'] == 'aim 2: active efter'
+    assert use['FP03_Qefter_försök2_15-Oct-2019_11-06-33'] == ''         # aim 2 leaves the control visit out
     assert use['FP09_Wföre_23-Oct-2019_08-20-37'] == 'aim 1: active före'
     assert use['FP02_Wföre_15-Oct-2019_08-29-10'] == ''
-    assert (table['used_for'] != '').sum() == 90
+    assert (table['used_for'] != '').sum() == 72
 
 
 def test_downloaded_videos_are_matched_whatever_the_spelling(tmp_path):
@@ -120,4 +123,4 @@ def test_the_command_line(tmp_path, capsys):
     assert sorted(p.name for p in (tmp_path / 'out').iterdir()) == ['participants.csv', 'recordings.csv',
                                                                     'to_download.csv']
     printed = capsys.readouterr().out
-    assert '124 recordings of 30 participants' in printed and 'still to download: 89' in printed
+    assert '124 recordings of 30 participants' in printed and 'still to download: 71' in printed
