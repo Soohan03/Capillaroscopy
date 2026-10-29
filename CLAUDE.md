@@ -277,6 +277,11 @@ the 2026-10-05 GUI rebuild entry.
     and 1 ESMOKE and 3 ISMOKE participants to aim 1: a decision for the PI.
   - ESMOKE: 7 of 14 participants, CV 67% (95% CI 43–147%), ICC(A,1) 0.01; ISMOKE: 2 of 10.
     Thresholds from 6.5 to 9 change nothing; the mean of the counted loops gives CV 65%.
+  - Post hoc, not agreed with the PI (`analysis/coarse_filter/`, plan committed before its checks): loops the
+    protocol doesn't resolve, measured again with rows band-passed at σ 4–16 px from 5 px/frame, pass every
+    check (no false flow in synthetic loops or the occlusion; same direction after release). ESMOKE 9
+    participants, CV 69%, ICC 0.31 (−0.39 to 0.79). The added loops are faster (median 0.38 against 0.08 mm/s):
+    the protocol counts mainly slow capillaries, but adding the fast ones doesn't make CBV more reproducible.
   - Fixed before unblinding: returning to a recording seen before restored its earlier line's
     role, which carried over, so 29 lines were saved without the whole-loop role. They were
     re-saved from their own diagrams (`analysis/primary_endpoint/relabel_whole_loops.py`), and the

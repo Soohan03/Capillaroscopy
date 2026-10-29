@@ -163,6 +163,9 @@ These describe the results further; none changes a value or a statistic fixed ab
 - The quality of the lines (shape, clearance, the two halves of the rest, the two limbs, loops of
   one recording) and where each recording's value comes from.
 - Exploratory: the second visit against the first, by date.
+- Exploratory, post hoc, not agreed with the PI beforehand: a coarser filter for flow too fast for the
+  default one (`analysis/coarse_filter/`). Its rule and pass marks were written down and committed
+  (`PLAN.md`) before its checks were run; the values above stay the primary result.
 
 ## Changes after unblinding
 

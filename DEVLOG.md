@@ -6,6 +6,59 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — Post hoc: a coarser filter for faster flow
+
+**Branch:** `feature/reference-capillary`. Commits: 0b15b9c (the plan, 14:38, before any check), then the scripts
+and results.
+
+**Why.** On ISMOKE FP04 Sföre the user saw blood moving, but none of its three blind loops counted
+(signal-to-noise 2.6–4.2). A test line placed after unblinding (`loop4`, 14:04, since moved to the trash by the
+user) was measured over the whole video, so the occlusion's slow creep dominated it. Over the rest alone it gave
+0.146 mm/s, signal-to-noise 10.7.
+
+With the rows band-passed at σ 4–16 px instead of 1–4, the three blind loops gave 0.40–0.48 mm/s
+(signal-to-noise 6.3–7.1). They showed no such speed in the occlusion and ran the same way, faster, after
+release. The likely reason: at about 11 px/frame the fine detail the default filter keeps is smeared within each
+frame. The user, unable to reach the PI, asked to run the check as a post-hoc analysis.
+
+**How it was kept honest.** `analysis/coarse_filter/PLAN.md` fixed the rule, the checks and their pass marks, and
+listed what had been seen. It was committed before anything was run; PROTOCOL.md's "Added after unblinding" points
+to it.
+- The rule: step 2 is only for loops not resolved by the protocol. It uses σ 4–16, with speeds searched from
+  5 px/frame (0.20 mm/s), so that the creep the coarser filter turns into "flow" in the occlusion falls at the
+  edge of the searched range. The quality control is the same.
+- Sensitivity: step 2 from 3 and from 8 px/frame.
+- Only the loops saved before unblinding. ISMOKE FP19 Cefter's `loop3` was saved at 13:53, after unblinding, and
+  is left out; it is not counted in the protocol's analysis either.
+
+**Results** (`analysis/coarse_filter/README.md`). The rule passes all three checks:
+- synthetic no-flow: 0 of 120 line clips;
+- the occlusion: step 2 added no false flow in 163 lines (the protocol's own measurement found "flow" in 12);
+- after release: 6 of 6 loops ran the same way.
+
+The simulator does not reproduce the loss of fine detail, so V1 tests false alarms only. FP04 Sföre itself gains
+nothing (6.3–7.1 < 8).
+
+Aim 1, ESMOKE:
+- 9 participants instead of 7;
+- CV 69% (47–132) instead of 67%; log CV 107% instead of 88%;
+- ICC 0.31 (−0.39 to 0.79) instead of 0.01.
+
+ISMOKE: 3 participants instead of 2. Step 2's 14 loops run at a median 0.38 mm/s, against 0.08 for the protocol's
+91: the protocol counts mainly slow capillaries. The rule adds data without making CBV more reproducible: 3 of the
+9 ESMOKE pairs set a slow capillary against a fast one.
+
+**Files:** `analysis/coarse_filter/` (`PLAN.md`, `rule.py`, `checks.py`, `aim1.py`, `README.md`,
+`synthetic_results.csv`, `checks_summary.json`, `aim1.csv`); tables with names in `Reports/coarse_filter/` (not in
+the repository).
+
+**Verified:**
+- `checks.py real` stops unless step 1 at rest judges all 200 loops as their saved data sets do; it did.
+- `aim1.py`'s protocol rows equal the primary report (ESMOKE 7, CV 66.6%, ICC 0.007).
+- No code of the app changed.
+
+---
+
 ## 2026-10-29 — The recordings aim 1 uses are marked in the list
 
 **Branch:** `feature/reference-capillary` (after the entry below).
