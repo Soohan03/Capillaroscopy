@@ -20,7 +20,9 @@ products".
   `metadata/` (see its README).
 - **Aim 1 (primary):** inter-day reproducibility of resting CBV from the two före
   recordings. Reported as the within-subject CV (typical error/mean), the smallest
-  detectable change (2.77 × typical error), Bland–Altman and ICC(A,1).
+  detectable change (2.77 × typical error), Bland–Altman and ICC(A,1). Pooled over both
+  studies (the primary result, agreed with the PI long before unblinding; `PROTOCOL.md` said
+  "for each study" and was corrected on 2026-10-29, after unblinding), and per study.
 - **Aim 2:** the before→after change on the nicotine visit (W, S) of each participant who has
   both, per study and pooled as a separate analysis; the control visit is not used. Agreed with
   the PI about a month before unblinding; `PROTOCOL.md` had recorded an older plan (all four
@@ -212,8 +214,9 @@ Tkinter classes.
   stabilized video and not crossing itself; a recording's value is its reference capillary (`loop1`)
   if it counts, else the first backup that counts (`PROTOCOL.md`; `--value reference-only|mean` and
   `--min-snr` for the sensitivity analyses, `--progress` and `--unblind` for blind placement, the
-  codes in `capillary/blinding.py`); loops on top of each other are listed for checking. Aim 1 per
-  study: CV (typical error / mean, and on the log scale), SDC (2.77 × typical error), Bland–Altman,
+  codes in `capillary/blinding.py`); loops on top of each other are listed for checking. Aim 1
+  pooled (`aims.POOLED`, the primary result, printed first) and per study: CV (typical error / mean,
+  and on the log scale), SDC (2.77 × typical error), Bland–Altman,
   ICC(A,1). Aim 2 per study and pooled (`aims.POOLED`): the change after minus before on the
   nicotine visit, paired t-test, Wilcoxon, ratio after / before. Tables in `Reports/aims/`.
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
@@ -280,6 +283,8 @@ the 2026-10-05 GUI rebuild entry.
     slowest speed searched, 1 px/frame (0.040 mm/s): slow flow or slow movement of the picture,
     which one line cannot tell apart (the slow range below). Counting them would add 14 recordings
     and 1 ESMOKE and 3 ISMOKE participants to aim 1: a decision for the PI.
+  - Pooled (the primary result since the protocol's correction on 2026-10-29): 9 of 24 participants,
+    CV 63% (95% CI 43–121%), log scale 76%, SDC 0.211 mm/s, ICC(A,1) 0.05 (−0.55 to 0.65).
   - ESMOKE: 7 of 14 participants, CV 67% (95% CI 43–147%), ICC(A,1) 0.01; ISMOKE: 2 of 10.
     Thresholds from 6.5 to 9 change nothing; the mean of the counted loops gives CV 65%.
   - Post hoc, not agreed with the PI (`analysis/coarse_filter/`, plan committed before its checks): loops the

@@ -185,6 +185,26 @@ def test_the_command_writes_the_tables(statistics, tmp_path, capsys):
     assert pd.read_csv(out / 'loops.csv')['observer'].eq('SJ').all()
 
 
+def test_aim_1_pooled_over_both_studies_is_the_primary_result(statistics, wanted):
+    save(statistics, 'IA1', 'loop1', 0.07)
+    save(statistics, 'IC1', 'loop1', 0.10)
+    loop_table = aims.loops(aims.collect(statistics))
+    recordings = aims.per_recording(loop_table)
+    pairs = aims.aim1_pairs(recordings, wanted, 'mean_mm_s')
+    stats = aims.aim1(pairs)
+    table = stats.set_index(['observer', 'study'])
+    assert list(table.loc['SJ'].index) == ['ESMOKE', 'ISMOKE', aims.POOLED]
+    pooled = table.loc[('SJ', aims.POOLED)]
+    assert (pooled['participants'], pooled['participants_wanted'], pooled['one_visit_only']) == (4, 5, 1)
+    a, c = np.array([0.12, 0.20, 0.09, 0.07]), np.array([0.08, 0.15, 0.11, 0.10])  # ESMOKE's three and IA1/IC1
+    typical = np.std(a - c, ddof=1) / math.sqrt(2)
+    assert pooled['cv_percent'] == pytest.approx(100 * typical / np.r_[a, c].mean())
+    assert pooled['icc_a1'] == pytest.approx(agreement.icc(np.column_stack([a, c]))['agreement'])
+    printed = aims.report(loop_table, recordings, pairs, stats, 'mean_mm_s')
+    assert printed.index(f'Aim 1, {aims.POOLED} (pooled: the primary result), observer SJ') < \
+        printed.index('Aim 1, ESMOKE, observer SJ')
+
+
 def test_aim_2_is_the_change_from_before_to_after_nicotine():
     before, after = np.array([0.10, 0.08, 0.12, 0.09]), np.array([0.13, 0.08, 0.15, 0.10])
     out = aims.response(np.r_[before, 0.1, np.nan], np.r_[after, np.nan, 0.1])

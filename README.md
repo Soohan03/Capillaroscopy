@@ -320,7 +320,8 @@ loop). A recording's value is its reference capillary (`loop1`) if it counts,
 else the first backup that counts (`loop2`, `loop3`); `--value` gives the
 reference alone or the mean of all counted loops instead, and `--min-snr`
 judges the loops at another threshold from their saved space-time diagrams
-(the protocol's sensitivity analyses). Then aim 1, per study: each participant's
+(the protocol's sensitivity analyses). Then aim 1, pooled over both studies (the
+primary result) and per study: each participant's
 before-exposure recordings of both visits (`capillary.inventory` chooses them),
 the within-subject CV (typical error / mean), the smallest detectable change
 (2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval; and

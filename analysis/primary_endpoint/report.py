@@ -251,10 +251,11 @@ def reproducibility(active, control) -> dict:
 
 
 def aim1_table(pairs: pd.DataFrame) -> dict:
-    """`reproducibility` per study, with how many participants had a value at one visit only, or at neither."""
+    """`reproducibility` per study and over both together (`capillary.aims.POOLED`, the primary result), with
+    how many participants had a value at one visit only, or at neither."""
     out = {}
-    for study in STUDIES:
-        group = pairs[pairs['study'] == study]
+    for study in (*STUDIES, aims.POOLED):
+        group = pairs if study == aims.POOLED else pairs[pairs['study'] == study]
         both = np.isfinite(group['active_mm_s']) & np.isfinite(group['control_mm_s'])
         one = np.isfinite(group['active_mm_s']) ^ np.isfinite(group['control_mm_s'])
         out[study] = {'participants_wanted': len(group), 'one_visit_only': int(one.sum()),
@@ -654,7 +655,7 @@ def main(argv=None) -> int:
     recordings.to_csv(os.path.join(out_dir, 'recordings.csv'), index=False)
     pairs.to_csv(os.path.join(out_dir, 'pairs.csv'), index=False)
     pd.DataFrame([{'analysis': key, 'study': study, **analyses[key]['aim1'][study]} for key in ANALYSES
-                  for study in STUDIES]).to_csv(os.path.join(out_dir, 'aim1.csv'), index=False)
+                  for study in (*STUDIES, aims.POOLED)]).to_csv(os.path.join(out_dir, 'aim1.csv'), index=False)
     sweep_table.to_csv(os.path.join(out_dir, 'threshold_sweep.csv'), index=False)
     other = table[(table['role'] != pattern_shift.WHOLE_LOOP) & table['recording'].isin(info['recording'])]
     files = report_files(loops_, recordings, pairs, analyses, sweep_table, visit_order(pairs_by['primary'], people),

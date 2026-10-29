@@ -22,7 +22,8 @@ observer to decide. Each observer's data sets are summarized on their own.
 
 Aim 1, inter-day reproducibility, uses each participant's before-exposure
 recording of both visits, as `capillary.inventory` chooses them, for every
-participant with a mean at both. Per study:
+participant with a mean at both. Over both studies together (the primary
+result) and per study:
 
 - the within-subject coefficient of variation: the typical error (SD of the
   differences / sqrt 2) over the mean of all values, in %;
@@ -83,7 +84,8 @@ VALUES = {'reference': 'value_mm_s', 'reference-only': 'reference_only_mm_s', 'm
 #: Aim 2's recordings of a participant, as columns of `aim2_recordings`: before and after exposure on the
 #: nicotine (active) visit. The control visit is not used (PROTOCOL.md).
 AIM2_RECORDINGS = ('active_before_recording', 'active_after_recording')
-#: Aim 2's analysis over both studies together, beside each study's own.
+#: Both studies together: aim 1's primary result, and aim 2's separate analysis beside each study's own
+#: (PROTOCOL.md).
 POOLED = 'ESMOKE + ISMOKE'
 #: The range a loop must lie in, as the data set's summary names its official phase.
 REST = 'rest'
@@ -317,14 +319,16 @@ def reproducibility(active, control) -> dict:
 
 
 def aim1(pairs: pd.DataFrame) -> pd.DataFrame:
-    """`reproducibility` per observer and study, with how many participants had a value at one visit only."""
+    """`reproducibility` per observer and study, then over both studies together (`POOLED`, the primary
+    result), with how many participants had a value at one visit only."""
     rows = []
-    for (observer, study), group in pairs.groupby(['observer', 'study'], sort=True):
-        both = np.isfinite(group['active_mm_s']) & np.isfinite(group['control_mm_s'])
-        one = np.isfinite(group['active_mm_s']) ^ np.isfinite(group['control_mm_s'])
-        rows.append({'observer': observer, 'study': study, 'participants_wanted': len(group),
-                     'one_visit_only': int(one.sum()), 'neither_visit': int((~both & ~one).sum()),
-                     **reproducibility(group.loc[both, 'active_mm_s'], group.loc[both, 'control_mm_s'])})
+    for observer, mine in pairs.groupby('observer', sort=True):
+        for study, group in [*mine.groupby('study', sort=True), (POOLED, mine)]:
+            both = np.isfinite(group['active_mm_s']) & np.isfinite(group['control_mm_s'])
+            one = np.isfinite(group['active_mm_s']) ^ np.isfinite(group['control_mm_s'])
+            rows.append({'observer': observer, 'study': study, 'participants_wanted': len(group),
+                         'one_visit_only': int(one.sum()), 'neither_visit': int((~both & ~one).sum()),
+                         **reproducibility(group.loc[both, 'active_mm_s'], group.loc[both, 'control_mm_s'])})
     return pd.DataFrame(rows)
 
 
@@ -568,9 +572,10 @@ def report(loop_table: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataFra
                       if sources is not None and len(sources) else ''))
         lines.append(f'  recordings with a mean of counted loops: {int(np.isfinite(values["mean_mm_s"]).sum())}, '
                      f'from {_counts(values)} loops each')
-    for row in stats.itertuples(index=False):
+    for row in sorted(stats.itertuples(index=False), key=lambda row: (row.observer, row.study != POOLED)):
         lines.append('')
-        lines.append(f'Aim 1, {row.study}, observer {row.observer or "(none)"}: {row.participants} of '
+        pooled = ' (pooled: the primary result)' if row.study == POOLED else ''
+        lines.append(f'Aim 1, {row.study}{pooled}, observer {row.observer or "(none)"}: {row.participants} of '
                      f'{row.participants_wanted} participants with a mean at both visits ({row.one_visit_only} at '
                      f'one only)')
         if row.participants:
