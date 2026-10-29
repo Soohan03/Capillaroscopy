@@ -59,8 +59,9 @@ changed, to write `dashboard/index.html` as its page.
   but sat at the slowest speed the protocol searches, 1 px/frame (0.040 mm/s);
   4 cross themselves; none had limbs moving opposite ways.
 - **Recordings with a value:** 54 of 90 (45 from the reference, 9 from a backup).
-- **Aim 1, both studies pooled (the primary result).** `PROTOCOL.md` was corrected to the pooling
-  agreed with the PI on 2026-10-29, after the per-study results below had been seen. 9 of 24
+- **Aim 1, both studies pooled (the primary result).** `PROTOCOL.md` was corrected on 2026-10-29
+  to the pooling the study progress report states, after the per-study results below had been
+  seen. 9 of 24
   participants with both visits. Mean 0.121 mm/s, typical error 0.076 mm/s, within-subject CV
   63% (95% CI 43–121%), on the log scale 76%, smallest detectable change 0.211 mm/s, bias
   active − control +0.043 mm/s (−0.040 to 0.126), limits −0.169 to 0.255 mm/s, ICC(A,1) 0.05
