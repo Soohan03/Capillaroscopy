@@ -6,6 +6,42 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — Aim 1 pooled over both studies
+
+**Branch:** `feature/aim1-pooled`, from `main` at a69db38 (PR #28 merged).
+
+**Why.** The user noticed that PROTOCOL.md was missing a statement: aim 1's result is pooled over ESMOKE and
+ISMOKE, as agreed with the PI long before unblinding. The protocol said "for each study". Like aim 2's this
+afternoon, the correction comes after unblinding: the per-study results (ESMOKE 7 of 14 participants, CV 67%,
+ICC(A,1) 0.01; ISMOKE 2 of 10) had been computed and looked at. They stay in the reports, beside the pooled result.
+No document in the repository records the pooling; the user's notes of the progress report (2026-10-07) say
+"studies analysed separately", under aim 2.
+
+**What changed.**
+- `capillary/aims.py`: `aim1` adds a pooled row (`POOLED`, 'ESMOKE + ISMOKE') after each observer's studies, as
+  `aim2` does. The printed report shows it first, as "pooled: the primary result".
+- `analysis/primary_endpoint/report.py`: `aim1_table` and `aim1.csv` include the pooled row, with the report's
+  intervals. The report page's charts still show the studies only; the page has not been regenerated.
+- PROTOCOL.md: aim 1's section and a "Changes after unblinding" entry with the pooled result. CLAUDE.md,
+  README.md and the primary endpoint's README: the same.
+
+**Results** (the same values as at unblinding, observer SJ):
+
+| | Participants | CV (95% CI) | Log CV | SDC, mm/s | Bias active − control, mm/s | ICC(A,1) (95% CI) |
+|---|---|---|---|---|---|---|
+| Pooled | 9 of 24 | 63% (43–121) | 76% | 0.211 | +0.043 (−0.040 to 0.126) | 0.05 (−0.55 to 0.65) |
+| ESMOKE | 7 of 14 | 67% (43–147) | 88% | 0.239 | +0.050 (−0.063 to 0.163) | 0.01 (−0.67 to 0.71) |
+| ISMOKE | 2 of 10 | 38% (17–1228) | 44% | 0.097 | +0.019 | 0.18 |
+
+Sensitivity, pooled: thresholds 7 and 9 give the same; the mean of the counted loops CV 62%, ICC(A,1) 0.11; the
+reference alone leaves 4 participants (CV 47%).
+
+**Verified.** `python3 -m pytest`: 319 passed. One new test checks the pooled row: the CV and ICC(A,1) of ESMOKE's
+three pairs and an ISMOKE pair, against `agreement.icc`, and that the report prints it first. `capillary.aims` and
+its four sensitivity runs were rerun. Their per-study aim 1 rows equal those of 13:07, compared file by file.
+
+---
+
 ## 2026-10-29 — Aim 2 corrected to the nicotine visit
 
 **Branch:** `feature/aim2-nicotine-visits`, from `feature/reference-capillary` at d44b8ea (not merged yet).
