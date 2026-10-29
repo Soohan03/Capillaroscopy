@@ -25,8 +25,12 @@ products".
   10 ISMOKE participants (two of them to check in DynCap); aim 2 has 13 ESMOKE and 8 ISMOKE. The
   aims use 90 recordings; 8 of them had been downloaded by 2026-10-09, 30 (all ESMOKE) were on
   the desktop by 2026-10-12, and by the end of 2026-10-14 all 54 ESMOKE ones and 32 of the 36
-  ISMOKE ones were on it, stabilized. Missing: ISMOKE FP23's four recordings.
+  ISMOKE ones were on it, stabilized; ISMOKE FP23's four followed on 2026-10-29, so all 90 are ready.
 - **Resting CBV must come from the rest window before occlusion.**
+- **Protocol and results:** `PROTOCOL.md` fixes the measurement and the analysis, agreed with the PI
+  on 2026-10-29: velocity round the whole loop at rest, signal-to-noise 8 or more, one reference
+  capillary per recording with two ranked backups. The lines were placed blind that day and
+  unblinded at 13:07. Aim 1's report: `analysis/primary_endpoint/` (Known issues has the gist).
 
 ## Change diary (mandatory)
 
@@ -68,8 +72,9 @@ without asking:
      black strip along its edge); a line that leaves it is refused, with how far to move it.
    - Blind placement (the header button): only the aims' recordings are listed, under
      codes; the preview and every result are hidden; measuring uses the official rest;
-     Two boxes, Results and Validation are closed. It stays on until turned off.
-     `python3 -m capillary.aims` then gives each recording's mean and aim 1's statistics.
+     every line is saved as a whole loop; Two boxes, Results and Validation are closed. It stays
+     on until turned off. `python3 -m capillary.aims --progress` checks the placement by code
+     without a result; `--unblind` gives the results (the study's were unblinded on 2026-10-29).
    - Two boxes page (the original method, kept for comparison): click places box 1
      (orange, downstream), the next click box 2 (blue, upstream); WASD nudges a box.
    - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
@@ -198,9 +203,12 @@ Tkinter classes.
     velocities and scores identical), and the split marks the same one loop as separately traced
     limbs did (DEVLOG 2026-10-14).
 - **The aims (since 2026-10-14):** `python3 -m capillary.aims [--data <folder>] [--observer XX]`. A
-  loop counts when it is a whole loop, within the official rest, resolved, without movement and on a
-  stabilized video; a recording's value is the mean of its counted loops (the count is kept); loops
-  on top of each other are listed for checking. Aim 1 per study: CV (typical error / mean, and on
+  loop counts when it is a whole loop, within the official rest, resolved, without movement, on a
+  stabilized video and not crossing itself; a recording's value is its reference capillary (`loop1`)
+  if it counts, else the first backup that counts (`PROTOCOL.md`; `--value reference-only|mean` and
+  `--min-snr` for the sensitivity analyses, `--progress` and `--unblind` for blind placement, the
+  codes in `capillary/blinding.py`); loops on top of each other are listed for checking. Aim 2's
+  statistics are printed too. Aim 1 per study: CV (typical error / mean, and on
   the log scale), SDC (2.77 × typical error), Bland–Altman, ICC(A,1). Tables in `Reports/aims/`.
 - **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
   (fixed boxes, an explicit frame range read straight from the file), saved in the
@@ -248,7 +256,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (306 tests, ~50 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (317 tests, ~50 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
@@ -260,6 +268,18 @@ the 2026-10-05 GUI rebuild entry.
 
 ## Known issues
 
+- **Aim 1 as the protocol fixed it** (unblinded 2026-10-29, `analysis/primary_endpoint/`).
+  - 91 of 200 whole loops count, and 54 of 90 recordings have a value. Of the rest, 69 loops scored
+    below 8, a median of 3.4 (no moving pattern), and 36 scored high (median 35) but sat at the
+    slowest speed searched, 1 px/frame (0.040 mm/s): slow flow or slow movement of the picture,
+    which one line cannot tell apart (the slow range below). Counting them would add 14 recordings
+    and 1 ESMOKE and 3 ISMOKE participants to aim 1: a decision for the PI.
+  - ESMOKE: 7 of 14 participants, CV 67% (95% CI 43–147%), ICC(A,1) 0.01; ISMOKE: 2 of 10.
+    Thresholds from 6.5 to 9 change nothing; the mean of the counted loops gives CV 65%.
+  - Fixed before unblinding: returning to a recording seen before restored its earlier line's
+    role, which carried over, so 29 lines were saved without the whole-loop role. They were
+    re-saved from their own diagrams (`analysis/primary_endpoint/relabel_whole_loops.py`), and the
+    app now fixes the role during blind placement.
 - **Resting flow** (revised 2026-10-08). The earlier note said resting flow was beyond the
   centre line's range (0.5–1 mm/s, from near-horizontal streaks). That rested on video that
   had never been stabilized (thought on 2026-10-08 to be MPEG-4-compressed; found to be the

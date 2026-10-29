@@ -6,6 +6,164 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-10-29 — The protocol, the study's lines placed blind, and the primary endpoint
+
+**Branch:** `feature/reference-capillary`. Commits 6fd617d, 282387f, db39c70 and c195221 (the
+protocol and `capillary.aims`), then this entry's commits: the app's role fix, the relabel
+script, the report and the documentation.
+
+### The protocol (`PROTOCOL.md`, 09:51, before the first study line)
+
+The user and the PI agreed: velocity round the whole capillary in the resting flow;
+signal-to-noise as the quality control, above 8 accepted as measurable; one "reference"
+capillary per video to begin with. The user added two ranked backups for when the reference
+fails. PROTOCOL.md fixes the details: the 90 recordings, candidates and ranking (the clearest
+moving blood first, then the longer loop), up to three loops named in ranking order (`loop1` the
+reference), each recording's value (the reference if it counts, else the first backup that
+counts, else missing; secondary: the mean of the counted loops), aim 1 and aim 2's statistics,
+the sensitivity analyses (reference only, mean, thresholds 7 and 9), blinding, and a later
+check of the placement's reproducibility (10 random recordings placed again under a second
+observer code).
+
+**FP23's four recordings** were stabilized the same morning (2.8–3.2 min each, match over the
+rest 0.80–0.89, no frame lost, 74–89% of the frame usable at rest), so all 90 recordings were
+ready. ISMOKE FP22 C was left raw on purpose: the aims do not use it (its S visit has no
+official times).
+
+### `capillary.aims` for the protocol (commits 6fd617d–c195221)
+
+- `capillary/blinding.py`: the codes, moved out of `gui/blind.py` so the command line shows the
+  same ones.
+- `--progress`: how far blind placement got, by code. Each recording's data set names and what
+  to fix (no `loop1`, a gap, more than three loops, not a whole loop, not over the rest, two
+  loops on one capillary, a line crossing itself), never a velocity, a score or a count of
+  loops that count. While the app is in blind placement the results stay hidden unless
+  `--unblind` is passed.
+- Each recording's value by the reference rule (`value_mm_s`, `value_from`), the reference alone
+  and the mean of the counted loops; `--value` picks which aim 1 uses.
+- Aim 2: each visit's change after minus before, the difference active minus control (mean,
+  95% CI, paired t-test, Wilcoxon) and the same as ratios on the log scale.
+- `--min-snr`: the loops judged at another threshold from their saved space-time diagrams
+  (`recount`; `pattern_shift.loop_limbs` took a `min_snr`).
+- Twisted loops: a line that crosses itself is not a candidate (the crossing is sampled twice
+  and the split at the apex fails). Asked during placement whether points may cross, the rule
+  was written into the protocol before unblinding; `--progress` flags such lines and the
+  analysis skips them, so the next loop in the ranking takes their place. 4 of the 200 lines,
+  all backups.
+
+### Placement (10:13–12:37)
+
+The user placed 200 whole loops on 89 recordings with blind placement on, a median of 32 s
+apart. The app lagged once mid-session (no traceback in the task output or the log) and was
+restarted.
+
+`--progress` afterwards found what the protocol asks to fix before unblinding:
+
+- **29 lines on 13 recordings saved without the whole-loop role** (11:58–12:12, the last 13
+  codes in the list). Their names were `set1`, `set2`… instead of `loop1`…, so the analysis would
+  have skipped them. They had whole-loop shape (both ends near each other, the apex in the
+  middle), lay over the official rest and were placed in ranking order.
+  - Cause: `LinePage.restore_state` gives a recording seen before the role its line had then,
+    and a recording not seen before keeps the last role. The first of the 13 (FP01
+    Qefter_försök2) had a try-out line with no role from 09:56; returning to it restored that
+    role, and every new line kept it.
+  - Fix, chosen by the user over placing them again:
+    `analysis/primary_endpoint/relabel_whole_loops.py` re-saved each line as a whole loop
+    (`set1` → `loop1`… in the order placed; on FP01 Qefter_försök2 `set2` → `loop1`) from its own
+    points, frames and space-time diagram with the app's `regenerate_line_report`. It checks that
+    the 3-s blocks and every summary number except the role's come out exactly as saved, then
+    moves the old files to `.trash/2026-10-29_12-43-28_lines re-saved as whole loops`. The
+    provenance keeps `relabelled` (from, when, why, software).
+  - Its first two runs stopped on bugs of the script before anything was moved: the 3-s blocks
+    were not copied for the regenerator to read, and a velocity saved as `null` (unresolved) was
+    compared with the fresh NaN. The two half-written `loop1` files each left on FP01
+    Qefter_försök2 were removed by hand (checked byte for byte to be copies of `set2`).
+  - App fix (`gui/blind.py` `ROLE`, `LinePage.keep_blind_role`): during blind placement every
+    line is a whole loop. The other role buttons are disabled, and a remembered role gives way,
+    with the suggested name. Tested on a stand-in page without a window (the user was placing
+    in the app).
+- **LK9EV (ISMOKE FP19 Sföre) had no lines.** Its picture was fine (85% of the frame usable,
+  match 0.93); the user had skipped it and placed it blind at 12:37 (`loop1`, `loop2`).
+- **E8FYS (ESMOKE FP03 Wefter) has no line.** No place shows the picture in every rest frame
+  (it moved more than the frame is high), so every line is refused; missing.
+- **Two try-out lines** from before blind placement (09:56 on FP01 Qefter_försök2, 09:59 on FP01
+  Qföre), measured over the whole video with results visible. The blind loops on both
+  recordings lie on other capillaries (no overlap). Not whole loops, so not read; left in place.
+
+### Unblinding (13:07) and the results
+
+The user confirmed that placement was final. `python3 -m capillary.aims --unblind --observer SJ`:
+
+- **Loops:** 91 of 200 count. 69 scored below 8 (a median of 3.4, no moving pattern; only 14
+  between 6 and 8). 36 scored high (median 35, 9.7–83.5) but their speed sat at the slowest
+  searched, 1 px/frame (0.040 mm/s; `in_range` false). 4 cross themselves. None had limbs
+  moving opposite ways.
+- **Recordings:** 54 of 90 have a value, 45 from the reference and 9 from a backup (loop2 7,
+  loop3 2). ESMOKE 36 of 54, ISMOKE 18 of 36.
+- **Aim 1, ESMOKE** (7 of 14 participants with both visits, 3 with one, 4 with neither):
+  - mean 0.130 mm/s (control 0.105, active 0.154);
+  - typical error 0.086 mm/s (95% CI 0.056–0.190), CV 67% (43–147%), log-scale CV 88% (50–300%);
+  - smallest detectable change 0.239 mm/s (184% of the mean);
+  - bias active − control +0.050 mm/s (−0.063 to 0.163), limits −0.189 to 0.289;
+  - ICC(A,1) 0.01 (−0.67 to 0.71);
+  - slope of the differences on the means 0.98 (−1.01 to 2.96): with 7 participants a
+    proportional bias can be neither shown nor excluded; as ratios, active / control ×1.37 with
+    limits ×0.24 to ×7.8.
+- **Aim 1, ISMOKE:** 2 of 10 participants with both visits (6 with one): CV 38% (17–1228%),
+  ICC(A,1) 0.18 (−3.3 to 1.0). Not interpretable.
+- **Sensitivity analyses:**
+  - thresholds 7 and 9 give the same participants and statistics; the sweep changes nothing
+    from 6.5 to 9, and ESMOKE drops to 5 participants at 9.5;
+  - the mean of the counted loops: ESMOKE CV 65%, ICC(A,1) 0.07; ISMOKE CV 42%;
+  - the reference alone: 3 ESMOKE and 1 ISMOKE participants.
+- **The search floor:** if the 36 loops at 1 px/frame counted, 14 more recordings would have a
+  value, and aim 1 would gain 1 ESMOKE and 3 ISMOKE participants (8 and 5). Below 1 px/frame one
+  line cannot tell slow flow from slow movement of the picture (Known issues), which is why the
+  protocol does not search there. Whether to measure them is for the PI, before their velocities
+  are seen.
+- **The lines:**
+  - median length 0.33 mm (IQR 0.25–0.43), 22 points about 12 px apart;
+  - the closest line kept 1.1 px inside the dashed outline;
+  - counted loops: median 0.080 mm/s (0.040–0.316), 2.0 px/frame (at most 7.9, inside the
+    validated range), median signal-to-noise 21.8, median 95% interval ±17%.
+- **The ranking** by visible flow: 51% of references counted, 40% of first and 46% of second
+  backups.
+- **Within a recording** (31 with two or more counted loops): between-loop CV a median 23%,
+  fastest over slowest 1.4× (up to 2.4×). The two halves of the rest differ by a median 22% of
+  their mean (63 loops).
+- **Exploratory, visit order:** second − first visit −0.010 mm/s (−0.133 to 0.113) in ESMOKE,
+  so the active visit's higher mean is not an order effect.
+- Aim 2 has values in all four recordings for 5 of 13 ESMOKE and 0 of 8 ISMOKE participants
+  (not analysed further here).
+
+### The report (`analysis/primary_endpoint/`)
+
+- `report.py`: it computes every loop's pattern shift and its limbs' once from the saved
+  diagrams (cached) and judges them at thresholds from 4 to 14. It stops unless at 8 this
+  reproduces every saved result. Then aim 1 for the protocol and its sensitivity analyses,
+  through `capillary.aims` and `capillary.agreement`, with the added intervals listed in
+  PROTOCOL.md, and the line quality.
+- It writes tables with the recordings' names for checking, plus the report's data, which names
+  only study, participant and visit. No blind code is shown next to a name, so the later blind
+  re-placement stays blind.
+- The report is a Dashboard artifact (https://claude.ai/artifact/QJj6SkQsuMToHa3NkAEtAZ), drawn
+  by `dashboard/index.html` from those tables. Four tabs:
+  - **primary endpoint:** per-study figures, both visits per participant, Bland–Altman, the
+    sensitivity analyses as interval plots, every participant, visit order;
+  - **signal-to-noise:** the attrition funnel, every loop's score by rank, why loops fail,
+    where values come from, the threshold sweep, the loops near the threshold;
+  - **line quality;**
+  - **methods.**
+- PROTOCOL.md records the fixes before unblinding, the unblinding and the additions after it
+  (none changes a value).
+
+**Verified:**
+- The report's numbers equal `capillary.aims --unblind`, and at 7 and 9 the sweep's loops and
+  recordings equal `--min-snr 7` (95, 55) and `--min-snr 9` (88, 54).
+- `python3 -m pytest`: 317 passed.
+
+---
+
 ## 2026-10-14 — 30 more ISMOKE recordings stabilized
 
 **Branch:** `fix/line-picture-edge`. No code changed; this entry and CLAUDE.md's data notes.
