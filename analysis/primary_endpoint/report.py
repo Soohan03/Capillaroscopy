@@ -264,6 +264,17 @@ def aim1_table(pairs: pd.DataFrame) -> dict:
     return out
 
 
+def aim1_records(tables: dict) -> list:
+    """The page's aim 1 rows: each analysis of `ANALYSES` (its `aim1_table` in `tables`) per study, then pooled over
+    both (key '<analysis> pooled', the primary result)."""
+    rows = []
+    for place, (key, (_, threshold, label, short)) in enumerate(ANALYSES.items()):
+        for study in (*STUDIES, aims.POOLED):
+            rows.append({'key': f'{key} {"pooled" if study == aims.POOLED else study}', 'analysis': key, 'label': label,
+                         'short': short, 'order': place, 'threshold': threshold, 'study': study, **tables[key][study]})
+    return rows
+
+
 #: Each aim's recordings per participant (`capillary.aims`), read once.
 WANTED = {}
 
@@ -453,13 +464,7 @@ def report_files(loops_: pd.DataFrame, recordings: pd.DataFrame, pairs: pd.DataF
         'mean_mm_s', 'diff_mm_s', 'ratio', 'first_visit', 'days_apart',
         *[f'{v}_{key}_mm_s' for key in ('reference_only', 'mean', 'snr7', 'snr9') for v in ('control', 'active')]])
 
-    aim1_rows = []
-    for place, (key, (_, threshold, label, short)) in enumerate(ANALYSES.items()):
-        for study in STUDIES:
-            found = analyses[key]['aim1'][study]
-            aim1_rows.append({'key': f'{key} {study}', 'analysis': key, 'label': label, 'short': short, 'order': place,
-                              'threshold': threshold, 'study': study,
-                              **{name: value for name, value in found.items()}})
+    aim1_rows = aim1_records({key: analyses[key]['aim1'] for key in ANALYSES})
 
     sweep_rows = records(sweep_table.assign(key=sweep_table['threshold'].map(lambda t: f'{t:g}')),
                          ['key'] + list(sweep_table.columns))

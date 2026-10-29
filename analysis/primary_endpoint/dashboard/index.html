@@ -68,10 +68,11 @@
 <div class="cbv">
   <header class="cbv-head" id="top">
     <h1>Inter-day CBV reproducibility</h1>
-    <p class="cbv-lede">Resting red-cell velocity round the whole capillary loop, measured blind in each participant's before-exposure recording at the control and the active visit. Within-subject CV: ESMOKE <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span> participants), ISMOKE <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span> participants).</p>
+    <p class="cbv-lede">Resting red-cell velocity round the whole capillary loop, measured blind: before exposure at the control and the active visit (aim 1), and before and after nicotine (aim 2). Within-subject CV, both studies pooled: <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</span> participants); ESMOKE <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>%, ISMOKE <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</span>%. Change after nicotine, pooled: <b data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary pooled" data-format="signed">—</b> mm/s (<span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary pooled" data-format="int">—</span> participants).</p>
     <p class="cbv-meta">Observer <span data-draw="n" data-source="summary" data-row="0" data-field="observer">—</span> · lines placed blind on <span data-draw="n" data-source="summary" data-row="0" data-field="placement_date">—</span> · <span data-draw="n" data-source="summary" data-row="0" data-field="loops_placed" data-format="int">—</span> whole loops on <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_with_lines" data-format="int">—</span> of <span data-draw="n" data-source="summary" data-row="0" data-field="recordings" data-format="int">—</span> recordings · signal-to-noise threshold <span data-draw="n" data-source="summary" data-row="0" data-field="snr_threshold" data-format="g">—</span></p>
     <nav class="cbv-tabs" role="tablist" aria-label="Report sections">
       <button type="button" role="tab" id="tab-endpoint" data-tab="endpoint" aria-controls="endpoint" aria-selected="true">Primary endpoint</button>
+      <button type="button" role="tab" id="tab-secondary" data-tab="secondary" aria-controls="secondary" aria-selected="false">Secondary endpoint</button>
       <button type="button" role="tab" id="tab-snr" data-tab="snr" aria-controls="snr" aria-selected="false">Signal-to-noise and data loss</button>
       <button type="button" role="tab" id="tab-quality" data-tab="quality" aria-controls="quality" aria-selected="false">Quality of the lines</button>
       <button type="button" role="tab" id="tab-methods" data-tab="methods" aria-controls="methods" aria-selected="false">Methods and notes</button>
@@ -82,10 +83,30 @@
   <section class="cbv-page" id="endpoint" role="tabpanel" aria-labelledby="tab-endpoint">
     <div class="cbv-section">
       <h2>Aim 1: the same participant on two days</h2>
-      <p class="cbv-prose" id="endpoint-takeaway">Each participant's value is the velocity of the reference capillary, or of the first backup that counts when the reference does not. Agreement is between the control and the active visit, both recorded before any exposure.</p>
+      <p class="cbv-prose" id="endpoint-takeaway">The primary result is pooled over both studies, as the study progress report states; each study is also shown on its own. Each participant's value is the velocity of the reference capillary, or of the first backup that counts when the reference does not. Agreement is between the control and the active visit, both recorded before any exposure.</p>
+      <p class="cbv-prose">Pooled, <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> participants have a value at both visits. Their typical error is <b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s on a mean of <span data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary pooled" data-format="mm">—</span> mm/s: a within-subject CV of <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary pooled" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary pooled" data-format="pct">—</span>%) and an ICC(A,1) of <b data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary pooled" data-format="r2">—</b> (95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary pooled" data-format="r2">—</span>). The protocol first said "for each study"; it was corrected to the pooling after the per-study results below had been seen (Methods and notes).</p>
       <p class="cbv-prose">In ESMOKE, <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span> participants have a value at both visits. Their typical error is <b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s on a mean of <span data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span> mm/s, and the smallest change one participant's value could show beyond measurement error is <b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>% of the mean. Whether the differences grow with the mean cannot be told from so few participants: the slope of the differences on the means is <span data-draw="n" data-source="aim1" data-field="ba_slope" data-where="key=primary ESMOKE" data-format="r2">—</span> (95% CI <span data-draw="n" data-source="aim1" data-field="ba_slope_ci_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_slope_ci_high" data-where="key=primary ESMOKE" data-format="r2">—</span>). The ratio limits and the log-scale CV cover the case that they do. In ISMOKE only <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span> participants have both visits, too few for its statistics to mean much: they are shown, with intervals to match.</p>
       <p class="cbv-prose">The numbers barely depend on the analysis. The mean of all counted loops gives an ESMOKE CV of <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=mean ESMOKE" data-format="pct">—</span>%, and thresholds of <span data-draw="n" data-source="summary" data-row="0" data-field="snr_low" data-format="g">—</span> and <span data-draw="n" data-source="summary" data-row="0" data-field="snr_high" data-format="g">—</span> keep the same participants (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=snr7 ESMOKE" data-format="int">—</span> and <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=snr9 ESMOKE" data-format="int">—</span> in ESMOKE). The reference capillary alone, without backups, leaves <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=reference_only ESMOKE" data-format="int">—</span> ESMOKE and <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=reference_only ISMOKE" data-format="int">—</span> ISMOKE participants.</p>
     </div>
+
+      <article class="cbv-card" id="card-pooled">
+        <h3>Both studies pooled: the primary result</h3>
+        <p class="cbv-note">Every participant with a value at both visits, ESMOKE and ISMOKE together</p>
+        <div class="cbv-kpis">
+          <div class="cbv-kpi"><span class="cbv-label">Within-subject CV</span><span class="cbv-big"><span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary pooled" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary pooled" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary pooled" data-format="pct">—</span>%</span></div>
+          <div class="cbv-kpi"><span class="cbv-label">ICC(A,1)</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary pooled" data-format="r2">—</span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary pooled" data-format="r2">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">Participants, both visits</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary pooled" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim1" data-field="one_visit_only" data-where="key=primary pooled" data-format="int">—</span> at one visit only</span></div>
+        </div>
+        <dl class="cbv-dl">
+          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s (control <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary pooled" data-format="mm">—</span>, active <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary pooled" data-format="mm">—</span>)</dd>
+          <dt>Typical error</dt><dd><b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="te_ci_low_mm_s" data-where="key=primary pooled" data-format="mm">—</span>–<span data-draw="n" data-source="aim1" data-field="te_ci_high_mm_s" data-where="key=primary pooled" data-format="mm">—</span>)</dd>
+          <dt>CV on the log scale</dt><dd><b data-draw="n" data-source="aim1" data-field="cv_log_percent" data-where="key=primary pooled" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_log_ci_low" data-where="key=primary pooled" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_log_ci_high" data-where="key=primary pooled" data-format="pct">—</span>%)</dd>
+          <dt>Smallest detectable change</dt><dd><b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary pooled" data-format="pct">—</span>% of the mean</dd>
+          <dt>Bias, active − control</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary pooled" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary pooled" data-format="signed">—</span>)</dd>
+          <dt>Limits of agreement</dt><dd><span data-draw="n" data-source="aim1" data-field="ba_loa_low" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_loa_high" data-where="key=primary pooled" data-format="signed">—</span> mm/s</dd>
+          <dt>Active / control</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary pooled" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary pooled" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary pooled" data-format="r2">—</span>)</dd>
+        </dl>
+      </article>
 
     <div class="cbv-grid" id="study-cards">
       <article class="cbv-card" id="card-esmoke">
@@ -142,6 +163,7 @@
       <p class="cbv-note">Each dot is a participant with values at both visits. The solid line is the bias; the dashed lines are the 95% limits of agreement (bias ± 1.96 SD of the differences).</p>
       <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Participant</li><li><span class="cbv-key line"></span>Bias</li><li><span class="cbv-key dash"></span>Limits of agreement</li></ul>
       <div class="cbv-pair">
+        <div class="cbv-facet"><h4>Both studies pooled</h4><div class="cbv-chart dash-skeleton" id="chart-ba-pooled" data-draw="ba" data-study="pooled" data-source="pairs aim1" data-label="Bland-Altman plot, both studies pooled"></div></div>
         <div class="cbv-facet"><h4>ESMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-ba-esmoke" data-draw="ba" data-study="ESMOKE" data-source="pairs aim1" data-label="Bland-Altman plot, ESMOKE"></div></div>
         <div class="cbv-facet"><h4>ISMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-ba-ismoke" data-draw="ba" data-study="ISMOKE" data-source="pairs aim1" data-label="Bland-Altman plot, ISMOKE"></div></div>
       </div>
@@ -203,6 +225,122 @@
     </article>
   </section>
 
+  <!-- ============================================================ secondary endpoint -->
+  <section class="cbv-page" id="secondary" role="tabpanel" aria-labelledby="tab-secondary" hidden>
+    <div class="cbv-section">
+      <h2>Aim 2: before and after nicotine</h2>
+      <p class="cbv-prose">Resting red-cell velocity in the recording before and the recording after exposure on the nicotine visit: the e-cigarette with nicotine in ESMOKE, heated tobacco in ISMOKE. The control visit is not used. Each participant's change is after minus before, analysed for each study and, as a separate analysis, for both studies pooled, since the nicotine comes from a different product in each. The values come from the same blind loops and quality control as aim 1.</p>
+      <p class="cbv-prose">Pooled, <b data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary pooled" data-format="int">—</b> of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> participants have a value both before and after, and <b data-draw="n" data-source="aim2" data-field="decreased" data-where="key=primary pooled" data-format="int">—</b> of them went down. Velocity changed by <b data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary pooled" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim2" data-field="change_ci_low_mm_s" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim2" data-field="change_ci_high_mm_s" data-where="key=primary pooled" data-format="signed">—</span>; paired t-test p <span data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary pooled" data-format="p">—</span>, Wilcoxon p <span data-draw="n" data-source="aim2" data-field="wilcoxon_p" data-where="key=primary pooled" data-format="p">—</span>), to <b data-draw="n" data-source="aim2" data-field="ratio" data-where="key=primary pooled" data-format="r2">—</b> times its value before (95% CI <span data-draw="n" data-source="aim2" data-field="ratio_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to <span data-draw="n" data-source="aim2" data-field="ratio_ci_high" data-where="key=primary pooled" data-format="r2">—</span>). In ESMOKE alone the change was <span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary ESMOKE" data-format="signed">—</span> mm/s (p <span data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary ESMOKE" data-format="p">—</span>, <span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span> participants), in ISMOKE <span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary ISMOKE" data-format="signed">—</span> mm/s (p <span data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary ISMOKE" data-format="p">—</span>, <span data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span> participants).</p>
+      <p class="cbv-prose">This is aim 2 as the student and the PI agreed verbally before unblinding. The protocol's first text compared the change on the active visit with the control visit's; it was corrected after unblinding (Methods and notes). The recordings the correction added were then placed blind; none of their loops counted.</p>
+    </div>
+
+    <div class="cbv-grid" id="aim2-cards">
+      <article class="cbv-card" id="card-aim2-pooled">
+        <h3>Both studies pooled</h3>
+        <p class="cbv-note">A separate analysis, beside each study's own</p>
+        <div class="cbv-kpis">
+          <div class="cbv-kpi"><span class="cbv-label">Change, after − before</span><span class="cbv-big"><span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary pooled" data-format="signed">—</span><span class="cbv-unit">mm/s</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim2" data-field="change_ci_low_mm_s" data-where="key=primary pooled" data-format="signed">—</span> to <span data-draw="n" data-source="aim2" data-field="change_ci_high_mm_s" data-where="key=primary pooled" data-format="signed">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">After / before</span><span class="cbv-big">×<span data-draw="n" data-source="aim2" data-field="ratio" data-where="key=primary pooled" data-format="r2">—</span></span><span class="cbv-sub">95% CI ×<span data-draw="n" data-source="aim2" data-field="ratio_ci_low" data-where="key=primary pooled" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim2" data-field="ratio_ci_high" data-where="key=primary pooled" data-format="r2">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">Participants, before and after</span><span class="cbv-big" data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary pooled" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim2" data-field="decreased" data-where="key=primary pooled" data-format="int">—</span> went down</span></div>
+        </div>
+        <dl class="cbv-dl">
+          <dt>Mean before</dt><dd><b data-draw="n" data-source="aim2" data-field="mean_before_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s</dd>
+          <dt>Mean after</dt><dd><b data-draw="n" data-source="aim2" data-field="mean_after_mm_s" data-where="key=primary pooled" data-format="mm">—</b> mm/s</dd>
+          <dt>SD of the changes</dt><dd><span data-draw="n" data-source="aim2" data-field="change_sd_mm_s" data-where="key=primary pooled" data-format="mm">—</span> mm/s</dd>
+          <dt>Paired t-test</dt><dd>p <b data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary pooled" data-format="p">—</b></dd>
+          <dt>Wilcoxon signed-rank</dt><dd>p <b data-draw="n" data-source="aim2" data-field="wilcoxon_p" data-where="key=primary pooled" data-format="p">—</b></dd>
+          <dt>t-test on the log ratios</dt><dd>p <b data-draw="n" data-source="aim2" data-field="log_t_test_p" data-where="key=primary pooled" data-format="p">—</b></dd>
+          <dt>A value before, after</dt><dd><span data-draw="n" data-source="aim2" data-field="with_before" data-where="key=primary pooled" data-format="int">—</span>, <span data-draw="n" data-source="aim2" data-field="with_after" data-where="key=primary pooled" data-format="int">—</span> of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary pooled" data-format="int">—</span></dd>
+        </dl>
+      </article>
+      <article class="cbv-card" id="card-aim2-esmoke">
+        <h3>ESMOKE</h3>
+        <p class="cbv-note">E-cigarette with nicotine, 2019–2020</p>
+        <div class="cbv-kpis">
+          <div class="cbv-kpi"><span class="cbv-label">Change, after − before</span><span class="cbv-big"><span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary ESMOKE" data-format="signed">—</span><span class="cbv-unit">mm/s</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim2" data-field="change_ci_low_mm_s" data-where="key=primary ESMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim2" data-field="change_ci_high_mm_s" data-where="key=primary ESMOKE" data-format="signed">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">After / before</span><span class="cbv-big">×<span data-draw="n" data-source="aim2" data-field="ratio" data-where="key=primary ESMOKE" data-format="r2">—</span></span><span class="cbv-sub">95% CI ×<span data-draw="n" data-source="aim2" data-field="ratio_ci_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim2" data-field="ratio_ci_high" data-where="key=primary ESMOKE" data-format="r2">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">Participants, before and after</span><span class="cbv-big" data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim2" data-field="decreased" data-where="key=primary ESMOKE" data-format="int">—</span> went down</span></div>
+        </div>
+        <dl class="cbv-dl">
+          <dt>Mean before</dt><dd><b data-draw="n" data-source="aim2" data-field="mean_before_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s</dd>
+          <dt>Mean after</dt><dd><b data-draw="n" data-source="aim2" data-field="mean_after_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s</dd>
+          <dt>SD of the changes</dt><dd><span data-draw="n" data-source="aim2" data-field="change_sd_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span> mm/s</dd>
+          <dt>Paired t-test</dt><dd>p <b data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary ESMOKE" data-format="p">—</b></dd>
+          <dt>Wilcoxon signed-rank</dt><dd>p <b data-draw="n" data-source="aim2" data-field="wilcoxon_p" data-where="key=primary ESMOKE" data-format="p">—</b></dd>
+          <dt>t-test on the log ratios</dt><dd>p <b data-draw="n" data-source="aim2" data-field="log_t_test_p" data-where="key=primary ESMOKE" data-format="p">—</b></dd>
+          <dt>A value before, after</dt><dd><span data-draw="n" data-source="aim2" data-field="with_before" data-where="key=primary ESMOKE" data-format="int">—</span>, <span data-draw="n" data-source="aim2" data-field="with_after" data-where="key=primary ESMOKE" data-format="int">—</span> of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span></dd>
+        </dl>
+      </article>
+      <article class="cbv-card" id="card-aim2-ismoke">
+        <h3>ISMOKE</h3>
+        <p class="cbv-note">Heated tobacco, 2020</p>
+        <div class="cbv-kpis">
+          <div class="cbv-kpi"><span class="cbv-label">Change, after − before</span><span class="cbv-big"><span data-draw="n" data-source="aim2" data-field="change_mm_s" data-where="key=primary ISMOKE" data-format="signed">—</span><span class="cbv-unit">mm/s</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim2" data-field="change_ci_low_mm_s" data-where="key=primary ISMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim2" data-field="change_ci_high_mm_s" data-where="key=primary ISMOKE" data-format="signed">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">After / before</span><span class="cbv-big">×<span data-draw="n" data-source="aim2" data-field="ratio" data-where="key=primary ISMOKE" data-format="r2">—</span></span><span class="cbv-sub">95% CI ×<span data-draw="n" data-source="aim2" data-field="ratio_ci_low" data-where="key=primary ISMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim2" data-field="ratio_ci_high" data-where="key=primary ISMOKE" data-format="r2">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">Participants, before and after</span><span class="cbv-big" data-draw="n" data-source="aim2" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim2" data-field="decreased" data-where="key=primary ISMOKE" data-format="int">—</span> went down</span></div>
+        </div>
+        <dl class="cbv-dl">
+          <dt>Mean before</dt><dd><b data-draw="n" data-source="aim2" data-field="mean_before_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s</dd>
+          <dt>Mean after</dt><dd><b data-draw="n" data-source="aim2" data-field="mean_after_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s</dd>
+          <dt>SD of the changes</dt><dd><span data-draw="n" data-source="aim2" data-field="change_sd_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span> mm/s</dd>
+          <dt>Paired t-test</dt><dd>p <b data-draw="n" data-source="aim2" data-field="t_test_p" data-where="key=primary ISMOKE" data-format="p">—</b></dd>
+          <dt>Wilcoxon signed-rank</dt><dd>p <b data-draw="n" data-source="aim2" data-field="wilcoxon_p" data-where="key=primary ISMOKE" data-format="p">—</b></dd>
+          <dt>t-test on the log ratios</dt><dd>p <b data-draw="n" data-source="aim2" data-field="log_t_test_p" data-where="key=primary ISMOKE" data-format="p">—</b></dd>
+          <dt>A value before, after</dt><dd><span data-draw="n" data-source="aim2" data-field="with_before" data-where="key=primary ISMOKE" data-format="int">—</span>, <span data-draw="n" data-source="aim2" data-field="with_after" data-where="key=primary ISMOKE" data-format="int">—</span> of <span data-draw="n" data-source="aim2" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span></dd>
+        </dl>
+      </article>
+    </div>
+
+    <article class="cbv-card" id="card-prepost">
+      <h3>Before and after nicotine, per participant</h3>
+      <p class="cbv-note">One row per participant, ordered by the value before; the line joins before and after. A single dot: the other recording has no loop that counts. One scale for both studies.</p>
+      <ul class="cbv-legend"><li><span class="cbv-key" data-series="2"></span>Before nicotine</li><li><span class="cbv-key" data-series="3"></span>After nicotine</li></ul>
+      <div class="cbv-pair">
+        <div class="cbv-facet"><h4>ESMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-prepost-esmoke" data-draw="prepost" data-study="ESMOKE" data-source="aim2_pairs" data-label="Resting CBV before and after nicotine, ESMOKE participants"></div></div>
+        <div class="cbv-facet"><h4>ISMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-prepost-ismoke" data-draw="prepost" data-study="ISMOKE" data-source="aim2_pairs" data-label="Resting CBV before and after nicotine, ISMOKE participants"></div></div>
+      </div>
+    </article>
+
+    <article class="cbv-card" id="card-forest-change">
+      <h3>Change by analysis</h3>
+      <p class="cbv-note">After minus before, mm/s, with 95% intervals: the protocol's analysis (filled) and its sensitivity analyses (open); n is the participants with both values. The vertical line is no change.</p>
+      <div class="cbv-chart dash-skeleton" id="chart-forest-change" data-draw="forest-change" data-source="aim2" data-label="Change after nicotine by analysis and study"></div>
+    </article>
+
+    <article class="cbv-card" id="card-aim2-pairs">
+      <h3>Every participant of aim 2</h3>
+      <p class="cbv-note">Velocities in mm/s; "from" names the loop the value comes from. Click a heading to sort.</p>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-aim2-pairs" data-source="aim2_pairs" data-row-key="key">
+          <thead><tr>
+            <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
+            <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
+            <th data-field="status"><button type="button" class="cbv-th-sort">Values</button></th>
+            <th data-field="before_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Before</button></th>
+            <th data-field="before_from"><button type="button" class="cbv-th-sort">From</button></th>
+            <th data-field="after_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">After</button></th>
+            <th data-field="after_from"><button type="button" class="cbv-th-sort">From</button></th>
+            <th data-field="change_mm_s" data-format="signed"><button type="button" class="cbv-th-sort">After − before</button></th>
+            <th data-field="ratio" data-format="r2"><button type="button" class="cbv-th-sort">Ratio</button></th>
+          </tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="cbv-card" id="card-aim2-read">
+      <h3>Reading the change</h3>
+      <ul class="cbv-list">
+        <li><b>No control visit.</b> The change also holds whatever else happens between the two recordings: the time between them, the time of day, and the first recording's cuff occlusion.</li>
+        <li><b>Few pairs.</b> Most participants miss a value before or after. Whether they would have changed alike is not known.</li>
+        <li><b>The capillary may differ.</b> Each recording's loops were chosen blind and on their own, so before and after may come from different capillaries. Aim 1 shows how much that alone moves a value.</li>
+        <li><b>Regression to the mean.</b> A value that is high by chance tends to come out lower the next time, which looks like a fall.</li>
+        <li><b>Several tests.</b> Each study and the pooled analysis are tested, without a correction for multiple tests.</li>
+        <li><b>Pooled.</b> It takes the two studies' participants as different people.</li>
+      </ul>
+    </article>
+  </section>
+
   <!-- ============================================================ signal-to-noise -->
   <section class="cbv-page" id="snr" role="tabpanel" aria-labelledby="tab-snr" hidden>
     <div class="cbv-section">
@@ -250,7 +388,6 @@
       <article class="cbv-card" id="card-sweep-participants"><h3>Aim 1 participants with both visits</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-participants" data-draw="sweep" data-panel="participants" data-source="sweep summary" data-label="Aim 1 participants against the threshold"></div></article>
       <article class="cbv-card" id="card-sweep-cv"><h3>Within-subject CV, %</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-cv" data-draw="sweep" data-panel="cv" data-source="sweep summary" data-label="Within-subject CV against the threshold"></div></article>
       <article class="cbv-card" id="card-sweep-icc"><h3>ICC(A,1)</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-icc" data-draw="sweep" data-panel="icc" data-source="sweep summary" data-label="ICC against the threshold"></div></article>
-      <article class="cbv-card" id="card-sweep-aim2"><h3>Aim 2 participants with a value before and after nicotine</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-aim2" data-draw="sweep" data-panel="aim2" data-source="sweep summary" data-label="Aim 2 participants against the threshold"></div></article>
     </div>
 
     <article class="cbv-card" id="card-near">
@@ -386,7 +523,7 @@
   <section class="cbv-page" id="methods" role="tabpanel" aria-labelledby="tab-methods" hidden>
     <div class="cbv-section">
       <h2>How the numbers were made</h2>
-      <p class="cbv-prose">The protocol (PROTOCOL.md in the repository) was fixed with the PI before the first line was placed: velocity round the whole capillary loop in the resting flow, signal-to-noise as the quality control, and one reference capillary per recording with ranked backups for when it fails. The observer placed every line blind: the recordings were listed under codes, results were hidden, and the measured range was fixed to the official rest. Nothing here was looked at until every recording had its lines.</p>
+      <p class="cbv-prose">The protocol (PROTOCOL.md in the repository) was fixed with the PI before the first line was placed: velocity round the whole capillary loop in the resting flow, signal-to-noise as the quality control, and one reference capillary per recording with ranked backups for when it fails. The observer placed every line blind: the recordings were listed under codes, results were hidden, and the measured range was fixed to the official rest. Nothing here was looked at until every recording had its lines. Two changes to the analysis came after, below.</p>
       <p class="cbv-prose">Aim 1 compares each participant's two before-exposure recordings, one per visit. Recordings after exposure are used by aim 2 only; they appear here in the counts of what the quality control keeps.</p>
     </div>
     <article class="cbv-card" id="card-method">
@@ -408,9 +545,18 @@
         <li>One recording has no line at all: its picture moved further than the frame is high during the rest, so no line stays in it.</li>
       </ul>
     </article>
+    <article class="cbv-card" id="card-changes">
+      <h3>Changed after unblinding</h3>
+      <ul class="cbv-list">
+        <li><b>Aim 1 is pooled over both studies,</b> as the study progress report states. The protocol first said "for each study"; it was corrected after the per-study results had been seen, and they are still shown beside the pooled one.</li>
+        <li><b>Aim 2 looks only at the nicotine visit,</b> as the student and the PI agreed verbally before unblinding. The protocol's first text took the participants with all four recordings and compared the change on the active visit with the control visit's. That analysis had been computed and seen at unblinding; its tables are kept with the data.</li>
+        <li>The correction added participants with a complete nicotine visit but no complete control visit. Their recordings without lines were placed blind, under codes and by the same rules, before aim 2 was computed again; none of their loops counted.</li>
+        <li>The other tabs describe the loops and recordings as they stood at unblinding, including the recordings after the control visit, which aim 2 no longer uses.</li>
+      </ul>
+    </article>
     <article class="cbv-card" id="card-files">
       <h3>Where the data come from</h3>
-      <p class="cbv-prose">analysis/primary_endpoint/report.py reads the saved data sets through capillary.aims, the protocol's analysis, and writes these tables. Run it again after any change to the lines, then ask Claude to replace the tables here. Recordings appear here only by study, participant and visit, so that a later blind placement of the same recordings stays blind.</p>
+      <p class="cbv-prose">analysis/primary_endpoint/report.py reads the saved data sets through capillary.aims, the protocol's analysis, and writes these tables; analysis/primary_endpoint/secondary.py adds aim 1 pooled and aim 2 from capillary.aims' tables. Run it again after any change to the lines, then ask Claude to replace the tables here. Recordings appear here only by study, participant and visit, so that a later blind placement of the same recordings stays blind.</p>
     </article>
   </section>
 </div>
@@ -766,7 +912,7 @@ dash.draw('rows', (body) => {
   cbv.chart('ba', ['pairs', 'aim1'], (el) => {
     const study = el.dataset.study;
     const both = cbv.rows('pairs').filter((r) => cbv.has(r.diff_mm_s) && cbv.has(r.mean_mm_s));
-    const mine = both.filter((r) => r.study === study);
+    const mine = study === 'pooled' ? both : both.filter((r) => r.study === study);
     const s = cbv.find('aim1', `key=primary ${study}`) || {};
     const limits = cbv.rows('aim1').filter((r) => r.analysis === 'primary')
       .flatMap((r) => [r.ba_loa_low, r.ba_loa_high, r.ba_bias]).filter(cbv.has).map(Number);
@@ -812,7 +958,9 @@ dash.draw('rows', (body) => {
     const cv = el.dataset.metric === 'cv';
     const spec = cv ? {v: 'cv_percent', lo: 'cv_ci_low', hi: 'cv_ci_high', f: 'pct', unit: '%'}
       : {v: 'icc_a1', lo: 'icc_a1_ci_low', hi: 'icc_a1_ci_high', f: 'r2', unit: ''};
-    const data = cbv.rows('aim1').slice().sort((a, b) => a.study.localeCompare(b.study) || a.order - b.order);
+    const first = (r) => (String(r.key).endsWith(' pooled') ? 0 : 1);
+    const data = cbv.rows('aim1').slice()
+      .sort((a, b) => first(a) - first(b) || a.study.localeCompare(b.study) || a.order - b.order);
     const lines = [];
     let last = null;
     for (const r of data) {
@@ -873,6 +1021,114 @@ dash.draw('rows', (body) => {
 </script>
 
 <script>
+/* Aim 2: before and after nicotine, and the change by analysis. */
+(() => {
+  const cbv = window.cbv;
+
+  cbv.chart('prepost', ['aim2_pairs'], (el) => {
+    const study = el.dataset.study;
+    const all = cbv.rows('aim2_pairs');
+    const values = all.flatMap((r) => [r.before_mm_s, r.after_mm_s]).filter(cbv.has).map(Number);
+    const start = (r) => (cbv.has(r.before_mm_s) ? +r.before_mm_s : cbv.has(r.after_mm_s) ? +r.after_mm_s : Infinity);
+    const mine = all.filter((r) => r.study === study).sort((a, b) => start(a) - start(b) || a.subject.localeCompare(b.subject));
+    const rowH = 24, top = 4, bottom = 36;
+    const height = top + Math.max(1, mine.length) * rowH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const left = cbv.measure(svg, mine.map((r) => r.subject)) + 12;
+    const x = d3.scaleLinear([0, (d3.max(values) || 0.1) * 1.06], [left, width - 10]).nice();
+    cbv.gridX(svg, x, x.ticks(5), top, height - bottom);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 10).attr('y', height - 4)
+      .attr('text-anchor', 'end').text('Resting CBV, mm/s');
+    const tip = cbv.tooltip(el);
+    mine.forEach((r, i) => {
+      const y = top + i * rowH + rowH / 2;
+      const b = cbv.num(r.before_mm_s), a = cbv.num(r.after_mm_s);
+      const both = Number.isFinite(b) && Number.isFinite(a);
+      svg.append('text').attr('class', both ? 'cbv-tick-strong' : 'cbv-tick').attr('x', left - 8).attr('y', y)
+        .attr('dy', '0.32em').attr('text-anchor', 'end').text(r.subject);
+      if (both) {
+        svg.append('line').attr('x1', x(b)).attr('x2', x(a)).attr('y1', y).attr('y2', y)
+          .style('stroke', cbv.MUTED).style('stroke-width', 2).attr('stroke-linecap', 'round');
+      }
+      if (Number.isFinite(b)) cbv.dot(svg, x(b), y, cbv.color(2), false, 5);
+      if (Number.isFinite(a)) cbv.dot(svg, x(a), y, cbv.color(3), false, 5);
+      const lines = [[cbv.who(r)],
+        ['before nicotine', Number.isFinite(b) ? `${cbv.show(b, 'mm')} mm/s (${r.before_from})` : 'no value'],
+        ['after nicotine', Number.isFinite(a) ? `${cbv.show(a, 'mm')} mm/s (${r.after_from})` : 'no value']];
+      if (both) lines.push(['after − before', `${cbv.show(r.change_mm_s, 'signed')} mm/s`]);
+      const hit = svg.append('rect').attr('x', 0).attr('y', y - rowH / 2).attr('width', width).attr('height', rowH)
+        .style('fill', 'transparent').attr('tabindex', 0).attr('aria-label', lines.map((l) => l.join(' ')).join('; '));
+      const at = () => (Number.isFinite(a) ? x(a) : Number.isFinite(b) ? x(b) : left);
+      hit.on('pointermove', (event) => {
+        const p = cbv.pointer(el, svg, width, event);
+        tip.show(lines, p.px, p.py);
+      }).on('pointerleave', () => tip.hide())
+        .on('focus', () => {
+          const scale = (el.clientWidth || width) / width;
+          tip.show(lines, at() * scale, y * scale);
+        }).on('blur', () => tip.hide());
+    });
+  });
+
+  cbv.chart('forest-change', ['aim2'], (el) => {
+    const first = (r) => (String(r.key).endsWith(' pooled') ? 0 : 1);
+    const data = cbv.rows('aim2').slice()
+      .sort((a, b) => first(a) - first(b) || a.study.localeCompare(b.study) || a.order - b.order);
+    const lines = [];
+    let last = null;
+    for (const r of data) {
+      if (r.study !== last) { lines.push({header: r.study}); last = r.study; }
+      lines.push(r);
+    }
+    const rowH = 22, top = 4, bottom = 36;
+    const height = top + lines.length * rowH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const left = cbv.measure(svg, data.map((r) => r.short)) + 14;
+    const right = cbv.measure(svg, data.map((r) => `n ${cbv.show(r.participants, 'int')}`)) + 14;
+    const values = data.flatMap((r) => [r.change_mm_s, r.change_ci_low_mm_s, r.change_ci_high_mm_s])
+      .filter(cbv.has).map(Number).concat([0]);
+    const x = d3.scaleLinear(d3.extent(values), [left, width - right]).nice();
+    cbv.gridX(svg, x, x.ticks(5), top, height - bottom);
+    cbv.refLine(svg, x(0), x(0), top, height - bottom, false);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - right).attr('y', height - 4)
+      .attr('text-anchor', 'end').text('After − before, mm/s');
+    const tip = cbv.tooltip(el);
+    lines.forEach((r, i) => {
+      const y = top + i * rowH + rowH / 2;
+      if (r.header) {
+        svg.append('text').attr('class', 'cbv-tick-strong').attr('x', 0).attr('y', y).attr('dy', '0.32em').text(r.header);
+        return;
+      }
+      svg.append('text').attr('class', 'cbv-tick').attr('x', left - 8).attr('y', y).attr('dy', '0.32em')
+        .attr('text-anchor', 'end').text(r.short);
+      svg.append('text').attr('class', 'cbv-tick').attr('x', width - right + 8).attr('y', y).attr('dy', '0.32em')
+        .text(`n ${cbv.show(r.participants, 'int')}`);
+      if (cbv.has(r.change_ci_low_mm_s) && cbv.has(r.change_ci_high_mm_s)) {
+        svg.append('line').attr('x1', x(+r.change_ci_low_mm_s)).attr('x2', x(+r.change_ci_high_mm_s))
+          .attr('y1', y).attr('y2', y).style('stroke', cbv.color(0)).style('stroke-width', 2)
+          .attr('stroke-linecap', 'round');
+      }
+      if (cbv.has(r.change_mm_s)) cbv.dot(svg, x(+r.change_mm_s), y, cbv.color(0), r.analysis !== 'primary', 5);
+      const text = [[`${r.study}: ${r.label}`],
+        ['after − before', `${cbv.show(r.change_mm_s, 'signed')} mm/s`],
+        ['95% interval', `${cbv.show(r.change_ci_low_mm_s, 'signed')} to ${cbv.show(r.change_ci_high_mm_s, 'signed')} mm/s`],
+        ['paired t-test p', cbv.show(r.t_test_p, 'p')],
+        ['participants', cbv.show(r.participants, 'int')]];
+      svg.append('rect').attr('x', 0).attr('y', y - rowH / 2).attr('width', width).attr('height', rowH)
+        .style('fill', 'transparent')
+        .on('pointermove', (event) => { const p = cbv.pointer(el, svg, width, event); tip.show(text, p.px, p.py); })
+        .on('pointerleave', () => tip.hide());
+    });
+  });
+})();
+</script>
+
+
+<script>
 /* Signal-to-noise: the funnel, every loop's score, outcomes, sources and the sweep. */
 (() => {
   const cbv = window.cbv;
@@ -886,7 +1142,8 @@ dash.draw('rows', (body) => {
   };
 
   cbv.chart('funnel', ['counts'], (el) => {
-    const data = cbv.rows('counts').filter((r) => r.group === 'funnel');
+    /* Aim 2's participants by the protocol's first text are left out: the Secondary endpoint tab has them. */
+    const data = cbv.rows('counts').filter((r) => r.group === 'funnel' && r.level !== 'Aim 2 participants');
     const levels = [...new Set(data.map((r) => r.level))];
     const barH = 14, labelH = 16, stage = 8, titleH = 22, gap = 18;
     const blocks = levels.map((level) => data.filter((r) => r.level === level).sort((a, b) => a.order - b.order));
