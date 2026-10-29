@@ -9,8 +9,8 @@ it was verified. Newest entries first.
 ## 2026-10-29 — The protocol, the study's lines placed blind, and the primary endpoint
 
 **Branch:** `feature/reference-capillary`. Commits 6fd617d, 282387f, db39c70 and c195221 (the
-protocol and `capillary.aims`), then this entry's commits: the app's role fix, the relabel
-script, the report and the documentation.
+protocol and `capillary.aims`), then b05f071 (the app's role fix), e53462b (the relabel script),
+9290c56 (the report, PROTOCOL.md, README.md) and 37505cb (this entry, CLAUDE.md).
 
 ### The protocol (`PROTOCOL.md`, 09:51, before the first study line)
 
