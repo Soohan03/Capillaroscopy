@@ -30,6 +30,12 @@ unblinding", with its reason.
 - **Candidates:** loops that lie wholly within the dashed outline (the part of the frame that
   every rest frame shows), whose two limbs and apex can be followed on a still rest frame,
   and whose limbs do not merge with or cross another vessel.
+  - A twisted loop whose limbs cross each other does not qualify either. Its line would cross
+    itself: the crossing is sampled twice, and the split at the apex that checks each limb on
+    its own becomes unreliable. A loop that twists without crossing qualifies; the two sides of
+    its line stay about 5 px apart except at the apex, since the line reads 2 px to each side.
+    (Clarified on 2026-10-29 during placement, before unblinding. `--progress` flags such lines,
+    and the analysis does not count them: the next loop in the ranking takes their place.)
 - **Ranking:** the observer plays the rest and ranks the candidates of the whole field before
   placing any line. First comes the loop where blood can be seen moving most clearly (plasma
   gaps, clusters of cells); between equally clear loops, the longer one.

@@ -147,6 +147,7 @@ def _judge(out: pd.DataFrame) -> pd.DataFrame:
         (out['video_folder'] != STABILIZED_FOLDER, 'not on a stabilized video'),
         (~out['resolved'].astype(bool) | ~finite, 'not resolved'),
         (out['loop_movement'].astype(bool), 'limbs moved opposite ways (movement)'),
+        (out['points'].map(_crosses_itself).astype(bool), 'crosses itself (not a candidate)'),
     ]
     out['why_not'] = [', '.join(text for mask, text in reasons if mask.iloc[i]) for i in range(len(out))]
     out['counted'] = out['why_not'] == ''
@@ -407,6 +408,22 @@ def rank(dataset: str) -> float:
     return float(match.group(1)) if match else math.nan
 
 
+def _crosses_itself(points) -> bool:
+    """Whether a line's clicked points cross themselves: two segments that are not neighbours intersect (a
+    twisted loop whose limbs cross, which the protocol leaves out)."""
+    try:
+        p = np.asarray(points, dtype=float).reshape(-1, 2)
+    except (TypeError, ValueError):
+        return False
+
+    def turn(a, b, c):
+        return (c[1] - a[1]) * (b[0] - a[0]) - (b[1] - a[1]) * (c[0] - a[0])
+
+    segments = list(zip(p[:-1], p[1:]))
+    return any(turn(a, b, c) * turn(a, b, d) < 0 and turn(c, d, a) * turn(c, d, b) < 0
+               for i, (a, b) in enumerate(segments) for c, d in segments[i + 2:])
+
+
 def _in_ranking_order(dataset: str) -> tuple:
     """Sort key: loop1, loop2, ... first, then any other name."""
     place = rank(dataset)
@@ -461,6 +478,9 @@ def progress(table: pd.DataFrame, studies: dict) -> str:
             if mask.any():
                 issues.append(f'{text}: {", ".join(sorted(loops_.loc[mask, "dataset"]))}')
         points = list(zip(loops_['dataset'], loops_['points']))
+        crossing = sorted(name_ for name_, line in points if _crosses_itself(line))
+        if crossing:
+            issues.append(f'crosses itself: {", ".join(crossing)}')
         for i, (first, first_points) in enumerate(points):
             for second, second_points in points[i + 1:]:
                 if _overlap(first_points, second_points) >= DUPLICATE_SHARE:

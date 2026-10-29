@@ -26,12 +26,12 @@ def loop_points(x):
 
 
 def save(statistics, recording, name, velocity=0.1, *, x=0.0, role='whole loop', phase='rest', resolved=True,
-         movement=False, observer='SJ', folder='StabilizedVideos'):
+         movement=False, observer='SJ', folder='StabilizedVideos', points=None):
     record = {
         'kind': 'line', 'dataset': name, 'recording': recording, 'observer': observer,
         'created': '2026-10-14T10:00:00', 'video': {'folder': folder, 'fps': 30.0},
         'frames': {'first': 60, 'last': 1859, 'count': 1800},
-        'line': {'points': loop_points(x), 'role': role, 'length_px': 220.0},
+        'line': {'points': points or loop_points(x), 'role': role, 'length_px': 220.0},
         'summary': {'pattern_shift_velocity_mm_s': velocity if resolved else math.nan,
                     'pattern_shift_snr': 12.0 if resolved else 5.0, 'pattern_shift_resolved': resolved,
                     'phase': phase, 'arterial_end': 'start' if velocity > 0 else 'end', 'loop_movement': movement}}
@@ -130,6 +130,8 @@ def test_each_recording_gets_its_reference_or_else_the_first_backup_that_counts(
     save(statistics, 'A8', 'loop1', 0.10, resolved=False)
     save(statistics, 'A8', 'loop4', 0.30, x=50)                 # beyond the two backups
     save(statistics, 'A8', 'extra', 0.40, x=100)                # not ranked
+    save(statistics, 'A9', 'loop1', 0.10, points=[[0, 100], [20, 0], [20, 100], [0, 0]])       # crosses itself
+    save(statistics, 'A9', 'loop2', 0.12, x=50)
     recordings = aims.per_recording(aims.loops(aims.collect(statistics)))
     mine = recordings[recordings['observer'] == 'SJ'].set_index('recording')
     assert (mine.at['A1', 'value_mm_s'], mine.at['A1', 'value_from']) == (pytest.approx(0.10), 'loop1')
@@ -140,6 +142,9 @@ def test_each_recording_gets_its_reference_or_else_the_first_backup_that_counts(
     assert mine.at['A8', 'mean_mm_s'] == pytest.approx(0.35)                 # the secondary value takes every loop
     assert np.isnan(mine.at['A6', 'reference_only_mm_s']) and mine.at['A1', 'reference_only_mm_s'] == pytest.approx(0.1)
     assert np.isnan(mine.at['C3', 'value_mm_s'])
+    assert (mine.at['A9', 'value_mm_s'], mine.at['A9', 'value_from']) == (pytest.approx(0.12), 'loop2')
+    table = aims.loops(aims.collect(statistics)).set_index(['observer', 'recording', 'dataset'])
+    assert table.at[('SJ', 'A9', 'loop1'), 'why_not'] == 'crosses itself (not a candidate)'
 
 
 def test_aim_1_takes_the_value_asked_for(statistics, wanted):
@@ -248,12 +253,16 @@ def test_progress_lists_codes_names_and_what_to_fix_but_no_result(statistics):
     save(statistics, 'A5', 'loop3', 0.12, x=50)                 # loop2 left out
     save(statistics, 'C5', 'loop2', 0.10)                       # no reference
     save(statistics, 'C5', 'ref', 0.10, x=50)                   # a name the protocol does not rank
-    studies = {'A1': 'ESMOKE', 'C1': 'ESMOKE', 'C2': 'ESMOKE', 'A5': 'ESMOKE', 'C5': 'ESMOKE', 'IA1': 'ISMOKE'}
+    save(statistics, 'C6', 'loop1', 0.10)
+    save(statistics, 'C6', 'loop2', 0.10, points=[[60, 100], [80, 0], [80, 100], [60, 0]])     # limbs cross
+    studies = {'A1': 'ESMOKE', 'C1': 'ESMOKE', 'C2': 'ESMOKE', 'A5': 'ESMOKE', 'C5': 'ESMOKE', 'C6': 'ESMOKE',
+               'IA1': 'ISMOKE'}
     table = aims.collect(statistics)
     printed = aims.progress(table[table['observer'] == 'SJ'], studies)
     lines = {line.split()[0]: line for line in printed.splitlines() if line.startswith('  ')}
     code = blinding.codes(studies)
-    assert set(lines) == {code[name] for name in ('A1', 'C1', 'C2', 'A5', 'C5')}
+    assert set(lines) == {code[name] for name in ('A1', 'C1', 'C2', 'A5', 'C5', 'C6')}
+    assert lines[code['C6']].endswith('<- crosses itself: loop2')
     assert lines[code['A1']].split() == [code['A1'], 'loop1', 'loop2']             # nothing to fix
     assert 'loop1 and loop2 lie on the same capillary' in lines[code['C1']]
     c2 = lines[code['C2']]
@@ -261,9 +270,9 @@ def test_progress_lists_codes_names_and_what_to_fix_but_no_result(statistics):
     assert 'not over the official rest: loop4' in c2 and 'not on the stabilized video: loop5' in c2
     assert 'loop2 missing' in lines[code['A5']]
     assert 'no loop1 (the reference)' in lines[code['C5']] and 'not named loop1-loop3: ref' in lines[code['C5']]
-    assert 'ESMOKE: 5 of 5 recordings have lines' in printed and 'ISMOKE: 0 of 1' in printed
+    assert 'ESMOKE: 6 of 6 recordings have lines' in printed and 'ISMOKE: 0 of 1' in printed
     assert f'No lines yet (1): {code["IA1"]}' in printed
-    assert 'recordings with something to fix: 4' in printed
+    assert 'recordings with something to fix: 5' in printed
     for hidden in ('0.', 'mm/s', 'snr', 'count', 'A1 ', 'C2 '):            # no result, no real name
         assert hidden not in printed
 
