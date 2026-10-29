@@ -1,0 +1,194 @@
+{
+ "from 5 px/frame": {
+  "V1 synthetic": {
+   "null_line_clips": 120,
+   "null_found_flow": 0,
+   "null_found_by_step2": 0,
+   "flow_line_clips": 120,
+   "flow_step1": 110,
+   "flow_step2": 0,
+   "step2_median_error": null,
+   "step2_within_20": null,
+   "passes": true,
+   "judged_on_accuracy": false,
+   "coarse_alone_resolved": "54 of 72",
+   "coarse_alone_median_error": -0.015538244662610445
+  },
+  "V2 occlusion": {
+   "lines": 185,
+   "left_out_picture": 22,
+   "checked": 163,
+   "step1_false_flow": 12,
+   "step2_added_false_flow": 0,
+   "step2_rate": 0.0,
+   "passes": true
+  },
+  "V2 occlusion, without FP04 Sföre": {
+   "lines": 182,
+   "left_out_picture": 22,
+   "checked": 160,
+   "step1_false_flow": 12,
+   "step2_added_false_flow": 0,
+   "step2_rate": 0.0,
+   "passes": true
+  },
+  "V3 after release": {
+   "step2_at_rest": 14,
+   "step2_counted_after_release": 6,
+   "step2_same_way": 6,
+   "step1_at_rest": 91,
+   "step1_counted_after_release": 51,
+   "step1_same_way": 51,
+   "judged": true,
+   "passes": true
+  },
+  "V3 after release, without FP04 Sföre": {
+   "step2_at_rest": 14,
+   "step2_counted_after_release": 6,
+   "step2_same_way": 6,
+   "step1_at_rest": 91,
+   "step1_counted_after_release": 51,
+   "step1_same_way": 51,
+   "judged": true,
+   "passes": true
+  },
+  "gains": {
+   "loops_step1": 91,
+   "loops_step2": 14,
+   "recordings_protocol": 54,
+   "recordings_rule": 60,
+   "ESMOKE_participants_protocol": 7,
+   "ESMOKE_participants_rule": 9,
+   "ISMOKE_participants_protocol": 2,
+   "ISMOKE_participants_rule": 3
+  }
+ },
+ "from 3 px/frame": {
+  "V1 synthetic": {
+   "null_line_clips": 120,
+   "null_found_flow": 0,
+   "null_found_by_step2": 0,
+   "flow_line_clips": 120,
+   "flow_step1": 110,
+   "flow_step2": 0,
+   "step2_median_error": null,
+   "step2_within_20": null,
+   "passes": true,
+   "judged_on_accuracy": false,
+   "coarse_alone_resolved": "66 of 84",
+   "coarse_alone_median_error": -0.008111204748054157
+  },
+  "V2 occlusion": {
+   "lines": 185,
+   "left_out_picture": 22,
+   "checked": 163,
+   "step1_false_flow": 12,
+   "step2_added_false_flow": 1,
+   "step2_rate": 0.006134969325153374,
+   "passes": true
+  },
+  "V2 occlusion, without FP04 Sföre": {
+   "lines": 182,
+   "left_out_picture": 22,
+   "checked": 160,
+   "step1_false_flow": 12,
+   "step2_added_false_flow": 1,
+   "step2_rate": 0.00625,
+   "passes": true
+  },
+  "V3 after release": {
+   "step2_at_rest": 20,
+   "step2_counted_after_release": 11,
+   "step2_same_way": 11,
+   "step1_at_rest": 91,
+   "step1_counted_after_release": 57,
+   "step1_same_way": 57,
+   "judged": true,
+   "passes": true
+  },
+  "V3 after release, without FP04 Sföre": {
+   "step2_at_rest": 20,
+   "step2_counted_after_release": 11,
+   "step2_same_way": 11,
+   "step1_at_rest": 91,
+   "step1_counted_after_release": 57,
+   "step1_same_way": 57,
+   "judged": true,
+   "passes": true
+  },
+  "gains": {
+   "loops_step1": 91,
+   "loops_step2": 20,
+   "recordings_protocol": 54,
+   "recordings_rule": 63,
+   "ESMOKE_participants_protocol": 7,
+   "ESMOKE_participants_rule": 9,
+   "ISMOKE_participants_protocol": 2,
+   "ISMOKE_participants_rule": 4
+  }
+ },
+ "from 8 px/frame": {
+  "V1 synthetic": {
+   "null_line_clips": 120,
+   "null_found_flow": 0,
+   "null_found_by_step2": 0,
+   "flow_line_clips": 120,
+   "flow_step1": 110,
+   "flow_step2": 0,
+   "step2_median_error": null,
+   "step2_within_20": null,
+   "passes": true,
+   "judged_on_accuracy": false,
+   "coarse_alone_resolved": "42 of 60",
+   "coarse_alone_median_error": -0.026466895814413305
+  },
+  "V2 occlusion": {
+   "lines": 185,
+   "left_out_picture": 22,
+   "checked": 163,
+   "step1_false_flow": 12,
+   "step2_added_false_flow": 0,
+   "step2_rate": 0.0,
+   "passes": true
+  },
+  "V2 occlusion, without FP04 Sföre": {
+   "lines": 182,
+   "left_out_picture": 22,
+   "checked": 160,
+   "step1_false_flow": 12,
+   "step2_added_false_flow": 0,
+   "step2_rate": 0.0,
+   "passes": true
+  },
+  "V3 after release": {
+   "step2_at_rest": 11,
+   "step2_counted_after_release": 5,
+   "step2_same_way": 5,
+   "step1_at_rest": 91,
+   "step1_counted_after_release": 50,
+   "step1_same_way": 50,
+   "judged": true,
+   "passes": true
+  },
+  "V3 after release, without FP04 Sföre": {
+   "step2_at_rest": 11,
+   "step2_counted_after_release": 5,
+   "step2_same_way": 5,
+   "step1_at_rest": 91,
+   "step1_counted_after_release": 50,
+   "step1_same_way": 50,
+   "judged": true,
+   "passes": true
+  },
+  "gains": {
+   "loops_step1": 91,
+   "loops_step2": 11,
+   "recordings_protocol": 54,
+   "recordings_rule": 60,
+   "ESMOKE_participants_protocol": 7,
+   "ESMOKE_participants_rule": 9,
+   "ISMOKE_participants_protocol": 2,
+   "ISMOKE_participants_rule": 3
+  }
+ }
+}
