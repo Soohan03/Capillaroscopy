@@ -42,7 +42,7 @@ from PIL import Image, ImageDraw, ImageTk
 
 from capillary import datasets, pattern_shift, spacetime, stabilize
 
-from . import tasks
+from . import blind, tasks
 from .jobs import LatestOnlyWorker
 from .measure_page import INSPECTOR_WIDTH, MeasurePage, stat
 from .theme import COLORS, FONTS, icon, px
@@ -193,11 +193,13 @@ class LinePage(MeasurePage):
         self.pooled_row.pack(fill='x')
         ttk.Label(frame, text='The line follows', style='Muted.Panel.TLabel').pack(anchor='w', pady=(px(10), px(2)))
         self.role_var = tk.StringVar(master=frame, value='')
+        self.role_buttons = {}
         for role, text, _, tip in ROLES:
             button = ttk.Radiobutton(frame, text=text, value=role, variable=self.role_var, style='Panel.TRadiobutton',
                                      command=self._role_changed)
             button.pack(anchor='w')
             Tooltip(button, tip, wrap=340)
+            self.role_buttons[role] = button
         actions = ttk.Frame(frame, style='Panel.TFrame')
         actions.pack(fill='x', pady=(px(10), 0))
         reverse = ttk.Button(actions, text='Reverse', image=icon('swap', 13, COLORS['text']), compound='left',
@@ -255,6 +257,7 @@ class LinePage(MeasurePage):
         self.points = list((state or {}).get('points', []))
         if state and 'role' in state:              # a recording seen before keeps its line's role; others keep the last
             self.role_var.set(state['role'])
+        self.keep_blind_role()
         self.preview = None
         self._preview_center = None
         self._update_line_ui()
@@ -338,8 +341,21 @@ class LinePage(MeasurePage):
 
     def refresh(self):
         super().refresh()
+        self.keep_blind_role()
         self._update_line_ui()
         self._update_preview_ui()
+
+    def keep_blind_role(self):
+        """During blind placement every line is a whole loop (`gui.blind.ROLE`): the other roles are closed, and a
+        role remembered from before (`restore_state`) gives way to it, the suggested name with it."""
+        on = self.app.blind
+        for role, button in self.role_buttons.items():
+            button.state(['disabled'] if on and role != blind.ROLE else ['!disabled'])
+        if on and self.role_var.get() != blind.ROLE:
+            self.role_var.set(blind.ROLE)
+            if self.recording is not None and SUGGESTED_NAME.match(self.name_var.get().strip()):
+                self.name_var.set(self.suggest_name(self.existing_names()))
+            self.draw_overlay()
 
     # ------------------------------------------------------------------------ the line
     def centreline(self):

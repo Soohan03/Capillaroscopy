@@ -11,7 +11,8 @@ hides what could steer it:
   nor the time of day shows;
 - the Centre line page hides the space-time preview and every result, and
   measures the official rest only;
-- the pages that show results (Two boxes, Results, Validation) are closed.
+- the pages that show results (Two boxes, Results, Validation) are closed;
+- every line is a whole loop (`ROLE`), the only line the protocol measures.
 
 A code is the recording's name hashed (`capillary.blinding.code`): the same
 on every computer and every day, and the same name always gets it. The data
@@ -23,13 +24,17 @@ from __future__ import annotations
 import functools
 import logging
 
-from capillary import inventory
+from capillary import inventory, pattern_shift
 from capillary.blinding import ALPHABET, LENGTH, code, codes  # noqa: F401 (the codes, as the app shows them)
 
 log = logging.getLogger(__name__)
 
 #: The pages closed during blind placement: they show what lines measure.
 LOCKED_PAGES = ('analyze', 'results', 'validation')
+#: The role of every line placed blind (PROTOCOL.md); the Centre line page closes the others. Before
+#: 2026-10-29 a recording seen before got back the role its line had then, and the next lines kept it: a
+#: try-out line's role came back that way and 29 lines were saved without this one (DEVLOG).
+ROLE = pattern_shift.WHOLE_LOOP
 #: The settings.csv row that keeps it on between sessions.
 SETTING = 'blind_placement'
 
