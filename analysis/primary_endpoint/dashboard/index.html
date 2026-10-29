@@ -1,0 +1,1190 @@
+<meta name="dash-one-writer">
+<style>
+/* Layout: a header with the takeaway and four tabs; each tab a column of cards, two to a row when wide.
+   Colour: the dashboard's theme tokens; series from dash.colors (control visit, active visit, counted). */
+.cbv{display:grid;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);color:var(--color-fg);max-width:80rem;margin-inline:auto}
+.cbv-head{display:grid;gap:var(--cds-gap-sm)}
+.cbv-head h1{margin:0;font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);text-wrap:balance}
+.cbv-lede{margin:0;max-width:74ch;font-size:var(--cds-font-size-body);line-height:1.55}
+.cbv-meta{margin:0;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.cbv-tabs{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs);border-bottom:1px solid var(--color-border-line);margin-top:var(--cds-gap-sm)}
+.cbv-tabs button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:var(--cds-pad-sm) var(--cds-pad-md);font:inherit;font-size:var(--cds-font-size-body);color:var(--color-fg-muted);cursor:pointer}
+.cbv-tabs button[aria-selected="true"]{color:var(--color-fg);border-bottom-color:var(--color-fg)}
+.cbv-tabs button:hover{color:var(--color-fg)}
+.cbv-tabs button:focus-visible,.cbv-th-sort:focus-visible,.cbv-search:focus-visible,.cbv-chart :focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.cbv-page{display:grid;gap:var(--cds-gap-xl)}
+.cbv-section{display:grid;gap:var(--cds-gap-md)}
+.cbv-section h2{margin:0;font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium)}
+.cbv-prose{margin:0;max-width:74ch;line-height:1.55}
+.cbv-prose b,.cbv-dl b,.cbv-sub b{font-weight:var(--cds-font-weight-medium)}
+.cbv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:var(--cds-gap-md)}
+.cbv-card{min-width:0;display:grid;gap:var(--cds-gap-sm);align-content:start;background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg)}
+.cbv-card h3{margin:0;font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium)}
+.cbv-note{margin:0;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);max-width:84ch;line-height:1.45}
+.cbv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:var(--cds-gap-md)}
+.cbv-kpi{display:grid;gap:2px;align-content:start}
+.cbv-label{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.cbv-big{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);line-height:1.15}
+.cbv-unit{font-family:var(--font-anthropic-sans);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-left:2px}
+.cbv-sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.cbv-dl{display:grid;grid-template-columns:minmax(8rem,max-content) 1fr;gap:6px var(--cds-gap-md);margin:0;font-size:var(--cds-font-size-caption);line-height:1.4}
+.cbv-dl dt{color:var(--color-fg-muted)}
+.cbv-dl dd{margin:0;font-variant-numeric:tabular-nums}
+.cbv-legend{display:flex;flex-wrap:wrap;gap:6px var(--cds-gap-md);margin:0;padding:0;list-style:none;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.cbv-legend li{display:flex;align-items:center;gap:6px}
+.cbv-key{display:inline-block;flex:none;width:10px;height:10px;border-radius:50%;background:var(--cds-chart-muted)}
+.cbv-key.bar{border-radius:2px}
+.cbv-key.ring{background:transparent;border:2px solid var(--cds-chart-muted)}
+.cbv-key.line,.cbv-key.dash{width:16px;height:0;border-radius:0;background:none;border-top:2px solid var(--cds-chart-reference)}
+.cbv-key.dash{border-top-style:dashed}
+.cbv-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:var(--cds-gap-lg)}
+.cbv-facet{display:grid;gap:4px;min-width:0;align-content:start}
+.cbv-facet h4{margin:0;font-size:var(--cds-font-size-caption);font-weight:var(--cds-font-weight-medium)}
+.cbv-chart{position:relative;min-width:0;min-height:8rem}
+.cbv-chart svg{display:block;overflow:visible}
+.cbv-tick{fill:var(--color-fg-muted);font-size:11px}
+.cbv-tick-strong{fill:var(--color-fg);font-size:11px;font-weight:var(--cds-font-weight-medium)}
+.cbv-tip{position:absolute;z-index:3;pointer-events:none;max-width:18rem;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);line-height:1.45;white-space:nowrap}
+.cbv-tip[hidden]{display:none}
+.cbv-tip-head{color:var(--cds-text-secondary)}
+.cbv-tip-row b{font-weight:var(--cds-font-weight-medium);color:var(--color-fg)}
+.cbv-tip-row span{color:var(--cds-text-secondary)}
+.cbv-failed{display:flex;align-items:center;justify-content:center;gap:6px;min-height:8rem;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.cbv-failed-dot{width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)}
+.cbv-tools{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
+.cbv-search{font:inherit;font-size:var(--cds-font-size-caption);padding:6px 8px;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);width:min(100%,18rem)}
+.cbv-table-wrap{max-height:30rem;overflow:auto}
+.cbv-table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.cbv-table th{position:sticky;top:0;z-index:1;background:var(--color-panel);text-align:left;font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);padding:6px 8px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.cbv-table td{padding:5px 8px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.cbv-th-sort{appearance:none;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
+.cbv-table th[aria-sort="ascending"] .cbv-th-sort::after{content:" ↑"}
+.cbv-table th[aria-sort="descending"] .cbv-th-sort::after{content:" ↓"}
+.cbv-list{margin:0;padding-left:1.2em;display:grid;gap:6px;max-width:74ch;line-height:1.5}
+#table-method td{white-space:normal;min-width:10rem;vertical-align:top;line-height:1.45}
+[data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+</style>
+
+<div class="cbv">
+  <header class="cbv-head" id="top">
+    <h1>Inter-day CBV reproducibility</h1>
+    <p class="cbv-lede">Resting red-cell velocity round the whole capillary loop, measured blind in each participant's before-exposure recording at the control and the active visit. Within-subject CV: ESMOKE <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span> participants), ISMOKE <b data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</b>% (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span> participants).</p>
+    <p class="cbv-meta">Observer <span data-draw="n" data-source="summary" data-row="0" data-field="observer">—</span> · lines placed blind on <span data-draw="n" data-source="summary" data-row="0" data-field="placement_date">—</span> · <span data-draw="n" data-source="summary" data-row="0" data-field="loops_placed" data-format="int">—</span> whole loops on <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_with_lines" data-format="int">—</span> of <span data-draw="n" data-source="summary" data-row="0" data-field="recordings" data-format="int">—</span> recordings · signal-to-noise threshold <span data-draw="n" data-source="summary" data-row="0" data-field="snr_threshold" data-format="g">—</span></p>
+    <nav class="cbv-tabs" role="tablist" aria-label="Report sections">
+      <button type="button" role="tab" id="tab-endpoint" data-tab="endpoint" aria-controls="endpoint" aria-selected="true">Primary endpoint</button>
+      <button type="button" role="tab" id="tab-snr" data-tab="snr" aria-controls="snr" aria-selected="false">Signal-to-noise and data loss</button>
+      <button type="button" role="tab" id="tab-quality" data-tab="quality" aria-controls="quality" aria-selected="false">Quality of the lines</button>
+      <button type="button" role="tab" id="tab-methods" data-tab="methods" aria-controls="methods" aria-selected="false">Methods and notes</button>
+    </nav>
+  </header>
+
+  <!-- ============================================================ primary endpoint -->
+  <section class="cbv-page" id="endpoint" role="tabpanel" aria-labelledby="tab-endpoint">
+    <div class="cbv-section">
+      <h2>Aim 1: the same participant on two days</h2>
+      <p class="cbv-prose" id="endpoint-takeaway">Each participant's value is the velocity of the reference capillary, or of the first backup that counts when the reference does not. Agreement is between the control and the active visit, both recorded before any exposure.</p>
+      <p class="cbv-prose">In ESMOKE, <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span> participants have a value at both visits. Their typical error is <b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s on a mean of <span data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span> mm/s, and the smallest change one participant's value could show beyond measurement error is <b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>% of the mean. Whether the differences grow with the mean cannot be told from so few participants: the slope of the differences on the means is <span data-draw="n" data-source="aim1" data-field="ba_slope" data-where="key=primary ESMOKE" data-format="r2">—</span> (95% CI <span data-draw="n" data-source="aim1" data-field="ba_slope_ci_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_slope_ci_high" data-where="key=primary ESMOKE" data-format="r2">—</span>). The ratio limits and the log-scale CV cover the case that they do. In ISMOKE only <b data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</b> of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span> participants have both visits, too few for its statistics to mean much: they are shown, with intervals to match.</p>
+      <p class="cbv-prose">The numbers barely depend on the analysis. The mean of all counted loops gives an ESMOKE CV of <span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=mean ESMOKE" data-format="pct">—</span>%, and thresholds of <span data-draw="n" data-source="summary" data-row="0" data-field="snr_low" data-format="g">—</span> and <span data-draw="n" data-source="summary" data-row="0" data-field="snr_high" data-format="g">—</span> keep the same participants (<span data-draw="n" data-source="aim1" data-field="participants" data-where="key=snr7 ESMOKE" data-format="int">—</span> and <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=snr9 ESMOKE" data-format="int">—</span> in ESMOKE). The reference capillary alone, without backups, leaves <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=reference_only ESMOKE" data-format="int">—</span> ESMOKE and <span data-draw="n" data-source="aim1" data-field="participants" data-where="key=reference_only ISMOKE" data-format="int">—</span> ISMOKE participants.</p>
+    </div>
+
+    <div class="cbv-grid" id="study-cards">
+      <article class="cbv-card" id="card-esmoke">
+        <h3>ESMOKE</h3>
+        <p class="cbv-note">E-cigarette with nicotine (active) or without (control), 2019–2020</p>
+        <div class="cbv-kpis">
+          <div class="cbv-kpi"><span class="cbv-label">Within-subject CV</span><span class="cbv-big"><span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ESMOKE" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary ESMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary ESMOKE" data-format="pct">—</span>%</span></div>
+          <div class="cbv-kpi"><span class="cbv-label">ICC(A,1)</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary ESMOKE" data-format="r2">—</span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary ESMOKE" data-format="r2">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">Participants, both visits</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ESMOKE" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ESMOKE" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim1" data-field="one_visit_only" data-where="key=primary ESMOKE" data-format="int">—</span> at one visit only</span></div>
+        </div>
+        <dl class="cbv-dl">
+          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s (control <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>, active <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>)</dd>
+          <dt>Typical error</dt><dd><b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="te_ci_low_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>–<span data-draw="n" data-source="aim1" data-field="te_ci_high_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</span>)</dd>
+          <dt>CV on the log scale</dt><dd><b data-draw="n" data-source="aim1" data-field="cv_log_percent" data-where="key=primary ESMOKE" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_log_ci_low" data-where="key=primary ESMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_log_ci_high" data-where="key=primary ESMOKE" data-format="pct">—</span>%)</dd>
+          <dt>Smallest detectable change</dt><dd><b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ESMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ESMOKE" data-format="pct">—</span>% of the mean</dd>
+          <dt>Bias, active − control</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary ESMOKE" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary ESMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary ESMOKE" data-format="signed">—</span>)</dd>
+          <dt>Limits of agreement</dt><dd><span data-draw="n" data-source="aim1" data-field="ba_loa_low" data-where="key=primary ESMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_loa_high" data-where="key=primary ESMOKE" data-format="signed">—</span> mm/s</dd>
+          <dt>Active / control</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary ESMOKE" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary ESMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary ESMOKE" data-format="r2">—</span>)</dd>
+        </dl>
+      </article>
+
+      <article class="cbv-card" id="card-ismoke">
+        <h3>ISMOKE</h3>
+        <p class="cbv-note">Heated tobacco (active) or no exposure (control), 2020</p>
+        <div class="cbv-kpis">
+          <div class="cbv-kpi"><span class="cbv-label">Within-subject CV</span><span class="cbv-big"><span data-draw="n" data-source="aim1" data-field="cv_percent" data-where="key=primary ISMOKE" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="cv_ci_low" data-where="key=primary ISMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_ci_high" data-where="key=primary ISMOKE" data-format="pct">—</span>%</span></div>
+          <div class="cbv-kpi"><span class="cbv-label">ICC(A,1)</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="icc_a1" data-where="key=primary ISMOKE" data-format="r2">—</span><span class="cbv-sub">95% CI <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=primary ISMOKE" data-format="r2">—</span> to <span data-draw="n" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=primary ISMOKE" data-format="r2">—</span></span></div>
+          <div class="cbv-kpi"><span class="cbv-label">Participants, both visits</span><span class="cbv-big" data-draw="n" data-source="aim1" data-field="participants" data-where="key=primary ISMOKE" data-format="int">—</span><span class="cbv-sub">of <span data-draw="n" data-source="aim1" data-field="participants_wanted" data-where="key=primary ISMOKE" data-format="int">—</span> wanted; <span data-draw="n" data-source="aim1" data-field="one_visit_only" data-where="key=primary ISMOKE" data-format="int">—</span> at one visit only</span></div>
+        </div>
+        <dl class="cbv-dl">
+          <dt>Mean resting CBV</dt><dd><b data-draw="n" data-source="aim1" data-field="grand_mean_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s (control <span data-draw="n" data-source="aim1" data-field="mean_control_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>, active <span data-draw="n" data-source="aim1" data-field="mean_active_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>)</dd>
+          <dt>Typical error</dt><dd><b data-draw="n" data-source="aim1" data-field="typical_error_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="te_ci_low_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>–<span data-draw="n" data-source="aim1" data-field="te_ci_high_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</span>)</dd>
+          <dt>CV on the log scale</dt><dd><b data-draw="n" data-source="aim1" data-field="cv_log_percent" data-where="key=primary ISMOKE" data-format="pct">—</b>% (95% CI <span data-draw="n" data-source="aim1" data-field="cv_log_ci_low" data-where="key=primary ISMOKE" data-format="pct">—</span>–<span data-draw="n" data-source="aim1" data-field="cv_log_ci_high" data-where="key=primary ISMOKE" data-format="pct">—</span>%)</dd>
+          <dt>Smallest detectable change</dt><dd><b data-draw="n" data-source="aim1" data-field="sdc_mm_s" data-where="key=primary ISMOKE" data-format="mm">—</b> mm/s, <span data-draw="n" data-source="aim1" data-field="sdc_percent" data-where="key=primary ISMOKE" data-format="pct">—</span>% of the mean</dd>
+          <dt>Bias, active − control</dt><dd><b data-draw="n" data-source="aim1" data-field="ba_bias" data-where="key=primary ISMOKE" data-format="signed">—</b> mm/s (95% CI <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_low" data-where="key=primary ISMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_bias_ci_high" data-where="key=primary ISMOKE" data-format="signed">—</span>)</dd>
+          <dt>Limits of agreement</dt><dd><span data-draw="n" data-source="aim1" data-field="ba_loa_low" data-where="key=primary ISMOKE" data-format="signed">—</span> to <span data-draw="n" data-source="aim1" data-field="ba_loa_high" data-where="key=primary ISMOKE" data-format="signed">—</span> mm/s</dd>
+          <dt>Active / control</dt><dd>×<b data-draw="n" data-source="aim1" data-field="ratio_ratio" data-where="key=primary ISMOKE" data-format="r2">—</b> (limits ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_low" data-where="key=primary ISMOKE" data-format="r2">—</span> to ×<span data-draw="n" data-source="aim1" data-field="ratio_loa_high" data-where="key=primary ISMOKE" data-format="r2">—</span>)</dd>
+        </dl>
+      </article>
+    </div>
+
+    <article class="cbv-card" id="card-visits">
+      <h3>Resting CBV at the two visits</h3>
+      <p class="cbv-note">One row per participant, ordered by their mean; the line joins the two visits. A single dot: the other visit has no loop that counts. One scale for both studies.</p>
+      <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Control visit</li><li><span class="cbv-key" data-series="1"></span>Active visit</li></ul>
+      <div class="cbv-pair">
+        <div class="cbv-facet"><h4>ESMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-visits-esmoke" data-draw="visits" data-study="ESMOKE" data-source="pairs" data-label="Resting CBV at the control and active visit, ESMOKE participants"></div></div>
+        <div class="cbv-facet"><h4>ISMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-visits-ismoke" data-draw="visits" data-study="ISMOKE" data-source="pairs" data-label="Resting CBV at the control and active visit, ISMOKE participants"></div></div>
+      </div>
+    </article>
+
+    <article class="cbv-card" id="card-ba">
+      <h3>Bland–Altman: active minus control visit</h3>
+      <p class="cbv-note">Each dot is a participant with values at both visits. The solid line is the bias; the dashed lines are the 95% limits of agreement (bias ± 1.96 SD of the differences).</p>
+      <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Participant</li><li><span class="cbv-key line"></span>Bias</li><li><span class="cbv-key dash"></span>Limits of agreement</li></ul>
+      <div class="cbv-pair">
+        <div class="cbv-facet"><h4>ESMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-ba-esmoke" data-draw="ba" data-study="ESMOKE" data-source="pairs aim1" data-label="Bland-Altman plot, ESMOKE"></div></div>
+        <div class="cbv-facet"><h4>ISMOKE</h4><div class="cbv-chart dash-skeleton" id="chart-ba-ismoke" data-draw="ba" data-study="ISMOKE" data-source="pairs aim1" data-label="Bland-Altman plot, ISMOKE"></div></div>
+      </div>
+    </article>
+
+    <div class="cbv-grid" id="sensitivity">
+      <article class="cbv-card" id="card-forest-cv">
+        <h3>Within-subject CV by analysis</h3>
+        <p class="cbv-note">The protocol's analysis (filled) and its sensitivity analyses (open), with 95% intervals; n is the participants with values at both visits. An interval that runs off the scale ends in an arrow.</p>
+        <div class="cbv-chart dash-skeleton" id="chart-forest-cv" data-draw="forest" data-metric="cv" data-source="aim1" data-label="Within-subject CV by analysis and study"></div>
+      </article>
+      <article class="cbv-card" id="card-forest-icc">
+        <h3>ICC(A,1) by analysis</h3>
+        <p class="cbv-note">Absolute agreement of a single measurement: 1 is perfect agreement, 0 none beyond chance. An interval that runs off the scale ends in an arrow.</p>
+        <div class="cbv-chart dash-skeleton" id="chart-forest-icc" data-draw="forest" data-metric="icc" data-source="aim1" data-label="ICC by analysis and study"></div>
+      </article>
+    </div>
+
+    <article class="cbv-card" id="card-pairs">
+      <h3>Every participant of aim 1</h3>
+      <p class="cbv-note">Velocities in mm/s; "from" names the loop the value comes from. Click a heading to sort.</p>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-pairs" data-source="pairs" data-row-key="key">
+          <thead><tr>
+            <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
+            <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
+            <th data-field="status"><button type="button" class="cbv-th-sort">Values</button></th>
+            <th data-field="control_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Control</button></th>
+            <th data-field="control_from"><button type="button" class="cbv-th-sort">From</button></th>
+            <th data-field="active_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Active</button></th>
+            <th data-field="active_from"><button type="button" class="cbv-th-sort">From</button></th>
+            <th data-field="diff_mm_s" data-format="signed"><button type="button" class="cbv-th-sort">Active − control</button></th>
+            <th data-field="ratio" data-format="r2"><button type="button" class="cbv-th-sort">Ratio</button></th>
+            <th data-field="first_visit"><button type="button" class="cbv-th-sort">First visit</button></th>
+            <th data-field="days_apart" data-format="int"><button type="button" class="cbv-th-sort">Days apart</button></th>
+          </tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="cbv-card" id="card-order">
+      <h3>Exploratory: the second visit against the first</h3>
+      <p class="cbv-note">Not in the protocol. The visits' order was set by the trials; a systematic change from the first to the second visit would add to the typical error. Second minus first visit, mm/s, with its 95% interval and a paired t-test.</p>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-order" data-source="visit_order" data-row-key="key">
+          <thead><tr>
+            <th data-field="group">Studies</th>
+            <th data-field="participants" data-format="int">Participants</th>
+            <th data-field="active_first" data-format="int">Active visit first</th>
+            <th data-field="second_minus_first_mm_s" data-format="signed">Second − first</th>
+            <th data-field="ci_low" data-format="signed">95% CI low</th>
+            <th data-field="ci_high" data-format="signed">95% CI high</th>
+            <th data-field="p" data-format="p">p</th>
+          </tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================================================ signal-to-noise -->
+  <section class="cbv-page" id="snr" role="tabpanel" aria-labelledby="tab-snr" hidden>
+    <div class="cbv-section">
+      <h2>What the signal-to-noise threshold removes</h2>
+      <p class="cbv-prose">Of <b data-draw="n" data-source="summary" data-row="0" data-field="loops_placed" data-format="int">—</b> loops placed, <b data-draw="n" data-source="summary" data-row="0" data-field="loops_counted" data-format="int">—</b> count. <span data-draw="n" data-source="summary" data-row="0" data-field="loops_snr_below" data-format="int">—</span> scored below signal-to-noise <span data-draw="n" data-source="summary" data-row="0" data-field="snr_threshold" data-format="g">—</span>, <span data-draw="n" data-source="summary" data-row="0" data-field="loops_range_edge" data-format="int">—</span> scored above it with the speed at the edge of the searched range, <span data-draw="n" data-source="summary" data-row="0" data-field="loops_movement" data-format="int">—</span> had limbs moving opposite ways, and <span data-draw="n" data-source="summary" data-row="0" data-field="loops_crossing" data-format="int">—</span> crossed themselves. <b data-draw="n" data-source="summary" data-row="0" data-field="recordings_with_value" data-format="int">—</b> of <span data-draw="n" data-source="summary" data-row="0" data-field="recordings" data-format="int">—</span> recordings have a value: <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_reference" data-format="int">—</span> from the reference capillary and <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_backup" data-format="int">—</span> from a backup; <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_missing" data-format="int">—</span> have none.</p>
+      <p class="cbv-prose">The threshold itself removes little. The loops below it scored a median of <b data-draw="n" data-source="summary" data-row="0" data-field="snr_below_median" data-format="snr">—</b>: most show no moving pattern at all, and only <span data-draw="n" data-source="summary" data-row="0" data-field="near_below" data-format="int">—</span> lie between <span data-draw="n" data-source="summary" data-row="0" data-field="near_low" data-format="g">—</span> and the threshold. The larger loss is the loops at the edge of the range: they scored a median of <b data-draw="n" data-source="summary" data-row="0" data-field="edge_snr_median" data-format="snr">—</b>, a clear signal, but their pattern moved at or below the slowest speed the protocol searches, <span data-draw="n" data-source="summary" data-row="0" data-field="search_floor_px" data-format="g">—</span> px per frame (<span data-draw="n" data-source="summary" data-row="0" data-field="search_floor_mm_s" data-format="mm">—</span> mm/s). There, slower flow and slow movement of the picture along the line look alike, which is why the protocol does not search below it. If those loops counted, <b data-draw="n" data-source="summary" data-row="0" data-field="edge_recordings_gain" data-format="int">—</b> more recordings would have a value, and aim 1 would gain <span data-draw="n" data-source="summary" data-row="0" data-field="edge_aim1_gain_esmoke" data-format="int">—</span> ESMOKE and <span data-draw="n" data-source="summary" data-row="0" data-field="edge_aim1_gain_ismoke" data-format="int">—</span> ISMOKE participants with both visits. Whether to measure them is a methods question for the PI, decided before their velocities are looked at.</p>
+    </div>
+
+    <article class="cbv-card" id="card-funnel">
+      <h3>From recordings to participants</h3>
+      <p class="cbv-note">Each step keeps what passed the one before; the bars of a block share one scale. Counts per study in brackets.</p>
+      <div class="cbv-chart dash-skeleton" id="chart-funnel" data-draw="funnel" data-source="counts" data-label="Recordings, loops and participants kept at each step"></div>
+    </article>
+
+    <article class="cbv-card" id="card-snr-strip">
+      <h3>Every loop's signal-to-noise, by its place in the ranking</h3>
+      <p class="cbv-note">Log scale. The solid line is the protocol's threshold; the dashed lines are the sensitivity analyses' thresholds. Loops that count are coloured; the rest are grey.</p>
+      <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Counted</li><li><span class="cbv-key"></span>Not counted</li><li><span class="cbv-key line"></span>Threshold</li><li><span class="cbv-key dash"></span>Sensitivity thresholds</li></ul>
+      <div class="cbv-chart dash-skeleton" id="chart-snr-strip" data-draw="snr-strip" data-source="loops summary" data-label="Signal-to-noise of every loop by rank"></div>
+    </article>
+
+    <div class="cbv-grid">
+      <article class="cbv-card" id="card-outcomes">
+        <h3>Why loops do not count, by rank</h3>
+        <p class="cbv-note">The first reason in the order of the protocol's checks. Loop1 is the reference capillary, ranked by the clearest moving blood.</p>
+        <ul class="cbv-legend"><li><span class="cbv-key bar" data-series="0"></span>Counted</li><li><span class="cbv-key bar" data-series="1"></span>Signal-to-noise below threshold</li><li><span class="cbv-key bar" data-series="2"></span>Speed at the edge of the range</li><li><span class="cbv-key bar" data-series="3"></span>Limbs moved opposite ways</li><li><span class="cbv-key bar" data-series="4"></span>Line crosses itself</li></ul>
+        <div class="cbv-chart dash-skeleton" id="chart-outcomes" data-draw="outcomes" data-source="counts summary" data-label="Outcome of each loop by rank"></div>
+      </article>
+      <article class="cbv-card" id="card-sources">
+        <h3>Where each recording's value comes from</h3>
+        <p class="cbv-note">The reference capillary when it counts, else the first backup that does.</p>
+        <ul class="cbv-legend"><li><span class="cbv-key bar" data-series="0"></span>loop1 (reference)</li><li><span class="cbv-key bar" data-series="0" data-step="2"></span>loop2</li><li><span class="cbv-key bar" data-series="0" data-step="3"></span>loop3</li><li><span class="cbv-key bar"></span>No value</li></ul>
+        <div class="cbv-chart dash-skeleton" id="chart-sources" data-draw="sources" data-source="counts" data-label="Source of each recording's value by study and phase"></div>
+      </article>
+    </div>
+
+    <div class="cbv-section">
+      <h2>The threshold swept from low to high</h2>
+      <p class="cbv-prose">Every loop's pattern shift and its limbs' were computed once from the saved space-time diagrams and judged again at each threshold, as the protocol's sensitivity analyses are. At the protocol's threshold this gives the saved results exactly. Vertical lines mark the protocol's threshold (solid) and the sensitivity thresholds (dashed).</p>
+      <ul class="cbv-legend"><li><span class="cbv-key line" data-series="0" data-line="1"></span>ESMOKE</li><li><span class="cbv-key line" data-series="1" data-line="1"></span>ISMOKE</li></ul>
+    </div>
+    <div class="cbv-grid" id="sweep-grid">
+      <article class="cbv-card" id="card-sweep-loops"><h3>Loops counted</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-loops" data-draw="sweep" data-panel="loops" data-source="sweep summary" data-label="Loops counted against the threshold"></div></article>
+      <article class="cbv-card" id="card-sweep-recordings"><h3>Recordings with a value</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-recordings" data-draw="sweep" data-panel="recordings" data-source="sweep summary" data-label="Recordings with a value against the threshold"></div></article>
+      <article class="cbv-card" id="card-sweep-participants"><h3>Aim 1 participants with both visits</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-participants" data-draw="sweep" data-panel="participants" data-source="sweep summary" data-label="Aim 1 participants against the threshold"></div></article>
+      <article class="cbv-card" id="card-sweep-cv"><h3>Within-subject CV, %</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-cv" data-draw="sweep" data-panel="cv" data-source="sweep summary" data-label="Within-subject CV against the threshold"></div></article>
+      <article class="cbv-card" id="card-sweep-icc"><h3>ICC(A,1)</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-icc" data-draw="sweep" data-panel="icc" data-source="sweep summary" data-label="ICC against the threshold"></div></article>
+      <article class="cbv-card" id="card-sweep-aim2"><h3>Aim 2 participants with all four recordings</h3><div class="cbv-chart dash-skeleton" id="chart-sweep-aim2" data-draw="sweep" data-panel="aim2" data-source="sweep summary" data-label="Aim 2 participants against the threshold"></div></article>
+    </div>
+
+    <article class="cbv-card" id="card-near">
+      <h3>Loops close to the threshold</h3>
+      <p class="cbv-note">Signal-to-noise between <span data-draw="n" data-source="summary" data-row="0" data-field="near_low" data-format="g">—</span> and <span data-draw="n" data-source="summary" data-row="0" data-field="near_high" data-format="g">—</span>: these are the loops a lower or a higher threshold would move. "Value" marks the loop a recording's value comes from.</p>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-near" data-source="loops" data-row-key="key" data-filter="near">
+          <thead><tr>
+            <th data-field="snr" data-format="snr" aria-sort="ascending"><button type="button" class="cbv-th-sort">Signal-to-noise</button></th>
+            <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
+            <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
+            <th data-field="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
+            <th data-field="when"><button type="button" class="cbv-th-sort">Exposure</button></th>
+            <th data-field="dataset"><button type="button" class="cbv-th-sort">Loop</button></th>
+            <th data-field="outcome"><button type="button" class="cbv-th-sort">Outcome</button></th>
+            <th data-field="speed_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Velocity</button></th>
+            <th data-field="is_value" data-format="bool"><button type="button" class="cbv-th-sort">Value</button></th>
+          </tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================================================ quality of the lines -->
+  <section class="cbv-page" id="quality" role="tabpanel" aria-labelledby="tab-quality" hidden>
+    <div class="cbv-section">
+      <h2>The lines as placed</h2>
+      <p class="cbv-prose">All lines were placed blind in one session, about <span data-draw="n" data-source="summary" data-row="0" data-field="seconds_per_line_median" data-format="int">—</span> s apart (median), from <span data-draw="n" data-source="summary" data-row="0" data-field="placement_first">—</span> to <span data-draw="n" data-source="summary" data-row="0" data-field="placement_last">—</span>. Recordings with one, two and three loops: <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_1_loop" data-format="int">—</span>, <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_2_loops" data-format="int">—</span> and <span data-draw="n" data-source="summary" data-row="0" data-field="recordings_3_loops" data-format="int">—</span>.</p>
+    </div>
+    <div class="cbv-kpis" id="quality-kpis">
+      <div class="cbv-kpi"><span class="cbv-label">Line length, median</span><span class="cbv-big"><span data-draw="n" data-source="summary" data-row="0" data-field="length_mm_median" data-format="mm2">—</span><span class="cbv-unit">mm</span></span><span class="cbv-sub">IQR <span data-draw="n" data-source="summary" data-row="0" data-field="length_mm_q1" data-format="mm2">—</span>–<span data-draw="n" data-source="summary" data-row="0" data-field="length_mm_q3" data-format="mm2">—</span> mm</span></div>
+      <div class="cbv-kpi"><span class="cbv-label">Points per line, median</span><span class="cbv-big" data-draw="n" data-source="summary" data-row="0" data-field="points_median" data-format="int">—</span><span class="cbv-sub"><span data-draw="n" data-source="summary" data-row="0" data-field="spacing_px_median" data-format="px">—</span> px apart (median)</span></div>
+      <div class="cbv-kpi"><span class="cbv-label">Inside the dashed outline</span><span class="cbv-big"><span data-draw="n" data-source="summary" data-row="0" data-field="clearance_px_min" data-format="px1">—</span><span class="cbv-unit">px</span></span><span class="cbv-sub">closest line; median <span data-draw="n" data-source="summary" data-row="0" data-field="clearance_px_median" data-format="px">—</span> px. The outline keeps its own margin from the black strip.</span></div>
+      <div class="cbv-kpi"><span class="cbv-label">Signal-to-noise, median</span><span class="cbv-big" data-draw="n" data-source="summary" data-row="0" data-field="snr_median" data-format="snr">—</span><span class="cbv-sub"><span data-draw="n" data-source="summary" data-row="0" data-field="snr_median_counted" data-format="snr">—</span> among loops that count</span></div>
+      <div class="cbv-kpi"><span class="cbv-label">Velocity, loops that count</span><span class="cbv-big"><span data-draw="n" data-source="summary" data-row="0" data-field="speed_mm_s_median" data-format="mm">—</span><span class="cbv-unit">mm/s</span></span><span class="cbv-sub">range <span data-draw="n" data-source="summary" data-row="0" data-field="speed_mm_s_min" data-format="mm">—</span>–<span data-draw="n" data-source="summary" data-row="0" data-field="speed_mm_s_max" data-format="mm">—</span></span></div>
+      <div class="cbv-kpi"><span class="cbv-label">Interval, loops that count</span><span class="cbv-big"><span data-draw="n" data-source="summary" data-row="0" data-field="ci_rel_pct_median" data-format="pct">—</span><span class="cbv-unit">%</span></span><span class="cbv-sub">median half-width of the 95% interval</span></div>
+    </div>
+
+    <div class="cbv-grid">
+      <article class="cbv-card" id="card-ranking">
+        <h3>Did the ranking find the measurable loops?</h3>
+        <p class="cbv-prose">Counted: <b data-draw="n" data-source="summary" data-row="0" data-field="counted_rank1" data-format="int">—</b> of <span data-draw="n" data-source="summary" data-row="0" data-field="placed_rank1" data-format="int">—</span> references (<span data-draw="n" data-source="summary" data-row="0" data-field="counted_pct_rank1" data-format="pct">—</span>%), <b data-draw="n" data-source="summary" data-row="0" data-field="counted_rank2" data-format="int">—</b> of <span data-draw="n" data-source="summary" data-row="0" data-field="placed_rank2" data-format="int">—</span> first backups (<span data-draw="n" data-source="summary" data-row="0" data-field="counted_pct_rank2" data-format="pct">—</span>%) and <b data-draw="n" data-source="summary" data-row="0" data-field="counted_rank3" data-format="int">—</b> of <span data-draw="n" data-source="summary" data-row="0" data-field="placed_rank3" data-format="int">—</span> second backups (<span data-draw="n" data-source="summary" data-row="0" data-field="counted_pct_rank3" data-format="pct">—</span>%).</p>
+        <p class="cbv-note">The observer ranked the loops of each recording by how clearly blood could be seen moving, before placing any line and without seeing a result.</p>
+      </article>
+      <article class="cbv-card" id="card-consistency">
+        <h3>Consistency within a loop and between loops</h3>
+        <dl class="cbv-dl">
+          <dt>Two halves of the rest</dt><dd><b data-draw="n" data-source="summary" data-row="0" data-field="halves_both" data-format="int">—</b> counted loops resolved in both halves; they differ by a median <b data-draw="n" data-source="summary" data-row="0" data-field="halves_diff_pct_median" data-format="pct">—</b>% of their mean</dd>
+          <dt>Two limbs</dt><dd><b data-draw="n" data-source="summary" data-row="0" data-field="limbs_both" data-format="int">—</b> counted loops resolved in both limbs on their own</dd>
+          <dt>Loops of one recording</dt><dd><b data-draw="n" data-source="summary" data-row="0" data-field="recordings_2plus_counted" data-format="int">—</b> recordings with two or more loops that count: between-loop CV a median <b data-draw="n" data-source="summary" data-row="0" data-field="between_loop_cv_pct_median" data-format="pct">—</b>%, fastest over slowest a median ×<span data-draw="n" data-source="summary" data-row="0" data-field="max_min_ratio_median" data-format="r2">—</span> (up to ×<span data-draw="n" data-source="summary" data-row="0" data-field="max_min_ratio_max" data-format="r2">—</span>)</dd>
+          <dt>Stabilization over the rest</dt><dd>median match <b data-draw="n" data-source="summary" data-row="0" data-field="rest_match_median" data-format="r2">—</b>; the part of the frame every rest frame shows, a median <span data-draw="n" data-source="summary" data-row="0" data-field="picture_pct_median" data-format="pct">—</span>%</dd>
+        </dl>
+      </article>
+    </div>
+
+    <div class="cbv-grid">
+      <article class="cbv-card" id="card-length-snr">
+        <h3>Signal-to-noise against line length</h3>
+        <p class="cbv-note">Log scale for signal-to-noise; the line marks the threshold.</p>
+        <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>Counted</li><li><span class="cbv-key"></span>Not counted</li></ul>
+        <div class="cbv-chart dash-skeleton" id="chart-length-snr" data-draw="length-snr" data-source="loops summary" data-label="Signal-to-noise against line length"></div>
+      </article>
+      <article class="cbv-card" id="card-halves">
+        <h3>First against second half of the rest</h3>
+        <p class="cbv-note">Loops that count, each half pooled on its own. The dashed line is equality.</p>
+        <div class="cbv-chart dash-skeleton" id="chart-halves" data-draw="halves" data-source="loops" data-label="Velocity in the first against the second half of the rest"></div>
+      </article>
+    </div>
+
+    <article class="cbv-card" id="card-spread">
+      <h3>Loops of one recording</h3>
+      <p class="cbv-note">Recordings with two or more loops that count, one row each. The filled dot is the loop the recording's value comes from; the open dots are its other counted loops.</p>
+      <ul class="cbv-legend"><li><span class="cbv-key" data-series="0"></span>The recording's value</li><li><span class="cbv-key ring" data-series="0" data-ring="1"></span>Another counted loop</li></ul>
+      <div class="cbv-chart dash-skeleton" id="chart-spread" data-draw="spread" data-source="loops" data-label="Velocity of each counted loop in recordings with two or more"></div>
+    </article>
+
+    <article class="cbv-card" id="card-recordings">
+      <h3>Every recording</h3>
+      <p class="cbv-note">Velocities in mm/s. Match: the stabilization's median match over the rest. Picture: the part of the frame that every rest frame shows, where a line may lie.</p>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-recordings" data-source="recordings" data-row-key="key">
+          <thead><tr>
+            <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
+            <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
+            <th data-field="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
+            <th data-field="when"><button type="button" class="cbv-th-sort">Exposure</button></th>
+            <th data-field="aims"><button type="button" class="cbv-th-sort">Aims</button></th>
+            <th data-field="loops_placed" data-format="int"><button type="button" class="cbv-th-sort">Loops</button></th>
+            <th data-field="loops_counted" data-format="int"><button type="button" class="cbv-th-sort">Counted</button></th>
+            <th data-field="value_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Value</button></th>
+            <th data-field="value_from"><button type="button" class="cbv-th-sort">From</button></th>
+            <th data-field="mean_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Mean of loops</button></th>
+            <th data-field="rest_match_median" data-format="r2"><button type="button" class="cbv-th-sort">Match</button></th>
+            <th data-field="picture_pct" data-format="pct"><button type="button" class="cbv-th-sort">Picture, %</button></th>
+            <th data-field="note"><button type="button" class="cbv-th-sort">Note</button></th>
+          </tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="cbv-card" id="card-loops">
+      <h3>Every loop</h3>
+      <div class="cbv-tools"><input type="search" class="cbv-search" id="loop-search" placeholder="Filter, e.g. FP05 or below" aria-label="Filter the loops"></div>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-loops" data-source="loops" data-row-key="key" data-search="loop-search">
+          <thead><tr>
+            <th data-field="study"><button type="button" class="cbv-th-sort">Study</button></th>
+            <th data-field="subject"><button type="button" class="cbv-th-sort">Participant</button></th>
+            <th data-field="visit"><button type="button" class="cbv-th-sort">Visit</button></th>
+            <th data-field="when"><button type="button" class="cbv-th-sort">Exposure</button></th>
+            <th data-field="dataset"><button type="button" class="cbv-th-sort">Loop</button></th>
+            <th data-field="outcome"><button type="button" class="cbv-th-sort">Outcome</button></th>
+            <th data-field="snr" data-format="snr"><button type="button" class="cbv-th-sort">Signal-to-noise</button></th>
+            <th data-field="speed_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">Velocity</button></th>
+            <th data-field="speed_px_per_frame" data-format="px1"><button type="button" class="cbv-th-sort">px/frame</button></th>
+            <th data-field="ci_rel_pct" data-format="pct"><button type="button" class="cbv-th-sort">Interval ±%</button></th>
+            <th data-field="length_mm" data-format="mm2"><button type="button" class="cbv-th-sort">Length, mm</button></th>
+            <th data-field="points_n" data-format="int"><button type="button" class="cbv-th-sort">Points</button></th>
+            <th data-field="clearance_px" data-format="px"><button type="button" class="cbv-th-sort">Clearance, px</button></th>
+            <th data-field="first_half_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">1st half</button></th>
+            <th data-field="second_half_mm_s" data-format="mm"><button type="button" class="cbv-th-sort">2nd half</button></th>
+            <th data-field="arterial_end"><button type="button" class="cbv-th-sort">Arterial end</button></th>
+          </tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================================================ methods -->
+  <section class="cbv-page" id="methods" role="tabpanel" aria-labelledby="tab-methods" hidden>
+    <div class="cbv-section">
+      <h2>How the numbers were made</h2>
+      <p class="cbv-prose">The protocol (PROTOCOL.md in the repository) was fixed with the PI before the first line was placed: velocity round the whole capillary loop in the resting flow, signal-to-noise as the quality control, and one reference capillary per recording with ranked backups for when it fails. The observer placed every line blind: the recordings were listed under codes, results were hidden, and the measured range was fixed to the official rest. Nothing here was looked at until every recording had its lines.</p>
+      <p class="cbv-prose">Aim 1 compares each participant's two before-exposure recordings, one per visit. Recordings after exposure are used by aim 2 only; they appear here in the counts of what the quality control keeps.</p>
+    </div>
+    <article class="cbv-card" id="card-method">
+      <h3>The protocol's settings</h3>
+      <div class="cbv-table-wrap">
+        <table class="cbv-table" id="table-method" data-source="method" data-row-key="key">
+          <thead><tr><th data-field="parameter">Setting</th><th data-field="value">Value</th><th data-field="note">Note</th></tr></thead>
+          <tbody data-draw="rows"></tbody>
+        </table>
+      </div>
+    </article>
+    <article class="cbv-card" id="card-fixes">
+      <h3>Fixed before unblinding</h3>
+      <ul class="cbv-list">
+        <li><span data-draw="n" data-source="summary" data-row="0" data-field="relabelled_lines" data-format="int">—</span> lines on <span data-draw="n" data-source="summary" data-row="0" data-field="relabelled_recordings" data-format="int">—</span> recordings had been saved without the whole-loop role: returning to a recording seen before restored the role of a try-out line, and the next lines kept it. They were re-saved as whole loops from their own points and space-time diagrams; the blocks and the pooled pattern shift came out exactly as saved. The app now fixes the role during blind placement.</li>
+        <li>A recording skipped by mistake was placed, still blind, before anything was unblinded.</li>
+        <li>Lines whose limbs cross (a twisted loop) are not candidates, a rule clarified during placement: the next loop in the ranking takes their place.</li>
+        <li><span data-draw="n" data-source="summary" data-row="0" data-field="tryout_lines" data-format="int">—</span> try-out lines from before blind placement, on two recordings, are not whole loops and are not used.</li>
+        <li>One recording has no line at all: its picture moved further than the frame is high during the rest, so no line stays in it.</li>
+      </ul>
+    </article>
+    <article class="cbv-card" id="card-files">
+      <h3>Where the data come from</h3>
+      <p class="cbv-prose">analysis/primary_endpoint/report.py reads the saved data sets through capillary.aims, the protocol's analysis, and writes these tables. Run it again after any change to the lines, then ask Claude to replace the tables here. Recordings appear here only by study, participant and visit, so that a later blind placement of the same recordings stays blind.</p>
+    </article>
+  </section>
+</div>
+
+<script>
+/* Shared helpers for the drawings below: reading a cell, formatting, and drawing a chart's frame. */
+window.cbv = (() => {
+  const MUTED = 'var(--cds-chart-muted)';
+  const GRID = 'var(--cds-chart-grid)';
+  const AXIS = 'var(--cds-chart-axis)';
+  const REF = 'var(--cds-chart-reference)';
+  const SURFACE = 'var(--color-panel)';
+  const fmt = {
+    text: (v) => String(v),
+    int: d3.format(',.0f'),
+    g: d3.format('~g'),
+    mm: d3.format('.3f'),
+    mm2: d3.format('.2f'),
+    pct: d3.format('.0f'),
+    r2: d3.format('.2f'),
+    snr: d3.format('.1f'),
+    px: d3.format('.0f'),
+    px1: d3.format('.1f'),
+    signed: d3.format('+.3f'),
+    p: (v) => (v < 0.001 ? '<0.001' : d3.format('.3f')(v)),
+    bool: (v) => (v === true || v === 'true' ? 'yes' : 'no'),
+  };
+  const num = (v) => (v === null || v === undefined || v === '' ? NaN : Number(v));
+  const has = (v) => Number.isFinite(num(v));
+  const status = (id) => dash.data(id).status;
+  const rows = (id) => (status(id) === 'ok' && Array.isArray(dash.data(id).data) ? dash.data(id).data : []);
+  const where = (text) => text.split('&').map((part) => part.split('=').map((s) => decodeURIComponent(s)));
+  const find = (id, text) => {
+    const wanted = where(text);
+    return rows(id).find((row) => wanted.every(([k, v]) => String(row[k]) === v));
+  };
+  const show = (value, format) => {
+    const kind = format || 'text';
+    if (value === undefined || value === null || value === '') return '—';
+    if (kind === 'text') return String(value);
+    if (kind === 'bool') return fmt.bool(value);
+    return has(value) ? (fmt[kind] || fmt.text)(num(value)) : '—';
+  };
+  const cell = (el) => {
+    if (status(el.dataset.source) !== 'ok') return undefined;
+    const row = el.dataset.where ? find(el.dataset.source, el.dataset.where)
+      : rows(el.dataset.source)[Number(el.dataset.row || 0)];
+    return row ? row[el.dataset.field] : undefined;
+  };
+  const color = (i) => dash.colors[i % dash.colors.length];
+  const STEPS = {1: 1, 2: 0.62, 3: 0.32};
+
+  function frame(el, height) {
+    el.replaceChildren();
+    const width = Math.max(260, Math.floor(el.clientWidth || 600));
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('role', 'img').attr('aria-label', el.dataset.label || '');
+    el.style.minHeight = `${Math.round(height * (el.clientWidth || width) / width)}px`;
+    return {svg, width, height};
+  }
+  function measure(svg, strings, className) {
+    const probe = svg.append('text').attr('class', className || 'cbv-tick');
+    let widest = 0;
+    for (const text of strings) {
+      probe.text(text);
+      widest = Math.max(widest, probe.node().getComputedTextLength());
+    }
+    probe.remove();
+    return widest;
+  }
+  function axis(selection) {
+    selection.attr('font-size', null).attr('font-family', null);
+    selection.selectAll('.domain').style('stroke', AXIS);
+    selection.selectAll('.tick line').style('stroke', AXIS);
+    selection.selectAll('.tick text').attr('class', 'cbv-tick');
+    return selection;
+  }
+  function gridX(svg, x, ticks, top, bottom) {
+    svg.append('g').selectAll('line').data(ticks).join('line')
+      .attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', top).attr('y2', bottom)
+      .style('stroke', GRID).style('stroke-width', 1);
+  }
+  function gridY(svg, y, ticks, left, right) {
+    svg.append('g').selectAll('line').data(ticks).join('line')
+      .attr('x1', left).attr('x2', right).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
+      .style('stroke', GRID).style('stroke-width', 1);
+  }
+  function refLine(svg, x1, x2, y1, y2, dashed) {
+    return svg.append('line').attr('x1', x1).attr('x2', x2).attr('y1', y1).attr('y2', y2)
+      .style('stroke', REF).style('stroke-width', 1.5).attr('stroke-dasharray', dashed ? '5 4' : null);
+  }
+  function dot(selection, cx, cy, fill, hollow, r) {
+    return selection.append('circle').attr('cx', cx).attr('cy', cy).attr('r', r || 4.5)
+      .style('fill', hollow ? SURFACE : fill).style('stroke', hollow ? fill : SURFACE)
+      .style('stroke-width', 2);
+  }
+  /* A tooltip inside the chart's box: lines of [label, value]; the first is the heading. */
+  function tooltip(el) {
+    const tip = document.createElement('div');
+    tip.className = 'cbv-tip';
+    tip.hidden = true;
+    el.append(tip);
+    const place = (x, y) => {
+      const w = tip.offsetWidth, h = tip.offsetHeight, room = el.clientWidth;
+      tip.style.left = `${Math.max(0, Math.min(x + 12, room - w))}px`;
+      tip.style.top = `${y - h - 10 < 0 ? y + 14 : y - h - 10}px`;
+    };
+    return {
+      show(lines, x, y) {
+        tip.replaceChildren(...lines.map(([label, value], i) => {
+          const row = document.createElement('div');
+          if (i === 0) {
+            row.className = 'cbv-tip-head';
+            row.textContent = label;
+          } else {
+            row.className = 'cbv-tip-row';
+            const strong = document.createElement('b');
+            strong.textContent = value;
+            const name = document.createElement('span');
+            name.textContent = ` ${label}`;
+            row.append(strong, name);
+          }
+          return row;
+        }));
+        tip.hidden = false;
+        place(x, y);
+      },
+      hide() { tip.hidden = true; },
+    };
+  }
+  /* Where a pointer event lies in the chart's box, in the svg's own units and in the box's pixels. */
+  function pointer(el, svg, width, event) {
+    const box = el.getBoundingClientRect();
+    const px = event.clientX - box.left, py = event.clientY - box.top;
+    const scale = width / (box.width || width);
+    return {x: px * scale, y: py * scale, px, py, scale};
+  }
+  /* A nearest-point hover layer over `points` ({x, y, lines}) within `reach` units. */
+  function nearest(el, svg, width, height, points, reach, onHover) {
+    const tip = tooltip(el);
+    if (!points.length) return tip;
+    const delaunay = d3.Delaunay.from(points, (p) => p.x, (p) => p.y);
+    const ring = svg.append('circle').attr('r', 8).style('fill', 'none').style('stroke', 'var(--color-fg)')
+      .style('stroke-width', 1.5).attr('visibility', 'hidden');
+    svg.append('rect').attr('width', width).attr('height', height).style('fill', 'transparent')
+      .on('pointermove', (event) => {
+        const at = pointer(el, svg, width, event);
+        const i = delaunay.find(at.x, at.y);
+        const p = points[i];
+        if (!p || Math.hypot(p.x - at.x, p.y - at.y) > reach) {
+          ring.attr('visibility', 'hidden');
+          tip.hide();
+          if (onHover) onHover(null);
+          return;
+        }
+        ring.attr('cx', p.x).attr('cy', p.y).attr('visibility', 'visible');
+        tip.show(p.lines, p.x / at.scale, p.y / at.scale);
+        if (onHover) onHover(p);
+      })
+      .on('pointerleave', () => { ring.attr('visibility', 'hidden'); tip.hide(); if (onHover) onHover(null); });
+    return tip;
+  }
+  /* A drawing that waits for its datasets: a skeleton while loading, one line if a source failed. */
+  function chart(name, ids, draw) {
+    dash.draw(name, (el) => {
+      const states = (el.dataset.source || ids.join(' ')).split(/\s+/).filter(Boolean).map(status);
+      if (states.every((s) => s === 'ok')) {
+        el.classList.remove('dash-skeleton');
+        draw(el);
+        return;
+      }
+      el.replaceChildren();
+      if (states.some((s) => s === 'loading')) {
+        el.classList.add('dash-skeleton');
+        return;
+      }
+      el.classList.remove('dash-skeleton');
+      const line = document.createElement('div');
+      line.className = 'cbv-failed';
+      const mark = document.createElement('span');
+      mark.className = 'cbv-failed-dot';
+      const words = document.createElement('span');
+      words.textContent = 'Failed to load';
+      line.append(mark, words);
+      el.append(line);
+    });
+  }
+  const who = (r) => `${r.study} ${r.subject}`;
+  const visitText = (r) => `${r.visit} visit, ${r.when} exposure, ${r.dataset}`;
+  return {MUTED, GRID, AXIS, REF, SURFACE, STEPS, fmt, num, has, status, rows, find, show, cell, color, frame,
+          measure, axis, gridX, gridY, refLine, dot, tooltip, pointer, nearest, chart, who, visitText};
+})();
+</script>
+
+<script>
+/* Tabs, legend keys, table sorting and the loop filter: listeners and attributes only. */
+(() => {
+  const open = (id) => {
+    let found = false;
+    for (const page of document.querySelectorAll('.cbv-page')) {
+      const on = page.id === id;
+      page.hidden = !on;
+      found = found || on;
+    }
+    if (!found) return false;
+    for (const tab of document.querySelectorAll('.cbv-tabs [data-tab]')) {
+      tab.setAttribute('aria-selected', String(tab.dataset.tab === id));
+    }
+    return true;
+  };
+  for (const nav of document.querySelectorAll('.cbv-tabs')) {
+    nav.addEventListener('click', (event) => {
+      const tab = event.target.closest('[data-tab]');
+      if (tab && open(tab.dataset.tab)) dash.setLink(tab.dataset.tab);
+    });
+  }
+  const named = location.hash.slice(1);
+  if (named && !open(named)) {
+    const place = document.getElementById(named);
+    const page = place ? place.closest('.cbv-page') : null;
+    if (page && open(page.id)) place.scrollIntoView();
+  }
+  for (const key of document.querySelectorAll('.cbv-key[data-series]')) {
+    const c = dash.colors[Number(key.dataset.series) % dash.colors.length];
+    if (key.dataset.ring || key.dataset.line) key.style.borderColor = c;
+    else key.style.background = c;
+    if (key.dataset.step) key.style.opacity = String(window.cbv.STEPS[Number(key.dataset.step)] || 1);
+  }
+  for (const table of document.querySelectorAll('.cbv-table')) {
+    table.addEventListener('click', (event) => {
+      const button = event.target.closest('.cbv-th-sort');
+      const th = button ? button.closest('th') : null;
+      if (!th) return;
+      const next = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+      for (const other of table.querySelectorAll('th[aria-sort]')) other.removeAttribute('aria-sort');
+      th.setAttribute('aria-sort', next);
+      dash.draw('rows');
+    });
+  }
+  for (const input of document.querySelectorAll('.cbv-search')) {
+    input.addEventListener('input', () => dash.draw('rows'));
+  }
+})();
+</script>
+
+<script>
+/* Numbers in the text, and the tables' rows. */
+dash.draw('n', (el) => {
+  el.textContent = window.cbv.show(window.cbv.cell(el), el.dataset.format);
+});
+
+dash.draw('rows', (body) => {
+  const cbv = window.cbv;
+  const table = body.closest('table');
+  if (!table) return;
+  const id = table.dataset.source;
+  body.replaceChildren();
+  if (cbv.status(id) !== 'ok' || (table.dataset.filter === 'near' && cbv.status('summary') !== 'ok')) return;
+  const columns = [...table.querySelectorAll('thead th[data-field]')].map((th) => ({
+    field: th.dataset.field, format: th.dataset.format, sort: th.getAttribute('aria-sort')}));
+  let data = cbv.rows(id).slice();
+  if (table.dataset.filter === 'near') {
+    const s = cbv.rows('summary')[0] || {};
+    data = data.filter((r) => cbv.has(r.snr) && +r.snr >= +s.near_low && +r.snr <= +s.near_high);
+  }
+  const search = table.dataset.search ? document.getElementById(table.dataset.search) : null;
+  const words = search ? search.value.trim().toLowerCase().split(/\s+/).filter(Boolean) : [];
+  if (words.length) {
+    data = data.filter((r) => {
+      const text = columns.map((c) => cbv.show(r[c.field], c.format)).join(' ').toLowerCase();
+      return words.every((w) => text.includes(w));
+    });
+  }
+  const sorted = columns.find((c) => c.sort === 'ascending' || c.sort === 'descending');
+  if (sorted) {
+    const numeric = sorted.format && sorted.format !== 'text' && sorted.format !== 'bool';
+    const value = (r) => (numeric ? (cbv.has(r[sorted.field]) ? +r[sorted.field] : null) : String(r[sorted.field] ?? ''));
+    data.sort((a, b) => {
+      const x = value(a), y = value(b);
+      if (x === null && y === null) return 0;
+      if (x === null) return 1;
+      if (y === null) return -1;
+      const order = numeric ? x - y : x.localeCompare(y, 'en', {numeric: true});
+      return sorted.sort === 'ascending' ? order : -order;
+    });
+  }
+  for (const r of data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = r.key;
+    for (const c of columns) {
+      const td = document.createElement('td');
+      td.textContent = cbv.show(r[c.field], c.format);
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+});
+</script>
+
+<script>
+/* Aim 1: the two visits, Bland-Altman and the sensitivity analyses. */
+(() => {
+  const cbv = window.cbv;
+
+  cbv.chart('visits', ['pairs'], (el) => {
+    const study = el.dataset.study;
+    const all = cbv.rows('pairs');
+    const values = all.flatMap((r) => [r.control_mm_s, r.active_mm_s]).filter(cbv.has).map(Number);
+    const mid = (r) => (cbv.has(r.mean_mm_s) ? +r.mean_mm_s
+      : cbv.has(r.control_mm_s) ? +r.control_mm_s : cbv.has(r.active_mm_s) ? +r.active_mm_s : Infinity);
+    const mine = all.filter((r) => r.study === study).sort((a, b) => mid(a) - mid(b) || a.subject.localeCompare(b.subject));
+    const rowH = 24, top = 4, bottom = 36;
+    const height = top + Math.max(1, mine.length) * rowH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const left = cbv.measure(svg, mine.map((r) => r.subject)) + 12;
+    const x = d3.scaleLinear([0, (d3.max(values) || 0.1) * 1.06], [left, width - 10]).nice();
+    cbv.gridX(svg, x, x.ticks(5), top, height - bottom);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 10).attr('y', height - 4)
+      .attr('text-anchor', 'end').text('Resting CBV, mm/s');
+    const tip = cbv.tooltip(el);
+    mine.forEach((r, i) => {
+      const y = top + i * rowH + rowH / 2;
+      const c = cbv.num(r.control_mm_s), a = cbv.num(r.active_mm_s);
+      const both = Number.isFinite(c) && Number.isFinite(a);
+      svg.append('text').attr('class', both ? 'cbv-tick-strong' : 'cbv-tick').attr('x', left - 8).attr('y', y)
+        .attr('dy', '0.32em').attr('text-anchor', 'end').text(r.subject);
+      if (both) {
+        svg.append('line').attr('x1', x(c)).attr('x2', x(a)).attr('y1', y).attr('y2', y)
+          .style('stroke', cbv.MUTED).style('stroke-width', 2).attr('stroke-linecap', 'round');
+      }
+      if (Number.isFinite(c)) cbv.dot(svg, x(c), y, cbv.color(0), false, 5);
+      if (Number.isFinite(a)) cbv.dot(svg, x(a), y, cbv.color(1), false, 5);
+      const lines = [[cbv.who(r)],
+        ['control visit', Number.isFinite(c) ? `${cbv.show(c, 'mm')} mm/s (${r.control_from})` : 'no value'],
+        ['active visit', Number.isFinite(a) ? `${cbv.show(a, 'mm')} mm/s (${r.active_from})` : 'no value']];
+      if (both) lines.push(['active − control', `${cbv.show(a - c, 'signed')} mm/s`]);
+      const hit = svg.append('rect').attr('x', 0).attr('y', y - rowH / 2).attr('width', width).attr('height', rowH)
+        .style('fill', 'transparent').attr('tabindex', 0).attr('aria-label', lines.map((l) => l.join(' ')).join('; '));
+      const at = () => (Number.isFinite(a) ? x(a) : Number.isFinite(c) ? x(c) : left);
+      hit.on('pointermove', (event) => {
+        const p = cbv.pointer(el, svg, width, event);
+        tip.show(lines, p.px, p.py);
+      }).on('pointerleave', () => tip.hide())
+        .on('focus', () => {
+          const scale = (el.clientWidth || width) / width;
+          tip.show(lines, at() * scale, y * scale);
+        }).on('blur', () => tip.hide());
+    });
+  });
+
+  cbv.chart('ba', ['pairs', 'aim1'], (el) => {
+    const study = el.dataset.study;
+    const both = cbv.rows('pairs').filter((r) => cbv.has(r.diff_mm_s) && cbv.has(r.mean_mm_s));
+    const mine = both.filter((r) => r.study === study);
+    const s = cbv.find('aim1', `key=primary ${study}`) || {};
+    const limits = cbv.rows('aim1').filter((r) => r.analysis === 'primary')
+      .flatMap((r) => [r.ba_loa_low, r.ba_loa_high, r.ba_bias]).filter(cbv.has).map(Number);
+    const ys = both.map((r) => +r.diff_mm_s).concat(limits, [0]);
+    const [low, high] = d3.extent(ys);
+    const pad = (high - low) * 0.1 || 0.01;
+    const height = 270, top = 22, bottom = 36;
+    const {svg, width} = cbv.frame(el, height);
+    const marks = [['bias', s.ba_bias, false], ['+1.96 SD', s.ba_loa_high, true], ['−1.96 SD', s.ba_loa_low, true]]
+      .filter(([, v]) => cbv.has(v));
+    const right = cbv.measure(svg, marks.map(([k, v]) => `${k} ${cbv.show(v, 'signed')}`)) + 10;
+    const y = d3.scaleLinear([low - pad, high + pad], [height - bottom, top]).nice();
+    const left = cbv.measure(svg, y.ticks(5).map(y.tickFormat(5))) + 12;
+    const x = d3.scaleLinear([0, (d3.max(both, (r) => +r.mean_mm_s) || 0.1) * 1.06], [left, width - right]).nice();
+    cbv.gridY(svg, y, y.ticks(5), left, width - right);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(4).tickSizeOuter(0)));
+    cbv.axis(svg.append('g').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', left).attr('y', 10).text('Active − control, mm/s');
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - right).attr('y', height - 4)
+      .attr('text-anchor', 'end').text('Mean of the two visits, mm/s');
+    svg.append('line').attr('x1', left).attr('x2', width - right).attr('y1', y(0)).attr('y2', y(0))
+      .style('stroke', cbv.AXIS).style('stroke-width', 1);
+    const placed = [];
+    for (const [label, value, dashed] of marks) {
+      cbv.refLine(svg, left, width - right, y(+value), y(+value), dashed);
+      let at = y(+value);
+      for (const other of placed) if (Math.abs(other - at) < 12) at = other + (at >= other ? 12 : -12);
+      placed.push(at);
+      svg.append('text').attr('class', 'cbv-tick').attr('x', width - right + 6).attr('y', at).attr('dy', '0.32em')
+        .text(`${label} ${cbv.show(value, 'signed')}`);
+    }
+    const points = mine.map((r) => ({x: x(+r.mean_mm_s), y: y(+r.diff_mm_s), lines: [[cbv.who(r)],
+      ['active − control', `${cbv.show(r.diff_mm_s, 'signed')} mm/s`],
+      ['mean of the visits', `${cbv.show(r.mean_mm_s, 'mm')} mm/s`],
+      ['control, active', `${cbv.show(r.control_mm_s, 'mm')}, ${cbv.show(r.active_mm_s, 'mm')}`]]}));
+    for (const p of points) cbv.dot(svg, p.x, p.y, cbv.color(0), false, 5);
+    cbv.nearest(el, svg, width, height, points, 24);
+  });
+
+  cbv.chart('forest', ['aim1'], (el) => {
+    const cv = el.dataset.metric === 'cv';
+    const spec = cv ? {v: 'cv_percent', lo: 'cv_ci_low', hi: 'cv_ci_high', f: 'pct', unit: '%'}
+      : {v: 'icc_a1', lo: 'icc_a1_ci_low', hi: 'icc_a1_ci_high', f: 'r2', unit: ''};
+    const data = cbv.rows('aim1').slice().sort((a, b) => a.study.localeCompare(b.study) || a.order - b.order);
+    const lines = [];
+    let last = null;
+    for (const r of data) {
+      if (r.study !== last) { lines.push({header: r.study}); last = r.study; }
+      lines.push(r);
+    }
+    const rowH = 22, top = 4, bottom = 36;
+    const height = top + lines.length * rowH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const left = cbv.measure(svg, data.map((r) => r.short).concat(['ESMOKE', 'ISMOKE'])) + 14;
+    const right = cbv.measure(svg, data.map((r) => `n ${cbv.show(r.participants, 'int')}`)) + 14;
+    const values = data.flatMap((r) => [r[spec.v], r[spec.lo], r[spec.hi]]).filter(cbv.has).map(Number);
+    /* Intervals from two participants run far off (a CV to over 1000%, an ICC below -1): the scale stops
+       at CV_CAP and at -1, and such an interval ends in an arrow. */
+    const CV_CAP = 200;
+    const domain = cv ? [0, Math.min(CV_CAP, Math.max(10, d3.max(values) || 10))]
+      : [Math.max(-1, Math.min(0, d3.min(values) ?? 0)), 1];
+    const x = d3.scaleLinear(domain, [left, width - right]).nice();
+    const [d0, d1] = x.domain();
+    cbv.gridX(svg, x, x.ticks(5), top, height - bottom);
+    if (!cv) cbv.refLine(svg, x(0), x(0), top, height - bottom, false);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - right).attr('y', height - 4)
+      .attr('text-anchor', 'end').text(cv ? 'Within-subject CV, %' : 'ICC(A,1)');
+    const tip = cbv.tooltip(el);
+    lines.forEach((r, i) => {
+      const y = top + i * rowH + rowH / 2;
+      if (r.header) {
+        svg.append('text').attr('class', 'cbv-tick-strong').attr('x', 0).attr('y', y).attr('dy', '0.32em').text(r.header);
+        return;
+      }
+      svg.append('text').attr('class', 'cbv-tick').attr('x', left - 8).attr('y', y).attr('dy', '0.32em')
+        .attr('text-anchor', 'end').text(r.short);
+      svg.append('text').attr('class', 'cbv-tick').attr('x', width - right + 8).attr('y', y).attr('dy', '0.32em')
+        .text(`n ${cbv.show(r.participants, 'int')}`);
+      const primary = r.analysis === 'primary';
+      if (cbv.has(r[spec.lo]) && cbv.has(r[spec.hi])) {
+        const lo = +r[spec.lo], hi = +r[spec.hi];
+        svg.append('line').attr('x1', x(Math.max(d0, lo))).attr('x2', x(Math.min(d1, hi)))
+          .attr('y1', y).attr('y2', y).style('stroke', cbv.color(0)).style('stroke-width', 2)
+          .attr('stroke-linecap', 'round');
+        if (hi > d1) svg.append('path').attr('d', `M${x(d1) + 2},${y}l-7,-4.5v9Z`).style('fill', cbv.color(0));
+        if (lo < d0) svg.append('path').attr('d', `M${x(d0) - 2},${y}l7,-4.5v9Z`).style('fill', cbv.color(0));
+      }
+      if (cbv.has(r[spec.v]) && +r[spec.v] >= d0 && +r[spec.v] <= d1) cbv.dot(svg, x(+r[spec.v]), y, cbv.color(0), !primary, 5);
+      const text = [[`${r.study}: ${r.label}`],
+        [cv ? 'within-subject CV' : 'ICC(A,1)', `${cbv.show(r[spec.v], spec.f)}${spec.unit}`],
+        ['95% interval', `${cbv.show(r[spec.lo], spec.f)} to ${cbv.show(r[spec.hi], spec.f)}${spec.unit}`],
+        ['participants', cbv.show(r.participants, 'int')]];
+      svg.append('rect').attr('x', 0).attr('y', y - rowH / 2).attr('width', width).attr('height', rowH)
+        .style('fill', 'transparent')
+        .on('pointermove', (event) => { const p = cbv.pointer(el, svg, width, event); tip.show(text, p.px, p.py); })
+        .on('pointerleave', () => tip.hide());
+    });
+  });
+})();
+</script>
+
+<script>
+/* Signal-to-noise: the funnel, every loop's score, outcomes, sources and the sweep. */
+(() => {
+  const cbv = window.cbv;
+
+  /* A horizontal bar from `x0`, rounded at its data end only. */
+  const bar = (svg, x0, y, w, h, fill, opacity) => {
+    const r = Math.min(4, w / 2, h / 2);
+    const x1 = x0 + Math.max(0, w);
+    const path = w <= 0 ? '' : `M${x0},${y}H${x1 - r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 - r},${y + h}H${x0}Z`;
+    return svg.append('path').attr('d', path).style('fill', fill).style('fill-opacity', opacity == null ? 1 : opacity);
+  };
+
+  cbv.chart('funnel', ['counts'], (el) => {
+    const data = cbv.rows('counts').filter((r) => r.group === 'funnel');
+    const levels = [...new Set(data.map((r) => r.level))];
+    const barH = 14, labelH = 16, stage = 8, titleH = 22, gap = 18;
+    const blocks = levels.map((level) => data.filter((r) => r.level === level).sort((a, b) => a.order - b.order));
+    const height = blocks.reduce((sum, b) => sum + titleH + b.length * (labelH + barH + stage) + gap, 0);
+    const {svg, width} = cbv.frame(el, height);
+    const valueText = (r) => `${cbv.show(r.total, 'int')}  (ESMOKE ${cbv.show(r.esmoke, 'int')} · ISMOKE ${cbv.show(r.ismoke, 'int')})`;
+    const right = cbv.measure(svg, data.map(valueText)) + 10;
+    const tip = cbv.tooltip(el);
+    let y = 0;
+    blocks.forEach((rows, b) => {
+      svg.append('text').attr('class', 'cbv-tick-strong').attr('x', 0).attr('y', y + 14).text(levels[b]);
+      y += titleH;
+      const x = d3.scaleLinear([0, Math.max(1, +rows[0].total)], [0, Math.max(40, width - right)]);
+      rows.forEach((r, i) => {
+        const lost = i ? +rows[i - 1].total - +r.total : 0;
+        svg.append('text').attr('class', 'cbv-tick').attr('x', 0).attr('y', y + 11)
+          .text(lost > 0 ? `${r.label}  −${cbv.show(lost, 'int')}` : r.label);
+        y += labelH;
+        bar(svg, 0, y, x(+r.total), barH, cbv.color(0), i === rows.length - 1 ? 1 : 0.55);
+        svg.append('text').attr('class', 'cbv-tick').attr('x', x(+r.total) + 6).attr('y', y + barH / 2)
+          .attr('dy', '0.32em').text(valueText(r));
+        const lines = [[`${levels[b]}: ${r.label}`], ['in all', cbv.show(r.total, 'int')],
+          ['ESMOKE', cbv.show(r.esmoke, 'int')], ['ISMOKE', cbv.show(r.ismoke, 'int')]];
+        if (lost > 0) lines.push(['fewer than the step before', cbv.show(lost, 'int')]);
+        const top = y - labelH;
+        svg.append('rect').attr('x', 0).attr('y', top).attr('width', width).attr('height', labelH + barH + stage)
+          .style('fill', 'transparent')
+          .on('pointermove', (event) => { const p = cbv.pointer(el, svg, width, event); tip.show(lines, p.px, p.py); })
+          .on('pointerleave', () => tip.hide());
+        y += barH + stage;
+      });
+      y += gap;
+    });
+  });
+
+  /* A stable jitter from a row's key, so the dots stay put between draws. */
+  const jitter = (key) => {
+    let h = 2166136261;
+    for (const ch of String(key)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+    return ((h >>> 0) % 1000) / 1000 - 0.5;
+  };
+  const RANKS = [[1, 'loop1, reference'], [2, 'loop2'], [3, 'loop3']];
+  const logTicks = (domain) => [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].filter((t) => t >= domain[0] && t <= domain[1]);
+
+  cbv.chart('snr-strip', ['loops', 'summary'], (el) => {
+    const s = cbv.rows('summary')[0] || {};
+    const data = cbv.rows('loops').filter((r) => cbv.has(r.snr) && +r.snr > 0);
+    const bandH = 62, top = 20, bottom = 36;
+    const height = top + RANKS.length * bandH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const left = cbv.measure(svg, RANKS.map(([, label]) => label)) + 12;
+    const lo = Math.min(1, d3.min(data, (r) => +r.snr) || 1), hi = Math.max(20, (d3.max(data, (r) => +r.snr) || 20) * 1.15);
+    const x = d3.scaleLog([lo, hi], [left, width - 12]);
+    const ticks = logTicks(x.domain());
+    cbv.gridX(svg, x, ticks, top, height - bottom);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).tickValues(ticks).tickFormat(d3.format('~g')).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 12).attr('y', height - 4).attr('text-anchor', 'end')
+      .text('Signal-to-noise (log scale)');
+    for (const [value, dashed] of [[s.snr_low, true], [s.snr_threshold, false], [s.snr_high, true]]) {
+      if (!cbv.has(value)) continue;
+      cbv.refLine(svg, x(+value), x(+value), top - 4, height - bottom, dashed);
+      svg.append('text').attr('class', dashed ? 'cbv-tick' : 'cbv-tick-strong').attr('x', x(+value)).attr('y', top - 8)
+        .attr('text-anchor', 'middle').text(cbv.show(value, 'g'));
+    }
+    const points = [];
+    RANKS.forEach(([rank, label], i) => {
+      const mid = top + i * bandH + bandH / 2;
+      svg.append('text').attr('class', 'cbv-tick').attr('x', left - 8).attr('y', mid).attr('dy', '0.32em')
+        .attr('text-anchor', 'end').text(label);
+      for (const r of data.filter((d) => +d.rank === rank)) {
+        const counted = r.counted === true || r.counted === 'true';
+        const p = {x: x(+r.snr), y: mid + jitter(r.key) * bandH * 0.72, counted, lines: [[`${cbv.who(r)}, ${cbv.visitText(r)}`],
+          ['signal-to-noise', cbv.show(r.snr, 'snr')], ['outcome', r.outcome],
+          ...(counted ? [['velocity', `${cbv.show(r.speed_mm_s, 'mm')} mm/s`]] : [])]};
+        points.push(p);
+      }
+    });
+    for (const p of points.filter((q) => !q.counted)) cbv.dot(svg, p.x, p.y, cbv.MUTED, false, 4);
+    for (const p of points.filter((q) => q.counted)) cbv.dot(svg, p.x, p.y, cbv.color(0), false, 4);
+    cbv.nearest(el, svg, width, height, points, 16);
+  });
+
+  const stacked = (el, rows, levels, series, rightText) => {
+    const barH = 18, rowH = 34, top = 4, bottom = 8;
+    const height = top + levels.length * rowH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const labels = levels.map((l) => l.label);
+    const left = cbv.measure(svg, labels) + 12;
+    const right = cbv.measure(svg, levels.map(rightText)) + 12;
+    const totals = levels.map((l) => d3.sum(rows.filter((r) => r.level === l.level), (r) => +r[l.column]));
+    const x = d3.scaleLinear([0, Math.max(1, d3.max(totals))], [left, width - right]);
+    const tip = cbv.tooltip(el);
+    levels.forEach((l, i) => {
+      const y = top + i * rowH + (rowH - barH) / 2;
+      svg.append('text').attr('class', 'cbv-tick').attr('x', left - 8).attr('y', y + barH / 2).attr('dy', '0.32em')
+        .attr('text-anchor', 'end').text(l.label);
+      let at = 0;
+      const parts = series.map((sr) => ({sr, n: +((rows.find((r) => r.level === l.level && r.label === sr.label) || {})[l.column] || 0)}))
+        .filter((p) => p.n > 0);
+      parts.forEach((p, k) => {
+        const x0 = x(at), x1 = x(at + p.n);
+        const last = k === parts.length - 1;
+        const w = Math.max(1, x1 - x0 - (last ? 0 : 2));
+        const rect = last ? bar(svg, x0, y, w, barH, p.sr.fill, p.sr.opacity)
+          : svg.append('rect').attr('x', x0).attr('y', y).attr('width', w).attr('height', barH)
+            .style('fill', p.sr.fill).style('fill-opacity', p.sr.opacity == null ? 1 : p.sr.opacity);
+        const lines = [[`${l.label}: ${p.sr.name}`], ['loops or recordings', cbv.show(p.n, 'int')],
+          ['share', `${cbv.show(100 * p.n / totals[i], 'pct')}%`]];
+        rect.on('pointermove', (event) => { const q = cbv.pointer(el, svg, width, event); tip.show(lines, q.px, q.py); })
+          .on('pointerleave', () => tip.hide());
+        at += p.n;
+      });
+      svg.append('text').attr('class', 'cbv-tick').attr('x', x(totals[i]) + 8).attr('y', y + barH / 2).attr('dy', '0.32em')
+        .text(rightText(l));
+    });
+  };
+
+  cbv.chart('outcomes', ['counts', 'summary'], (el) => {
+    const s = cbv.rows('summary')[0] || {};
+    const rows = cbv.rows('counts').filter((r) => r.group === 'outcome');
+    const names = [...new Map(rows.slice().sort((a, b) => a.order - b.order).map((r) => [r.label, r.order])).keys()];
+    const series = names.map((label, i) => ({label, name: label, fill: cbv.color(i)}));
+    const levels = [1, 2, 3].map((n) => ({level: `loop${n}`, label: n === 1 ? 'loop1, reference' : `loop${n}`, column: 'total', n}));
+    stacked(el, rows, levels, series, (l) => `${cbv.show(s[`counted_rank${l.n}`], 'int')} of ${cbv.show(s[`placed_rank${l.n}`], 'int')} count`);
+  });
+
+  cbv.chart('sources', ['counts'], (el) => {
+    const rows = cbv.rows('counts').filter((r) => r.group === 'source');
+    const flat = [];
+    for (const study of ['ESMOKE', 'ISMOKE']) {
+      for (const when of ['before', 'after']) {
+        for (const r of rows.filter((q) => q.level === when)) {
+          flat.push({level: `${study} ${when}`, label: r.label, n: r[study.toLowerCase()]});
+        }
+      }
+    }
+    const series = [['loop1', 'loop1, reference', 1], ['loop2', 'loop2', 2], ['loop3', 'loop3', 3]]
+      .map(([label, name, step]) => ({label, name, fill: cbv.color(0), opacity: cbv.STEPS[step]}))
+      .concat([{label: 'none', name: 'no value', fill: cbv.MUTED}]);
+    const levels = ['ESMOKE before', 'ESMOKE after', 'ISMOKE before', 'ISMOKE after']
+      .map((level) => ({level, label: `${level} exposure`, column: 'n'}));
+    stacked(el, flat, levels, series, (l) => {
+      const mine = flat.filter((r) => r.level === l.level);
+      const all = d3.sum(mine, (r) => +r.n), none = d3.sum(mine.filter((r) => r.label === 'none'), (r) => +r.n);
+      return `${cbv.show(all - none, 'int')} of ${cbv.show(all, 'int')} with a value`;
+    });
+  });
+
+  const PANELS = {
+    loops: {series: [['loops_counted', 'loops counted', 0]], format: 'int', zero: true},
+    recordings: {series: [['recordings_with_value', 'recordings with a value', 0]], format: 'int', zero: true},
+    participants: {series: [['ESMOKE_participants', 'ESMOKE', 0], ['ISMOKE_participants', 'ISMOKE', 1]], format: 'int', zero: true},
+    cv: {series: [['ESMOKE_cv_percent', 'ESMOKE', 0], ['ISMOKE_cv_percent', 'ISMOKE', 1]], format: 'pct', zero: true},
+    icc: {series: [['ESMOKE_icc_a1', 'ESMOKE', 0], ['ISMOKE_icc_a1', 'ISMOKE', 1]], format: 'r2', zero: true, top: 1},
+    aim2: {series: [['ESMOKE_aim2_complete', 'ESMOKE', 0], ['ISMOKE_aim2_complete', 'ISMOKE', 1]], format: 'int', zero: true},
+  };
+
+  cbv.chart('sweep', ['sweep', 'summary'], (el) => {
+    const spec = PANELS[el.dataset.panel];
+    if (!spec) return;
+    const s = cbv.rows('summary')[0] || {};
+    const data = cbv.rows('sweep').slice().sort((a, b) => +a.threshold - +b.threshold);
+    const height = 190, top = 10, bottom = 36;
+    const {svg, width} = cbv.frame(el, height);
+    const values = data.flatMap((r) => spec.series.map(([f]) => r[f])).filter(cbv.has).map(Number);
+    let [low, high] = d3.extent(values.length ? values : [0, 1]);
+    if (spec.zero) low = Math.min(0, low);
+    if (spec.top) high = Math.max(high, spec.top);
+    if (high === low) high = low + 1;
+    const y = d3.scaleLinear([low, high], [height - bottom, top]).nice();
+    const yFormat = spec.format === 'r2' ? d3.format('.1f') : d3.format('~s');
+    const left = cbv.measure(svg, y.ticks(4).map(yFormat)) + 10;
+    const x = d3.scaleLinear(d3.extent(data, (r) => +r.threshold), [left, width - 10]);
+    cbv.gridY(svg, y, y.ticks(4), left, width - 10);
+    for (const [value, dashed] of [[s.snr_low, true], [s.snr_threshold, false], [s.snr_high, true]]) {
+      if (cbv.has(value)) cbv.refLine(svg, x(+value), x(+value), top, height - bottom, dashed);
+    }
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(6).tickFormat(d3.format('~g')).tickSizeOuter(0)));
+    cbv.axis(svg.append('g').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).ticks(4).tickFormat(yFormat).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 10).attr('y', height - 4).attr('text-anchor', 'end')
+      .text('Signal-to-noise threshold');
+    for (const [field, , i] of spec.series) {
+      const line = d3.line().defined((r) => cbv.has(r[field])).x((r) => x(+r.threshold)).y((r) => y(+r[field]));
+      svg.append('path').attr('d', line(data)).style('fill', 'none').style('stroke', cbv.color(i))
+        .style('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+      const at = data.find((r) => +r.threshold === +s.snr_threshold);
+      if (at && cbv.has(at[field])) cbv.dot(svg, x(+at.threshold), y(+at[field]), cbv.color(i), false, 4);
+    }
+    const tip = cbv.tooltip(el);
+    const rule = svg.append('line').attr('y1', top).attr('y2', height - bottom).style('stroke', 'var(--color-fg)')
+      .style('stroke-width', 1).attr('visibility', 'hidden');
+    svg.append('rect').attr('x', left).attr('y', top).attr('width', Math.max(0, width - 10 - left))
+      .attr('height', height - bottom - top).style('fill', 'transparent')
+      .on('pointermove', (event) => {
+        const p = cbv.pointer(el, svg, width, event);
+        const r = data.reduce((best, d) => (Math.abs(x(+d.threshold) - p.x) < Math.abs(x(+best.threshold) - p.x) ? d : best), data[0]);
+        if (!r) return;
+        rule.attr('x1', x(+r.threshold)).attr('x2', x(+r.threshold)).attr('visibility', 'visible');
+        tip.show([[`Threshold ${cbv.show(r.threshold, 'g')}`], ...spec.series.map(([field, name]) => [name, cbv.show(r[field], spec.format)])],
+          p.px, p.py);
+      })
+      .on('pointerleave', () => { rule.attr('visibility', 'hidden'); tip.hide(); });
+  });
+})();
+</script>
+
+<script>
+/* Quality of the lines: length against signal-to-noise, the two halves, and loops of one recording. */
+(() => {
+  const cbv = window.cbv;
+
+  cbv.chart('length-snr', ['loops', 'summary'], (el) => {
+    const s = cbv.rows('summary')[0] || {};
+    const data = cbv.rows('loops').filter((r) => cbv.has(r.snr) && +r.snr > 0 && cbv.has(r.length_mm));
+    const height = 280, top = 10, bottom = 36;
+    const {svg, width} = cbv.frame(el, height);
+    const lo = Math.min(1, d3.min(data, (r) => +r.snr) || 1), hi = Math.max(20, (d3.max(data, (r) => +r.snr) || 20) * 1.15);
+    const y = d3.scaleLog([lo, hi], [height - bottom, top]);
+    const ticks = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].filter((t) => t >= lo && t <= hi);
+    const left = cbv.measure(svg, ticks.map(d3.format('~g'))) + 12;
+    const x = d3.scaleLinear([0, (d3.max(data, (r) => +r.length_mm) || 1) * 1.05], [left, width - 10]).nice();
+    cbv.gridY(svg, y, ticks, left, width - 10);
+    if (cbv.has(s.snr_threshold)) cbv.refLine(svg, left, width - 10, y(+s.snr_threshold), y(+s.snr_threshold), false);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    cbv.axis(svg.append('g').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).tickValues(ticks).tickFormat(d3.format('~g')).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 10).attr('y', height - 4).attr('text-anchor', 'end')
+      .text('Line length, mm');
+    const points = data.map((r) => ({x: x(+r.length_mm), y: y(+r.snr), counted: r.counted === true || r.counted === 'true',
+      lines: [[`${cbv.who(r)}, ${cbv.visitText(r)}`], ['signal-to-noise', cbv.show(r.snr, 'snr')],
+        ['length', `${cbv.show(r.length_mm, 'mm2')} mm`], ['outcome', r.outcome]]}));
+    for (const p of points.filter((q) => !q.counted)) cbv.dot(svg, p.x, p.y, cbv.MUTED, false, 4);
+    for (const p of points.filter((q) => q.counted)) cbv.dot(svg, p.x, p.y, cbv.color(0), false, 4);
+    cbv.nearest(el, svg, width, height, points, 16);
+  });
+
+  cbv.chart('halves', ['loops'], (el) => {
+    const data = cbv.rows('loops').filter((r) => (r.counted === true || r.counted === 'true')
+      && cbv.has(r.first_half_mm_s) && cbv.has(r.second_half_mm_s));
+    const height = 280, top = 10, bottom = 36;
+    const {svg, width} = cbv.frame(el, height);
+    const max = (d3.max(data.flatMap((r) => [+r.first_half_mm_s, +r.second_half_mm_s])) || 0.1) * 1.06;
+    const y = d3.scaleLinear([0, max], [height - bottom, top]).nice();
+    const left = cbv.measure(svg, y.ticks(5).map(y.tickFormat(5))) + 12;
+    const x = d3.scaleLinear(y.domain(), [left, width - 10]);
+    cbv.gridY(svg, y, y.ticks(5), left, width - 10);
+    cbv.refLine(svg, x(0), x(y.domain()[1]), y(0), y(y.domain()[1]), true);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    cbv.axis(svg.append('g').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 10).attr('y', height - 4).attr('text-anchor', 'end')
+      .text('First half, mm/s');
+    svg.append('text').attr('class', 'cbv-tick').attr('x', left + 6).attr('y', top + 10).text('Second half, mm/s');
+    const points = data.map((r) => ({x: x(+r.first_half_mm_s), y: y(+r.second_half_mm_s),
+      lines: [[`${cbv.who(r)}, ${cbv.visitText(r)}`], ['first half', `${cbv.show(r.first_half_mm_s, 'mm')} mm/s`],
+        ['second half', `${cbv.show(r.second_half_mm_s, 'mm')} mm/s`], ['whole rest', `${cbv.show(r.speed_mm_s, 'mm')} mm/s`]]}));
+    for (const p of points) cbv.dot(svg, p.x, p.y, cbv.color(0), false, 4.5);
+    cbv.nearest(el, svg, width, height, points, 18);
+  });
+
+  cbv.chart('spread', ['loops'], (el) => {
+    const counted = cbv.rows('loops').filter((r) => (r.counted === true || r.counted === 'true') && cbv.has(r.speed_mm_s));
+    const groups = d3.groups(counted, (r) => r.recording_key).filter(([, rows]) => rows.length >= 2)
+      .map(([key, rows]) => ({key, rows, mean: d3.mean(rows, (r) => +r.speed_mm_s)}))
+      .sort((a, b) => a.mean - b.mean);
+    const rowH = 20, top = 4, bottom = 36;
+    const height = top + Math.max(1, groups.length) * rowH + bottom;
+    const {svg, width} = cbv.frame(el, height);
+    const label = (g) => `${g.rows[0].study} ${g.rows[0].subject} · ${g.rows[0].visit} · ${g.rows[0].when}`;
+    const left = cbv.measure(svg, groups.map(label)) + 12;
+    const x = d3.scaleLinear([0, (d3.max(counted, (r) => +r.speed_mm_s) || 0.1) * 1.06], [left, width - 10]).nice();
+    cbv.gridX(svg, x, x.ticks(5), top, height - bottom);
+    cbv.axis(svg.append('g').attr('transform', `translate(0,${height - bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0)));
+    svg.append('text').attr('class', 'cbv-tick').attr('x', width - 10).attr('y', height - 4).attr('text-anchor', 'end')
+      .text('Velocity, mm/s');
+    const points = [];
+    groups.forEach((g, i) => {
+      const y = top + i * rowH + rowH / 2;
+      svg.append('text').attr('class', 'cbv-tick').attr('x', left - 8).attr('y', y).attr('dy', '0.32em')
+        .attr('text-anchor', 'end').text(label(g));
+      const [lo, hi] = d3.extent(g.rows, (r) => +r.speed_mm_s);
+      svg.append('line').attr('x1', x(lo)).attr('x2', x(hi)).attr('y1', y).attr('y2', y)
+        .style('stroke', cbv.MUTED).style('stroke-width', 2).attr('stroke-linecap', 'round');
+      for (const r of g.rows.slice().sort((a, b) => (a.is_value === true) - (b.is_value === true))) {
+        const value = r.is_value === true || r.is_value === 'true';
+        cbv.dot(svg, x(+r.speed_mm_s), y, cbv.color(0), !value, 4.5);
+        points.push({x: x(+r.speed_mm_s), y, lines: [[`${cbv.who(r)}, ${cbv.visitText(r)}`],
+          ['velocity', `${cbv.show(r.speed_mm_s, 'mm')} mm/s`], ['signal-to-noise', cbv.show(r.snr, 'snr')],
+          ['the recording’s value', value ? 'yes' : 'no']]});
+      }
+    });
+    cbv.nearest(el, svg, width, height, points, 14);
+  });
+})();
+</script>

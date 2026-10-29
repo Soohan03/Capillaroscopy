@@ -126,6 +126,44 @@ a second observer code (for example `SJ-R`), also blind. Compared:
 - its velocity;
 - the recording's value.
 
+## Fixed before unblinding
+
+Found with `--progress` once every recording had been placed, and fixed without a result
+being looked at:
+
+- **29 lines on 13 recordings had been saved without the whole-loop role** (11:58–12:12).
+  Returning to a recording seen before restored the role of its try-out line (none), and every
+  new line kept it. They had been placed as this protocol asks, round whole loops over the
+  official rest in the order of the ranking. They were re-saved as whole loops (`set1` →
+  `loop1`, …) from their own points and space-time diagrams
+  (`analysis/primary_endpoint/relabel_whole_loops.py`); the 3-s blocks and every number of the
+  pooled pattern shift came out exactly as saved. Nothing was placed again. Since then the app
+  saves every line as a whole loop during blind placement.
+- **A recording skipped by mistake** (ISMOKE FP19 Sföre) was placed, still blind, at 12:37.
+- **Not used:** two try-out lines placed while trying the app, before blind placement was switched
+  on (09:56 and 09:59, measured over the whole video, on ESMOKE FP01 Qefter_försök2 and FP01
+  Qföre). Their results could be seen. The study's loops on both recordings were placed blind
+  later, on other capillaries (no overlap with the try-out lines). They are not whole loops, so
+  the analysis does not read them.
+- **No line possible:** ESMOKE FP03 Wefter. Its picture moved more than the frame is high during
+  the rest, so no line stays in the picture over the whole rest. It counts as missing.
+
+## Unblinding
+
+On 2026-10-29 at 13:07, after 200 whole loops had been placed on 89 of the 90 recordings
+(10:13–12:37). Results: `analysis/primary_endpoint/` and its report.
+
+## Added after unblinding
+
+These describe the results further; none changes a value or a statistic fixed above.
+
+- 95% intervals for the typical error and the CV (chi-square, n − 1 degrees of freedom), for the
+  limits of agreement (Bland & Altman 1999), the Bland–Altman slope, and the limits as ratios.
+- The signal-to-noise threshold swept from 4 to 14, beside the protocol's 7 and 9.
+- The quality of the lines (shape, clearance, the two halves of the rest, the two limbs, loops of
+  one recording) and where each recording's value comes from.
+- Exploratory: the second visit against the first, by date.
+
 ## Changes after unblinding
 
 None yet.
