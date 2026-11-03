@@ -6,6 +6,146 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-11-03 — Three checks saved: a whole loop's two limbs, före against efter, the statistics report's numbers
+
+**Branch:** `analysis/limb-speeds-and-fields`, from `main` at b776eb4 (PR #31 merged). One commit holds the
+three folders, CLAUDE.md and this entry; a follow-up notes its hash.
+
+**Why.** On the Mac, two sessions prepared material for the user's supervisor. It lives on claude.ai, not
+here:
+
+- a briefing on the method, its accuracy and the aims (2026-10-23,
+  https://claude.ai/artifact/Fx2v26VzfoaK4mwUSgnyYJ). It was written from the code of 2026-10-14, before the
+  protocol.
+- the report "Statistics for Aims 1 and 2" (today, https://claude.ai/artifact/C719bwNfWzSPfh7mEVidvp). It
+  explains every test of `PROTOCOL.md`.
+
+Their checks ran as scratch scripts. Asked whether all results were in the repository, Claude Code found
+they were not, and the user asked for them to be saved here. The Mac's checkout was also 26 commits behind
+(PRs #26–#31); `main` was fast-forwarded to b776eb4 first. The statistics report had been drafted from the
+old checkout, so it described aim 2's superseded plan; it was rewritten from the protocol after this
+commit.
+
+**In short:**
+- `analysis/whole_loop_limbs/`: a whole loop's velocity is that of its dominant limb, not the mean of its
+  two limbs. In these loops that is mostly the venous one. An arterial limb alone has much less signal, and
+  it is the fainter limb.
+- `analysis/fore_efter_fields/`: on the Mac's copies of three visits, före and efter show different
+  capillaries.
+- `analysis/statistics_report/`: every number of the statistics report, step by step, from the protocol's
+  own functions.
+- CLAUDE.md: two Known issues, and where the pixel size comes from.
+
+### A whole loop with two limb speeds (`analysis/whole_loop_limbs/two_speeds.py`)
+
+- **Why it was open.** `capillary.simulate` moves its cells at one speed all round the loop, so the whole
+  loop had only been tested with both limbs alike. In a real loop the venous limb is usually wider and
+  slower.
+- **Method.** Space-time diagrams of a whole-loop line, built directly:
+  - the arterial half at 3 px/frame, the venous half at 1, 0.75 or 0.5 times that;
+  - two models of the venous pattern: the arterial pattern compressed (the same flux in a slower limb),
+    or a pattern of its own;
+  - motion blur over the frame or none, optical blur of 1.2 px, the same-moment darkening and jitter of
+    `capillary.simulate`, and noise of 1.3–10 grey levels;
+  - 60 s per clip, 144 clips, each measured as the app measures a whole loop (the line and each half).
+- **Results** (what the whole loop read, px/frame):
+  - equal halves of 80 px: 2.95–2.98 at the same speed; 2.34–2.61 with the venous limb 25% slower (the
+    mean of the limbs 2.62); 1.51–1.56 at half the speed (venous 1.50, mean 2.25);
+  - venous half longer (60 + 100 px): 2.29–2.36 and 1.51–1.53;
+  - arterial half longer: 100 + 60 px gave 2.73–2.86 and 1.54–2.96 (either limb, by model); 120 + 40 px
+    gave 2.88–2.92 and 2.94–2.97, the arterial speed;
+  - without motion blur: 2.33–2.67 and 1.50–1.55. With the venous limb 1.5 times as dark: 2.27–2.33 and
+    1.49–1.53.
+- **So** the whole loop locks on to the limb that carries the stronger signal. A likely cause, not proven:
+  the slower pattern stays in its half of the line for more frames and adds more matching pairs to the
+  pooled comparison.
+
+### The two limbs on the recordings (`analysis/whole_loop_limbs/real_limbs.py`)
+
+The aim-1 check's lines (`analysis/aim1_feasibility/restabilized/`, placed by Claude Code during method
+development, not the study's blind lines):
+
+- **11 counted whole loops** with both limbs' own best speeds (score 5 or more) running opposite ways:
+  - the whole loop lay nearer the venous limb in 7;
+  - the arterial limb ran a median 1.10 times the venous (0.75–1.53); the whole loop ran 0.94 times the
+    limbs' mean;
+  - in the 5 with the arterial limb at least 1.2 times the venous, the whole loop read 0.5–12% above the
+    venous limb and 9–31% below the arterial.
+- **23 counted whole loops,** their two limbs side by side:
+  - the whole loop scored a median 2.7 times its arterial limb alone (quartiles 2.0–3.4);
+  - arterial limbs scored a median 6.0, under 8, and 5 more scored 5 to under 8;
+  - the arterial limb was the fainter on the resting image in 17 of 23 (sign test p = 0.035, `on_ridge`
+    0.56 against 0.64), and scored lower in 16 (p = 0.09);
+  - it was not shorter (9 of 23), and it ran faster in 13 of 22 (median 1.10 times);
+  - 9 arterial and 9 venous limbs resolved on their own.
+- **All 115 limbs:** 9 arterial and 14 venous resolved; an arterial limb in 8 of 16 recordings against a
+  whole loop in 13; an arterial limb at both visits only for FP06.
+
+### Före against efter (`analysis/fore_efter_fields/same_field.py`)
+
+- **Method.** The band-passed mean image of each official rest (difference of Gaussians, σ 2 and 15 px,
+  the black strip set to zero). The central half of one image is searched in the other by normalized
+  cross-correlation (±160 px across, ±120 px down). Three kinds of pair:
+  - the two halves of one rest (the same field);
+  - the före and efter of each visit the aims use (`metadata/derived/participants.csv`);
+  - the före recordings of different participants.
+
+  The pictures go to `out/`, which is not tracked.
+- **On the Mac's copies** (stabilized 2026-10-08):
+  - the halves matched 0.97–0.99 in 6 recordings. FP01_W (0.68) and FP03_Wefter (0.81) are smeared,
+    because the old stabilizer did not follow their movement;
+  - före against efter: FP01 Q 0.32, FP03 Q 0.28; FP03 W 0.29 and FP01 W 0.60 involve a smeared image;
+  - different people: 0.20–0.26;
+  - by eye (2026-10-23): no loop in common in FP01 Q, FP03 Q and FP03 W.
+- **So** the camera was most likely placed anew after the exposure, and aim 2's changes compare different
+  capillaries. Within one recording loops differ by a median 23% (2026-10-29). To check every visit, run
+  the script on the desktop.
+
+### The statistics report's numbers (`analysis/statistics_report/report_numbers.py`)
+
+- **How.** It prints each step from `capillary.aims` and `capillary.agreement`. Its input is
+  `capillary.aims`' tables, or the report page's tables, which name only study and participant. The
+  per-participant values stay out of the repository.
+- **Checked.** Run against the report page's tables (https://claude.ai/artifact/QJj6SkQsuMToHa3NkAEtAZ:
+  its aim 1 participants and `aim2_pairs.json`), every aim 1 and aim 2 figure equals 2026-10-29's.
+- **Steps it adds, aim 1 pooled:**
+  - typical error 0.0763 mm/s (95% CI 0.0516–0.1462);
+  - smallest detectable change 175% of the mean, a factor of 4.75 on the log scale;
+  - the bias's paired t-test, p = 0.27;
+  - mean square between people over the residual 1.11 (ESMOKE 1.01): the participants barely differ beyond
+    the noise; ICC(C,1) 0.05.
+- **Steps it adds, aim 2 pooled:**
+  - Wilcoxon: W+ = 2, since the one increase ranks second. 3 of the 256 sign patterns are as extreme, so
+    p = 0.0234. On the ln ratios p = 0.039, where the increase ranks third.
+  - sign test 7 of 8, p = 0.070; Hodges–Lehmann −0.057 mm/s;
+  - the change against the value before: Spearman −0.79 (p = 0.021), which regression to the mean would
+    also give.
+- **Limits of the tests:**
+  - ESMOKE's Wilcoxon p of 0.0625 is the smallest five pairs can give; ISMOKE's three pairs cannot go below
+    0.25.
+  - At the observed SD of the ln ratios (0.61), 8 pairs have 80% power only for a fall of about 50%.
+- **The control day.** The five ESMOKE participants of aim 2 are those of the protocol's first text, which
+  needed all four recordings. Its difference in change, −0.097 mm/s, against these five's change on the
+  nicotine visit, −0.087, means their control-day change averaged about +0.01 mm/s.
+
+### Also
+
+- **The pixel size** (CLAUDE.md, Known issues). The recording program's Settings tab, photographed by the
+  user on 2026-10-23, shows "Scale factor (pixel to micrometer) 0.00132". That is in fact mm per pixel,
+  the app's 0.001329.
+- **The Mac's test failure.** On the Mac, `test_a_line_passes_only_where_it_reads_the_recorded_picture`
+  fails. Its OpenCV 5.0 differs by 0.2 grey levels near the frame edge after a 0.76-px move, while the
+  desktop's OpenCV 4.13 passes. Not changed here.
+
+### Verification
+
+- The scripts reproduce the scratch checks: `two_speeds.py`'s 80 + 80 rows equal the briefing's table, and
+  `real_limbs.py` and `same_field.py` give the scratch runs' numbers.
+- `python3 -m pytest` on the Mac: 318 passed, 1 failed (above).
+- flake8 (`--max-line-length=127`) is clean on the new files, and the CI selection on the whole repository.
+
+---
+
 ## 2026-10-29 — The report page names the nicotine visit, not the "active" one
 
 **Branch:** `feature/report-aim2` (on top of the entry below).

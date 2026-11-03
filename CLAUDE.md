@@ -301,6 +301,20 @@ the 2026-10-05 GUI rebuild entry.
     role, which carried over, so 29 lines were saved without the whole-loop role. They were
     re-saved from their own diagrams (`analysis/primary_endpoint/relabel_whole_loops.py`), and the
     app now fixes the role during blind placement.
+- **A whole loop's velocity is its dominant limb's** (2026-11-03, `analysis/whole_loop_limbs/`).
+  - On synthetic lines whose limbs move at different speeds, the whole loop does not average them.
+    With equal lengths it reads the slower limb (at half the speed, exactly the slower limb's); a
+    longer or darker limb pulls it towards itself. Motion blur is not the cause.
+  - On the aim-1 check's loops with a clearly faster arterial limb, it read 0.5–12% above the
+    venous limb. So the protocol's resting CBV is mostly a venous-limb velocity, not an arterial
+    one. Relative measures (CV, ICC, ratios) suffer less: one loop carries the same flux in both
+    limbs.
+  - An arterial limb alone scores a median 2.7 times lower than its whole loop, and it is the
+    fainter limb in 17 of 23 loops.
+- **Före and efter seem to show different capillaries** (2026-11-03, `analysis/fore_efter_fields/`,
+  the Mac's copies of three ESMOKE visits). No loop could be recognized in both rest images, and the
+  image match is 0.28–0.32, against 0.20–0.26 for two different people. So aim 2's changes compare
+  different capillaries. Run `same_field.py` on the desktop for every visit.
 - **Resting flow** (revised 2026-10-08). The earlier note said resting flow was beyond the
   centre line's range (0.5–1 mm/s, from near-horizontal streaks). That rested on video that
   had never been stabilized (thought on 2026-10-08 to be MPEG-4-compressed; found to be the
@@ -447,13 +461,18 @@ the 2026-10-05 GUI rebuild entry.
     10-13-03), the centre-line `set1` and `set2` of FP01_Qefter 09-46-17,
     `Validation/reading1`, and the real-data numbers the simulator was calibrated on.
   - The files were moved to `RecordedVideos/` and stabilized (DEVLOG 2026-10-11).
-- **Frame rate unverified:** the recordings come from the DynCap archive, and the local
-  copies are stamped 30 fps. Every velocity scales with the true rate.
+- **Frame rate and pixel size unverified:** the recordings come from the DynCap archive, and the
+  local copies are stamped 30 fps. Every velocity scales with the true rate and pixel size.
   - FP01_Qföre agrees with its official times at 30 fps.
   - `FP01_Wefter_14-Oct-2019_10-07-49` does not: its release at 230.1 s fits its 3435
     frames only at 15 fps (see `metadata/README.md`).
   - Earlier notes that these videos were made by this app's old recorder (MP4V, 30-fps
     stamp) rested on circular evidence and do not hold.
+  - The pixel size: the program that recorded the videos (MATLAB, "liveStabilisation") shows
+    "Scale factor (pixel to micrometer) 0.00132" on its Settings tab. Despite the label that is
+    mm per pixel, the app's 0.001329 (photographed by the user, 2026-10-23). That says where the
+    number comes from; it is not a calibration, which an image of a stage micrometer would be. The
+    program's Capture tab may show the frame rate and the exposure time.
 
 ## Repo state notes
 
