@@ -144,6 +144,39 @@ development, not the study's blind lines):
 - `python3 -m pytest` on the Mac: 318 passed, 1 failed (above).
 - flake8 (`--max-line-length=127`) is clean on the new files, and the CI selection on the whole repository.
 
+### The report checked against the data (after the pull request was opened)
+
+The user asked whether every result was right. The published report was exported, and each of its numbers
+was recomputed from the report page's tables. That covered the per-participant tables, the per-analysis
+tables of both aims (all five analyses), the 200 loops and the 90 recordings, plus
+`metadata/derived/participants.csv`. It ran as a scratch script, because the script holds the doc's
+per-participant values, which stay out of the repository.
+
+- **Found and corrected in the report:**
+  - **Aim 2's sensitivity analysis.** The table said "1 ESMOKE pair" for the reference loop alone, in its
+    pooled column, and the section opened with "the sensitivity analyses agree".
+    - Pooled, the reference loop alone leaves 4 pairs (ESMOKE FP20 and the three ISMOKE pairs), with a
+      change of −0.041 mm/s (95% CI −0.110 to +0.028), t-test p = 0.16 and Wilcoxon p = 0.25.
+    - So for aim 2 the sensitivity analyses do not all agree.
+    - The 2026-10-29 entry's summary ("the reference alone leaves 1 ESMOKE pair") gave only the ESMOKE row,
+      and the report had followed it.
+    - The report now says this in its lead, its aim 2 caveats and the table. CLAUDE.md's aim 2 note has it
+      too.
+  - **ISMOKE's mean velocity** is 0.0905 mm/s: 0.091, not 0.090.
+  - **The time between före and efter** on the nicotine visits is a median 1.5 hours (0.9–2.0), not "the
+    hour" the report said.
+- **Confirmed from the data** (they had come from the 2026-10-29 entries):
+  - 91 of 200 loops counted, and 54 of 90 recordings have a value (45 from the reference, 7 from `loop2`,
+    2 from `loop3`);
+  - 69 loops scored below 8, 36 sat at the floor, and 4 crossed themselves;
+  - the floor loops would add 14 recordings, and 1 ESMOKE and 3 ISMOKE participants to aim 1;
+  - loops of one recording differ by a median 23% (31 recordings), and the halves of the rest by 22% (63
+    loops);
+  - in ESMOKE the second visit minus the first gave −0.010 mm/s (−0.133 to 0.113);
+  - the post-hoc filter gave ESMOKE 9 participants, CV 69%, ICC(A,1) 0.31 (−0.39 to 0.79).
+- **After the corrections:** 326 numbers checked, no mismatch. The first text's aim 2 result (−0.097 mm/s)
+  could not be checked: its tables are only on the desktop (`Reports/aims/aim2_as_first_written/`).
+
 ---
 
 ## 2026-10-29 — The report page names the nicotine visit, not the "active" one

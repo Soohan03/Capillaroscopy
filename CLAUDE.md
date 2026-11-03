@@ -297,6 +297,8 @@ the 2026-10-05 GUI rebuild entry.
     blind; none of their loops counted): the change after minus before nicotine, ESMOKE 5 of 13 participants
     −0.087 mm/s (−0.204 to 0.030, p 0.11), ISMOKE 3 of 10 −0.042 (p 0.30), pooled 8 of 23 −0.070 (−0.137 to
     −0.003, p 0.043; ratio 0.55). 7 of 8 decreased; no control visit, few pairs, three tests without correction.
+    The reference loop alone leaves 4 pairs (1 ESMOKE, 3 ISMOKE): pooled −0.041 (−0.110 to +0.028, p 0.16), so
+    the sensitivity analyses do not all agree for aim 2 (DEVLOG 2026-11-03).
   - Fixed before unblinding: returning to a recording seen before restored its earlier line's
     role, which carried over, so 29 lines were saved without the whole-loop role. They were
     re-saved from their own diagrams (`analysis/primary_endpoint/relabel_whole_loops.py`), and the
