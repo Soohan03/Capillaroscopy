@@ -8,7 +8,7 @@ it was verified. Newest entries first.
 
 ## 2026-11-03 — Three checks saved: a whole loop's two limbs, före against efter, the statistics report's numbers
 
-**Branch:** `analysis/limb-speeds-and-fields`, from `main` at b776eb4 (PR #31 merged). One commit holds the
+**Branch:** `analysis/limb-speeds-and-fields`, from `main` at b776eb4 (PR #31 merged). Commit `95aac6d` holds the
 three folders, CLAUDE.md and this entry; a follow-up notes its hash.
 
 **Why.** On the Mac, two sessions prepared material for the user's supervisor. It lives on claude.ai, not
