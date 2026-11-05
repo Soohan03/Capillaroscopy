@@ -6,6 +6,86 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-11-05 — The placement repeat: plan, draw and the repeat's own data folder
+
+**Branch:** `analysis/placement-repeat`, from `main` at 8ec216c (PR #32 merged). Commit `d2633a9` holds
+`analysis/placement_repeat/` (PLAN.md, README.md, repeat.py); it was committed and pushed before the draw.
+This entry and CLAUDE.md follow in a second commit.
+
+**Why.** `PROTOCOL.md` ("Reproducibility of the placement (later)") plans that on another day the observer
+places 10 recordings, drawn at random, again from scratch, blind, under a second observer code, and that the
+reference capillary chosen, its velocity and the recording's value are compared. A week after the first
+placement the user asked whether it was time. With the first draft due to the PI on 2026-11-16, it is set up
+now.
+
+**The app could not run it as it was.**
+- During blind placement the Centre line page still draws the recording's saved lines, dashed and labelled
+  (`LinePage._draw_saved_lines`): the first placement's `loop1` would show where the reference had been put.
+- New data sets are named after the existing ones (`datasets.suggest_dataset_name`), so the repeat's reference
+  would be suggested as `loop4`, and `capillary.aims` ranks loops by name.
+- Blind placement lists all 72 recordings the aims use, not the 10 drawn.
+
+No code was changed for it. The repeat gets its own data folder instead (below): only the drawn videos, an
+empty `Statistics/`.
+
+**The plan** (`analysis/placement_repeat/PLAN.md`, fixed before the draw):
+- **Pool:** the 72 recordings the aims use without ESMOKE FP03 Wefter (no line possible) and ISMOKE FP04 Sföre
+  (its three blind loops were measured with other filters and given a test line after unblinding, for the
+  coarse filter): 70, each with a `loop1` in the first placement.
+- **Draw:** the pool sorted by name (NFC), `numpy.random.default_rng(20261105).choice(70, size=10,
+  replace=False)`, once.
+- **The first placement:** observer SJ's whole loops `loop1`–`loop3` saved in blind placement on 2026-10-29.
+  Checked (counts only): on the 71 recordings with lines, all 164 of SJ's whole loops were saved 10:00–13:07 or
+  18:58–19:05, and every recording has a `loop1`.
+- **The same capillary:** at least half of either line within 5 px of the other (`capillary.placement`).
+- **Compared:** 1. the same reference (share, exact 95% interval); 2. its velocity where it counts in both;
+  3. the recording's value (in both, one, neither; from the same capillary). For 2 and 3 aim 1's statistics
+  (typical error and CV with chi-square intervals, log-scale CV, SDC, Bland–Altman repeat minus first,
+  ICC(A,1)). Also: the mean of the counted loops, and which first-placement loops the repeat's loops lie on.
+- **Reading:** no pass marks. The placement CV of the value is set beside aim 1's inter-day CV.
+
+**`repeat.py`:** `draw` (once; makes the folder, prints only codes), `switch repeat|main` (rewrites
+`Application_path`, `observer` and `blind_placement` in settings.csv, refuses while the app runs), `progress`
+(`capillary.aims.progress` for the drawn recordings) and `compare` (refuses while blind placement is on, like
+`capillary.aims`; writes recordings.csv, loops.csv and summary.csv).
+
+**Checked before the draw** (scratch script, the whole pool of 70, aggregates only, so nothing pointed at
+the 10 to be drawn):
+- the first placement against a copy of itself under SJ-R: the same reference in 70 of 70, every value in
+  both, CV 0;
+- the copy with `loop1` and `loop2` swapped: the same reference in 0 of the 68 recordings with a `loop2`, the
+  repeat's reference on the first placement's `loop2` in all 68, the values from the same capillary in 23 of
+  42, the mean of the counted loops unchanged;
+- no repeat yet: runs, nothing compared;
+- settings.csv switched to the repeat and back on a copy: restored byte for byte.
+- On the pool the first placement has 161 loops (68 counted), and 42 of 70 recordings have a value (60%), so
+  comparison 3 will rest on about six pairs.
+
+**The draw** (after `d2633a9` was pushed): 10 of 70, codes 3MJS9 48JBX 782X8 EPJXZ FHRW9 LK9EV M5LN3 RAHFG
+S5UK5 SA8EY. Only the codes were printed; `placement_repeat.json` in the folder keeps the seed and the codes,
+and `drawn()` makes the draw again and checks it against them. One code, LK9EV, is named in this diary's
+entry of 2026-10-29, so the observer may know which recording it is. If so, it is noted before placing, as
+PLAN.md says for a recognized recording. The other nine appear nowhere in the repository.
+
+**The repeat's data folder:** `/home/soohan_jang/projects/capillaroscopy_placement_repeat/`, beside the
+repository (outside it, so `git clean` cannot reach it). `StabilizedVideos/` holds 30 links (each drawn video,
+its `___stabilization.csv` and `___stabilization_provenance.json`), `Statistics/` is empty. `switch repeat`
+set settings.csv to that folder, observer SJ-R, blind placement on. Checked without a window:
+- `gui.library.scan` finds 10 recordings, and `gui.blind.listed` lists all 10, in the order of their codes, all
+  stabilized, with no data sets;
+- each video and its shifts can be read through the links (`capillary.video.probe_video`,
+  `stabilize.read_shifts`, which `check_picture` uses);
+- a line's provenance records the video's folder by name (`StabilizedVideos`, `gui/tasks.py`), which is what
+  `capillary.aims` checks, so lines on the links count as on a stabilized video;
+- the lines the Centre line page remembers per recording (`MeasurePage._saved_state`) live only in memory, so
+  a fresh start brings back none of the first placement's;
+- `progress` lists the 10 codes with no lines; `compare` refuses while blind placement is on.
+
+`capillary/` and `gui/` are unchanged; `python3 -m pytest`: 319 passed.
+
+**Next:** the user places the 10 as SJ-R by `PROTOCOL.md`'s rules, then `repeat.py switch main` and
+`repeat.py compare`. The repeat's `Statistics/` needs the same backup as the main one.
+
 ## 2026-11-03 — Three checks saved: a whole loop's two limbs, före against efter, the statistics report's numbers
 
 **Branch:** `analysis/limb-speeds-and-fields`, from `main` at b776eb4 (PR #31 merged). Commit `95aac6d` holds the

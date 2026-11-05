@@ -38,6 +38,10 @@ products".
   on 2026-10-29: velocity round the whole loop at rest, signal-to-noise 8 or more, one reference
   capillary per recording with two ranked backups. The lines were placed blind that day and
   unblinded at 13:07. Aim 1's report: `analysis/primary_endpoint/` (Known issues has the gist).
+- **Placement repeat** (`analysis/placement_repeat/`, the protocol's "Reproducibility of the
+  placement"): `PLAN.md` was committed on 2026-11-05 before 10 of 70 recordings were drawn (seed
+  20261105). They are placed again blind as observer SJ-R in their own data folder, then compared
+  with `repeat.py compare`. Don't name the drawn recordings to the user before the comparison.
 
 ## Change diary (mandatory)
 
@@ -131,6 +135,11 @@ If the user reports the app froze or crashed, check the task output file and
 - `metadata/` (in the repository, tracked, unlike the data folders above) — the official
   occlusion and release times of every ESMOKE and ISMOKE recording, exported from
   DynCap, with notes on odd rows in its README
+- `../capillaroscopy_placement_repeat/` (beside the repository, since 2026-11-05) — the placement
+  repeat's data folder: links to the 10 drawn stabilized videos, and the repeat's own `Statistics/`.
+  While `settings.csv` points at it (`repeat.py switch repeat`, until `repeat.py switch main`), the app
+  opens on it in blind placement, observer SJ-R, and lists only those 10. The links carry the
+  recordings' names, so the folder is not opened before the comparison
 
 ## Code layout
 
@@ -266,7 +275,7 @@ Tkinter classes.
   Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
 - Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
   or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (318 tests, ~50 s; synthetic videos with known velocity,
+- Tests: `python3 -m pytest` (319 tests, ~50 s; synthetic videos with known velocity,
   the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
   display needed)
 
