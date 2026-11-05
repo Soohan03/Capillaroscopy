@@ -119,6 +119,26 @@ set settings.csv to that folder, observer SJ-R, blind placement on. Checked with
 - **Reading:** the observer and the line explain little of aim 1's 63%. Where a value comes from a backup, the
   choice of backup can move it several-fold. These rest on 3–5 velocity pairs.
 
+**A report page of its own** (asked for as a separate analysis rather than a tab of the primary report):
+https://claude.ai/artifact/WJ44Nm8aQrCWPyuksNHpyi, from the Dashboard type, written for the PI.
+- `analysis/placement_repeat/dashboard.py` writes the four tables it reads into `dashboard/`:
+  - `recordings.csv`: recordings named by study, participant, visit and before/after instead of their file
+    names (the codes stay);
+  - `loop_pairs.csv`: the 18 loops placed twice, with both readings and the size of the speed each found (from
+    the provenance; its sign only says which way the line was drawn). The outcome is "counted both times" (5),
+    "at the slowest speed searched" (6) or "below 8 both times" (7). The script stops if a loop scoring 8 or
+    more without counting is not at 1 px/frame; none was.
+  - `summary.csv` with a key per comparison;
+  - `aim1.csv`: the pooled primary row of the report page's `aim1.json` (CV 63%, 43–121%).
+  - Yes/no columns are written as words.
+- The page (`dashboard/index.html`, kept here) fills every number from those tables:
+  - tiles: same reference, same-capillary CV, value CV, aim 1 for comparison;
+  - three charts: velocity first against repeat for the 5 loops counted both times; signal-to-noise first
+    against repeat on log scales with the limit; each recording's two values, the pair from different backups
+    flagged;
+  - the per-recording and statistics tables, and how it was done.
+- The type's own check had not finished when this was written (it runs in an open page).
+
 **Next:** the results go into the first draft. The repeat folder's `Statistics/` needs the same backup as the
 main one.
 

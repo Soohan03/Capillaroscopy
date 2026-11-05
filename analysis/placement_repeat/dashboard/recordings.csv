@@ -1,0 +1,11 @@
+code,label,study,participant,visit,exposure,when,first_loops,repeat_loops,same_reference,reference_overlap,repeat_reference_lies_on,first_reference_counted,first_reference_mm_s,first_value_mm_s,first_value_from,first_mean_mm_s,first_loops_counted,repeat_reference_counted,repeat_reference_mm_s,repeat_value_mm_s,repeat_value_from,repeat_mean_mm_s,repeat_loops_counted,values_same_capillary
+EPJXZ,ESMOKE FP07 W before,ESMOKE,FP07,W,nicotine,before,3,3,yes,0.9064449064449064,loop1,no,,0.283847401390475,loop3,0.283847401390475,1,no,,0.0857460230408083,loop2,0.0857460230408083,1,no
+3MJS9,ESMOKE FP21 W after,ESMOKE,FP21,W,nicotine,after,2,2,yes,0.935897435897436,loop1,yes,0.0824223094813273,0.0824223094813273,loop1,0.0824223094813273,1,yes,0.0848087261780553,0.0848087261780553,loop1,0.0848087261780553,1,yes
+782X8,ISMOKE FP02 S before,ISMOKE,FP02,S,nicotine,before,3,2,yes,1.0,loop1,no,,,,,0,no,,,,,0,
+M5LN3,ISMOKE FP08 S after,ISMOKE,FP08,S,nicotine,after,3,2,no,0.0,loop2,no,,,,,0,no,,,,,0,
+48JBX,ISMOKE FP08 S before,ISMOKE,FP08,S,nicotine,before,2,2,yes,1.0,loop1,no,,,,,0,no,,,,,0,
+LK9EV,ISMOKE FP19 S before,ISMOKE,FP19,S,nicotine,before,2,2,yes,1.0,loop1,no,,,,,0,no,,,,,0,
+RAHFG,ISMOKE FP20 C before,ISMOKE,FP20,C,control,before,2,2,yes,0.9458128078817734,loop1,no,,,,,0,no,,,,,0,
+FHRW9,ISMOKE FP20 S after,ISMOKE,FP20,S,nicotine,after,2,2,yes,1.0,loop1,yes,0.0745204585087893,0.0745204585087893,loop1,0.0882696280221097,2,yes,0.0796981872914183,0.0796981872914183,loop1,0.0909351267256073,2,yes
+SA8EY,ISMOKE FP20 S before,ISMOKE,FP20,S,nicotine,before,2,2,yes,0.9664804469273744,loop1,no,,,,,0,no,,,,,0,
+S5UK5,ISMOKE FP23 C before,ISMOKE,FP23,C,control,before,2,2,yes,0.9755351681957186,loop1,yes,0.0833963407343797,0.0833963407343797,loop1,0.0651772753627006,2,yes,0.0874809120743663,0.0874809120743663,loop1,0.0671358187489355,2,yes

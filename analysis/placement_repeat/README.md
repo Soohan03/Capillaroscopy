@@ -66,3 +66,5 @@ links carry the recordings' names.
 | `PLAN.md` | The plan, fixed before the draw |
 | `repeat.py` | The draw, the settings switch, the progress check and the comparison |
 | `recordings.csv`, `loops.csv`, `summary.csv` | Written by `compare`: one row per drawn recording, per loop of either placement, and per comparison |
+| `dashboard.py` | Writes `dashboard/*.csv` from compare's tables: recordings named by study, participant and visit, the loops placed twice with both readings, the summary with a key per comparison, and aim 1's pooled result for comparison |
+| `dashboard/index.html` | The report page (https://claude.ai/artifact/WJ44Nm8aQrCWPyuksNHpyi, private until shared), which reads those four tables |

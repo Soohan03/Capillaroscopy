@@ -1,0 +1,2 @@
+study,participants_wanted,participants,grand_mean_mm_s,typical_error_mm_s,cv_percent,cv_ci_low,cv_ci_high,cv_log_percent,sdc_mm_s,icc_a1,icc_a1_ci_low,icc_a1_ci_high
+ESMOKE + ISMOKE,24,9,0.120864,0.076333,63.156222,42.659314,120.992851,75.550041,0.211442,0.048625,-0.552254,0.649779
