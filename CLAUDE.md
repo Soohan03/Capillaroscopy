@@ -39,9 +39,12 @@ products".
   capillary per recording with two ranked backups. The lines were placed blind that day and
   unblinded at 13:07. Aim 1's report: `analysis/primary_endpoint/` (Known issues has the gist).
 - **Placement repeat** (`analysis/placement_repeat/`, the protocol's "Reproducibility of the
-  placement"): `PLAN.md` was committed on 2026-11-05 before 10 of 70 recordings were drawn (seed
-  20261105). They are placed again blind as observer SJ-R in their own data folder, then compared
-  with `repeat.py compare`. Don't name the drawn recordings to the user before the comparison.
+  placement"): `PLAN.md` was committed on 2026-11-05, before 10 of 70 recordings were drawn (seed
+  20261105). They were placed again blind that day as observer SJ-R, in their own data folder.
+  - The same reference in 9 of 10. On the same capillary the velocity agrees within 0.005 mm/s (CV 1%,
+    3 pairs), and the same loops count.
+  - The value's CV is 66% (4 pairs): one recording's two values came from different backups (0.284 against
+    0.086 mm/s).
 
 ## Change diary (mandatory)
 
@@ -136,10 +139,9 @@ If the user reports the app froze or crashed, check the task output file and
   occlusion and release times of every ESMOKE and ISMOKE recording, exported from
   DynCap, with notes on odd rows in its README
 - `../capillaroscopy_placement_repeat/` (beside the repository, since 2026-11-05) — the placement
-  repeat's data folder: links to the 10 drawn stabilized videos, and the repeat's own `Statistics/`.
-  While `settings.csv` points at it (`repeat.py switch repeat`, until `repeat.py switch main`), the app
-  opens on it in blind placement, observer SJ-R, and lists only those 10. The links carry the
-  recordings' names, so the folder is not opened before the comparison
+  repeat's data folder: links to the 10 drawn stabilized videos, and the repeat's own `Statistics/` (21
+  loops by SJ-R; back it up with the main one). The app opens on it only while `settings.csv` points at it
+  (`repeat.py switch repeat`); since the comparison it points back at the main data folder
 
 ## Code layout
 

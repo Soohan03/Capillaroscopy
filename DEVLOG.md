@@ -83,8 +83,44 @@ set settings.csv to that folder, observer SJ-R, blind placement on. Checked with
 
 `capillary/` and `gui/` are unchanged; `python3 -m pytest`: 319 passed.
 
-**Next:** the user places the 10 as SJ-R by `PROTOCOL.md`'s rules, then `repeat.py switch main` and
-`repeat.py compare`. The repeat's `Statistics/` needs the same backup as the main one.
+**Placed and compared (the same evening).**
+- The app was started on the repeat folder. The user placed the 10 recordings as SJ-R, 21 whole loops over
+  the official rest, at 17:25:52–17:34:52.
+- `repeat.py progress` (codes and loop names only) flagged SA8EY: `loop2` and `loop3` on one capillary.
+  - The user looked at the two lines (still blind) and confirmed an accidental second save: `loop3` was saved
+    6 s after `loop2`.
+  - `loop3` was moved, with its three report files, to the repeat folder's
+    `.trash/2026-11-05_17-37-05_SA8EY loop3 duplicate of loop2` (`gui.tasks.move_to_trash`, as the Results
+    page would). The recording was found by its code, and no name or result was printed.
+  - The user's ranking had no third loop that qualified, so none was placed. The progress check then found
+    nothing to fix.
+- Asked before the comparison, the user recognized none of the codes (PLAN.md).
+- The user closed the app. `switch main` set settings.csv back to the main data folder, observer SJ, blind
+  placement off (checked). `compare` wrote `recordings.csv`, `loops.csv` and `summary.csv`.
+
+**Results** (README of `analysis/placement_repeat/`):
+- 1, the same reference: 9 of 10 (95% CI 55–100%).
+- 2, its velocity where it counts in both: 3 pairs, 0.082/0.085, 0.075/0.080, 0.083/0.087 mm/s. CV 1% (1–8%);
+  the repeat read 0.004 mm/s higher in all three (limits 0.001 to 0.007).
+- Whether the reference counts: the same in all 9 (3 both, 6 neither).
+- 3, the recording's value: 4 pairs (6 with a value in neither, none in one only), CV 66% (38–247%), log 55%,
+  ICC(A,1) 0.02. 3 of the 4 values come from the same capillary.
+  - The fourth, ESMOKE FP07 Wföre (EPJXZ), carries the CV. Neither reference counted (signal-to-noise 3.75 and
+    3.77); the first placement's value came from `loop3` (0.284 mm/s), the repeat's from `loop2` (0.086), two
+    capillaries the other placement did not place.
+- Also: 18 of the repeat's 21 loops lie on a capillary of the first placement (on its loop1 9, loop2 8,
+  loop3 1).
+  - On those 18 the same loops count (5 both, 13 neither). The 5 counted in both agree within 0.005 mm/s.
+  - The reference that differed is on ISMOKE FP08 Sefter (M5LN3). There the repeat's `loop1`/`loop2` are the
+    first placement's `loop2`/`loop3`.
+- Every loop that scored 8 or more without counting was at 1 px/frame in both placements, on the same
+  capillaries (checked from the provenance: `pattern_shift_speed_px_per_frame` 1.0). This holds for 5 pairs,
+  plus RAHFG's `loop2` at 7.7 / 8.0.
+- **Reading:** the observer and the line explain little of aim 1's 63%. Where a value comes from a backup, the
+  choice of backup can move it several-fold. These rest on 3–5 velocity pairs.
+
+**Next:** the results go into the first draft. The repeat folder's `Statistics/` needs the same backup as the
+main one.
 
 ## 2026-11-03 — Three checks saved: a whole loop's two limbs, före against efter, the statistics report's numbers
 

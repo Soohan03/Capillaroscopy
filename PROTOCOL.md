@@ -139,6 +139,11 @@ a second observer code (for example `SJ-R`), also blind. Compared:
 - its velocity;
 - the recording's value.
 
+Done on 2026-11-05. `analysis/placement_repeat/PLAN.md`, committed before the draw, fixed what this section
+left open: the pool (70 recordings: the aims' 72 without ESMOKE FP03 Wefter and ISMOKE FP04 Sföre, whose
+blind lines had been looked at after unblinding), the seed, the repeat's own data folder and the statistics.
+The results are in its README.
+
 ## Fixed before unblinding
 
 Found with `--progress` once every recording had been placed, and fixed without a result
