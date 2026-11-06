@@ -1,0 +1,13 @@
+label,study,participant,visit,when,loop,aims,snr,speed_px_per_frame,status_8,status_6,speed_mm_s_8,speed_mm_s_6,changed,occlusion_snr,occlusion_flow_at_6,after_release_snr,after_release_counted_at_6,after_release_same_way
+ESMOKE FP01 W before,ESMOKE,FP01,W,before,loop2,"aims 1, 2",7.3815175770123584,1.6706818108636208,below the cutoff,counted,,0.06660525489384,yes,2.4330703547222883,no,,not measured,
+ESMOKE FP16 Q after,ESMOKE,FP16,Q,after,loop2,,6.209667561315909,7.998024745750121,below the cutoff,counted,,0.3188581292822927,yes,35.051549581248715,no,2.9902889114035207,no,
+ESMOKE FP16 W after,ESMOKE,FP16,W,after,loop1,aim 2,6.056155895576334,2.4272156712037813,below the cutoff,counted,,0.096766073235263,yes,11.100026174259575,no,3.16980802108142,no,
+ESMOKE FP20 Q after,ESMOKE,FP20,Q,after,loop2,,6.619055807757041,6.535937244999344,below the cutoff,counted,,0.2605689266158296,yes,16.549951282178654,no,3.520833567930226,no,
+ESMOKE FP20 Q before,ESMOKE,FP20,Q,before,loop2,aim 1,6.045540865814885,7.2239888098303835,below the cutoff,counted,,0.2879995537751612,yes,8.1594205718136,yes,2.3361398904001414,no,
+ESMOKE FP22 W before,ESMOKE,FP22,W,before,loop1,"aims 1, 2",6.310959141520913,4.2824883174667985,below the cutoff,counted,,0.1707304311988182,yes,49.21492256343105,no,21.06987883254829,yes,yes
+ESMOKE FP22 W before,ESMOKE,FP22,W,before,loop2,"aims 1, 2",6.481675936318049,3.6604436997104406,below the cutoff,counted,,0.1459313102341945,yes,5.750803499204442,no,8.054532397099448,yes,yes
+ISMOKE FP04 C before,ISMOKE,FP04,C,before,loop2,aim 1,7.204831405480952,2.940254616145268,below the cutoff,counted,,0.1172194530925744,yes,14.95505919243951,no,2.4828673949830837,no,
+ISMOKE FP08 C before,ISMOKE,FP08,C,before,loop2,aim 1,7.300119057720547,4.562095672630677,below the cutoff,counted,,0.1818775682776948,yes,,not measured,,not measured,
+ISMOKE FP15 S before,ISMOKE,FP15,S,before,loop3,"aims 1, 2",7.77456701327804,2.793586238319979,below the cutoff,counted,,0.111372208796026,yes,,not measured,,not measured,
+ISMOKE FP20 C before,ISMOKE,FP20,C,before,loop1,aim 1,6.396071690259669,1.5019202293591698,below the cutoff,counted,,0.0598772184243575,yes,,not measured,6.537449482417919,yes,yes
+ISMOKE FP23 C after,ISMOKE,FP23,C,after,loop2,,10.947233364849792,2.704666168015977,counted,limbs moved opposite ways,0.1078272226057983,,yes,,not measured,,not measured,

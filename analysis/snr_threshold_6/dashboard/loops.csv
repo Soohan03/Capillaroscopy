@@ -1,0 +1,211 @@
+label,study,participant,visit,when,loop,aims,snr,speed_px_per_frame,status_8,status_6,speed_mm_s_8,speed_mm_s_6,changed
+ESMOKE FP01 Q after,ESMOKE,FP01,Q,after,loop1,,10.305462695440074,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP01 Q before,ESMOKE,FP01,Q,before,loop1,aim 1,30.933188627837914,1.4745145369202537,counted,counted,0.0587846326796832,0.0587846326796832,no
+ESMOKE FP01 W before,ESMOKE,FP01,W,before,loop1,"aims 1, 2",9.034976435577738,2.9900803411862587,counted,counted,0.1192058607346795,0.1192058607346795,no
+ESMOKE FP01 W before,ESMOKE,FP01,W,before,loop2,"aims 1, 2",7.3815175770123584,1.6706818108636208,below the cutoff,counted,,0.06660525489384,yes
+ESMOKE FP01 W before,ESMOKE,FP01,W,before,loop3,"aims 1, 2",3.740561127871475,3.4715982266837075,below the cutoff,below the cutoff,,,no
+ESMOKE FP01 W after,ESMOKE,FP01,W,after,loop1,aim 2,39.41739814244947,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP01 W after,ESMOKE,FP01,W,after,loop2,aim 2,2.7386207930656594,6.3494646667869805,below the cutoff,below the cutoff,,,no
+ESMOKE FP03 Q after,ESMOKE,FP03,Q,after,loop1,,51.79200162631696,1.1402956593764404,counted,counted,0.0454602920515707,0.0454602920515707,no
+ESMOKE FP03 Q after,ESMOKE,FP03,Q,after,loop2,,15.33778334230082,1.2100779692590764,counted,counted,0.0482423110491985,0.0482423110491985,no
+ESMOKE FP03 Q before,ESMOKE,FP03,Q,before,loop1,aim 1,3.987426224249457,3.7785909808014666,below the cutoff,below the cutoff,,,no
+ESMOKE FP03 Q before,ESMOKE,FP03,Q,before,loop2,aim 1,3.353485385329217,9.438355335315517,below the cutoff,below the cutoff,,,no
+ESMOKE FP03 W before,ESMOKE,FP03,W,before,loop1,"aims 1, 2",20.6550495379208,1.7479565909577868,counted,counted,0.0696859770227155,0.0696859770227155,no
+ESMOKE FP03 W before,ESMOKE,FP03,W,before,loop2,"aims 1, 2",8.92857212972163,3.283970957129964,counted,counted,0.1309224301367965,0.1309224301367965,no
+ESMOKE FP05 Q after,ESMOKE,FP05,Q,after,loop1,,60.93514926713128,1.5059536731766885,counted,counted,0.0600380201711766,0.0600380201711766,no
+ESMOKE FP05 Q after,ESMOKE,FP05,Q,after,loop2,,35.87727970349702,2.813089665856279,counted,counted,0.1121497540795814,0.1121497540795814,no
+ESMOKE FP05 Q after,ESMOKE,FP05,Q,after,loop3,,21.06840238525362,1.6412758743948994,counted,counted,0.0654329252011628,0.0654329252011628,no
+ESMOKE FP05 Q before,ESMOKE,FP05,Q,before,loop1,aim 1,16.704290289402245,3.4353720908701044,counted,counted,0.136958355732207,0.136958355732207,no
+ESMOKE FP05 Q before,ESMOKE,FP05,Q,before,loop2,aim 1,22.994370649154817,2.482674806646691,counted,counted,0.0989770686673959,0.0989770686673959,no
+ESMOKE FP05 W after,ESMOKE,FP05,W,after,loop1,aim 2,40.39477243659684,1.817824226555212,counted,counted,0.0724713977099683,0.0724713977099683,no
+ESMOKE FP05 W after,ESMOKE,FP05,W,after,loop2,aim 2,32.69402357305593,1.3908716299633448,counted,counted,0.0554500317390967,0.0554500317390967,no
+ESMOKE FP05 W after,ESMOKE,FP05,W,after,loop3,aim 2,16.337655476054106,2.003108736579499,counted,counted,0.0798581555819945,0.0798581555819945,no
+ESMOKE FP05 W before,ESMOKE,FP05,W,before,loop1,"aims 1, 2",4.860724918553895,7.824213673283538,below the cutoff,below the cutoff,,,no
+ESMOKE FP05 W before,ESMOKE,FP05,W,before,loop2,"aims 1, 2",9.453927406369113,7.928810496021911,counted,counted,0.3160987572011121,0.3160987572011121,no
+ESMOKE FP06 Q after,ESMOKE,FP06,Q,after,loop1,,33.29902574127868,1.6820131562088856,counted,counted,0.0670570028808618,0.0670570028808618,no
+ESMOKE FP06 Q after,ESMOKE,FP06,Q,after,loop2,,48.12437787524898,1.511503329138422,counted,counted,0.0602592689137564,0.0602592689137564,no
+ESMOKE FP06 Q after,ESMOKE,FP06,Q,after,loop3,,42.439903050041394,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP06 Q before,ESMOKE,FP06,Q,before,loop1,aim 1,48.9307476947484,2.0014416427822135,counted,counted,0.0797916933708313,0.0797916933708313,no
+ESMOKE FP06 Q before,ESMOKE,FP06,Q,before,loop2,aim 1,55.96782388823138,2.0016087998825434,counted,counted,0.079798357441274,0.079798357441274,no
+ESMOKE FP06 Q before,ESMOKE,FP06,Q,before,loop3,aim 1,47.05320624465641,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP06 W after,ESMOKE,FP06,W,after,loop1,aim 2,24.40440270218177,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP06 W after,ESMOKE,FP06,W,after,loop2,aim 2,27.09479239563239,1.005245679279406,counted,counted,0.0400762396908634,0.0400762396908634,no
+ESMOKE FP06 W before,ESMOKE,FP06,W,before,loop1,"aims 1, 2",5.748826919162973,7.136583971598837,below the cutoff,below the cutoff,,,no
+ESMOKE FP06 W before,ESMOKE,FP06,W,before,loop2,"aims 1, 2",25.77876160379728,3.425450550982944,counted,counted,0.1365628126139264,0.1365628126139264,no
+ESMOKE FP06 W before,ESMOKE,FP06,W,before,loop3,"aims 1, 2",17.74031601938818,1.516358780733172,counted,counted,0.0604528417347389,0.0604528417347389,no
+ESMOKE FP07 Q after,ESMOKE,FP07,Q,after,loop1,,28.962848241672663,3.779133691071429,counted,counted,0.1506631371305798,0.1506631371305798,no
+ESMOKE FP07 Q after,ESMOKE,FP07,Q,after,loop2,,8.84146309671852,4.855134485431927,counted,counted,0.1935601787505569,0.1935601787505569,no
+ESMOKE FP07 Q after,ESMOKE,FP07,Q,after,loop3,,21.914598798160373,2.961740046282953,counted,counted,0.1180760150911063,0.1180760150911063,no
+ESMOKE FP07 Q before,ESMOKE,FP07,Q,before,loop1,aim 1,12.385420734839842,1.3875196800198841,counted,counted,0.05531639918326,0.05531639918326,no
+ESMOKE FP07 Q before,ESMOKE,FP07,Q,before,loop2,aim 1,25.49597874036119,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP07 Q before,ESMOKE,FP07,Q,before,loop3,aim 1,21.58422218907499,1.763479329655137,counted,counted,0.0703048237479654,0.0703048237479654,no
+ESMOKE FP07 W after,ESMOKE,FP07,W,after,loop1,aim 2,26.49516075830197,5.74701706731256,counted,counted,0.2291169594105607,0.2291169594105607,no
+ESMOKE FP07 W after,ESMOKE,FP07,W,after,loop2,aim 2,31.164617214904748,4.098182785836802,counted,counted,0.1633827023657527,0.1633827023657527,no
+ESMOKE FP07 W before,ESMOKE,FP07,W,before,loop1,"aims 1, 2",3.750317957192936,11.103619276346055,below the cutoff,below the cutoff,,,no
+ESMOKE FP07 W before,ESMOKE,FP07,W,before,loop2,"aims 1, 2",3.14103207781592,13.295433475121957,below the cutoff,below the cutoff,,,no
+ESMOKE FP07 W before,ESMOKE,FP07,W,before,loop3,"aims 1, 2",11.990026393613704,7.119838987476489,counted,counted,0.283847401390475,0.283847401390475,no
+ESMOKE FP09 Q before,ESMOKE,FP09,Q,before,loop1,aim 1,16.7682474828983,2.2063267606308643,counted,counted,0.0879598708236101,0.0879598708236101,no
+ESMOKE FP09 Q before,ESMOKE,FP09,Q,before,loop2,aim 1,17.525264103232857,1.131782703319497,counted,counted,0.0451209050992583,0.0451209050992583,no
+ESMOKE FP09 W before,ESMOKE,FP09,W,before,loop1,aim 1,33.4604444992091,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP09 W before,ESMOKE,FP09,W,before,loop2,aim 1,12.97124663836914,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 Q after,ESMOKE,FP12,Q,after,loop1,,20.346292043907752,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 Q after,ESMOKE,FP12,Q,after,loop2,,34.57597126671224,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 Q before,ESMOKE,FP12,Q,before,loop1,aim 1,21.8807799098364,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 Q before,ESMOKE,FP12,Q,before,loop2,aim 1,16.881931161579992,1.224477201224108,counted,counted,0.0488163668083923,0.0488163668083923,no
+ESMOKE FP12 W after,ESMOKE,FP12,W,after,loop1,aim 2,21.665866444281423,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 W after,ESMOKE,FP12,W,after,loop2,aim 2,15.595622655794344,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 W before,ESMOKE,FP12,W,before,loop1,"aims 1, 2",14.282958074963558,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP12 W before,ESMOKE,FP12,W,before,loop2,"aims 1, 2",29.593462601668755,1.237000922225862,counted,counted,0.0493156513664195,0.0493156513664195,no
+ESMOKE FP12 W before,ESMOKE,FP12,W,before,loop3,"aims 1, 2",27.85514731573693,1.3625343700767576,counted,counted,0.0543203070928677,0.0543203070928677,no
+ESMOKE FP13 Q after,ESMOKE,FP13,Q,after,loop1,,23.428345726995595,3.6216046276108558,counted,counted,0.1443829086892612,0.1443829086892612,no
+ESMOKE FP13 Q after,ESMOKE,FP13,Q,after,loop2,,31.85183395237403,2.6828705560682904,counted,counted,0.1069582945550449,0.1069582945550449,no
+ESMOKE FP13 Q after,ESMOKE,FP13,Q,after,loop3,,15.544121834527015,2.744484827182916,counted,counted,0.109414677455728,0.109414677455728,no
+ESMOKE FP13 Q before,ESMOKE,FP13,Q,before,loop1,aim 1,13.345444253607516,3.407634686353026,counted,counted,0.1358525455857504,0.1358525455857503,no
+ESMOKE FP13 Q before,ESMOKE,FP13,Q,before,loop2,aim 1,74.69622733793321,1.3926207245052273,counted,counted,0.0555197630829337,0.0555197630829337,no
+ESMOKE FP13 Q before,ESMOKE,FP13,Q,before,loop3,aim 1,38.96235701154634,2.022207454706529,counted,counted,0.0806195662711663,0.0806195662711663,no
+ESMOKE FP13 W after,ESMOKE,FP13,W,after,loop1,aim 2,52.64950200293996,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP13 W after,ESMOKE,FP13,W,after,loop2,aim 2,2.644666885151412,51.94609901984308,below the cutoff,below the cutoff,,,no
+ESMOKE FP13 W after,ESMOKE,FP13,W,after,loop3,aim 2,34.94977210272192,1.216773983564979,counted,counted,0.048509261785549,0.048509261785549,no
+ESMOKE FP13 W before,ESMOKE,FP13,W,before,loop1,"aims 1, 2",82.1433053035185,1.2624352988143301,counted,counted,0.0503296464459883,0.0503296464459883,no
+ESMOKE FP13 W before,ESMOKE,FP13,W,before,loop2,"aims 1, 2",17.098747152605167,2.306427851604732,counted,counted,0.0919506119905469,0.0919506119905469,no
+ESMOKE FP13 W before,ESMOKE,FP13,W,before,loop3,"aims 1, 2",56.20114943621686,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP15 Q after,ESMOKE,FP15,Q,after,loop1,,13.733767370755904,5.067373586206663,counted,counted,0.2020215382467935,0.2020215382467935,no
+ESMOKE FP15 Q before,ESMOKE,FP15,Q,before,loop1,aim 1,2.6529117015477377,1.658272815458951,below the cutoff,below the cutoff,,,no
+ESMOKE FP15 Q before,ESMOKE,FP15,Q,before,loop2,aim 1,3.434478001053469,35.77370441949958,below the cutoff,below the cutoff,,,no
+ESMOKE FP15 W after,ESMOKE,FP15,W,after,loop1,aim 2,28.888202498772632,2.2580934333205245,counted,counted,0.0900236584383915,0.0900236584383915,no
+ESMOKE FP15 W after,ESMOKE,FP15,W,after,loop2,aim 2,8.279281280027417,1.4135855314659114,counted,counted,0.0563555693401974,0.0563555693401974,no
+ESMOKE FP15 W before,ESMOKE,FP15,W,before,loop1,"aims 1, 2",3.1068663519863158,42.70798484313075,below the cutoff,below the cutoff,,,no
+ESMOKE FP16 Q after,ESMOKE,FP16,Q,after,loop1,,9.490772290846008,5.754119660061181,counted,counted,0.2294001192542562,0.2294001192542562,no
+ESMOKE FP16 Q after,ESMOKE,FP16,Q,after,loop2,,6.209667561315909,7.998024745750121,below the cutoff,counted,,0.3188581292822927,yes
+ESMOKE FP16 Q before,ESMOKE,FP16,Q,before,loop1,aim 1,2.9460420317837968,12.495696821471768,below the cutoff,below the cutoff,,,no
+ESMOKE FP16 Q before,ESMOKE,FP16,Q,before,loop2,aim 1,2.756556990379809,30.90529902140612,below the cutoff,below the cutoff,,,no
+ESMOKE FP16 W after,ESMOKE,FP16,W,after,loop1,aim 2,6.056155895576334,2.4272156712037813,below the cutoff,counted,,0.096766073235263,yes
+ESMOKE FP16 W after,ESMOKE,FP16,W,after,loop2,aim 2,10.654064099520989,2.91935414825686,counted,counted,0.1163862118481579,0.1163862118481579,no
+ESMOKE FP16 W before,ESMOKE,FP16,W,before,loop1,"aims 1, 2",3.304925859958967,144.80548020242998,below the cutoff,below the cutoff,,,no
+ESMOKE FP16 W before,ESMOKE,FP16,W,before,loop2,"aims 1, 2",2.400358381223077,66.47388943524348,below the cutoff,below the cutoff,,,no
+ESMOKE FP18 Q after,ESMOKE,FP18,Q,after,loop1,,13.71205374423944,1.1135173841317532,counted,counted,0.0443927196169562,0.0443927196169562,no
+ESMOKE FP18 Q after,ESMOKE,FP18,Q,after,loop2,,9.687040635558237,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP18 Q before,ESMOKE,FP18,Q,before,loop1,aim 1,5.380446956561362,7.817490185131725,below the cutoff,below the cutoff,,,no
+ESMOKE FP18 Q before,ESMOKE,FP18,Q,before,loop2,aim 1,3.083238951107641,6.957342257370377,below the cutoff,below the cutoff,,,no
+ESMOKE FP18 Q before,ESMOKE,FP18,Q,before,loop3,aim 1,2.25581361281276,8.70777246596338,below the cutoff,below the cutoff,,,no
+ESMOKE FP18 W after,ESMOKE,FP18,W,after,loop1,aim 2,15.586696669166848,5.929858814569915,counted,counted,0.236406331391582,0.236406331391582,no
+ESMOKE FP18 W after,ESMOKE,FP18,W,after,loop2,aim 2,10.413740568579064,4.247997282554339,counted,counted,0.1693553733290559,0.1693553733290559,no
+ESMOKE FP18 W before,ESMOKE,FP18,W,before,loop1,"aims 1, 2",2.295632087719084,19.798843774087423,below the cutoff,below the cutoff,,,no
+ESMOKE FP18 W before,ESMOKE,FP18,W,before,loop2,"aims 1, 2",2.7042670018054715,10.2730787726375,below the cutoff,below the cutoff,,,no
+ESMOKE FP18 W before,ESMOKE,FP18,W,before,loop3,"aims 1, 2",3.26792988906655,32.10672139182649,below the cutoff,below the cutoff,,,no
+ESMOKE FP20 Q after,ESMOKE,FP20,Q,after,loop1,,9.994237751158607,6.431829130428766,counted,counted,0.2564184369999129,0.2564184369999129,no
+ESMOKE FP20 Q after,ESMOKE,FP20,Q,after,loop2,,6.619055807757041,6.535937244999344,below the cutoff,counted,,0.2605689266158296,yes
+ESMOKE FP20 Q before,ESMOKE,FP20,Q,before,loop1,aim 1,14.174860100041233,5.43323260095831,counted,counted,0.2166072796933626,0.2166072796933626,no
+ESMOKE FP20 Q before,ESMOKE,FP20,Q,before,loop2,aim 1,6.045540865814885,7.2239888098303835,below the cutoff,counted,,0.2879995537751612,yes
+ESMOKE FP20 W after,ESMOKE,FP20,W,after,loop1,aim 2,28.982838355294454,2.243784090424982,counted,counted,0.0894531862965847,0.0894531862965847,no
+ESMOKE FP20 W after,ESMOKE,FP20,W,after,loop2,aim 2,16.477247122310985,2.710398669251063,counted,counted,0.1080557608609342,0.1080557608609342,no
+ESMOKE FP20 W before,ESMOKE,FP20,W,before,loop1,"aims 1, 2",14.26625280181274,3.1585179384736892,counted,counted,0.1259209808898669,0.125920980889867,no
+ESMOKE FP20 W before,ESMOKE,FP20,W,before,loop2,"aims 1, 2",5.861800648010284,5.928951685980864,below the cutoff,below the cutoff,,,no
+ESMOKE FP21 W before,ESMOKE,FP21,W,before,loop1,"aims 1, 2",7.394115406292358,1.0,below the cutoff,at the slowest speed searched,,,no
+ESMOKE FP21 W before,ESMOKE,FP21,W,before,loop2,"aims 1, 2",4.214062613130297,2.0049624486051005,crosses itself,crosses itself,,,no
+ESMOKE FP21 W before,ESMOKE,FP21,W,before,loop3,"aims 1, 2",3.342681895729463,1.677295577630053,below the cutoff,below the cutoff,,,no
+ESMOKE FP21 Q after,ESMOKE,FP21,Q,after,loop1,,18.85964097389433,2.0018147789848975,counted,counted,0.0798065692327269,0.0798065692327269,no
+ESMOKE FP21 Q after,ESMOKE,FP21,Q,after,loop2,,28.95028017897046,2.3183531033716136,counted,counted,0.0924260373099833,0.0924260373099833,no
+ESMOKE FP21 Q before,ESMOKE,FP21,Q,before,loop1,aim 1,2.689687960382697,16.334535673073503,below the cutoff,below the cutoff,,,no
+ESMOKE FP21 Q before,ESMOKE,FP21,Q,before,loop2,aim 1,3.666799683987058,6.727153931705998,below the cutoff,below the cutoff,,,no
+ESMOKE FP21 W after,ESMOKE,FP21,W,after,loop1,aim 2,13.298782124493153,2.067426263577904,counted,counted,0.0824223094813273,0.0824223094813273,no
+ESMOKE FP21 W after,ESMOKE,FP21,W,after,loop2,aim 2,3.557873166201116,74.54935258700615,below the cutoff,below the cutoff,,,no
+ESMOKE FP22 Q after,ESMOKE,FP22,Q,after,loop1,,83.47715704152355,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP22 Q after,ESMOKE,FP22,Q,after,loop2,,39.09106525621321,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP22 Q before,ESMOKE,FP22,Q,before,loop1,aim 1,67.3974144311802,1.2155635423779507,counted,counted,0.0484610049940572,0.0484610049940572,no
+ESMOKE FP22 Q before,ESMOKE,FP22,Q,before,loop2,aim 1,64.31038164623425,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP22 W after,ESMOKE,FP22,W,after,loop1,aim 2,54.58675541591053,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP22 W after,ESMOKE,FP22,W,after,loop2,aim 2,37.124275622711856,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ESMOKE FP22 W before,ESMOKE,FP22,W,before,loop1,"aims 1, 2",6.310959141520913,4.2824883174667985,below the cutoff,counted,,0.1707304311988182,yes
+ESMOKE FP22 W before,ESMOKE,FP22,W,before,loop2,"aims 1, 2",6.481675936318049,3.6604436997104406,below the cutoff,counted,,0.1459313102341945,yes
+ISMOKE FP02 S after,ISMOKE,FP02,S,after,loop1,aim 2,41.843367753659145,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP02 S after,ISMOKE,FP02,S,after,loop2,aim 2,37.546398001029615,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP02 S after,ISMOKE,FP02,S,after,loop3,aim 2,30.485191174897118,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP02 S before,ISMOKE,FP02,S,before,loop1,aim 2,17.630649152177845,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP02 S before,ISMOKE,FP02,S,before,loop2,aim 2,7.1409613199253865,1.0,below the cutoff,at the slowest speed searched,,,no
+ISMOKE FP02 S before,ISMOKE,FP02,S,before,loop3,aim 2,2.747149761393843,1.0,below the cutoff,below the cutoff,,,no
+ISMOKE FP04 C before,ISMOKE,FP04,C,before,loop1,aim 1,2.6066881870652763,27.397636876359844,below the cutoff,below the cutoff,,,no
+ISMOKE FP04 C before,ISMOKE,FP04,C,before,loop2,aim 1,7.204831405480952,2.940254616145268,below the cutoff,counted,,0.1172194530925744,yes
+ISMOKE FP04 S before,ISMOKE,FP04,S,before,loop1,aim 1,3.029429549567272,27.385243030049846,below the cutoff,below the cutoff,,,no
+ISMOKE FP04 S before,ISMOKE,FP04,S,before,loop2,aim 1,4.184400833133008,111.7056532292419,below the cutoff,below the cutoff,,,no
+ISMOKE FP04 S before,ISMOKE,FP04,S,before,loop3,aim 1,2.631558894380066,23.56328615860295,below the cutoff,below the cutoff,,,no
+ISMOKE FP07 C after,ISMOKE,FP07,C,after,loop1,,4.747236159584037,3.2734791894757924,below the cutoff,below the cutoff,,,no
+ISMOKE FP07 C after,ISMOKE,FP07,C,after,loop2,,5.829456808338328,2.081450894983241,below the cutoff,below the cutoff,,,no
+ISMOKE FP07 C before,ISMOKE,FP07,C,before,loop1,aim 1,3.1854264891178827,32.22754532111939,below the cutoff,below the cutoff,,,no
+ISMOKE FP07 C before,ISMOKE,FP07,C,before,loop2,aim 1,2.4634942625423477,16.233137182003066,below the cutoff,below the cutoff,,,no
+ISMOKE FP07 S after,ISMOKE,FP07,S,after,loop1,aim 2,50.36469985747099,1.2198537207289146,counted,counted,0.0486320420046645,0.0486320420046645,no
+ISMOKE FP07 S after,ISMOKE,FP07,S,after,loop2,aim 2,16.142816340057994,1.0,crosses itself,crosses itself,,,no
+ISMOKE FP07 S before,ISMOKE,FP07,S,before,loop1,"aims 1, 2",16.303895025633825,3.388533473649313,counted,counted,0.1350910354450165,0.1350910354450165,no
+ISMOKE FP07 S before,ISMOKE,FP07,S,before,loop2,"aims 1, 2",5.945748262135667,2.9821723977464267,below the cutoff,below the cutoff,,,no
+ISMOKE FP08 C before,ISMOKE,FP08,C,before,loop1,aim 1,17.924636521309214,3.519080332211009,counted,counted,0.1402955613658423,0.1402955613658423,no
+ISMOKE FP08 C before,ISMOKE,FP08,C,before,loop2,aim 1,7.300119057720547,4.562095672630677,below the cutoff,counted,,0.1818775682776948,yes
+ISMOKE FP08 C before,ISMOKE,FP08,C,before,loop3,aim 1,5.434380481554922,5.215235622580353,below the cutoff,below the cutoff,,,no
+ISMOKE FP08 S after,ISMOKE,FP08,S,after,loop1,aim 2,4.830011883323252,1.298522136328834,below the cutoff,below the cutoff,,,no
+ISMOKE FP08 S after,ISMOKE,FP08,S,after,loop2,aim 2,19.91086883705699,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP08 S after,ISMOKE,FP08,S,after,loop3,aim 2,4.614488152408515,2.5840270381328034,below the cutoff,below the cutoff,,,no
+ISMOKE FP08 S before,ISMOKE,FP08,S,before,loop1,"aims 1, 2",56.5825528570053,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP08 S before,ISMOKE,FP08,S,before,loop2,"aims 1, 2",7.5045277947839075,1.0,below the cutoff,at the slowest speed searched,,,no
+ISMOKE FP09 C after,ISMOKE,FP09,C,after,loop1,,5.399741401598411,1.0,below the cutoff,below the cutoff,,,no
+ISMOKE FP09 C after,ISMOKE,FP09,C,after,loop2,,19.61628043115208,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP09 C before,ISMOKE,FP09,C,before,loop1,aim 1,31.238078424856308,2.0038794385359187,counted,counted,0.0798888812413755,0.0798888812413755,no
+ISMOKE FP09 C before,ISMOKE,FP09,C,before,loop2,aim 1,17.58837711915255,1.059167919281775,counted,counted,0.0422259635439938,0.0422259635439938,no
+ISMOKE FP09 S after,ISMOKE,FP09,S,after,loop1,aim 2,20.964005237261723,1.4491969086437575,counted,counted,0.0577752920178658,0.0577752920178658,no
+ISMOKE FP09 S after,ISMOKE,FP09,S,after,loop2,aim 2,35.92828443000753,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP09 S before,ISMOKE,FP09,S,before,loop1,"aims 1, 2",27.71307276017931,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP09 S before,ISMOKE,FP09,S,before,loop2,"aims 1, 2",52.2545004658495,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP15 C after,ISMOKE,FP15,C,after,loop1,,2.45157810405002,49.67866479735272,below the cutoff,below the cutoff,,,no
+ISMOKE FP15 C after,ISMOKE,FP15,C,after,loop2,,2.4443669925083267,120.37792851379784,below the cutoff,below the cutoff,,,no
+ISMOKE FP15 C before,ISMOKE,FP15,C,before,loop1,aim 1,3.2094343117845456,33.66248842069903,below the cutoff,below the cutoff,,,no
+ISMOKE FP15 C before,ISMOKE,FP15,C,before,loop2,aim 1,3.26193220306002,46.457856260598355,below the cutoff,below the cutoff,,,no
+ISMOKE FP15 C before,ISMOKE,FP15,C,before,loop3,aim 1,3.6284611455949976,89.89972969130515,below the cutoff,below the cutoff,,,no
+ISMOKE FP15 S after,ISMOKE,FP15,S,after,loop1,aim 2,44.96936568997972,1.3086016130185216,counted,counted,0.0521701639551182,0.0521701639551182,no
+ISMOKE FP15 S after,ISMOKE,FP15,S,after,loop2,aim 2,47.1752885436208,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP15 S before,ISMOKE,FP15,S,before,loop1,"aims 1, 2",13.0452947874534,2.7464533351970903,counted,counted,0.109493156180517,0.109493156180517,no
+ISMOKE FP15 S before,ISMOKE,FP15,S,before,loop2,"aims 1, 2",18.861112373141097,2.597845043085675,counted,counted,0.1035685731084702,0.1035685731084702,no
+ISMOKE FP15 S before,ISMOKE,FP15,S,before,loop3,"aims 1, 2",7.77456701327804,2.793586238319979,below the cutoff,counted,,0.111372208796026,yes
+ISMOKE FP16 C after,ISMOKE,FP16,C,after,loop1,,3.203427989973818,7.673446547371422,below the cutoff,below the cutoff,,,no
+ISMOKE FP16 C after,ISMOKE,FP16,C,after,loop2,,3.229789624048051,61.29271896415121,below the cutoff,below the cutoff,,,no
+ISMOKE FP16 C after,ISMOKE,FP16,C,after,loop3,,2.8540241959903674,28.291395114286804,below the cutoff,below the cutoff,,,no
+ISMOKE FP16 C before,ISMOKE,FP16,C,before,loop1,aim 1,22.74589814284841,1.9959858036026514,counted,counted,0.0795741848321907,0.0795741848321907,no
+ISMOKE FP16 C before,ISMOKE,FP16,C,before,loop2,aim 1,10.088491945095308,1.999329628373973,counted,counted,0.079707493460899,0.079707493460899,no
+ISMOKE FP16 S after,ISMOKE,FP16,S,after,loop1,aim 2,2.9431444540137317,122.36889257891714,below the cutoff,below the cutoff,,,no
+ISMOKE FP16 S after,ISMOKE,FP16,S,after,loop2,aim 2,2.6112603982919107,67.03592840309354,crosses itself,crosses itself,,,no
+ISMOKE FP16 S before,ISMOKE,FP16,S,before,loop1,"aims 1, 2",2.417384505194244,46.090800760159055,below the cutoff,below the cutoff,,,no
+ISMOKE FP16 S before,ISMOKE,FP16,S,before,loop2,"aims 1, 2",3.2261042975232326,4.395364194573318,below the cutoff,below the cutoff,,,no
+ISMOKE FP19 C after,ISMOKE,FP19,C,after,loop1,,69.37835512867966,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP19 C after,ISMOKE,FP19,C,after,loop2,,27.56546370894812,1.0,crosses itself,crosses itself,,,no
+ISMOKE FP19 C after,ISMOKE,FP19,C,after,loop3,,37.091935998364,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP19 C before,ISMOKE,FP19,C,before,loop1,aim 1,32.93033058651208,1.4661473107619825,counted,counted,0.0584510555572161,0.0584510555572161,no
+ISMOKE FP19 C before,ISMOKE,FP19,C,before,loop2,aim 1,44.36509764246939,2.1090804428934034,counted,counted,0.0840829412142294,0.0840829412142294,no
+ISMOKE FP19 C before,ISMOKE,FP19,C,before,loop3,aim 1,3.124655049993243,97.18922501325096,below the cutoff,below the cutoff,,,no
+ISMOKE FP19 S after,ISMOKE,FP19,S,after,loop1,aim 2,25.222570769335515,1.0678745188781458,counted,counted,0.0425730705045198,0.0425730705045198,no
+ISMOKE FP19 S after,ISMOKE,FP19,S,after,loop2,aim 2,46.68730368157105,1.0986355813913877,counted,counted,0.0437994251557628,0.0437994251557628,no
+ISMOKE FP19 S after,ISMOKE,FP19,S,after,loop3,aim 2,21.798807672566955,2.000141630420381,counted,counted,0.0797398656354948,0.0797398656354948,no
+ISMOKE FP19 S before,ISMOKE,FP19,S,before,loop1,"aims 1, 2",41.856278367598414,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP19 S before,ISMOKE,FP19,S,before,loop2,"aims 1, 2",25.79508566292701,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP20 C after,ISMOKE,FP20,C,after,loop1,,15.856361680936963,2.1280697770741033,counted,counted,0.0848399910816222,0.0848399910816222,no
+ISMOKE FP20 C after,ISMOKE,FP20,C,after,loop2,,14.719015542070876,2.00431640203181,counted,counted,0.0799063017129661,0.0799063017129661,no
+ISMOKE FP20 C before,ISMOKE,FP20,C,before,loop1,aim 1,6.396071690259669,1.5019202293591698,below the cutoff,counted,,0.0598772184243575,yes
+ISMOKE FP20 C before,ISMOKE,FP20,C,before,loop2,aim 1,7.66888582782525,1.0,below the cutoff,at the slowest speed searched,,,no
+ISMOKE FP20 S after,ISMOKE,FP20,S,after,loop1,aim 2,12.635024189940545,1.8692215016110658,counted,counted,0.0745204585087893,0.0745204585087893,no
+ISMOKE FP20 S after,ISMOKE,FP20,S,after,loop2,aim 2,25.232648327712,2.5589715057810616,counted,counted,0.10201879753543,0.10201879753543,no
+ISMOKE FP20 S before,ISMOKE,FP20,S,before,loop1,"aims 1, 2",3.824869572106433,2.5608301071094486,below the cutoff,below the cutoff,,,no
+ISMOKE FP20 S before,ISMOKE,FP20,S,before,loop2,"aims 1, 2",2.96231994627828,4.66079934888867,below the cutoff,below the cutoff,,,no
+ISMOKE FP21 C after,ISMOKE,FP21,C,after,loop1,,17.937665260076034,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP21 C after,ISMOKE,FP21,C,after,loop2,,27.25710119365537,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP21 C before,ISMOKE,FP21,C,before,loop1,aim 1,24.89013775420377,1.9740107362665744,counted,counted,0.0786981024137964,0.0786981024137964,no
+ISMOKE FP21 C before,ISMOKE,FP21,C,before,loop2,aim 1,23.425605704277174,1.3391558098863814,counted,counted,0.0533882714710002,0.0533882714710002,no
+ISMOKE FP21 S after,ISMOKE,FP21,S,after,loop1,aim 2,49.29726697691127,1.9980938679266769,counted,counted,0.0796582272636826,0.0796582272636826,no
+ISMOKE FP21 S after,ISMOKE,FP21,S,after,loop2,aim 2,3.1283597550976774,9.140124687768333,below the cutoff,below the cutoff,,,no
+ISMOKE FP21 S before,ISMOKE,FP21,S,before,loop1,"aims 1, 2",27.314241448276945,1.5760772722611414,counted,counted,0.0628336453828255,0.0628336453828255,no
+ISMOKE FP21 S before,ISMOKE,FP21,S,before,loop2,"aims 1, 2",49.09003805352414,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP21 S before,ISMOKE,FP21,S,before,loop3,"aims 1, 2",34.92229828125167,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP23 C after,ISMOKE,FP23,C,after,loop1,,15.426768193051537,5.174494917859522,counted,counted,0.2062921561184384,0.2062921561184384,no
+ISMOKE FP23 C after,ISMOKE,FP23,C,after,loop2,,10.947233364849792,2.704666168015977,counted,limbs moved opposite ways,0.1078272226057983,,yes
+ISMOKE FP23 C before,ISMOKE,FP23,C,before,loop1,aim 1,50.59338811103057,2.0918582141842212,counted,counted,0.0833963407343797,0.0833963407343797,no
+ISMOKE FP23 C before,ISMOKE,FP23,C,before,loop2,aim 1,35.01457182483849,1.1778684343713755,counted,counted,0.0469582099910214,0.0469582099910214,no
+ISMOKE FP23 S after,ISMOKE,FP23,S,after,loop1,aim 2,4.437345854297459,92.21141208202438,below the cutoff,below the cutoff,,,no
+ISMOKE FP23 S after,ISMOKE,FP23,S,after,loop2,aim 2,19.689139506541636,1.0,at the slowest speed searched,at the slowest speed searched,,,no
+ISMOKE FP23 S before,ISMOKE,FP23,S,before,loop1,"aims 1, 2",4.561382464258703,7.180114847591334,below the cutoff,below the cutoff,,,no
+ISMOKE FP23 S before,ISMOKE,FP23,S,before,loop2,"aims 1, 2",22.181748992917772,3.4417026410669336,counted,counted,0.1372107364708589,0.1372107364708589,no
+ISMOKE FP23 S before,ISMOKE,FP23,S,before,loop3,"aims 1, 2",17.228592858916723,3.1110402832720068,counted,counted,0.1240281840054409,0.1240281840054409,no

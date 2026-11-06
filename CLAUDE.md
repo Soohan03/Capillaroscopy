@@ -299,6 +299,11 @@ the 2026-10-05 GUI rebuild entry.
     CV 63% (95% CI 43–121%), log scale 76%, SDC 0.211 mm/s, ICC(A,1) 0.05 (−0.55 to 0.65).
   - ESMOKE: 7 of 14 participants, CV 67% (95% CI 43–147%), ICC(A,1) 0.01; ISMOKE: 2 of 10.
     Thresholds from 6.5 to 9 change nothing; the mean of the counted loops gives CV 65%.
+  - Threshold 6 (the PI's question of 2026-11-06, post hoc, `analysis/snr_threshold_6/`): 11 more loops count
+    (1 lost to the movement check, on a recording no aim uses) and ESMOKE FP22 enters aim 1. Pooled 10 of 24,
+    CV 62% (43–113%), ICC(A,1) 0.02; ESMOKE 8 of 14, CV 64%; aim 2 the same in every figure. No synthetic
+    no-flow clip reaches 6 inside the range searched (highest 5.4); the occlusion lets 14 of 163 lines through
+    against 12 at 8.
   - Post hoc, not agreed with the PI (`analysis/coarse_filter/`, plan committed before its checks): loops the
     protocol doesn't resolve, measured again with rows band-passed at σ 4–16 px from 5 px/frame, pass every
     check (no false flow in synthetic loops or the occlusion; same direction after release). ESMOKE 9

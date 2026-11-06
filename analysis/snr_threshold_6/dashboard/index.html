@@ -1,0 +1,570 @@
+<meta name="dash-one-writer">
+<style>
+  /* One reading column for the answer, cards for the evidence: the answer, aim 1, why so little moves, what
+     changes, aim 2, the checks where there should be no flow, the protocol's other values, how it was done. */
+  .sn { display: grid; gap: var(--cds-gap-xl); max-width: 72rem; margin-inline: auto; font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+  .sn b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sn-head { display: grid; gap: var(--cds-gap-sm); }
+  .sn-eyebrow { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); letter-spacing: .02em; }
+  .sn-title { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; text-wrap: balance; }
+  .sn-lede { margin: 0; max-width: 68ch; font-size: var(--cds-font-size-body); line-height: 1.6; }
+  .sn-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr)); gap: var(--cds-gap-md); }
+  .sn-tile { display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; padding: var(--cds-pad-lg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .sn-tile-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .sn-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .sn-tile-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
+  .sn-section { display: grid; gap: var(--cds-gap-md); }
+  .sn-h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); text-wrap: balance; }
+  .sn-intro { margin: 0; max-width: 68ch; line-height: 1.55; }
+  .sn-card { display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; padding: var(--cds-pad-lg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .sn-h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .sn-note { margin: 0; max-width: 80ch; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+  .sn-chart { position: relative; min-height: 350px; }
+  .sn-chart svg { display: block; overflow: visible; }
+  .sn-tick, .sn-axis-title, .sn-row-label, .sn-line-label { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); }
+  .sn-tick, .sn-axis-title, .sn-line-label { fill: var(--color-fg-muted); }
+  .sn-row-label { fill: var(--color-fg); paint-order: stroke; stroke: var(--color-panel); stroke-width: 4px; stroke-linejoin: round; }
+  .sn-tip { position: absolute; z-index: 2; max-width: 17rem; padding: var(--cds-pad-xs) var(--cds-pad-sm); background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); font-size: var(--cds-font-size-caption); line-height: 1.45; pointer-events: none; }
+  .sn-tip-head { color: var(--cds-text-secondary); }
+  .sn-table-wrap { overflow-x: auto; }
+  .sn-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .sn-table th, .sn-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); text-align: right; white-space: nowrap; }
+  .sn-table th:first-child, .sn-table td:first-child { text-align: left; }
+  .sn-table thead th { color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); vertical-align: bottom; }
+  .sn-table td:first-child { font-weight: var(--cds-font-weight-medium); }
+  .sn-table td.is-text { text-align: left; }
+  .sn-table td.is-wrap { min-width: 14rem; white-space: normal; text-align: left; }
+  .sn-table tr.is-asked td { font-weight: 600; }
+  .sn-table tr.is-context td { color: var(--color-fg-muted); }
+  .sn-table tr.is-first td { border-top: 2px solid var(--color-border-line); }
+  .sn-prose { display: grid; gap: var(--cds-gap-sm); max-width: 68ch; line-height: 1.6; }
+  .sn-prose p, .sn-prose ul { margin: 0; }
+  .sn-prose ul { display: grid; gap: var(--cds-gap-xs); padding-left: 1.2rem; }
+  .sn-foot { margin: 0; max-width: 68ch; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+  .sn-fail { display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .sn-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+  .sn [data-dash-source-state=empty] { color: transparent; }
+  .sn [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="sn">
+  <header class="sn-head" id="summary">
+    <p class="sn-eyebrow">Nailfold capillary velocity · a sensitivity analysis after unblinding · 6 November 2026</p>
+    <h1 class="sn-title">Signal-to-noise cutoff <span data-draw="cutoff">—</span></h1>
+    <p class="sn-lede">In the protocol a whole loop counts when its signal-to-noise ratio is <b data-draw="protocol">—</b> or more. Counted from <b data-draw="cutoff">—</b> instead, <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained" data-format="int">—</b> more loops count, and aim 1 has <b data-draw="value" data-source="aim1" data-field="participants" data-where="key=protocol 6 pooled" data-format="int">—</b> participants with a value at both visits instead of <b data-draw="value" data-source="aim1" data-field="participants" data-where="key=protocol 8 pooled" data-format="int">—</b>. Its results hardly move: over both studies the within-subject CV is <b data-draw="value" data-source="aim1" data-field="cv_percent" data-where="key=protocol 6 pooled" data-format="pct">—</b> instead of <b data-draw="value" data-source="aim1" data-field="cv_percent" data-where="key=protocol 8 pooled" data-format="pct">—</b>, and the ICC(A,1) <b data-draw="value" data-source="aim1" data-field="icc_a1" data-where="key=protocol 6 pooled" data-format="icc">—</b> instead of <b data-draw="value" data-source="aim1" data-field="icc_a1" data-where="key=protocol 8 pooled" data-format="icc">—</b>. Aim 2 is the same in every figure.</p>
+  </header>
+
+  <section class="sn-tiles" aria-label="Main figures">
+    <div class="sn-tile">
+      <span class="sn-tile-label">Aim 1, both studies: within-subject CV</span>
+      <span class="sn-big" data-draw="value" data-source="aim1" data-field="cv_percent" data-where="key=protocol 6 pooled" data-format="pct">—</span>
+      <span class="sn-tile-note">95% CI <span data-draw="value" data-source="aim1" data-field="cv_ci_low" data-where="key=protocol 6 pooled" data-format="pct">—</span> to <span data-draw="value" data-source="aim1" data-field="cv_ci_high" data-where="key=protocol 6 pooled" data-format="pct">—</span>. At <span data-draw="protocol">—</span>, the protocol: <span data-draw="value" data-source="aim1" data-field="cv_percent" data-where="key=protocol 8 pooled" data-format="pct">—</span> (<span data-draw="value" data-source="aim1" data-field="cv_ci_low" data-where="key=protocol 8 pooled" data-format="pct">—</span> to <span data-draw="value" data-source="aim1" data-field="cv_ci_high" data-where="key=protocol 8 pooled" data-format="pct">—</span>)</span>
+    </div>
+    <div class="sn-tile">
+      <span class="sn-tile-label">Aim 1, both studies: participants with both visits</span>
+      <span class="sn-big"><span data-draw="value" data-source="aim1" data-field="participants" data-where="key=protocol 6 pooled" data-format="int">—</span> of <span data-draw="value" data-source="aim1" data-field="participants_wanted" data-where="key=protocol 6 pooled" data-format="int">—</span></span>
+      <span class="sn-tile-note">At <span data-draw="protocol">—</span>, the protocol: <span data-draw="value" data-source="aim1" data-field="participants" data-where="key=protocol 8 pooled" data-format="int">—</span>. Added: <span data-draw="value" data-source="aim1_pairs" data-field="label" data-where="in_aim1_8=no">—</span>.</span>
+    </div>
+    <div class="sn-tile">
+      <span class="sn-tile-label">Aim 1, both studies: ICC(A,1)</span>
+      <span class="sn-big" data-draw="value" data-source="aim1" data-field="icc_a1" data-where="key=protocol 6 pooled" data-format="icc">—</span>
+      <span class="sn-tile-note">95% CI <span data-draw="value" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=protocol 6 pooled" data-format="icc">—</span> to <span data-draw="value" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=protocol 6 pooled" data-format="icc">—</span>. At <span data-draw="protocol">—</span>: <span data-draw="value" data-source="aim1" data-field="icc_a1" data-where="key=protocol 8 pooled" data-format="icc">—</span> (<span data-draw="value" data-source="aim1" data-field="icc_a1_ci_low" data-where="key=protocol 8 pooled" data-format="icc">—</span> to <span data-draw="value" data-source="aim1" data-field="icc_a1_ci_high" data-where="key=protocol 8 pooled" data-format="icc">—</span>)</span>
+    </div>
+    <div class="sn-tile">
+      <span class="sn-tile-label">Aim 2, both studies: change after nicotine</span>
+      <span class="sn-big"><span data-draw="value" data-source="aim2" data-field="change_mm_s" data-where="key=protocol 6 pooled" data-format="signed">—</span> mm/s</span>
+      <span class="sn-tile-note"><span data-draw="value" data-source="aim2" data-field="participants" data-where="key=protocol 6 pooled" data-format="int">—</span> of <span data-draw="value" data-source="aim2" data-field="participants_wanted" data-where="key=protocol 6 pooled" data-format="int">—</span> participants, paired t-test p <span data-draw="value" data-source="aim2" data-field="t_test_p" data-where="key=protocol 6 pooled" data-format="p">—</span>. At <span data-draw="protocol">—</span>: <span data-draw="value" data-source="aim2" data-field="change_mm_s" data-where="key=protocol 8 pooled" data-format="signed">—</span> mm/s, p <span data-draw="value" data-source="aim2" data-field="t_test_p" data-where="key=protocol 8 pooled" data-format="p">—</span></span>
+    </div>
+  </section>
+
+  <section class="sn-section" id="aim1">
+    <h2 class="sn-h2">Aim 1: inter-day reproducibility</h2>
+    <p class="sn-intro">Resting velocity before exposure on the two visit days, with each recording's value taken as the protocol takes it: the reference capillary if it counts, else the first backup that counts. Bold rows count loops from <span data-draw="cutoff">—</span>; grey rows are the protocol's own sensitivity analyses.</p>
+    <article class="sn-card">
+      <h3 class="sn-h3">Aim 1 at each cutoff</h3>
+      <p class="sn-note">Typical error: the SD of the differences between the visits divided by √2. CV: the typical error over the mean of all values, with its 95% interval from the chi-square distribution. SDC: the smallest detectable change, <span data-draw="sdc-factor">—</span> × the typical error. Bias and limits of agreement: the nicotine visit minus the control visit. ICC(A,1): two-way, absolute agreement, single measurement.</p>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="aim1" data-row-key="key">
+          <thead>
+            <tr>
+              <th scope="col" data-field="study_label">Studies</th>
+              <th scope="col" data-field="cutoff">Cutoff</th>
+              <th scope="col" data-field="participants">Participants</th>
+              <th scope="col" data-field="participants_wanted">Of</th>
+              <th scope="col" data-field="grand_mean_mm_s">Mean (mm/s)</th>
+              <th scope="col" data-field="typical_error_mm_s">Typical error (mm/s)</th>
+              <th scope="col" data-field="cv_percent">CV</th>
+              <th scope="col" data-field="cv_ci_low">95% CI from</th>
+              <th scope="col" data-field="cv_ci_high">to</th>
+              <th scope="col" data-field="cv_log_percent">CV, log scale</th>
+              <th scope="col" data-field="sdc_mm_s">SDC (mm/s)</th>
+              <th scope="col" data-field="ba_bias">Bias (mm/s)</th>
+              <th scope="col" data-field="ba_loa_low">Limits from</th>
+              <th scope="col" data-field="ba_loa_high">to</th>
+              <th scope="col" data-field="icc_a1">ICC(A,1)</th>
+              <th scope="col" data-field="icc_a1_ci_low">95% CI from</th>
+              <th scope="col" data-field="icc_a1_ci_high">to</th>
+            </tr>
+          </thead>
+          <tbody data-draw="aim1-rows"></tbody>
+        </table>
+      </div>
+      <p class="sn-note">ISMOKE has two participants at every cutoff, too few for an estimate.</p>
+    </article>
+  </section>
+
+  <section class="sn-section" id="why">
+    <h2 class="sn-h2">Why so little moves</h2>
+    <p class="sn-intro">Most loops that do not count lie far below either cutoff. Only <b data-draw="value" data-source="summary" data-field="value" data-where="key=band" data-format="int">—</b> of the <b data-draw="value" data-source="summary" data-field="value" data-where="key=loops" data-format="int">—</b> whole loops score from <span data-draw="cutoff">—</span> up to <span data-draw="protocol">—</span>. Of those, <b data-draw="value" data-source="summary" data-field="value" data-where="key=band_gained" data-format="int">—</b> count at <span data-draw="cutoff">—</span>, and <b data-draw="value" data-source="summary" data-field="value" data-where="key=band_slowest" data-format="int">—</b> sit at the slowest speed the protocol searches, <span data-draw="slowest">—</span>, so they count at neither. The loops that score below <span data-draw="protocol">—</span> have a median of <b data-draw="value" data-source="summary" data-field="value" data-where="key=median_snr_below_8" data-format="snr">—</b>: no moving pattern in their space-time diagram.</p>
+    <article class="sn-card" id="snr-chart">
+      <h3 class="sn-h3">Signal-to-noise of every whole loop</h3>
+      <p class="sn-note">Each dot is one loop placed blind, on a log scale. The rows say what became of it, the dashed lines mark the two cutoffs. Point at a dot for its recording.</p>
+      <div class="sn-chart" data-draw="snr-chart" data-source="loop_groups"></div>
+      <p class="sn-note">The loop that counts only at <span data-draw="protocol">—</span> lies on a recording the aims do not use. At <span data-draw="cutoff">—</span> both its limbs resolve and run opposite ways along the line, which the protocol reads as the picture moving.</p>
+    </article>
+  </section>
+
+  <section class="sn-section" id="changes">
+    <h2 class="sn-h2">What changes</h2>
+    <p class="sn-intro">At <span data-draw="cutoff">—</span> the value of <b data-draw="value" data-source="summary" data-field="value" data-where="key=values_changed" data-format="int">—</b> recordings changes, all of them used by the aims. One of them changes a result. <b data-draw="value" data-source="aim1_pairs" data-field="label" data-where="in_aim1_8=no">—</b>'s nicotine visit gets a value from its reference capillary, which scores <b data-draw="value" data-source="changed_loops" data-field="snr" data-where="label=ESMOKE FP22 W before&amp;loop=loop1" data-format="snr">—</b>, so the participant enters aim 1: <b data-draw="value" data-source="aim1_pairs" data-field="nicotine_6_mm_s" data-where="label=ESMOKE FP22" data-format="mm">—</b> mm/s on the nicotine visit against <b data-draw="value" data-source="aim1_pairs" data-field="control_6_mm_s" data-where="label=ESMOKE FP22" data-format="mm">—</b> on the control visit. In the others, the participant's other recording has no value at either cutoff, so no pair changes.</p>
+    <article class="sn-card" id="values">
+      <h3 class="sn-h3">Recordings whose value changes</h3>
+      <p class="sn-note">Recordings are named by study, participant, visit (W and S nicotine, Q and C control) and before or after exposure. Loops are named in the order of the observer's ranking: loop1 is the reference capillary, loop2 and loop3 its backups. – means no value.</p>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="changed_values" data-row-key="label">
+          <thead>
+            <tr>
+              <th scope="col" data-field="label">Recording</th>
+              <th scope="col" data-field="aims">Used by</th>
+              <th scope="col" data-field="value_8_mm_s">Value at <span data-draw="protocol"></span> (mm/s)</th>
+              <th scope="col" data-field="from_8">From</th>
+              <th scope="col" data-field="value_6_mm_s">Value at <span data-draw="cutoff"></span> (mm/s)</th>
+              <th scope="col" data-field="from_6">From</th>
+              <th scope="col" data-field="effect">What it changes</th>
+            </tr>
+          </thead>
+          <tbody data-draw="value-rows"></tbody>
+        </table>
+      </div>
+    </article>
+    <article class="sn-card" id="pairs">
+      <h3 class="sn-h3">Aim 1's participants at both cutoffs</h3>
+      <p class="sn-note">Each participant's value before exposure on each visit, mm/s, and the loop it comes from at the lower cutoff. Bold: the participant who enters at <span data-draw="cutoff">—</span>.</p>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="aim1_pairs" data-row-key="label">
+          <thead>
+            <tr>
+              <th scope="col" data-field="label">Participant</th>
+              <th scope="col" data-field="nicotine_8_mm_s">Nicotine visit at <span data-draw="protocol"></span></th>
+              <th scope="col" data-field="control_8_mm_s">Control visit at <span data-draw="protocol"></span></th>
+              <th scope="col" data-field="nicotine_6_mm_s">Nicotine visit at <span data-draw="cutoff"></span></th>
+              <th scope="col" data-field="nicotine_6_from">From</th>
+              <th scope="col" data-field="control_6_mm_s">Control visit at <span data-draw="cutoff"></span></th>
+              <th scope="col" data-field="control_6_from">From</th>
+              <th scope="col" data-field="in_aim1_8">In aim 1 at <span data-draw="protocol"></span></th>
+              <th scope="col" data-field="in_aim1_6">at <span data-draw="cutoff"></span></th>
+            </tr>
+          </thead>
+          <tbody data-draw="pair-rows"></tbody>
+        </table>
+      </div>
+    </article>
+    <article class="sn-card" id="loops">
+      <h3 class="sn-h3">Loops that count at one cutoff only</h3>
+      <p class="sn-note">– under Used by: a recording the aims do not use, a control visit after exposure.</p>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="changed_loops" data-row-key="label,loop">
+          <thead>
+            <tr>
+              <th scope="col" data-field="label">Recording</th>
+              <th scope="col" data-field="loop">Loop</th>
+              <th scope="col" data-field="aims">Used by</th>
+              <th scope="col" data-field="snr">Signal-to-noise</th>
+              <th scope="col" data-field="status_8">At <span data-draw="protocol"></span></th>
+              <th scope="col" data-field="status_6">At <span data-draw="cutoff"></span></th>
+              <th scope="col" data-field="speed_mm_s_6">Velocity at <span data-draw="cutoff"></span> (mm/s)</th>
+            </tr>
+          </thead>
+          <tbody data-draw="loop-rows"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <section class="sn-section" id="aim2">
+    <h2 class="sn-h2">Aim 2: response to nicotine</h2>
+    <p class="sn-intro">The change from before to after exposure on the nicotine visit. At <span data-draw="cutoff">—</span> some of its recordings change value (above), but in each case the participant's other recording has no value, so no pair changes and every figure stays as it was.</p>
+    <article class="sn-card">
+      <h3 class="sn-h3">Aim 2 at each cutoff</h3>
+      <p class="sn-note">Change: after minus before, with its 95% interval and a paired t-test, and the Wilcoxon signed-rank test as a check. Ratio: after over before, as a geometric mean.</p>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="aim2" data-row-key="key">
+          <thead>
+            <tr>
+              <th scope="col" data-field="study_label">Studies</th>
+              <th scope="col" data-field="cutoff">Cutoff</th>
+              <th scope="col" data-field="participants">Participants</th>
+              <th scope="col" data-field="participants_wanted">Of</th>
+              <th scope="col" data-field="mean_before_mm_s">Before (mm/s)</th>
+              <th scope="col" data-field="mean_after_mm_s">After (mm/s)</th>
+              <th scope="col" data-field="change_mm_s">Change (mm/s)</th>
+              <th scope="col" data-field="change_ci_low_mm_s">95% CI from</th>
+              <th scope="col" data-field="change_ci_high_mm_s">to</th>
+              <th scope="col" data-field="t_test_p">t-test p</th>
+              <th scope="col" data-field="wilcoxon_p">Wilcoxon p</th>
+              <th scope="col" data-field="ratio">Ratio</th>
+              <th scope="col" data-field="ratio_ci_low">95% CI from</th>
+              <th scope="col" data-field="ratio_ci_high">to</th>
+            </tr>
+          </thead>
+          <tbody data-draw="aim2-rows"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <section class="sn-section" id="noise">
+    <h2 class="sn-h2">Is <span data-draw="cutoff">—</span> still above the noise?</h2>
+    <p class="sn-intro">A lower cutoff lets more noise through. Two checks with the protocol's own measurement where there should be no flow, and one where real flow should keep its direction. They use the measurements of the coarse-filter analysis: synthetic loops without flow, and the <b data-draw="value" data-source="null_checks" data-field="rest_loops" data-where="cutoff=6.0" data-format="int">—</b> loops placed before unblinding, measured again over the cuff occlusion and after release.</p>
+    <article class="sn-card">
+      <h3 class="sn-h3">Flow found where there should be none, and direction after release</h3>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="null_checks" data-row-key="cutoff">
+          <thead>
+            <tr>
+              <th scope="col" data-field="cutoff">Cutoff</th>
+              <th scope="col" data-field="synthetic_flow">Synthetic, no flow: flow found</th>
+              <th scope="col" data-field="synthetic_clips">Of clips</th>
+              <th scope="col" data-field="occlusion_flow">Occlusion: flow found</th>
+              <th scope="col" data-field="occlusion_lines">Of lines</th>
+              <th scope="col" data-field="rest_counted">Loops counted at rest</th>
+              <th scope="col" data-field="after_release_counted_too">Counted after release too</th>
+              <th scope="col" data-field="after_release_same_way">The same way</th>
+            </tr>
+          </thead>
+          <tbody data-draw="null-rows"></tbody>
+        </table>
+      </div>
+    </article>
+    <div class="sn-prose">
+      <ul>
+        <li><strong>Synthetic loops without flow.</strong> The highest score inside the range searched is <b data-draw="value" data-source="summary" data-field="value" data-where="key=synthetic_highest_in_range" data-format="snr">—</b>, so none reaches <span data-draw="cutoff">—</span>.</li>
+        <li><strong>The cuff occlusion</strong> should stop the blood, yet <b data-draw="value" data-source="null_checks" data-field="occlusion_flow" data-where="cutoff=6.0" data-format="int">—</b> of <b data-draw="value" data-source="null_checks" data-field="occlusion_lines" data-where="cutoff=6.0" data-format="int">—</b> lines show flow at <span data-draw="cutoff">—</span>, against <b data-draw="value" data-source="null_checks" data-field="occlusion_flow" data-where="cutoff=8.0" data-format="int">—</b> at <span data-draw="protocol">—</span>. Some of it may be real flow under the cuff, so the check errs on the strict side.</li>
+        <li><strong>After release</strong> every loop that counts both at rest and after release runs the same way as at rest, at every cutoff in the table.</li>
+        <li><strong>The loops gained.</strong> Of the <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained" data-format="int">—</b> loops that count only from <span data-draw="cutoff">—</span>, <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained_flow_in_occlusion" data-format="int">—</b> of the <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained_measured_occlusion" data-format="int">—</b> measured in the occlusion shows flow there. After release <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained_counted_after_release" data-format="int">—</b> of the <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained_measured_after_release" data-format="int">—</b> measured count, and <b data-draw="value" data-source="summary" data-field="value" data-where="key=gained_same_way_after_release" data-format="int">—</b> of those run the same way as at rest.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sn-section" id="other-values">
+    <h2 class="sn-h2">The protocol's other values</h2>
+    <p class="sn-intro">Both studies pooled. The protocol's secondary value is the mean of all counted loops; one of its sensitivity analyses takes the reference capillary alone.</p>
+    <article class="sn-card">
+      <h3 class="sn-h3">Mean of loops and reference only, at both cutoffs</h3>
+      <div class="sn-table-wrap">
+        <table class="sn-table" data-source="other_values" data-row-key="key">
+          <thead>
+            <tr>
+              <th scope="col" data-field="value_text">Each recording's value</th>
+              <th scope="col" data-field="cutoff">Cutoff</th>
+              <th scope="col" data-field="aim1_participants">Aim 1: participants</th>
+              <th scope="col" data-field="aim1_cv_percent">CV</th>
+              <th scope="col" data-field="aim1_icc_a1">ICC(A,1)</th>
+              <th scope="col" data-field="aim2_participants">Aim 2: participants</th>
+              <th scope="col" data-field="aim2_change_mm_s">Change (mm/s)</th>
+              <th scope="col" data-field="aim2_t_test_p">t-test p</th>
+            </tr>
+          </thead>
+          <tbody data-draw="other-rows"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <section class="sn-section" id="method">
+    <h2 class="sn-h2">How it was done</h2>
+    <div class="sn-prose">
+      <ul>
+        <li><strong>Asked for after unblinding.</strong> The PI asked on 6 November 2026 how the results change if loops count from <span data-draw="cutoff">—</span>. The protocol of 29 October fixes <span data-draw="protocol">—</span> and named its sensitivity analyses before the results were seen. This one is post hoc, and the protocol's results stand.</li>
+        <li><strong>The same lines, the same measurement.</strong> No line was placed again or moved. Each loop's pattern shift, and that of its two limbs for the movement check, was computed again from the space-time diagram saved when the loop was measured, and judged at <span data-draw="cutoff">—</span>. The movement check uses the same cutoff, so a loop can also drop out at the lower one.</li>
+        <li><strong>Checked.</strong> The same computation at <span data-draw="protocol">—</span> gives the protocol's tables to float precision, and every run judged the same <b data-draw="value" data-source="summary" data-field="value" data-where="key=loops" data-format="int">—</b> loops.</li>
+        <li><strong>Otherwise a loop counts as before:</strong> a whole loop over the official rest, on a stabilized video, its speed inside the range searched, its line not crossing itself.</li>
+      </ul>
+      <p><strong>Limits.</strong> Few participants: <span data-draw="value" data-source="aim1" data-field="participants" data-where="key=protocol 6 pooled" data-format="int">—</span> of <span data-draw="value" data-source="aim1" data-field="participants_wanted" data-where="key=protocol 6 pooled" data-format="int">—</span> in aim 1 and <span data-draw="value" data-source="aim2" data-field="participants" data-where="key=protocol 6 pooled" data-format="int">—</span> of <span data-draw="value" data-source="aim2" data-field="participants_wanted" data-where="key=protocol 6 pooled" data-format="int">—</span> in aim 2. The cutoff was chosen after the results were known. One observer placed every line.</p>
+    </div>
+    <p class="sn-foot">Source tables: analysis/snr_threshold_6/dashboard/ in the project repository, written by compare.py from capillary.aims' runs at each cutoff (README.md in the same folder).</p>
+  </section>
+</div>
+
+<script>
+  (() => {
+    // The protocol's cutoff (PROTOCOL.md), the one the PI asked about, and the protocol's own sensitivity analyses.
+    const PROTOCOL = 8;
+    const CUTOFF = 6;
+    const CUTOFF_ORDER = [PROTOCOL, CUTOFF, 7, 9];
+    // The smallest detectable change in typical errors (1.96 x sqrt 2).
+    const SDC_FACTOR = 2.77;
+    // The slowest speed the protocol's pattern shift searches, 1 px/frame at 30 frames/s and 0.001329 mm/px.
+    const SLOWEST_PX_PER_FRAME = 1;
+    const SLOWEST_MM_S = SLOWEST_PX_PER_FRAME * 30 * 0.001329;
+    const STUDY_ORDER = ['pooled', 'ESMOKE', 'ISMOKE'];
+
+    const num = (value) => (value === '' || value === null || value === undefined ? NaN : Number(value));
+    const FORMATS = {
+      int: (v) => d3.format(',')(Math.round(v)),
+      pct: (v) => `${d3.format(Math.abs(v) < 10 ? '.1f' : '.0f')(v)}%`,
+      mm: (v) => d3.format('.3f')(v),
+      signed: (v) => d3.format('+.3f')(v),
+      icc: (v) => d3.format('.2f')(v),
+      p: (v) => d3.format('.3f')(v),
+      ratio: (v) => d3.format('.2f')(v),
+      snr: (v) => d3.format('.1f')(v),
+      cutoff: (v) => d3.format('d')(v),
+    };
+    const show = (value, format) => {
+      if (!FORMATS[format]) return value === '' || value === null || value === undefined ? '–' : String(value);
+      const n = num(value);
+      return Number.isFinite(n) ? FORMATS[format](n) : '–';
+    };
+
+    dash.calc('loop_groups', {
+      inputs: ['loops'],
+      title: 'Loops by what became of them',
+      description: 'Every whole loop with its signal-to-noise and its group: counted at both cutoffs, only at the lower, only at the protocol’s, or at neither and why.',
+      fn: (loops) => loops.map((row) => {
+        const at8 = row.status_8 === 'counted';
+        const at6 = row.status_6 === 'counted';
+        let group = 'other';
+        if (at8 && at6) group = 'both';
+        else if (at6) group = 'gained';
+        else if (at8) group = 'lost';
+        else if (row.status_6 === 'at the slowest speed searched') group = 'slowest';
+        else if (row.status_6 === 'below the cutoff') group = 'below';
+        else if (row.status_6 === 'crosses itself') group = 'crossing';
+        return {label: row.label, loop: row.loop, snr: Number(row.snr), group, status_8: row.status_8,
+          status_6: row.status_6, speed_mm_s_8: row.speed_mm_s_8, speed_mm_s_6: row.speed_mm_s_6};
+      }),
+    });
+    dash.calc('other_values', {
+      inputs: ['aim1', 'aim2'],
+      title: 'Mean of loops and reference only',
+      description: 'The protocol’s other values over both studies at each cutoff: aim 1’s participants, CV and ICC(A,1); aim 2’s participants, change and paired t-test.',
+      fn: (aim1, aim2) => {
+        const n = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
+        return ['mean', 'reference_only'].flatMap((value) => [8, 6].map((cutoff) => {
+          const key = `${value} ${cutoff} pooled`;
+          const a = aim1.find((row) => row.key === key) || {};
+          const b = aim2.find((row) => row.key === key) || {};
+          return {key, value_text: a.value_text, cutoff, aim1_participants: n(a.participants),
+            aim1_cv_percent: n(a.cv_percent), aim1_icc_a1: n(a.icc_a1), aim2_participants: n(b.participants),
+            aim2_change_mm_s: n(b.change_mm_s), aim2_t_test_p: n(b.t_test_p)};
+        }));
+      },
+    });
+
+    const conditions = (el) => (el.dataset.where || '').split('&').filter(Boolean)
+      .map((part) => part.split('=').map(decodeURIComponent));
+    const rowOf = (el) => {
+      const d = dash.data(el.dataset.source);
+      if (d.status !== 'ok') return {status: d.status};
+      const rows = d.data || [];
+      if (el.dataset.row !== undefined) return {status: 'ok', row: rows[Number(el.dataset.row)]};
+      const where = conditions(el);
+      return {status: 'ok', row: rows.find((row) => where.every(([key, value]) => String(row[key]) === value))};
+    };
+    dash.draw('value', (el) => {
+      const {status, row} = rowOf(el);
+      el.classList.toggle('dash-skeleton', status === 'loading');
+      el.textContent = row ? show(row[el.dataset.field], el.dataset.format) : '—';
+    });
+    dash.draw('cutoff', (el) => { el.textContent = String(CUTOFF); });
+    dash.draw('protocol', (el) => { el.textContent = String(PROTOCOL); });
+    dash.draw('sdc-factor', (el) => { el.textContent = String(SDC_FACTOR); });
+    dash.draw('slowest', (el) => { el.textContent = `${SLOWEST_PX_PER_FRAME} px/frame (${d3.format('.3f')(SLOWEST_MM_S)} mm/s)`; });
+
+    // ---------------------------------------------------------------- the chart
+    const ready = (el, ...ids) => {
+      const states = ids.map((id) => dash.data(id).status);
+      el.replaceChildren();
+      el.classList.toggle('dash-skeleton', states.includes('loading'));
+      if (states.every((s) => s === 'ok')) return true;
+      if (states.includes('error')) {
+        const fail = document.createElement('div');
+        fail.className = 'sn-fail';
+        fail.textContent = 'Failed to load';
+        el.append(fail);
+      }
+      return false;
+    };
+    const styleAxis = (g) => {
+      g.attr('font-size', null).attr('font-family', null);
+      g.selectAll('.domain, .tick line').style('stroke', 'var(--cds-chart-axis)');
+      g.selectAll('.tick text').attr('class', 'sn-tick');
+    };
+    const tooltip = (el) => {
+      const tip = document.createElement('div');
+      tip.className = 'sn-tip';
+      tip.hidden = true;
+      el.append(tip);
+      return {
+        show(lines, x, y) {
+          tip.replaceChildren(...lines.map((text, i) => {
+            const line = document.createElement('div');
+            line.textContent = text;
+            if (i === 0) line.className = 'sn-tip-head';
+            return line;
+          }));
+          tip.hidden = false;
+          let left = x + 14;
+          if (left + tip.offsetWidth > el.clientWidth) left = Math.max(0, x - 14 - tip.offsetWidth);
+          let top = y - tip.offsetHeight - 10;
+          if (top < 0) top = y + 14;
+          tip.style.left = `${left}px`;
+          tip.style.top = `${top}px`;
+        },
+        hide() { tip.hidden = true; },
+      };
+    };
+
+    const GROUPS = [
+      {key: 'both', name: () => 'Count at both cutoffs', color: () => dash.colors[0]},
+      {key: 'gained', name: () => `Count only from ${CUTOFF}`, color: () => dash.colors[1]},
+      {key: 'lost', name: () => `Count only at ${PROTOCOL}`, color: () => 'var(--cds-chart-status-critical)'},
+      {key: 'slowest', name: () => 'At the slowest speed searched', color: () => 'var(--cds-chart-muted)'},
+      {key: 'below', name: () => `Score below ${CUTOFF}`, color: () => 'var(--cds-chart-muted)'},
+      {key: 'crossing', name: () => 'Line crosses itself', color: () => 'var(--cds-chart-muted)'},
+      {key: 'other', name: () => 'Other', color: () => 'var(--cds-chart-muted)'},
+    ];
+    const outcome = (status, speed) => (status === 'counted' ? `counted, ${show(speed, 'mm')} mm/s` : status);
+
+    dash.draw('snr-chart', (el) => {
+      if (!ready(el, 'loop_groups')) return;
+      const rows = dash.data('loop_groups').data.filter((row) => Number.isFinite(row.snr) && row.snr > 0);
+      const groups = GROUPS.filter((g) => rows.some((row) => row.group === g.key));
+      const width = Math.max(280, el.clientWidth);
+      const band = 46;
+      const m = {top: 28, right: 18, bottom: 46, left: 14};
+      const height = m.top + groups.length * band + m.bottom;
+      const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('role', 'img').attr('aria-label', 'Signal-to-noise of every whole loop, by what became of it at the two cutoffs');
+      const lo = Math.min(2, d3.min(rows, (row) => row.snr) * 0.9);
+      const hi = Math.max(100, d3.max(rows, (row) => row.snr) * 1.1);
+      const x = d3.scaleLog([lo, hi], [m.left, width - m.right]);
+      const y = d3.scaleBand(groups.map((g) => g.key), [m.top, m.top + groups.length * band]);
+      const ticks = [2, 4, CUTOFF, PROTOCOL, 16, 32, 64].filter((t) => t >= lo && t <= hi);
+      svg.append('g').selectAll('line').data(ticks).join('line')
+        .attr('x1', (t) => x(t)).attr('x2', (t) => x(t)).attr('y1', m.top).attr('y2', height - m.bottom)
+        .style('stroke', 'var(--cds-chart-grid)');
+      [[CUTOFF, `${CUTOFF}`, 'end', -5], [PROTOCOL, `${PROTOCOL}, the protocol`, 'start', 5]].forEach(([value, text, anchor, dx]) => {
+        svg.append('line').attr('x1', x(value)).attr('x2', x(value)).attr('y1', m.top - 8).attr('y2', height - m.bottom)
+          .style('stroke', 'var(--cds-chart-reference)').style('stroke-dasharray', '6 3');
+        svg.append('text').attr('class', 'sn-line-label').attr('x', x(value) + dx).attr('y', m.top - 12)
+          .attr('text-anchor', anchor).text(text);
+      });
+      styleAxis(svg.append('g').attr('transform', `translate(0,${height - m.bottom})`)
+        .call(d3.axisBottom(x).tickValues(ticks).tickFormat(d3.format('d')).tickSizeOuter(0)));
+      svg.append('text').attr('class', 'sn-axis-title').attr('text-anchor', 'middle')
+        .attr('x', (m.left + width - m.right) / 2).attr('y', height - 8).text('Signal-to-noise ratio (log scale)');
+      const tip = tooltip(el);
+      groups.forEach((g) => {
+        const top = y(g.key);
+        const mine = rows.filter((row) => row.group === g.key);
+        const color = g.color();
+        svg.append('g').selectAll('circle').data(mine).join('circle')
+          .attr('cx', (row) => x(row.snr))
+          .attr('cy', (row, i) => top + 30 + (((i * 0.6180339887) % 1) - 0.5) * 16)
+          .attr('r', 3.5)
+          .style('fill', color).style('fill-opacity', 0.85)
+          .style('stroke', 'var(--color-panel)').style('stroke-width', 1)
+          .on('mouseenter', (event, row) => tip.show([`${row.label}, ${row.loop}`,
+            `Signal-to-noise ${show(row.snr, 'snr')}`, `At ${PROTOCOL}: ${outcome(row.status_8, row.speed_mm_s_8)}`,
+            `At ${CUTOFF}: ${outcome(row.status_6, row.speed_mm_s_6)}`], x(row.snr), top + 30))
+          .on('mouseleave', () => tip.hide());
+        svg.append('text').attr('class', 'sn-row-label').attr('x', m.left).attr('y', top + 13)
+          .text(`${g.name()} (${mine.length})`);
+      });
+    });
+
+    // ---------------------------------------------------------------- tables
+    const fill = (tbody, o) => {
+      tbody.replaceChildren();
+      const d = dash.data(o.id);
+      if (d.status !== 'ok') return;
+      let rows = d.data.filter(o.keep || (() => true));
+      if (o.sort) rows = rows.slice().sort(o.sort);
+      rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.dataset.key = o.key(row);
+        const classes = o.rowClass ? o.rowClass(row, i, rows) : '';
+        if (classes) tr.className = classes;
+        o.columns.forEach(([field, format, cls]) => {
+          const td = document.createElement('td');
+          td.textContent = show(row[field], format);
+          if (cls) td.className = cls;
+          tr.append(td);
+        });
+        tbody.append(tr);
+      });
+    };
+    const byStudyAndCutoff = (p, q) => STUDY_ORDER.indexOf(p.study) - STUDY_ORDER.indexOf(q.study)
+      || CUTOFF_ORDER.indexOf(num(p.cutoff)) - CUTOFF_ORDER.indexOf(num(q.cutoff));
+    const cutoffClass = (row) => (num(row.cutoff) === CUTOFF ? 'is-asked' : num(row.cutoff) === PROTOCOL ? '' : 'is-context');
+    const studyRowClass = (row, i, rows) => [cutoffClass(row), i > 0 && rows[i - 1].study !== row.study ? 'is-first' : '']
+      .filter(Boolean).join(' ');
+    const encodeKey = (...parts) => parts.map((part) => encodeURIComponent(part)).join(',');
+
+    dash.draw('aim1-rows', (tbody) => fill(tbody, {
+      id: 'aim1', key: (row) => row.key, keep: (row) => row.value === 'protocol', sort: byStudyAndCutoff,
+      rowClass: studyRowClass, columns: [
+        ['study_label'], ['cutoff', 'cutoff'], ['participants', 'int'], ['participants_wanted', 'int'],
+        ['grand_mean_mm_s', 'mm'], ['typical_error_mm_s', 'mm'], ['cv_percent', 'pct'], ['cv_ci_low', 'pct'],
+        ['cv_ci_high', 'pct'], ['cv_log_percent', 'pct'], ['sdc_mm_s', 'mm'], ['ba_bias', 'signed'],
+        ['ba_loa_low', 'signed'], ['ba_loa_high', 'signed'], ['icc_a1', 'icc'], ['icc_a1_ci_low', 'icc'],
+        ['icc_a1_ci_high', 'icc'],
+      ],
+    }));
+    dash.draw('aim2-rows', (tbody) => fill(tbody, {
+      id: 'aim2', key: (row) => row.key, keep: (row) => row.value === 'protocol', sort: byStudyAndCutoff,
+      rowClass: studyRowClass, columns: [
+        ['study_label'], ['cutoff', 'cutoff'], ['participants', 'int'], ['participants_wanted', 'int'],
+        ['mean_before_mm_s', 'mm'], ['mean_after_mm_s', 'mm'], ['change_mm_s', 'signed'],
+        ['change_ci_low_mm_s', 'signed'], ['change_ci_high_mm_s', 'signed'], ['t_test_p', 'p'], ['wilcoxon_p', 'p'],
+        ['ratio', 'ratio'], ['ratio_ci_low', 'ratio'], ['ratio_ci_high', 'ratio'],
+      ],
+    }));
+    dash.draw('value-rows', (tbody) => fill(tbody, {
+      id: 'changed_values', key: (row) => row.label, columns: [
+        ['label'], ['aims', null, 'is-text'], ['value_8_mm_s', 'mm'], ['from_8', null, 'is-text'], ['value_6_mm_s', 'mm'],
+        ['from_6', null, 'is-text'], ['effect', null, 'is-wrap'],
+      ],
+    }));
+    dash.draw('pair-rows', (tbody) => fill(tbody, {
+      id: 'aim1_pairs', key: (row) => row.label, rowClass: (row) => (row.in_aim1_8 === 'no' ? 'is-asked' : ''),
+      columns: [
+        ['label'], ['nicotine_8_mm_s', 'mm'], ['control_8_mm_s', 'mm'], ['nicotine_6_mm_s', 'mm'],
+        ['nicotine_6_from', null, 'is-text'], ['control_6_mm_s', 'mm'], ['control_6_from', null, 'is-text'],
+        ['in_aim1_8'], ['in_aim1_6'],
+      ],
+    }));
+    dash.draw('loop-rows', (tbody) => fill(tbody, {
+      id: 'changed_loops', key: (row) => encodeKey(row.label, row.loop), columns: [
+        ['label'], ['loop', null, 'is-text'], ['aims', null, 'is-text'], ['snr', 'snr'], ['status_8', null, 'is-text'],
+        ['status_6', null, 'is-text'], ['speed_mm_s_6', 'mm'],
+      ],
+    }));
+    dash.draw('null-rows', (tbody) => fill(tbody, {
+      id: 'null_checks', key: (row) => row.cutoff, rowClass: cutoffClass,
+      sort: (p, q) => num(p.cutoff) - num(q.cutoff), columns: [
+        ['cutoff', 'cutoff'], ['synthetic_flow', 'int'], ['synthetic_clips', 'int'], ['occlusion_flow', 'int'],
+        ['occlusion_lines', 'int'], ['rest_counted', 'int'], ['after_release_counted_too', 'int'],
+        ['after_release_same_way', 'int'],
+      ],
+    }));
+    dash.draw('other-rows', (tbody) => fill(tbody, {
+      id: 'other_values', key: (row) => row.key, rowClass: cutoffClass, columns: [
+        ['value_text', null, 'is-text'], ['cutoff', 'cutoff'], ['aim1_participants', 'int'], ['aim1_cv_percent', 'pct'],
+        ['aim1_icc_a1', 'icc'], ['aim2_participants', 'int'], ['aim2_change_mm_s', 'signed'], ['aim2_t_test_p', 'p'],
+      ],
+    }));
+  })();
+</script>

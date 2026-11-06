@@ -184,6 +184,10 @@ These describe the results further; none changes a value or a statistic fixed ab
 - Exploratory, post hoc, not agreed with the PI beforehand: a coarser filter for flow too fast for the
   default one (`analysis/coarse_filter/`). Its rule and pass marks were written down and committed
   (`PLAN.md`) before its checks were run; the values above stay the primary result.
+- Post hoc, asked for by the PI on 2026-11-06: a signal-to-noise threshold of 6 for both aims, with the
+  protocol's value and its two sensitivity values (`analysis/snr_threshold_6/`). The same loops are
+  judged again from their saved space-time diagrams; nothing is placed again. The values above stay the
+  primary result.
 
 ## Changes after unblinding
 
