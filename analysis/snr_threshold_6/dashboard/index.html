@@ -81,7 +81,7 @@
     <h2 class="sn-h2">Aim 1: inter-day reproducibility</h2>
     <p class="sn-intro">Resting velocity before exposure on the two visit days, with each recording's value taken as the protocol takes it: the reference capillary if it counts, else the first backup that counts. Bold rows count loops from <span data-draw="cutoff">—</span>; grey rows are the protocol's own sensitivity analyses.</p>
     <article class="sn-card">
-      <h3 class="sn-h3">Aim 1 at each cutoff</h3>
+      <h3 class="sn-h3" id="aim1-table">Aim 1 at each cutoff</h3>
       <p class="sn-note">Typical error: the SD of the differences between the visits divided by √2. CV: the typical error over the mean of all values, with its 95% interval from the chi-square distribution. SDC: the smallest detectable change, <span data-draw="sdc-factor">—</span> × the typical error. Bias and limits of agreement: the nicotine visit minus the control visit. ICC(A,1): two-way, absolute agreement, single measurement.</p>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="aim1" data-row-key="key">
@@ -117,7 +117,7 @@
     <h2 class="sn-h2">Why so little moves</h2>
     <p class="sn-intro">Most loops that do not count lie far below either cutoff. Only <b data-draw="value" data-source="summary" data-field="value" data-where="key=band" data-format="int">—</b> of the <b data-draw="value" data-source="summary" data-field="value" data-where="key=loops" data-format="int">—</b> whole loops score from <span data-draw="cutoff">—</span> up to <span data-draw="protocol">—</span>. Of those, <b data-draw="value" data-source="summary" data-field="value" data-where="key=band_gained" data-format="int">—</b> count at <span data-draw="cutoff">—</span>, and <b data-draw="value" data-source="summary" data-field="value" data-where="key=band_slowest" data-format="int">—</b> sit at the slowest speed the protocol searches, <span data-draw="slowest">—</span>, so they count at neither. The loops that score below <span data-draw="protocol">—</span> have a median of <b data-draw="value" data-source="summary" data-field="value" data-where="key=median_snr_below_8" data-format="snr">—</b>: no moving pattern in their space-time diagram.</p>
     <article class="sn-card" id="snr-chart">
-      <h3 class="sn-h3">Signal-to-noise of every whole loop</h3>
+      <h3 class="sn-h3" id="loop-scores">Signal-to-noise of every whole loop</h3>
       <p class="sn-note">Each dot is one loop placed blind, on a log scale. The rows say what became of it, the dashed lines mark the two cutoffs. Point at a dot for its recording.</p>
       <div class="sn-chart" data-draw="snr-chart" data-source="loop_groups"></div>
       <p class="sn-note">The loop that counts only at <span data-draw="protocol">—</span> lies on a recording the aims do not use. At <span data-draw="cutoff">—</span> both its limbs resolve and run opposite ways along the line, which the protocol reads as the picture moving.</p>
@@ -128,7 +128,7 @@
     <h2 class="sn-h2">What changes</h2>
     <p class="sn-intro">At <span data-draw="cutoff">—</span> the value of <b data-draw="value" data-source="summary" data-field="value" data-where="key=values_changed" data-format="int">—</b> recordings changes, all of them used by the aims. One of them changes a result. <b data-draw="value" data-source="aim1_pairs" data-field="label" data-where="in_aim1_8=no">—</b>'s nicotine visit gets a value from its reference capillary, which scores <b data-draw="value" data-source="changed_loops" data-field="snr" data-where="label=ESMOKE FP22 W before&amp;loop=loop1" data-format="snr">—</b>, so the participant enters aim 1: <b data-draw="value" data-source="aim1_pairs" data-field="nicotine_6_mm_s" data-where="label=ESMOKE FP22" data-format="mm">—</b> mm/s on the nicotine visit against <b data-draw="value" data-source="aim1_pairs" data-field="control_6_mm_s" data-where="label=ESMOKE FP22" data-format="mm">—</b> on the control visit. In the others, the participant's other recording has no value at either cutoff, so no pair changes.</p>
     <article class="sn-card" id="values">
-      <h3 class="sn-h3">Recordings whose value changes</h3>
+      <h3 class="sn-h3" id="changed-values">Recordings whose value changes</h3>
       <p class="sn-note">Recordings are named by study, participant, visit (W and S nicotine, Q and C control) and before or after exposure. Loops are named in the order of the observer's ranking: loop1 is the reference capillary, loop2 and loop3 its backups. – means no value.</p>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="changed_values" data-row-key="label">
@@ -148,7 +148,7 @@
       </div>
     </article>
     <article class="sn-card" id="pairs">
-      <h3 class="sn-h3">Aim 1's participants at both cutoffs</h3>
+      <h3 class="sn-h3" id="aim1-pairs">Aim 1's participants at both cutoffs</h3>
       <p class="sn-note">Each participant's value before exposure on each visit, mm/s, and the loop it comes from at the lower cutoff. Bold: the participant who enters at <span data-draw="cutoff">—</span>.</p>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="aim1_pairs" data-row-key="label">
@@ -170,7 +170,7 @@
       </div>
     </article>
     <article class="sn-card" id="loops">
-      <h3 class="sn-h3">Loops that count at one cutoff only</h3>
+      <h3 class="sn-h3" id="changed-loops">Loops that count at one cutoff only</h3>
       <p class="sn-note">– under Used by: a recording the aims do not use, a control visit after exposure.</p>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="changed_loops" data-row-key="label,loop">
@@ -195,7 +195,7 @@
     <h2 class="sn-h2">Aim 2: response to nicotine</h2>
     <p class="sn-intro">The change from before to after exposure on the nicotine visit. At <span data-draw="cutoff">—</span> some of its recordings change value (above), but in each case the participant's other recording has no value, so no pair changes and every figure stays as it was.</p>
     <article class="sn-card">
-      <h3 class="sn-h3">Aim 2 at each cutoff</h3>
+      <h3 class="sn-h3" id="aim2-table">Aim 2 at each cutoff</h3>
       <p class="sn-note">Change: after minus before, with its 95% interval and a paired t-test, and the Wilcoxon signed-rank test as a check. Ratio: after over before, as a geometric mean.</p>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="aim2" data-row-key="key">
@@ -227,7 +227,7 @@
     <h2 class="sn-h2">Is <span data-draw="cutoff">—</span> still above the noise?</h2>
     <p class="sn-intro">A lower cutoff lets more noise through. Two checks with the protocol's own measurement where there should be no flow, and one where real flow should keep its direction. They use the measurements of the coarse-filter analysis: synthetic loops without flow, and the <b data-draw="value" data-source="null_checks" data-field="rest_loops" data-where="cutoff=6.0" data-format="int">—</b> loops placed before unblinding, measured again over the cuff occlusion and after release.</p>
     <article class="sn-card">
-      <h3 class="sn-h3">Flow found where there should be none, and direction after release</h3>
+      <h3 class="sn-h3" id="no-flow-checks">Flow found where there should be none, and direction after release</h3>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="null_checks" data-row-key="cutoff">
           <thead>
@@ -260,7 +260,7 @@
     <h2 class="sn-h2">The protocol's other values</h2>
     <p class="sn-intro">Both studies pooled. The protocol's secondary value is the mean of all counted loops; one of its sensitivity analyses takes the reference capillary alone.</p>
     <article class="sn-card">
-      <h3 class="sn-h3">Mean of loops and reference only, at both cutoffs</h3>
+      <h3 class="sn-h3" id="other-values-table">Mean of loops and reference only, at both cutoffs</h3>
       <div class="sn-table-wrap">
         <table class="sn-table" data-source="other_values" data-row-key="key">
           <thead>
