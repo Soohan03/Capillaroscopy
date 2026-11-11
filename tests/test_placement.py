@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import Caper
 from capillary import datasets, placement
-from gui import tasks
+from gui import reports, tasks
 from gui.settings import DataFolder
 
 LIMB = [(60.0, 200.0), (63.0, 150.0), (66.0, 100.0), (70.0, 50.0)]           # 150 px up a capillary limb
@@ -123,5 +122,5 @@ def test_the_report_from_saved_data_sets(tmp_path):
     summary = pd.read_csv(result['files']['summary'])
     assert list(summary['comparison']) == ['AB vs SJ', 'SJ: first vs second measurement']
     assert os.path.dirname(result['files']['summary']) == os.path.join(folder.validation, 'line_placement')
-    Caper.generate_validation_report(os.path.dirname(result['files']['summary']), pd.DataFrame(), [])
+    reports.generate_validation_report(os.path.dirname(result['files']['summary']), pd.DataFrame(), [])
     assert not os.path.exists(result['files']['scatter'])

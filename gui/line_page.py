@@ -141,7 +141,6 @@ class LineTool(Tool):
 class LinePage(MeasurePage):
     key = 'line'
     title = 'Centre line'
-    kind = 'line'
     measure_label = 'Measure velocity and save'
     min_frames = spacetime.DEFAULT_BLOCK_FRAMES
 

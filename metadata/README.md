@@ -58,8 +58,8 @@ dates and times) and live in the private repository.
 
 ## In the app (since 2026-10-11)
 
-The Centre line and Two boxes pages offer each recording's phases as ranges,
-from these times (`capillary.inventory.recording_phases`):
+The Centre line page offers each recording's phases as ranges, from these
+times (`capillary.inventory.recording_phases`):
 
 - **Rest:** from 2 s after the start to 2 s before the occlusion.
 - **Occlusion:** from 2 s after the occlusion to 2 s before the release.

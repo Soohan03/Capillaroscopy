@@ -4,8 +4,7 @@ import numpy as np
 import pytest
 
 from capillary import simulate
-from capillary.intensity import extract_traces
-from capillary.velocity import lag_and_correlation
+from capillary.spacetime import space_time_diagram
 
 
 @pytest.fixture(scope='module')
@@ -44,10 +43,8 @@ def test_pulsatile_speed_keeps_its_mean():
     assert pulsing.mean_speed_px_per_frame == pytest.approx(2.0, rel=0.05)
 
 
-def test_boxes_and_drawn_lines_follow_the_vessel(recording):
-    box1, box2 = recording.boxes(30, 30)
-    assert np.hypot(box1.center_x - box2.center_x, box1.center_y - box2.center_y) == pytest.approx(30, abs=1.5)
-    assert box2.center_y > box1.center_y           # the arterial limb runs up the image
+def test_drawn_lines_follow_the_vessel(recording):
+    assert recording.point_at(30)[1] > recording.point_at(60)[1]           # the arterial limb runs up the image
     line = recording.drawn_line(20, 140, wobble_px=1.0, seed=4)
     assert line.length_px == pytest.approx(120, rel=0.05)
     positions, _ = recording.centreline.sample_positions(0.25)
@@ -66,10 +63,19 @@ def test_negative_speed_is_rejected():
         simulate.simulate(simulate.hairpin(), 10, -1.0)
 
 
-def test_two_boxes_mostly_see_the_same_moment_change(recording):
-    """The failure this simulator was calibrated to reproduce: on the real recordings two boxes 30 px
-    apart on a capillary correlate best at a delay of zero, whatever the flow."""
-    box1, box2 = recording.boxes(30, 30)
-    trace = extract_traces(recording.frames, box1, box2, fps=recording.fps)
-    lags = [lag_and_correlation(trace.a[i:i + 201], trace.b[i:i + 201])[0] for i in range(0, 40, 5)]
-    assert np.mean(np.array(lags) == 0) >= 0.5          # the true lag is 30 frames
+def _halves(recording):
+    """The brightness of the vessel's two halves over time: the mean along each half of its centre line."""
+    diagram = space_time_diagram(recording.frames, recording.centreline).astype(float)
+    half = diagram.shape[1] // 2
+    return diagram[:, :half].mean(axis=1), diagram[:, half:].mean(axis=1)
+
+
+def test_the_vessel_darkens_at_the_same_moment_along_all_of_it(recording):
+    """What this simulator was calibrated to reproduce: on the real recordings most of a vessel's change in
+    brightness happens at the same moment along the whole vessel, whatever the flow."""
+    first, second = _halves(recording)
+    assert np.corrcoef(first, second)[0, 1] > 0.7
+    clean = simulate.simulate(simulate.hairpin(), 240, 1.0, disturbances=simulate.Disturbances.clean(), seed=2)
+    clean_first, clean_second = _halves(clean)
+    assert np.corrcoef(clean_first, clean_second)[0, 1] < 0.5
+    assert first.std() > 2 * clean_first.std() and second.std() > 2 * clean_second.std()

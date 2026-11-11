@@ -40,8 +40,6 @@ COLORS = {
     'danger': '#C42B2B',
     'danger_hover': '#A82020',
     'danger_soft': '#FBE3E3',
-    'box1': '#FF9F1C',          # box 1, downstream (orange)
-    'box2': '#29B2FF',          # box 2, upstream (sky blue)
     'line': '#FFD24D',          # the centre line (yellow)
     'saved_line': '#8FD3FF',    # lines of the recording's saved data sets (light blue)
     'picture_edge': '#E6EBF2',  # where every frame of the range has picture (dashed outline)
@@ -50,14 +48,6 @@ COLORS = {
     'brand': '#E5484D',         # the capillary loop of the logo in the header
 }
 
-# Correlation quality bands, the same edges and colours the report uses for its dots.
-QUALITY_BANDS = (
-    (0.25, 'poor', '#D62F2F'),
-    (0.50, 'fair', '#E08A00'),
-    (0.75, 'good', '#2463EB'),
-    (1.01, 'very good', '#1E874B'),
-)
-
 FONTS = {}
 UI_SCALE = 1.0
 
@@ -65,16 +55,6 @@ UI_SCALE = 1.0
 def px(value):
     """`value` pixels at 96 dpi, scaled to the screen."""
     return int(round(value * UI_SCALE))
-
-
-def quality_of(r):
-    """``(label, colour)`` of a correlation coefficient."""
-    if r is None or not math.isfinite(r):
-        return 'n/a', COLORS['faint']
-    for edge, label, color in QUALITY_BANDS:
-        if r < edge:
-            return label, color
-    return QUALITY_BANDS[-1][1], QUALITY_BANDS[-1][2]
 
 
 def _pick(families, candidates, fallback):

@@ -6,11 +6,11 @@
     ,0
     Application_path,/path/to/data
     mm_per_pixel,0.001328903654
-    box_size,12
 
-Rows this version does not know about are kept when the file is saved. Each
-computer has its own file (git ignores it); without one, the app asks for the
-data folder on first start.
+Further rows (the observer's initials, blind placement) are kept in `extra`,
+and rows this version does not know about are kept when the file is saved.
+Each computer has its own file (git ignores it); without one, the app asks
+for the data folder on first start.
 """
 
 from __future__ import annotations
@@ -25,17 +25,16 @@ SETTINGS_FILE = os.path.join(APP_DIR, 'settings.csv')
 
 #: Spatial calibration of the original study microscope; recalibrate when the optics change.
 DEFAULT_MM_PER_PIXEL = 0.001328903654
-#: Box size the Analyze tab has always started with (its size fields read 12 x 12).
-DEFAULT_BOX_SIZE = 12
 
-_KNOWN_KEYS = ('Application_path', 'mm_per_pixel', 'box_size')
+_KNOWN_KEYS = ('Application_path', 'mm_per_pixel')
+#: Rows of earlier versions that nothing reads any more; they are dropped when the file is next saved.
+_OBSOLETE_KEYS = ('box_size',)
 
 
 @dataclass
 class Settings:
     data_folder: str
     mm_per_pixel: float = DEFAULT_MM_PER_PIXEL
-    box_size: int = DEFAULT_BOX_SIZE
     path: str = SETTINGS_FILE
     extra: dict = field(default_factory=dict)
 
@@ -57,20 +56,13 @@ class Settings:
                 raise ValueError
         except ValueError:
             mm_per_pixel = DEFAULT_MM_PER_PIXEL
-        try:
-            box_size = int(values.get('box_size', DEFAULT_BOX_SIZE))
-            if not 2 <= box_size <= 200:
-                raise ValueError
-        except ValueError:
-            box_size = DEFAULT_BOX_SIZE
-        extra = {k: v for k, v in values.items() if k not in _KNOWN_KEYS}
-        return cls(data_folder=folder, mm_per_pixel=mm_per_pixel, box_size=box_size, path=path, extra=extra)
+        extra = {k: v for k, v in values.items() if k not in _KNOWN_KEYS + _OBSOLETE_KEYS}
+        return cls(data_folder=folder, mm_per_pixel=mm_per_pixel, path=path, extra=extra)
 
     def save(self) -> None:
         rows = [['', '0'],
                 ['Application_path', self.data_folder],
-                ['mm_per_pixel', repr(float(self.mm_per_pixel))],
-                ['box_size', str(int(self.box_size))]]
+                ['mm_per_pixel', repr(float(self.mm_per_pixel))]]
         rows += [[key, value] for key, value in self.extra.items()]
         with open(self.path, 'w', newline='', encoding='utf-8') as handle:
             csv.writer(handle, lineterminator='\n').writerows(rows)

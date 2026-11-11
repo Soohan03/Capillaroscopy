@@ -73,9 +73,9 @@ History (see the DEVLOG; on 2026-10-14 the frame-to-frame path, the choice of
 the references' centre, the placing of frames the references miss, and the
 centring on the rest were added, all above; the rest from 2026-10-08):
 
-- The original `Caper.VideoStabilization` held the whole video in memory twice
-  as float64 (22–37 GB for the 2019 recordings), wrote MPEG-4 (lossy), and wrote
-  every frame one frame late.
+- The original stabilizer (`VideoStabilization` in the first version of the
+  app) held the whole video in memory twice as float64 (22–37 GB for the 2019
+  recordings), wrote MPEG-4 (lossy), and wrote every frame one frame late.
 - It was first moved here unchanged: the same arithmetic, read from disk,
   lossless and in step.
 - Its registration was then replaced. The old one used CLAHE on a fixed 3 x 3
@@ -137,7 +137,6 @@ import numpy as np
 import pandas as pd
 
 from .datasets import SEPARATOR, software_version, write_provenance
-from .measure import Cancelled
 from .quality import calculate_blur
 from .video import VideoInfo, iter_frames, probe_video
 
@@ -433,6 +432,11 @@ class Stabilization:
                 'frames_at_search_limit': int(self.frames['at_search_limit'].sum()),
                 'frames_placed_by_neighbours': int(np.sum(placed_by == 'neighbours')),
                 'frames_lost': int(np.sum(placed_by == 'lost'))}
+
+
+class Cancelled(Exception):
+    """Raised inside long work when it is cancelled: here when `should_cancel` returns True, and by the
+    GUI's background jobs (`gui.jobs`)."""
 
 
 def _report(progress: ProgressCallback, fraction: float, stage: str) -> None:

@@ -61,7 +61,7 @@ def test_measurement_finds_the_known_velocity(recording, measured):
     result, job = measured
     truth = clip.true_velocity_mm_s(MM_PER_PIXEL)
     summary = result['summary']
-    assert result['kind'] == 'line' and result['name'] == 'line1'
+    assert result['stem'] == STEM and result['name'] == 'line1'
     assert summary['median'] == pytest.approx(truth, rel=0.05)
     assert summary['resolved_fraction'] > 0.8
     assert summary['fastest_mm_s'] > truth
@@ -94,9 +94,9 @@ def test_measurement_saves_the_data_set_and_its_report(recording, measured):
 def test_the_library_and_the_results_page_see_it(recording, measured):
     folder = recording[0]
     found = {r.stem: r for r in library.scan(folder)}[STEM]
-    assert found.line_sets == ['line1'] and found.velocity_sets == []
-    info = tasks.dataset_info(folder, STEM, 'line1', 'line')
-    assert info['kind'] == 'line' and info['complete']
+    assert found.line_sets == ['line1'] and found.dataset_count == 1
+    info = tasks.dataset_info(folder, STEM, 'line1')
+    assert info['name'] == 'line1' and info['complete']
     assert {role for role, _ in info['images']} == {'line_velocity', 'space_time'}
     assert info['summary']['median'] == pytest.approx(measured[0]['summary']['median'])
 
@@ -183,7 +183,7 @@ def test_a_failed_measurement_leaves_nothing_behind(recording):
     with pytest.raises(RuntimeError):
         tasks.measure_line_dataset(Failing(), folder=folder, stem=STEM, name='broken', video_path=path,
                                    points=points, start=0, end=150, mm_per_pixel=MM_PER_PIXEL)
-    assert datasets.dataset_paths(folder.statistics, folder.reports, STEM, 'broken', 'line') == []
+    assert datasets.dataset_paths(folder.statistics, folder.reports, STEM, 'broken') == []
 
 
 def test_a_line_that_reaches_the_black_strip_is_refused(recording):
@@ -201,7 +201,7 @@ def test_a_line_that_reaches_the_black_strip_is_refused(recording):
     with pytest.raises(ValueError, match="In 10 of the range's 220 frames the line reaches the black strip"):
         tasks.measure_line_dataset(FakeJob(), folder=folder, stem=stem, name='edge', video_path=video,
                                    points=points, start=10, end=229, mm_per_pixel=MM_PER_PIXEL)
-    assert datasets.dataset_paths(folder.statistics, folder.reports, stem, 'edge', 'line') == []
+    assert datasets.dataset_paths(folder.statistics, folder.reports, stem, 'edge') == []
 
     tasks.measure_line_dataset(FakeJob(), folder=folder, stem=stem, name='clear', video_path=video, points=points,
                                start=110, end=229, mm_per_pixel=MM_PER_PIXEL)

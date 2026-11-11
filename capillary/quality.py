@@ -1,10 +1,7 @@
 """Per-frame image quality.
 
-`calculate_blur` is the sharpness score saved with every velocity data set
-(``___blur_vector.csv``) and used by the stabilizer (`capillary.stabilize`) to
-pick its reference frames. It lived in `Utilities.py` until the 2026-10 GUI
-rebuild and moved here unchanged; `Utilities.py` itself was removed on
-2026-10-08.
+`calculate_blur` is the sharpness score the stabilizer (`capillary.stabilize`)
+uses to pick its reference frames.
 """
 
 from __future__ import annotations

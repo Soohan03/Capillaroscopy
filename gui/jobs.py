@@ -21,7 +21,7 @@ import time
 import traceback
 from typing import Callable, Optional
 
-from capillary.measure import Cancelled
+from capillary.stabilize import Cancelled
 
 log = logging.getLogger(__name__)
 

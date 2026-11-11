@@ -1,42 +1,36 @@
 """GUI-free capillaroscopy analysis engine.
 
-This package holds the measurement code: the centre-line velocity estimate
-from a space-time diagram (`capillary.spacetime`, the Centre line page), and
-the older two-box cross-correlation estimate with its region-of-interest
-geometry and per-frame intensity sampling (the Two boxes page), which used to
-live inside the Tkinter application (`Caper.py` and the original GUI's
-`FrameClasses.py`).
+Red-cell velocity in a nailfold capillary, measured from a video along a line
+drawn on the vessel:
+
+- `capillary.stabilize` moves every frame of a raw recording back into place
+  (``python -m capillary.stabilize``);
+- `capillary.spacetime` samples the space-time diagram along the line and reads
+  the velocity from the slope of its streaks, in 3-s blocks;
+- `capillary.pattern_shift` reads the same diagram pooled over a whole stretch,
+  which measures the faint flow at rest;
+- `capillary.datasets` is the file layout of saved measurements, and
+  `capillary.cli` measures a line without the GUI (``python -m capillary.cli``).
+
+For the study the tool was built for, `capillary.inventory` reads the
+recordings' names and official times and chooses each aim's recordings,
+`capillary.blinding` gives the codes of blind placement, and `capillary.aims`
+turns the saved data sets into the aims' statistics (``python -m
+capillary.aims``) with those of `capillary.agreement`.
+
+Validation: `capillary.simulate` renders synthetic recordings with a known
+velocity and `capillary.benchmark` measures them (``python -m
+capillary.benchmark``). On real recordings, which have no ground truth,
+`capillary.validation` compares the estimator with observers reading the same
+blocks blinded, and `capillary.placement` the same capillary measured twice.
 
 Nothing in here imports tkinter, PIL or matplotlib, so it can be imported from
 a batch script, a notebook or a test without a display. The GUI (`gui/`) keeps
-its own widgets and calls into these functions so that both paths compute
+its own widgets and calls into these functions, so that both paths compute
 velocity with exactly the same code.
-
-See `capillary.cli` for the batch entry point (`python -m capillary.cli`).
-`capillary.measure` is what the Two boxes page's Measure button runs,
-`capillary.datasets` the file layout of saved measurements,
-`capillary.simulate` synthetic recordings with a known velocity, and
-`capillary.benchmark` the comparison of both estimators on them
-(`python -m capillary.benchmark`). `capillary.stabilize` stabilizes a raw recording
-(`python -m capillary.stabilize`). On real recordings, which have no ground
-truth, `capillary.validation` compares the estimator with observers reading
-the same blocks blinded, `capillary.placement` the same capillary measured by
-different observers, both with the statistics of `capillary.agreement`.
 """
 
-from .roi import ROI
-from .intensity import IntensityTrace, extract_traces, extract_traces_from_video
 from .spacetime import Centreline, analyze_space_time, space_time_diagram, space_time_summary, streak_speed
-from .velocity import (
-    DEFAULT_WINDOWS,
-    lag_and_correlation,
-    signed_lag,
-    sliding_lag,
-    analyze_trace,
-    velocity_from_lag,
-    resolvable_range,
-    velocity_summary,
-)
 from .video import VideoInfo, probe_video, iter_frames
 
 __all__ = [
@@ -45,18 +39,6 @@ __all__ = [
     'analyze_space_time',
     'space_time_summary',
     'streak_speed',
-    'ROI',
-    'IntensityTrace',
-    'extract_traces',
-    'extract_traces_from_video',
-    'DEFAULT_WINDOWS',
-    'lag_and_correlation',
-    'signed_lag',
-    'sliding_lag',
-    'analyze_trace',
-    'velocity_from_lag',
-    'resolvable_range',
-    'velocity_summary',
     'VideoInfo',
     'probe_video',
     'iter_frames',

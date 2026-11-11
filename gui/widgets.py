@@ -9,7 +9,7 @@ from tkinter import ttk
 
 import numpy as np
 
-from .theme import COLORS, FONTS, icon, px, rounded_rect
+from .theme import COLORS, FONTS, icon, px
 
 # ------------------------------------------------------------------ mouse wheel routing
 
@@ -222,27 +222,18 @@ def separator(parent):
     ttk.Separator(parent, orient='horizontal').pack(fill='x')
 
 
-def color_swatch(parent, color, size=12, background=None):
-    canvas = tk.Canvas(parent, width=px(size), height=px(size), highlightthickness=0, bd=0,
-                       bg=background or COLORS['panel'])
-    rounded_rect(canvas, 1, 1, px(size) - 1, px(size) - 1, px(3), fill=color, outline='')
-    return canvas
-
-
 # ------------------------------------------------------------------------------ charts
 
 class LineChart(tk.Canvas):
     """A compact line chart on a canvas.
 
-    `set_data` takes series of ``(x, y, colour)``. With ``normalize`` each
-    series is scaled to its own range (to compare shapes, as for the two box
-    signals); otherwise all share a y axis and its range is labelled.
+    `set_data` takes series of ``(x, y, colour)``; all share a y axis, and its
+    range is labelled.
     """
 
-    def __init__(self, parent, height=110, normalize=False, zero_line=False, unit='', background=None):
+    def __init__(self, parent, height=110, zero_line=False, unit='', background=None):
         background = background or COLORS['panel']
         super().__init__(parent, height=px(height), bg=background, highlightthickness=0, bd=0)
-        self.normalize = normalize
         self.zero_line = zero_line
         self.unit = unit
         self._series = []
@@ -273,7 +264,7 @@ class LineChart(tk.Canvas):
             self.create_text(width / 2, height / 2, text=self._message or 'No data', fill=COLORS['faint'],
                              font=FONTS['small'], width=width - px(20), justify='center')
             return
-        left = px(8) if self.normalize else px(44)
+        left = px(44)
         right, top, bottom = width - px(8), px(10), height - px(10)
         xs = np.concatenate([x[np.isfinite(y)] for x, y, _ in self._series if np.isfinite(y).any()] or [np.array([0.0, 1.0])])
         x0, x1 = self._x_range or (float(np.nanmin(xs)), float(np.nanmax(xs)))
@@ -283,44 +274,38 @@ class LineChart(tk.Canvas):
         def sx(x):
             return left + (x - x0) / (x1 - x0) * (right - left)
 
-        if not self.normalize:
-            ys = np.concatenate([y[np.isfinite(y)] for _, y, _ in self._series] or [np.array([0.0])])
-            ys = ys if ys.size else np.array([0.0])
-            y0, y1 = float(np.min(ys)), float(np.max(ys))
-            if self.zero_line:
-                y0, y1 = min(y0, 0.0), max(y1, 0.0)
-            if y1 - y0 < 1e-12:
-                y0, y1 = y0 - 1, y1 + 1
-            # leave a margin only on the sides where there is data (not below a zero baseline)
-            pad = (y1 - y0) * 0.08
-            if not (self.zero_line and y0 == 0):
-                y0 -= pad
-            if not (self.zero_line and y1 == 0):
-                y1 += pad
-            for value, anchor_y in ((y1, top), (y0, bottom)):
-                self.create_text(left - px(6), anchor_y, text=_short(value), anchor='e', fill=COLORS['faint'],
-                                 font=FONTS['tiny'])
-            if self.unit:
-                self.create_text(left - px(6), (top + bottom) / 2, text=self.unit, anchor='e', fill=COLORS['faint'],
-                                 font=FONTS['tiny'])
-            if self.zero_line and y0 < 0 < y1:
-                zero = bottom - (0 - y0) / (y1 - y0) * (bottom - top)
-                self.create_line(left, zero, right, zero, fill=COLORS['border_strong'], dash=(3, 3))
+        ys = np.concatenate([y[np.isfinite(y)] for _, y, _ in self._series] or [np.array([0.0])])
+        ys = ys if ys.size else np.array([0.0])
+        y0, y1 = float(np.min(ys)), float(np.max(ys))
+        if self.zero_line:
+            y0, y1 = min(y0, 0.0), max(y1, 0.0)
+        if y1 - y0 < 1e-12:
+            y0, y1 = y0 - 1, y1 + 1
+        # leave a margin only on the sides where there is data (not below a zero baseline)
+        pad = (y1 - y0) * 0.08
+        if not (self.zero_line and y0 == 0):
+            y0 -= pad
+        if not (self.zero_line and y1 == 0):
+            y1 += pad
+        for value, anchor_y in ((y1, top), (y0, bottom)):
+            self.create_text(left - px(6), anchor_y, text=_short(value), anchor='e', fill=COLORS['faint'],
+                             font=FONTS['tiny'])
+        if self.unit:
+            self.create_text(left - px(6), (top + bottom) / 2, text=self.unit, anchor='e', fill=COLORS['faint'],
+                             font=FONTS['tiny'])
+        if self.zero_line and y0 < 0 < y1:
+            zero = bottom - (0 - y0) / (y1 - y0) * (bottom - top)
+            self.create_line(left, zero, right, zero, fill=COLORS['border_strong'], dash=(3, 3))
 
         for x_value, color in self._vlines:
             if x0 <= x_value <= x1:
                 self.create_line(sx(x_value), top - px(4), sx(x_value), bottom + px(4), fill=color, width=1)
 
+        low, high = y0, y1
         for x, y, color in self._series:
             finite = np.isfinite(y)
             if not finite.any():
                 continue
-            if self.normalize:
-                low, high = np.percentile(y[finite], 2), np.percentile(y[finite], 98)
-                if high - low < 1e-9:
-                    low, high = low - 1, high + 1
-            else:
-                low, high = y0, y1
             # break the line at gaps (NaN) so missing data is not bridged
             start = None
             for i in range(len(y) + 1):

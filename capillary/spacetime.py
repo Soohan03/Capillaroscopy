@@ -12,18 +12,17 @@ the slope of the streaks is their speed:
     speed = distance along the line / time  [px per frame]
     velocity = speed * fps * mm_per_pixel   [mm/s]
 
-The diagram uses every position along the line, where the two-box method uses
-two, and the speed comes from a slope rather than from a whole number of
-frames of delay, so it is not limited to distance / 1, distance / 2, ...
+The diagram uses every position along the line, and the speed comes from a
+slope, so it is not limited to a whole number of frames of delay between two
+points.
 
-Why not two boxes
------------------
+The same-moment change
+----------------------
 In the recordings this tool was built for, about 70% of the brightness change
-seen by a box on a capillary happens at the same moment along the whole vessel
-(probably small movements of the vessel, or focus). Two boxes see that change
-simultaneously, so their correlation peaks at a delay of zero, which the box
-method reports as "too fast to resolve" even where the flow is slow (see the
-2026-10-06 entry in DEVLOG.md).
+of a small patch of capillary happens at the same moment along the whole
+vessel (probably small movements of the vessel, or focus; see the 2026-10-06
+entry in DEVLOG.md). It says nothing about the flow, so the estimator is built
+to cancel it (the direction contrast below).
 
 How the slope is found
 ----------------------

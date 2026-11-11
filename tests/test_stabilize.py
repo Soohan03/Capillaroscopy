@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 from capillary import spacetime, stabilize
-from capillary.measure import Cancelled
+from capillary.stabilize import Cancelled
 from capillary.video import iter_frames, probe_video
 from gui import library, tasks
 from gui.settings import DataFolder

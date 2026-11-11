@@ -27,7 +27,7 @@ On disk, in ``Validation/<set name>/`` in the data folder::
     set.json                    what the set holds and how it was drawn
     blocks.npz                  the blocks (float32, frames x positions), by item id
     readings/<observer>_s<session>.json    one reading each
-    report/                     agreement tables (here) and plots (Caper.py)
+    report/                     agreement tables (here) and plots (gui/reports.py)
 
 Nothing here imports a GUI toolkit.
 """

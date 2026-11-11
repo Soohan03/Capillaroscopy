@@ -14,8 +14,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import Caper
 from capillary import datasets, spacetime, validation
+from gui import reports
 
 from .test_spacetime import diagram as moving_diagram
 
@@ -245,7 +245,7 @@ def test_three_observers_add_the_icc_of_all_of_them(reading_set, agreement):
 def test_the_report_is_written_and_read_back(reading_set, agreement):
     readings, _, table, comparisons = agreement
     files = validation.write_report_tables(reading_set, table, comparisons, reading_set.readings())
-    files.update(Caper.generate_validation_report(reading_set.report_dir, table, comparisons))
+    files.update(reports.generate_validation_report(reading_set.report_dir, table, comparisons))
     for role in ('items', 'summary', 'readings', 'bland_altman', 'scatter'):
         assert os.path.isfile(files[role])
     summary = pd.read_csv(files['readings'])
@@ -254,5 +254,5 @@ def test_the_report_is_written_and_read_back(reading_set, agreement):
     assert [row['comparison'] for row in loaded] == [row['comparison'] for row in comparisons]
     assert loaded[0]['bias'] == pytest.approx(comparisons[0]['bias'])
     # nothing to plot: stale plots are removed
-    Caper.generate_validation_report(reading_set.report_dir, table, [])
+    reports.generate_validation_report(reading_set.report_dir, table, [])
     assert not os.path.exists(files['bland_altman'])

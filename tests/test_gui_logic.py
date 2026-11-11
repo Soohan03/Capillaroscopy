@@ -38,13 +38,22 @@ def test_settings_round_trip_keeps_rows_it_does_not_know(tmp_path):
     path = tmp_path / 'settings.csv'
     path.write_text(',0\nApplication_path,/data\nmm_per_pixel,0.002\nsomething_else,42\n')
     settings = Settings.load(str(path))
-    assert (settings.data_folder, settings.mm_per_pixel, settings.box_size) == ('/data', 0.002, 12)
-    settings.box_size = 20
+    assert (settings.data_folder, settings.mm_per_pixel) == ('/data', 0.002)
+    settings.mm_per_pixel = 0.003
     settings.save()
     again = Settings.load(str(path))
-    assert (again.data_folder, again.mm_per_pixel, again.box_size) == ('/data', 0.002, 20)
+    assert (again.data_folder, again.mm_per_pixel) == ('/data', 0.003)
     assert again.extra == {'something_else': '42'}
-    assert path.read_text().splitlines()[:3] == [',0', 'Application_path,/data', 'mm_per_pixel,0.002']
+    assert path.read_text().splitlines()[:3] == [',0', 'Application_path,/data', 'mm_per_pixel,0.003']
+
+
+def test_settings_drop_rows_that_nothing_reads_any_more(tmp_path):
+    path = tmp_path / 'settings.csv'
+    path.write_text(',0\nApplication_path,/data\nmm_per_pixel,0.002\nbox_size,12\nobserver,SJ\n')
+    settings = Settings.load(str(path))
+    assert settings.extra == {'observer': 'SJ'}
+    settings.save()
+    assert path.read_text().splitlines() == [',0', 'Application_path,/data', 'mm_per_pixel,0.002', 'observer,SJ']
 
 
 def test_settings_first_start_and_unusable_values(tmp_path):
@@ -52,10 +61,9 @@ def test_settings_first_start_and_unusable_values(tmp_path):
     path = tmp_path / 'settings.csv'
     path.write_text(',0\nmm_per_pixel,0.002\n')
     assert Settings.load(str(path)) is None  # no data folder chosen yet
-    path.write_text(',0\nApplication_path,/data\nmm_per_pixel,abc\nbox_size,1\n')
+    path.write_text(',0\nApplication_path,/data\nmm_per_pixel,abc\n')
     settings = Settings.load(str(path))
     assert settings.mm_per_pixel == pytest.approx(0.001328903654)
-    assert settings.box_size == 12
 
 
 # --------------------------------------------------------------------- the library
@@ -71,16 +79,15 @@ def test_scan_groups_the_files_of_each_recording(folder):
     touch(os.path.join(folder.stabilized, 'notes.txt'))
     for stem, name in (('FP01', 'Test'), ('FP01', 'Test2'), ('FP01_b', 'set1'), ('FP01', 'old___name'),
                        ('FP09', 'orphan')):
-        touch(datasets.velocity_dataset_files(folder.statistics, stem, name)['cross_correlation'])
-    touch(datasets.line_dataset_files(folder.statistics, 'FP01', 'line1')['velocity'])
+        touch(datasets.line_dataset_files(folder.statistics, stem, name)['velocity'])
+    touch(os.path.join(folder.statistics, 'FP01___other___cross_correlation.csv'))   # not a data set's file
 
     recordings = {recording.stem: recording for recording in library.scan(folder)}
     assert sorted(recordings) == ['FP01', 'FP01_b', 'FP02']
     fp01 = recordings['FP01']
     assert fp01.video == fp01.stabilized and fp01.raw
-    assert fp01.velocity_sets == ['Test', 'Test2', 'old___name'] and fp01.line_sets == ['line1']
-    assert fp01.dataset_count == 4 and fp01.datasets_of('line') == ['line1']
-    assert recordings['FP01_b'].velocity_sets == ['set1'] and recordings['FP01_b'].video.endswith('FP01_b.avi')
+    assert fp01.line_sets == ['Test', 'Test2', 'old___name'] and fp01.dataset_count == 3
+    assert recordings['FP01_b'].line_sets == ['set1'] and recordings['FP01_b'].video.endswith('FP01_b.avi')
     assert recordings['FP02'].is_stabilized and recordings['FP02'].dataset_count == 0
     assert all(recording.legacy_flow_files == [] for recording in recordings.values())
 
@@ -102,7 +109,7 @@ def test_old_flow_files_are_not_listed_but_belong_to_their_recording(folder):
     recordings = library.scan(folder)
     assert [recording.stem for recording in recordings] == ['FP01']
     fp01 = recordings[0]
-    assert fp01.velocity_sets == [] and fp01.dataset_count == 0
+    assert fp01.line_sets == [] and fp01.dataset_count == 0
     assert sorted(fp01.legacy_flow_files) == sorted(old)
 
 
@@ -117,17 +124,14 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
         touch(path, content)
     old = old_flow_files(folder, stem, 'Test_1')
     videos[old[0]] = old[0].encode()     # the old flow video shares the file name too
-    files = datasets.velocity_dataset_files(folder.statistics, stem, 'Test')
-    for part in datasets.VELOCITY_INPUTS:
-        touch(files[part], part.encode())
     line_files = datasets.line_dataset_files(folder.statistics, stem, 'line1')
-    touch(line_files['velocity'], b'v')
-    touch(line_files['space_time'], b's')
+    for part in ('velocity', 'space_time', 'provenance'):
+        touch(line_files[part], part.encode())
     datasets.save_time_points(datasets.time_points_file(folder.statistics, stem), [12.5])
 
     recording = library.scan(folder)[0]
     paths = tasks.recording_files(folder, recording)
-    assert len(paths) == 2 + 3 + 2 + 1 + len(old)
+    assert len(paths) == 2 + 3 + 1 + len(old)
     assert line_files['space_time'] in paths
     target = tasks.move_to_trash(folder, paths, recording.stem)
 
@@ -137,7 +141,7 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
         assert not os.path.exists(path)
         with open(os.path.join(target, tasks.relative_path(folder, path)), 'rb') as handle:
             assert handle.read() == content
-    assert os.path.isfile(os.path.join(target, 'Statistics', os.path.basename(files['cross_correlation'])))
+    assert os.path.isfile(os.path.join(target, 'Statistics', os.path.basename(line_files['provenance'])))
     for path in old:
         assert not os.path.exists(path)
         assert os.path.isfile(os.path.join(target, tasks.relative_path(folder, path)))
