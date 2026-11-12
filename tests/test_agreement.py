@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 
-from capillary.agreement import bland_altman, bland_altman_ratio, cohens_kappa, icc, same_direction
+from capillary.agreement import bland_altman, bland_altman_ratio, icc
 
 # Shrout & Fleiss (Psychol Bull 1979;86:420-8), table 2: six targets rated by four judges.
 SHROUT_FLEISS = np.array([[9, 2, 5, 8], [6, 1, 3, 2], [8, 4, 6, 8], [7, 1, 2, 6], [10, 5, 6, 9], [6, 2, 4, 7]], float)
@@ -82,30 +82,3 @@ def test_ratio_scale_compares_magnitudes_of_same_sign_pairs_only():
     result = bland_altman_ratio([-0.2, 0.1, 0.0, 0.3], [-0.1, -0.1, 0.1, 0.3])
     assert result['n'] == 2                            # (-0.2, -0.1) and (0.3, 0.3)
     assert result['ratio'] == pytest.approx(math.sqrt(2.0))
-
-
-def test_cohens_kappa_by_hand():
-    # 50 items: both yes 20, only the first 5, only the second 10, both no 15
-    first = np.array([1] * 25 + [0] * 25, float)
-    second = np.array([1] * 20 + [0] * 5 + [1] * 10 + [0] * 15, float)
-    result = cohens_kappa(first, second)
-    # observed 0.7, chance 0.5 x 0.6 + 0.5 x 0.4 = 0.5 -> kappa 0.4; SE sqrt(0.7 x 0.3 / (50 x 0.25))
-    assert (result['both'], result['first_only'], result['second_only'], result['neither']) == (20, 5, 10, 15)
-    assert result['agreement'] == pytest.approx(0.7)
-    assert result['kappa'] == pytest.approx(0.4)
-    se = math.sqrt(0.7 * 0.3 / (50 * 0.25))
-    assert result['kappa_ci_high'] - result['kappa'] == pytest.approx(1.95996 * se, rel=1e-4)
-
-
-def test_cohens_kappa_leaves_out_items_not_judged_and_is_undefined_without_variety():
-    result = cohens_kappa([1, 0, np.nan, 1], [1, 0, 1, np.nan])
-    assert result['n'] == 2 and result['kappa'] == pytest.approx(1.0)
-    nearly = cohens_kappa([1] * 6 + [0] * 11 + [0], [1] * 6 + [0] * 11 + [1])
-    assert nearly['kappa'] < 1 and nearly['kappa_ci_high'] == 1.0          # the interval stops at 1
-    always = cohens_kappa([1, 1, 1], [1, 1, 1])
-    assert always['agreement'] == 1.0 and math.isnan(always['kappa'])
-
-
-def test_same_direction():
-    result = same_direction([0.1, -0.2, 0.3, np.nan], [0.2, 0.1, 0.4, 0.5])
-    assert result['n'] == 3 and result['fraction'] == pytest.approx(2 / 3)

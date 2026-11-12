@@ -105,28 +105,10 @@ def confirm(parent, title, message, detail='', ok='OK', cancel='Cancel', danger=
     return bool(dialog.show())
 
 
-def choose(parent, title, message, options, detail='', cancel='Cancel'):
-    """Buttons for each ``(value, text, style)`` in `options`; returns the value or None."""
-    dialog = Dialog(parent, title)
-    _message_body(dialog, title, message, detail, 'question')
-    for value, text, style in reversed(options):
-        dialog.button(text, lambda v=value: dialog.finish(v), style)
-    if cancel:
-        dialog.button(cancel, dialog.cancel)
-    return dialog.show()
-
-
 def show_error(parent, title, message, detail=''):
     dialog = Dialog(parent, title)
     _message_body(dialog, title, message, detail, 'error')
     dialog.button('Close', dialog.cancel, 'Accent.TButton', default=True)
-    dialog.show()
-
-
-def show_info(parent, title, message, detail=''):
-    dialog = Dialog(parent, title)
-    _message_body(dialog, title, message, detail, 'info')
-    dialog.button('OK', dialog.cancel, 'Accent.TButton', default=True)
     dialog.show()
 
 
@@ -254,18 +236,8 @@ SHORTCUTS = (
         ('M', 'Mark a time point at the current frame'),
         ('Right-click a marker', 'Remove it'),
     )),
-    ('Reading blocks (Validation)', (
-        ('Drag on the block', 'Draw a line along a streak'),
-        ('Drag a line end', 'Move it'),
-        ('Right-click a line', 'Remove it'),
-        ('Backspace', 'Remove the last line'),
-        ('N', 'No clear streaks in this block'),
-        ('Enter or →', 'Next block'),
-        ('←', 'Previous block'),
-        ('Esc', 'Finish later (everything is saved)'),
-    )),
     ('Window', (
-        ('Ctrl + 1 … 3', 'Centre line, Results, Validation'),
+        ('Ctrl + 1 / 2', 'Centre line / Results'),
         ('Ctrl + R', 'Look for new videos and data sets'),
         ('Ctrl + ,', 'Settings'),
         ('F1 or ?', 'This list'),
@@ -282,7 +254,7 @@ class ShortcutsDialog(Dialog):
                                                                                       pady=(0, px(10)))
         columns = ttk.Frame(self.body, style='Panel.TFrame')
         columns.pack(fill='both')
-        halves = (SHORTCUTS[:3], SHORTCUTS[3:])
+        halves = (SHORTCUTS[:2], SHORTCUTS[2:])
         for column, groups in enumerate(halves):
             frame = ttk.Frame(columns, style='Panel.TFrame')
             frame.grid(row=0, column=column, sticky='nw', padx=(0 if column == 0 else px(28), 0))

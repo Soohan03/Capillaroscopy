@@ -87,22 +87,12 @@ class DataFolder:
         return os.path.join(self.root, 'StabilizedVideos')
 
     @property
-    def flows(self) -> str:
-        """Optical flow from versions before 2026-10-06; only read to trash it with its recording."""
-        return os.path.join(self.root, 'Flows')
-
-    @property
     def statistics(self) -> str:
         return os.path.join(self.root, 'Statistics')
 
     @property
     def reports(self) -> str:
         return os.path.join(self.root, 'Reports')
-
-    @property
-    def validation(self) -> str:
-        """Reading sets: blocks read by observers to validate the centre-line velocity (created when needed)."""
-        return os.path.join(self.root, 'Validation')
 
     @property
     def trash(self) -> str:

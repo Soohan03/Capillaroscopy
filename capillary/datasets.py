@@ -29,12 +29,9 @@ unknown). For a whole loop, ``arterial_end`` says which end of it lies on the
 arterial limb (start, end or unknown), and each limb's own pattern shift
 (``pattern_shift_start_limb_...``, ``pattern_shift_end_limb_...``) comes with
 ``loop_movement``: whether they ran opposite ways along the line, as the
-picture moving does (`capillary.pattern_shift.loop_limbs`).
-
-Versions before 2026-10-06 also had an optical-flow measurement, saved as
-``___flow.pickle`` and ``___mask.pickle`` (plus ``___flow_provenance.json``)
-with plots in ``Reports/``. Nothing reads those any more; they are only moved
-to the trash together with their recording (`legacy_flow_dataset_paths`).
+picture moving does (`capillary.pattern_shift.loop_limbs`). The provenance
+also keeps the observer's code (``observer``), entered next to the data set's
+name.
 
 Time points marked on a recording live in ``<stem>_registered_time_points.csv``
 (one underscore), in seconds from the start of the video.
@@ -62,12 +59,9 @@ LINE_REPORT_FILES = {
     'summary': '___line_summary.csv',
 }
 
-#: Files of an optical-flow data set from before 2026-10-06, after ``<stem>___<name>___``:
-#: the first marks the data set; the plots are in ``Reports/``, the rest in ``Statistics/``.
-LEGACY_FLOW_STATISTICS = ('flow.pickle', 'mask.pickle', 'flow_provenance.json')
-LEGACY_FLOW_REPORTS = ('up_and_down_.png', 'omnidirectional_.png')
-
 _FORBIDDEN_NAME_CHARACTERS = '<>:"/\\|?*'
+#: Observer codes: initials or a short name.
+_OBSERVER = re.compile(r'^[A-Z0-9][A-Z0-9-]{0,15}$')
 
 
 # --------------------------------------------------------------------------- names
@@ -139,6 +133,21 @@ def suggest_dataset_name(existing: Iterable[str], base: str = 'set') -> str:
     while f'{base}{number}' in taken:
         number += 1
     return f'{base}{number}'
+
+
+def normalize_observer(text: str) -> str:
+    """An observer's code as it is saved with a data set: upper case, without surrounding spaces."""
+    return (text or '').strip().upper()
+
+
+def validate_observer(text: str) -> Optional[str]:
+    """Why `text` cannot be used as an observer code, or None."""
+    code = normalize_observer(text)
+    if not code:
+        return 'Enter the observer\'s initials.'
+    if not _OBSERVER.match(code):
+        return 'Use up to 16 letters, digits or dashes, for example initials such as SJ.'
+    return None
 
 
 # --------------------------------------------------------------------- time points
@@ -251,15 +260,6 @@ def dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str) -
     """
     candidates = list(line_dataset_files(statistics_dir, stem, name).values())
     candidates += list(line_report_files(reports_dir, stem, name).values())
-    return [path for path in candidates if os.path.exists(path)]
-
-
-def legacy_flow_dataset_paths(statistics_dir: str, reports_dir: str, stem: str, name: str) -> list[str]:
-    """Every file of an optical-flow data set from before 2026-10-06 that exists on disk."""
-    statistics = dataset_prefix(statistics_dir, stem, name) + SEPARATOR
-    reports = dataset_prefix(reports_dir, stem, name) + SEPARATOR
-    candidates = [statistics + part for part in LEGACY_FLOW_STATISTICS]
-    candidates += [reports + part for part in LEGACY_FLOW_REPORTS]
     return [path for path in candidates if os.path.exists(path)]
 
 

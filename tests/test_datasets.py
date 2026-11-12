@@ -79,26 +79,6 @@ def test_line_data_set_files_and_round_trip(tmp_path):
     assert datasets.dataset_paths(str(statistics), str(reports), STEM, 'line2') == []
 
 
-def test_old_flow_data_sets_are_found_with_their_plots(tmp_path):
-    statistics, reports = tmp_path / 'Statistics', tmp_path / 'Reports'
-    statistics.mkdir()
-    reports.mkdir()
-    # the names an optical-flow data set had before 2026-10-06, including one saved without a name
-    for name in ('', 'Test_1', 'Test_12'):
-        for part in ('flow.pickle', 'mask.pickle'):
-            touch(statistics / f'{STEM}___{name}___{part}')
-    for part in ('up_and_down_.png', 'omnidirectional_.png'):
-        touch(reports / f'{STEM}___Test_1___{part}')
-    touch(statistics / f'{STEM}___Test_1___flow_provenance.json')
-
-    paths = datasets.legacy_flow_dataset_paths(str(statistics), str(reports), STEM, 'Test_1')
-    assert sorted(os.path.basename(p) for p in paths) == sorted(
-        f'{STEM}___Test_1___{part}' for part in ('flow.pickle', 'mask.pickle', 'flow_provenance.json',
-                                                  'up_and_down_.png', 'omnidirectional_.png'))
-    assert [os.path.basename(p) for p in datasets.legacy_flow_dataset_paths(
-        str(statistics), str(reports), STEM, '')] == [f'{STEM}______flow.pickle', f'{STEM}______mask.pickle']
-
-
 @pytest.mark.parametrize('name', ['set1', 'Före test', 'baseline-2.1', 'a b c'])
 def test_valid_names(name):
     assert datasets.validate_dataset_name(name) is None
@@ -113,6 +93,14 @@ def test_invalid_names_are_explained(name):
 def test_suggested_name_is_unused():
     assert datasets.suggest_dataset_name([]) == 'set1'
     assert datasets.suggest_dataset_name(['set1', 'set2', 'other']) == 'set3'
+    assert datasets.suggest_dataset_name(['loop1'], 'loop') == 'loop2'
+
+
+def test_observer_codes():
+    assert datasets.normalize_observer(' sj ') == 'SJ' and datasets.normalize_observer(None) == ''
+    assert datasets.validate_observer('sj') is None and datasets.validate_observer('SJ-R') is None
+    assert datasets.validate_observer(' ') and datasets.validate_observer('a b')
+    assert datasets.validate_observer('x' * 17)
 
 
 def test_time_points_round_trip(tmp_path):

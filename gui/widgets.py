@@ -94,9 +94,6 @@ class ScrollFrame(ttk.Frame):
         if first > 0.0 or last < 1.0:
             self.canvas.yview_scroll(-3 * steps, 'units')
 
-    def scroll_to_top(self):
-        self.canvas.yview_moveto(0)
-
 
 # ---------------------------------------------------------------------------- tooltip
 

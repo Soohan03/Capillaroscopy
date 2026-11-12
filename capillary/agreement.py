@@ -1,9 +1,8 @@
-"""Agreement between two ways of measuring the same thing: Bland-Altman, ICC, Cohen's kappa.
+"""Agreement between two measurements of the same thing: Bland-Altman and the intraclass correlation.
 
-Used to validate the centre-line velocity on real recordings, where nobody
-knows the true velocity: the estimate is compared with observers reading the
-same space-time diagrams by hand, observers with each other, and an observer
-with their own second reading (`capillary.validation`).
+Used for the study's reproducibility: a participant's resting velocity on two
+days (`capillary.aims`), and the same recording placed twice
+(`analysis/placement_repeat/`).
 
 - **Bland-Altman** (Bland & Altman, Lancet 1986;327:307-10, and Stat Methods
   Med Res 1999;8:135-60): the mean difference (bias) and the 95% limits of
@@ -17,8 +16,6 @@ with their own second reading (`capillary.validation`).
   two-way model, single measurements: absolute agreement ICC(A,1), which is
   Shrout & Fleiss's ICC(2,1), and consistency ICC(C,1), their ICC(3,1), with
   the F-distribution confidence intervals of McGraw & Wong.
-- **Cohen's kappa** (Educ Psychol Meas 1960;20:37-46) for agreeing whether a
-  block can be read at all, with a large-sample confidence interval.
 
 Pairs with a missing value (NaN) are left out everywhere. Nothing here imports
 a GUI toolkit.
@@ -47,11 +44,6 @@ def _pairs(a, b) -> tuple[np.ndarray, np.ndarray]:
 def _t(confidence: float, df: float) -> float:
     from scipy import stats
     return float(stats.t.ppf(0.5 + confidence / 2, df))
-
-
-def _z(confidence: float) -> float:
-    from scipy import stats
-    return float(stats.norm.ppf(0.5 + confidence / 2))
 
 
 # ------------------------------------------------------------------------- Bland-Altman
@@ -175,46 +167,3 @@ def icc(ratings, confidence: float = 0.95) -> dict:
             result['agreement_ci_low'] = n * (ms_rows - f_star * ms_error) / (f_star * spread + n * ms_rows)
             result['agreement_ci_high'] = n * (f_star_upper * ms_rows - ms_error) / (spread + n * f_star_upper * ms_rows)
     return {key: float(value) if isinstance(value, (float, np.floating)) else value for key, value in result.items()}
-
-
-# -------------------------------------------------------------------------------- kappa
-
-def cohens_kappa(first, second, confidence: float = 0.95) -> dict:
-    """Agreement of two yes/no judgements of the same items beyond chance.
-
-    `first` and `second` hold 1 (yes), 0 (no) or NaN (not judged; left out).
-    Returns ``n``, the counts ``both``, ``first_only``, ``second_only`` and
-    ``neither``, the observed agreement ``agreement``, ``kappa`` and
-    ``kappa_ci_low/high`` (large-sample standard error
-    sqrt(po (1 - po) / (n (1 - pe)^2)), the interval cut off at -1 and 1).
-    Kappa is NaN when chance agreement is already 1 (both always said the
-    same single answer).
-    """
-    x, y = _pairs(first, second)
-    x, y = x > 0.5, y > 0.5
-    n = int(x.size)
-    both = int(np.sum(x & y))
-    first_only = int(np.sum(x & ~y))
-    second_only = int(np.sum(~x & y))
-    neither = int(np.sum(~x & ~y))
-    result = {'n': n, 'both': both, 'first_only': first_only, 'second_only': second_only, 'neither': neither,
-              'agreement': NAN, 'kappa': NAN, 'kappa_ci_low': NAN, 'kappa_ci_high': NAN}
-    if n == 0:
-        return result
-    observed = (both + neither) / n
-    p_first, p_second = (both + first_only) / n, (both + second_only) / n
-    expected = p_first * p_second + (1 - p_first) * (1 - p_second)
-    result['agreement'] = observed
-    if expected < 1:
-        kappa = (observed - expected) / (1 - expected)
-        se = math.sqrt(max(observed * (1 - observed), 0.0) / (n * (1 - expected) ** 2))
-        z = _z(confidence)
-        result.update(kappa=kappa, kappa_ci_low=max(-1.0, kappa - z * se), kappa_ci_high=min(1.0, kappa + z * se))
-    return result
-
-
-def same_direction(a, b) -> dict:
-    """``n`` pairs and the ``fraction`` of them with the same sign (zeros count as their own sign)."""
-    a, b = _pairs(a, b)
-    n = int(a.size)
-    return {'n': n, 'fraction': float(np.mean(np.sign(a) == np.sign(b))) if n else NAN}

@@ -66,7 +66,6 @@ def _velocity_text(value):
 class ResultsPage(ttk.Frame):
     key = 'results'
     title = 'Results'
-    uses_library = True
 
     def __init__(self, parent, app):
         super().__init__(parent, style='TFrame')

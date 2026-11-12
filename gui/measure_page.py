@@ -26,7 +26,7 @@ from functools import partial
 from tkinter import ttk
 from typing import Optional
 
-from capillary import datasets, inventory, validation
+from capillary import datasets, inventory
 
 from . import tasks
 from .dialogs import confirm, show_error
@@ -49,7 +49,6 @@ PHASE_SPANS = {'rest': 'from 2 s after the start to 2 s before the occlusion',
 class MeasurePage(ttk.Frame):
     key = ''
     title = ''
-    uses_library = True
     measure_label = 'Measure and save'
     min_frames = 1
 
@@ -240,8 +239,8 @@ class MeasurePage(ttk.Frame):
         self.observer_entry.grid(row=1, column=1, sticky='w', padx=(px(8), 0))
         self.app.observer_var.trace_add('write', lambda *_: self.update_measure_state())
         for widget in (observer_label, self.observer_entry):
-            Tooltip(widget, 'Initials of who measures (optional). They are saved with the data set, so that the '
-                            'same capillary measured by different people can be compared on the Validation page.')
+            Tooltip(widget, 'Initials of who measures (optional). They are saved with the data set, so that each '
+                            'observer\'s lines can be told apart and summarized on their own.')
         self.name_message = ttk.Label(footer, text='', style='Faint.Panel.TLabel',
                                       wraplength=px(INSPECTOR_WIDTH - 40), justify='left')
         self.name_message.pack(anchor='w', pady=(px(3), 0))
@@ -555,14 +554,14 @@ class MeasurePage(ttk.Frame):
         if message:
             reasons.append(message)
         if self.app.observer_var.get().strip():
-            message = validation.validate_observer(self.app.observer_var.get())
+            message = datasets.validate_observer(self.app.observer_var.get())
             if message:
                 reasons.append(f'Observer: {message}')
         return reasons
 
     def observer(self) -> str:
         """The observer's code as saved with a data set ('' if none was entered)."""
-        return validation.normalize_observer(self.app.observer_var.get())
+        return datasets.normalize_observer(self.app.observer_var.get())
 
     def update_measure_state(self):
         name = self.name_var.get()

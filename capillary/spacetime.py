@@ -516,14 +516,3 @@ def space_time_summary(report: pd.DataFrame) -> dict:
         'positive_fraction': float(np.mean(resolved > 0)) if resolved.size else float('nan'),
         'median_snr': float(np.median(snr)) if snr.size else float('nan'),
     }
-
-
-def estimate_from_frames(frames: Iterable[np.ndarray], centreline: Centreline, fps: float,
-                         mm_per_pixel: float, half_width_px: int = DEFAULT_HALF_WIDTH_PX,
-                         block_frames: int = DEFAULT_BLOCK_FRAMES, step_frames: int = DEFAULT_STEP_FRAMES,
-                         first_frame: int = 0) -> tuple[np.ndarray, pd.DataFrame]:
-    """Diagram and per-block velocities in one call (for scripts and tests)."""
-    diagram = space_time_diagram(frames, centreline, half_width_px)
-    report = analyze_space_time(diagram, fps, mm_per_pixel, block_frames=block_frames,
-                                step_frames=step_frames, first_frame=first_frame)
-    return diagram, report

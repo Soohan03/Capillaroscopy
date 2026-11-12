@@ -1,4 +1,4 @@
-"""The GUI's non-visual logic: settings, the recording list, the trash, background jobs.
+"""The GUI's logic without a window: settings, the recording list, the trash, background jobs.
 
 None of these tests opens a window, so they run headless like the rest of the suite.
 """
@@ -7,15 +7,13 @@ import os
 import threading
 import time
 
-import numpy as np
 import pytest
 
-from capillary import datasets, validation
+from capillary import datasets
 from gui import library, tasks
 from gui.jobs import JobManager
 from gui.media import format_time
 from gui.settings import DataFolder, Settings
-from gui.reading_view import BlockGeometry, block_image
 
 
 def touch(path, content=b''):
@@ -69,7 +67,6 @@ def test_settings_first_start_and_unusable_values(tmp_path):
 # --------------------------------------------------------------------- the library
 
 def test_scan_groups_the_files_of_each_recording(folder):
-    assert not os.path.exists(folder.flows)  # new data folders get no Flows/ any more
     assert library.scan(folder) == []
     touch(os.path.join(folder.recorded, 'FP01.avi'))
     touch(os.path.join(folder.stabilized, 'FP01.avi'))
@@ -89,28 +86,6 @@ def test_scan_groups_the_files_of_each_recording(folder):
     assert fp01.line_sets == ['Test', 'Test2', 'old___name'] and fp01.dataset_count == 3
     assert recordings['FP01_b'].line_sets == ['set1'] and recordings['FP01_b'].video.endswith('FP01_b.avi')
     assert recordings['FP02'].is_stabilized and recordings['FP02'].dataset_count == 0
-    assert all(recording.legacy_flow_files == [] for recording in recordings.values())
-
-
-def old_flow_files(folder, stem, name):
-    """The files the removed optical-flow feature left for `stem`: flow video, summary, one data set."""
-    paths = [os.path.join(folder.flows, stem + '.avi'), os.path.join(folder.flows, stem + '.pickle')]
-    prefix = f'{stem}___{name}___'
-    paths += [os.path.join(folder.statistics, prefix + part) for part in ('flow.pickle', 'mask.pickle')]
-    paths += [os.path.join(folder.reports, prefix + part) for part in ('up_and_down_.png', 'omnidirectional_.png')]
-    return [touch(path, path.encode()) for path in paths]
-
-
-def test_old_flow_files_are_not_listed_but_belong_to_their_recording(folder):
-    touch(os.path.join(folder.stabilized, 'FP01.avi'))
-    old = old_flow_files(folder, 'FP01', 'region')
-    old_flow_files(folder, 'FP04', '')   # flow of a recording whose videos are gone
-
-    recordings = library.scan(folder)
-    assert [recording.stem for recording in recordings] == ['FP01']
-    fp01 = recordings[0]
-    assert fp01.line_sets == [] and fp01.dataset_count == 0
-    assert sorted(fp01.legacy_flow_files) == sorted(old)
 
 
 # ------------------------------------------------------------------------ the trash
@@ -122,29 +97,26 @@ def test_moving_a_recording_to_the_trash_keeps_every_file(folder):
         os.path.join(folder.stabilized, stem + '.avi'))}
     for path, content in videos.items():
         touch(path, content)
-    old = old_flow_files(folder, stem, 'Test_1')
-    videos[old[0]] = old[0].encode()     # the old flow video shares the file name too
     line_files = datasets.line_dataset_files(folder.statistics, stem, 'line1')
     for part in ('velocity', 'space_time', 'provenance'):
         touch(line_files[part], part.encode())
     datasets.save_time_points(datasets.time_points_file(folder.statistics, stem), [12.5])
+    other = touch(os.path.join(folder.statistics, stem + '___old___flow.pickle'))     # not a data set's file
 
     recording = library.scan(folder)[0]
     paths = tasks.recording_files(folder, recording)
-    assert len(paths) == 2 + 3 + 1 + len(old)
+    assert len(paths) == 2 + 3 + 1
     assert line_files['space_time'] in paths
     target = tasks.move_to_trash(folder, paths, recording.stem)
 
     assert os.path.dirname(target) == folder.trash
-    # the three videos share a file name; each must survive in its own subfolder
+    # the two videos share a file name; each must survive in its own subfolder
     for path, content in videos.items():
         assert not os.path.exists(path)
         with open(os.path.join(target, tasks.relative_path(folder, path)), 'rb') as handle:
             assert handle.read() == content
     assert os.path.isfile(os.path.join(target, 'Statistics', os.path.basename(line_files['provenance'])))
-    for path in old:
-        assert not os.path.exists(path)
-        assert os.path.isfile(os.path.join(target, tasks.relative_path(folder, path)))
+    assert os.path.isfile(other)             # a file the app does not know stays where it is
     assert library.scan(folder) == []
 
 
@@ -222,33 +194,6 @@ def test_jobs_report_results_errors_and_cancellation():
     assert outcome['cancelled'] and running.state == 'cancelled'
     assert manager.active() == [] and tk.errors == []
     assert manager.close(timeout=5)
-
-
-def test_the_reading_canvas_maps_block_coordinates_both_ways():
-    geometry = BlockGeometry(frames=90, positions=121, width=1000, height=600, margin=20)
-    assert geometry.scale == pytest.approx(min(960 / 121, 560 / 90))
-    assert geometry.left + geometry.width / 2 == pytest.approx(500)
-    assert geometry.top + geometry.height / 2 == pytest.approx(300)
-    x, y = geometry.to_canvas(30.0, 60.0)
-    assert geometry.to_block(x, y) == pytest.approx((30.0, 60.0))
-    assert geometry.to_block(-50, 10_000) == (89.0, 0.0)             # kept inside the block
-    # one pixel along the line is drawn as wide as one frame is tall: 45 degrees is 1 px/frame
-    (x0, y0), (x1, y1) = geometry.to_canvas(0, 0), geometry.to_canvas(40, 20)
-    frame0, position0 = geometry.to_block(x0, y0)
-    frame1, position1 = geometry.to_block(x1, y1)
-    assert validation.line_speed([(frame0, position0, frame1, position1)]) == pytest.approx(0.5)
-    assert (x1 - x0) / (y1 - y0) == pytest.approx(0.5)
-
-
-def test_observers_see_the_block_without_still_structure_or_same_moment_changes():
-    rng = np.random.default_rng(0)
-    still = rng.normal(100, 10, 120)
-    same = rng.normal(0, 5, 90)
-    image = block_image(still[None, :] + same[:, None])
-    assert image.shape == (90, 120) and image.dtype == np.uint8 and image.max() == 0
-    moving = np.array([np.roll(np.sin(np.arange(120) / 4.0), t) for t in range(90)]) + still[None, :]
-    shown = block_image(moving)
-    assert shown.min() == 0 and shown.max() == 255
 
 
 def test_lanes_run_side_by_side_and_close_waits_for_the_workers():

@@ -16,13 +16,12 @@ For the study the tool was built for, `capillary.inventory` reads the
 recordings' names and official times and chooses each aim's recordings,
 `capillary.blinding` gives the codes of blind placement, and `capillary.aims`
 turns the saved data sets into the aims' statistics (``python -m
-capillary.aims``) with those of `capillary.agreement`.
+capillary.aims``) with those of `capillary.agreement`. `capillary.placement`
+tells whether two lines follow the same capillary.
 
 Validation: `capillary.simulate` renders synthetic recordings with a known
 velocity and `capillary.benchmark` measures them (``python -m
-capillary.benchmark``). On real recordings, which have no ground truth,
-`capillary.validation` compares the estimator with observers reading the same
-blocks blinded, and `capillary.placement` the same capillary measured twice.
+capillary.benchmark``).
 
 Nothing in here imports tkinter, PIL or matplotlib, so it can be imported from
 a batch script, a notebook or a test without a display. The GUI (`gui/`) keeps

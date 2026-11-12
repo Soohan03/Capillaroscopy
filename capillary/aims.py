@@ -1,28 +1,34 @@
-"""The aims from the saved centre-line data sets: each recording's resting velocity, and aim 1's statistics.
+"""The aims from the saved centre-line data sets: each recording's resting velocity, and the aims' statistics.
 
 python3 -m capillary.aims [--data <data folder>] [--observer <code>] [--out <folder>] [--progress] [--unblind]
+                          [--value reference|reference-only|mean] [--min-snr <threshold>]
 
-A recording's resting red-cell velocity is the mean over its capillary loops
-(the plan of 2026-10-14, DEVLOG):
+A recording's resting red-cell velocity comes from its capillary loops, as
+PROTOCOL.md fixes it:
 
-- every centre-line data set drawn round a whole loop
+- a loop is a centre-line data set drawn round a whole loop
   (`capillary.pattern_shift.WHOLE_LOOP`) and measured within the official
   rest (``phase`` 'rest');
-- counted when its pooled pattern shift is resolved (signal-to-noise 8 or
+- it counts when its pooled pattern shift is resolved (signal-to-noise 8 or
   more, the app's rule), its limbs did not move opposite ways along the line
-  (``loop_movement``: the picture moving, not flow) and it was measured on a
-  stabilized video;
-- as the velocity's size: its sign only says which end of the line lies on
-  the arterial limb.
+  (``loop_movement``: the picture moving, not flow), it was measured on a
+  stabilized video and its line does not cross itself;
+- its velocity is taken as its size: the sign only says which end of the line
+  lies on the arterial limb.
 
-The number of loops placed and counted is kept with each mean. Two loops of
+The recording's value is that of its reference capillary (``loop1``) if it
+counts, else of the first backup that counts (``loop2``, ``loop3``).
+``--value`` gives the reference capillary alone or the mean of all counted
+loops instead, and ``--min-snr`` judges the loops at another threshold, from
+their saved space-time diagrams (the protocol's sensitivity analyses). The
+number of loops placed and counted is kept with each value. Two loops of
 one recording that lie on top of each other (`DUPLICATE_PX`) are listed, as
 one capillary probably drawn twice; they are not removed, which is for the
 observer to decide. Each observer's data sets are summarized on their own.
 
 Aim 1, inter-day reproducibility, uses each participant's before-exposure
 recording of both visits, as `capillary.inventory` chooses them, for every
-participant with a mean at both. Over both studies together (the primary
+participant with a value at both. Over both studies together (the primary
 result) and per study:
 
 - the within-subject coefficient of variation: the typical error (SD of the

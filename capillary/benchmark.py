@@ -1,7 +1,7 @@
 """Benchmark: the velocity estimators on synthetic recordings with a known speed.
 
-    python3 -m capillary.benchmark --out benchmark            (a few minutes)
-    python3 -m capillary.benchmark --out benchmark --quick    (seconds; fewer cases)
+    python3 -m capillary.benchmark --out benchmark            (about 4 minutes)
+    python3 -m capillary.benchmark --out benchmark --quick    (about 12 s; fewer cases)
 
 Every case renders a capillary loop (`capillary.simulate`) with red cells
 moving along it at a known speed, under one of three levels of disturbance,

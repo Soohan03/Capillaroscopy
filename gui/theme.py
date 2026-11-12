@@ -125,10 +125,7 @@ def apply(root):
     # frames
     style.configure('TFrame', background=c['bg'])
     style.configure('Panel.TFrame', background=c['panel'])
-    style.configure('Alt.TFrame', background=c['panel_alt'])
     style.configure('Header.TFrame', background=c['header'])
-    style.configure('Card.TFrame', background=c['panel'], bordercolor=c['border'], lightcolor=c['panel'],
-                    darkcolor=c['panel'], relief='solid', borderwidth=1)
 
     # labels
     style.configure('TLabel', background=c['bg'], foreground=c['text'])
@@ -151,7 +148,6 @@ def apply(root):
         style.configure(f'Danger.{area}.TLabel', foreground=c['danger'], font=FONTS['small'])
     style.configure('Header.TLabel', background=c['header'], foreground=c['header_text'])
     style.configure('Brand.Header.TLabel', font=FONTS['brand'])
-    style.configure('Muted.Header.TLabel', foreground=c['header_muted'], font=FONTS['small'])
     style.configure('Status.TLabel', background=c['panel'], foreground=c['muted'], font=FONTS['small'])
 
     # buttons
@@ -195,7 +191,7 @@ def apply(root):
     lit = [('pressed', '#E8B92E'), ('active', '#FFDF7A')]
     style.map('On.Header.TButton', background=lit, lightcolor=lit, darkcolor=lit, bordercolor=lit)
 
-    # navigation tabs in the header and segmented toggles in panels (radio buttons drawn as buttons)
+    # navigation tabs in the header (radio buttons drawn as buttons)
     style.configure('Nav.Toolbutton', background=c['header'], foreground=c['header_muted'],
                     bordercolor=c['header'], lightcolor=c['header'], darkcolor=c['header'],
                     focuscolor=c['header'], padding=(px(16), px(8)), font=FONTS['nav'], anchor='center')
@@ -205,16 +201,6 @@ def apply(root):
               darkcolor=[('selected', c['header_active']), ('active', c['header_hover'])],
               bordercolor=[('selected', c['header_active']), ('active', c['header_hover'])],
               foreground=[('disabled', '#4F5B6B'), ('selected', c['header_text']), ('active', c['header_text'])])
-    style.configure('Seg.Toolbutton', background=c['panel_alt'], foreground=c['muted'],
-                    bordercolor=c['border'], lightcolor=c['panel_alt'], darkcolor=c['panel_alt'],
-                    focuscolor=c['panel_alt'], padding=(px(10), px(4)), font=FONTS['small_bold'],
-                    anchor='center')
-    style.map('Seg.Toolbutton',
-              background=[('selected', c['accent_soft']), ('active', c['panel'])],
-              lightcolor=[('selected', c['accent_soft']), ('active', c['panel'])],
-              darkcolor=[('selected', c['accent_soft']), ('active', c['panel'])],
-              bordercolor=[('selected', c['accent'])],
-              foreground=[('selected', c['accent']), ('active', c['text'])])
 
     # entry fields
     for name in ('TEntry', 'TSpinbox', 'TCombobox'):
@@ -323,8 +309,6 @@ def _draw_icon(d, name, S, fill):
     elif name == 'close':
         line([(24, 24), (76, 76)], 11)
         line([(76, 24), (24, 76)], 11)
-    elif name == 'check':
-        line([(18, 52), (40, 74), (84, 28)], 12)
     elif name == 'swap':
         line([(18, 34), (78, 34)], 9)
         d.polygon(p((66, 18), (88, 34), (66, 50)), fill=fill)
@@ -348,9 +332,6 @@ def _draw_icon(d, name, S, fill):
             points.append((cx + radius * math.cos(angle + math.pi / 16), cy + radius * math.sin(angle + math.pi / 16)))
         d.polygon(p(*points), fill=fill)
         d.ellipse(p((36, 36), (64, 64)), fill=(0, 0, 0, 0))
-    elif name == 'search':
-        d.ellipse(p((14, 14), (64, 64)), outline=fill, width=int(10 * S / 100))
-        line([(58, 58), (86, 86)], 12)
     elif name == 'more':
         for x in (22, 50, 78):
             d.ellipse(p((x - 8, 42), (x + 8, 58)), fill=fill)
@@ -365,8 +346,6 @@ def _draw_icon(d, name, S, fill):
     elif name == 'ok':
         d.ellipse(p((8, 8), (92, 92)), fill=fill)
         d.line(p((28, 52), (44, 67), (72, 36)), fill=(255, 255, 255, 255), width=int(10 * S / 100), joint='curve')
-    elif name == 'expand':
-        line([(30, 40), (50, 60), (70, 40)], 10)
     else:
         raise KeyError(name)
 
