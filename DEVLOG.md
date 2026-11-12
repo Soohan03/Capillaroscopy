@@ -14,7 +14,7 @@ report page), e557a77 and 7207425 (the cutoff of 6). Commits here:
 - `12d91b1` (2026-11-11): the two-box method removed;
 - `e86bed5` (2026-11-11): the launcher and the list of dependencies;
 - `658a2a5` (2026-11-12): the Validation page and the optical-flow leftovers removed;
-- a fourth with the documentation and this entry.
+- `62a4d9f` (2026-11-12): the documentation and this entry (a follow-up commit notes this hash).
 
 **Why.** The final draft of the thesis is written, and the repository may be published with it. The user asked
 for it to be made scientifically presentable and reduced to its core, and for the two-box method to be deleted:
