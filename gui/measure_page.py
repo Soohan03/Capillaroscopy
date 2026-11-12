@@ -1,12 +1,11 @@
-"""What the Centre line and Two boxes pages share: video with timeline, a
-frame range, time points, naming a data set, running the measurement and
-showing its result.
+"""The frame of a measuring page: video with timeline, a frame range, time
+points, naming a data set, running the measurement and showing its result.
 
-The workflow on both: draw the line (or place the boxes) on the video, choose
-the range of frames, name the data set, press Measure. The frames of the range
-are read straight from the file in a background job, the data set is saved and
-its report written, and the result appears in the panel. `LinePage` and
-`AnalyzePage` add their own tool and live preview.
+The workflow: draw on the video, choose the range of frames, name the data
+set, press Measure. The frames of the range are read straight from the file
+in a background job, the data set is saved and its report written, and the
+result appears in the panel. `LinePage` (the Centre line page) adds the line
+tool and its live preview.
 
 A recording with official occlusion and release times (`metadata/`) offers
 its rest, occlusion and the time after release as ranges
@@ -27,7 +26,7 @@ from functools import partial
 from tkinter import ttk
 from typing import Optional
 
-from capillary import datasets, inventory, validation
+from capillary import datasets, inventory
 
 from . import tasks
 from .dialogs import confirm, show_error
@@ -50,8 +49,6 @@ PHASE_SPANS = {'rest': 'from 2 s after the start to 2 s before the occlusion',
 class MeasurePage(ttk.Frame):
     key = ''
     title = ''
-    kind = 'velocity'           # which data sets this page makes: 'velocity' (two boxes) or 'line'
-    uses_library = True
     measure_label = 'Measure and save'
     min_frames = 1
 
@@ -242,8 +239,8 @@ class MeasurePage(ttk.Frame):
         self.observer_entry.grid(row=1, column=1, sticky='w', padx=(px(8), 0))
         self.app.observer_var.trace_add('write', lambda *_: self.update_measure_state())
         for widget in (observer_label, self.observer_entry):
-            Tooltip(widget, 'Initials of who measures (optional). They are saved with the data set, so that the '
-                            'same capillary measured by different people can be compared on the Validation page.')
+            Tooltip(widget, 'Initials of who measures (optional). They are saved with the data set, so that each '
+                            'observer\'s lines can be told apart and summarized on their own.')
         self.name_message = ttk.Label(footer, text='', style='Faint.Panel.TLabel',
                                       wraplength=px(INSPECTOR_WIDTH - 40), justify='left')
         self.name_message.pack(anchor='w', pady=(px(3), 0))
@@ -307,7 +304,7 @@ class MeasurePage(ttk.Frame):
     def existing_names(self):
         if self.recording is None:
             return []
-        return self.recording.datasets_of(self.kind)
+        return self.recording.line_sets
 
     def _open_video(self, path):
         self.player.close()
@@ -557,14 +554,14 @@ class MeasurePage(ttk.Frame):
         if message:
             reasons.append(message)
         if self.app.observer_var.get().strip():
-            message = validation.validate_observer(self.app.observer_var.get())
+            message = datasets.validate_observer(self.app.observer_var.get())
             if message:
                 reasons.append(f'Observer: {message}')
         return reasons
 
     def observer(self) -> str:
         """The observer's code as saved with a data set ('' if none was entered)."""
-        return validation.normalize_observer(self.app.observer_var.get())
+        return datasets.normalize_observer(self.app.observer_var.get())
 
     def update_measure_state(self):
         name = self.name_var.get()
@@ -607,7 +604,7 @@ class MeasurePage(ttk.Frame):
                            'where you can restore them by hand.', ok='Replace', danger=True):
                 return
             folder = self.app.folder
-            paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, self.kind)
+            paths = datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
             try:
                 tasks.move_to_trash(folder, paths, f'{recording.stem} {name}')
             except OSError as exc:
@@ -689,7 +686,7 @@ class MeasurePage(ttk.Frame):
         result = self.results.get(self.recording.stem) if self.recording else None
         self.app.show_page('results')
         if result is not None:
-            self.app.pages['results'].focus_dataset(result['kind'], result['name'])
+            self.app.pages['results'].focus_dataset(result['name'])
 
     # ----------------------------------------------------------------------- keyboard
     def handle_key(self, event) -> bool:

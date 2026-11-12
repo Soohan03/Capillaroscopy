@@ -1,6 +1,6 @@
 """The video canvas: fit-to-window display, zoom and pan, overlays and mouse tools.
 
-Overlays (boxes, regions, hints) are canvas items drawn on top of the picture,
+Overlays (lines, outlines, hints) are canvas items drawn on top of the picture,
 not burned into the frame: the measurement reads the file itself, so what is
 drawn can never leak into the data. Pages draw their overlay in a view
 listener, using `to_canvas` / `to_video` to convert between screen and video

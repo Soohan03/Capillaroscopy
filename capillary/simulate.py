@@ -9,12 +9,13 @@ added on top:
 
 - sensor noise of about 3 grey levels per pixel,
 - a darkening of the whole vessel that changes at the same moment along all
-  of it (in the recordings about 70% of what a box on the vessel sees),
-  slightly stronger in some parts of the vessel than in others,
+  of it (in the recordings about 70% of the brightness change of a small
+  patch of vessel), slightly stronger in some parts of the vessel than in
+  others,
 - residual movement of the whole image after stabilization (jitter),
 - optical blur, and motion blur while the shutter is open.
 
-`tests/synthetic.py` keeps the simpler clips the older tests use: a pattern
+`tests/synthetic.py` keeps the simpler clips some tests use: a pattern
 sliding down the whole frame, with no vessel and no disturbances.
 """
 
@@ -25,7 +26,6 @@ from typing import Optional
 
 import numpy as np
 
-from .roi import ROI
 from .spacetime import Centreline
 
 
@@ -71,13 +71,6 @@ class SyntheticRecording:
         positions, _ = self.centreline.sample_positions(0.25)
         index = int(np.clip(round(arc_px / 0.25), 0, len(positions) - 1))
         return float(positions[index, 0]), float(positions[index, 1])
-
-    def boxes(self, upstream_arc_px: float, distance_px: float, size: int = 12) -> tuple[ROI, ROI]:
-        """Two boxes on the vessel `distance_px` apart along it: (box 1 downstream, box 2 upstream)."""
-        up = self.point_at(upstream_arc_px)
-        down = self.point_at(upstream_arc_px + distance_px)
-        return (ROI(int(round(down[0])), int(round(down[1])), size, size),
-                ROI(int(round(up[0])), int(round(up[1])), size, size))
 
     def drawn_line(self, start_arc_px: float, end_arc_px: float, every_px: float = 15.0,
                    wobble_px: float = 1.0, seed: int = 0) -> Centreline:

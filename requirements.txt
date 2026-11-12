@@ -1,7 +1,8 @@
-numpy
-Pillow
-opencv-python
-webcolors
-pandas
-matplotlib
-scipy
+# The versions the study's results were computed with, on Python 3.12.
+# Later versions are likely to work as well; the tests (python3 -m pytest) tell.
+numpy==2.4.6
+Pillow==12.2.0
+opencv-python==4.13.0.92
+pandas==3.0.3
+matplotlib==3.10.9
+scipy==1.17.1

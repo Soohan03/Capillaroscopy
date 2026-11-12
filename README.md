@@ -1,364 +1,355 @@
 # Capillaroscopy Analysis Tool
 
-A desktop tool (Tkinter + OpenCV) for analysing nailfold capillaroscopy
-videos: it stabilizes a recording and measures red-cell velocity in a
-capillary, along a line drawn on the vessel or between two boxes. Videos are
-recorded with other software and copied into the data folder (the app's own
-recorder was removed on 2026-10-07).
+A desktop tool (Python, Tkinter and OpenCV) that measures red-cell velocity in
+nailfold capillaries from capillaroscopy videos. It stabilizes a recording,
+lets an observer draw a line along a capillary, and reads the velocity from
+the brightness pattern that moves along that line.
 
-## Using the app
+It was built for a degree project in medicine at Karolinska Institutet (2026),
+"Nailfold capillary blood cell velocity in healthy individuals: inter-day
+reproducibility and response to e-cigarettes and heated tobacco products". The
+repository holds the tool, the study's measurement and analysis protocol, and
+the analyses behind the results.
 
-The window has a list of recordings on the left (everything that shares one
-video's name: raw recording, stabilized copy, data sets) and four pages:
-
-| Page | What you do there |
-| --- | --- |
-| **Centre line** | Click points along the middle of one capillary, starting where the blood comes from. A live preview shows the space-time diagram of the frames around the playhead with the slope it found, the velocity and its signal-to-noise ratio, and which velocities this line can measure. Choose a frame range (for a recording of the study, **Rest**, **Occlusion** or **After release** from its official times), name the data set, press **Measure velocity and save**. The result gives the velocity pooled over the range (pattern shift) and that of the 3-s blocks. Choose what the line follows: any stretch; an **Arterial limb**, drawn from its base to the apex (the direction of the flow then shows whether it is the arterial limb); or a **Whole loop**, from the base of one limb over the apex to the base of the other, which measures resting flow in more loops (the direction shows which end lies on the arterial limb, and each limb is measured on its own as a check against movement). The lines of the recording's saved data sets are drawn dashed. On a stabilized video a dashed outline shows where every frame of the range has picture; a line that leaves it is refused (see *How a recording is stabilized*). |
-| **Two boxes** | The original method: place box 1 (downstream, orange) and box 2 (upstream, blue) on a capillary; the velocity comes from the delay between their brightness signals. Kept for comparison and for the data sets made with it (see below). |
-| **Results** | The files, time points and saved data sets of a recording, with their reports. Reports can be regenerated, data sets moved to the trash, and the line or boxes of a data set restored on its page. |
-| **Validation** | Checks the centre-line velocity on real recordings, where there is no ground truth. A *reading set* draws 3-s blocks from centre-line data sets; observers read them by hand, blinded, by drawing lines along the streaks; the agreement with the estimator, between observers and between two sessions of one observer is computed with Bland–Altman limits, intraclass correlation and kappa. *Line placement* compares data sets of the same capillary measured by different observers (or twice by one). |
-
-A measurement reads the chosen frame range straight from the video file with
-the line (or boxes) held fixed, so it takes seconds rather than the length of
-the clip, and it is fully described by its parameters. Each data set gets a
-small `…_provenance.json` file beside it that records the line or box
-positions, frame range, calibration, estimator settings, video and code
-version it was made with, and the observer (initials) entered next to its
-name.
-
-Stabilizing runs in the background (right-click a recording, or the **⋯** menu
-above the list for all at once); you can keep working meanwhile. The recordings
-aim 1 uses (each participant's before-exposure recording of both visits) carry an
-**Aim 1** chip in the list, and typing "aim 1" in the filter lists only them; the
-chip is hidden during blind placement, where it would tell the recordings before
-exposure from those after it. Press **F1**
-for all keyboard and mouse controls.
-
-**Blind placement** (the button in the header, since 2026-10-14) is for placing
-the study's lines without anything but the anatomy deciding where they go. The
-list then shows only the recordings the aims use, each under a code (a hash of
-its name) instead of its name, in the order of the codes; the Centre line page
-hides the space-time preview and every result, measures the official rest
-only, and saves every line as a whole loop (the other roles are closed, since
-2026-10-29); Two boxes, Results and Validation are closed. It stays on between
-sessions until turned off. The data sets are saved under the real names, and
-`python3 -m capillary.aims` (below) summarizes them. The study's measurement
-and analysis are fixed in `PROTOCOL.md`.
-
-Nothing is deleted outright: replaced or removed videos and data sets go to
-`.trash/` in the data folder, keeping their subfolders, so they can be put back
-by hand.
-
-## How a recording is stabilized
-
-The skin moves under the microscope, so before measuring every frame is moved
-back into place (`capillary/stabilize.py`); only translation is corrected.
-
-1. The registration works on a band-passed copy of each frame (difference of
-   Gaussians, σ 2 and 15 px). It removes pixel noise and the uneven lighting,
-   which stays with the camera while the skin moves.
-2. The sharpest frame and the 12 frames on each side of it are aligned onto it
-   and averaged, alternately, into two references. Averaging smooths out the
-   moving blood, which makes a single frame a noisy reference.
-3. Each frame is found in both references, to a fraction of a pixel. A coarse
-   search on reduced frames reaches a third of the frame. The previous frame's
-   position is a second starting point, so the search can follow a recording
-   that moves further than that: FP03_Wföre swings by about 200 px with
-   breathing.
-4. Each frame is moved by the mean of the two results, re-centred on the
-   recording's median position, with bicubic interpolation.
-
-The stabilized video is written frame for frame and uncompressed (8-bit grey,
-like the recordings from DynCap). Next to it, `<recording>___stabilization.csv`
-holds the shift of every frame and how sure it is: how well the frame matched
-the references, how far apart the two references' results were, and whether
-the match lay at the edge of the search. The video is read from disk three
-times and never held in memory, so recordings of any length can be
-stabilized; a 3-minute recording takes about 2–3 minutes.
-
-Where the picture moved, the frame moved back into place leaves a black strip
-along its edge. A line that reaches it sees the strip's edge move along the
-line, which reads as flow. So a line on a stabilized video is measured only if
-its samples keep 3 px clear of the strip in every frame of the range
-(`stabilize.check_picture`, since 2026-10-14; 2 px is just enough for the
-bicubic move and the reading between pixels). The Centre line page outlines the
-part of the frame that every frame of the range shows and says how far to move
-a line that leaves it; the batch command refuses such a line too, and a data
-set's provenance keeps how far its line stayed from the strip. A range with
-frames the stabilizer lost is refused as well.
-
-## How velocity is measured
-
-**Centre line (since 2026-10-06).** Along the drawn line the brightness is
-sampled in every frame (averaged over 5 pixels across the line). Stacked over
-time this is the *space-time diagram*: red cells and plasma gaps moving along
-the vessel draw slanted streaks in it, and the slope of the streaks is their
-speed. The slope is found in 3-s blocks with a Radon-transform method
-evaluated in the Fourier domain (`capillary/spacetime.py` explains it in
-full). Brightness changes that happen along the whole vessel at once, the
-power of a pattern moving the opposite way, and noise are subtracted out by
-comparing every line in the spectrum with its mirror image. Each block gets a
-signal-to-noise ratio and a coherence (the share of its energy on the slope
-found); blocks with a ratio below 8, a coherence below 0.03, or a speed outside
-the measurable range count as unresolved and are left out of the median.
-
-The measurable range depends on the line and the frame rate. At 30 fps the
-fastest speed a line of *L* pixels can follow is about 0.045 × *L* pixels per
-frame (at 1.33 µm per pixel: 0.18 mm/s for a 100-px line, 0.35 mm/s for
-200 px); faster flow is reported as unresolved, not as a wrong number. The
-page shows the range for the line drawn.
-
-**Pattern shift (since 2026-10-08).** The same diagram, read another way: how
-far the pattern along the line moves between a frame and the next few (1–8
-frames later). Rows are band-passed along the line (patterns of about 4–30 px:
-cells and plasma gaps), correlated at every shift, forward minus backward, and
-pooled over all 3-s blocks of a stretch such as the minute of rest
-(`capillary/pattern_shift.py`). Pooling is what makes faint patterns
-measurable. On FP01_Qföre the resting flow of a capillary limb, about
-0.08 mm/s, was too faint for single 3-s blocks of the centre line (8 of 123
-resolved) but clear over the minute of rest, with each half of the minute
-agreeing. The estimate comes with a signal-to-noise ratio (8 to count) and a
-95% interval. On synthetic recordings it is within about 1% from 1.5 to
-8 px/frame (0.06–0.32 mm/s at 30 fps) on a 120-px line and reads about 5% low
-at 12 px/frame (0.48 mm/s); faster flow, smeared by the shutter, is reported
-as unresolved. A longer line reaches further: round a whole simulated loop
-(300 px), 0.48–1.6 mm/s were measured within about 1%. Until 2026-10-11 the
-rows were differenced instead; on the recordings band-passing resolved more
-limbs (5 against 3 of 29 at rest) and stayed lower on lines through tissue
-(`analysis/pattern_shift_bandpass/`). Since 2026-10-11 every centre-line data
-set keeps the pattern shift of its whole range and of each half (the halves
-show whether the flow stayed the same), and the batch command prints them for
-a line (below).
-
-**The slow range (since 2026-10-14, not the default).** By default the pattern
-shift searches from 1 px/frame (0.04 mm/s at 30 fps). Asked for (in code
-`min_speed=pattern_shift.SLOW_MIN_SPEED`, in the batch command `--slow-flow`),
-it searches from 0.1 px/frame (0.004 mm/s), comparing rows over as many frames
-as the pattern takes to move 2–8 px. On synthetic recordings every clip from
-0.15 to 1 px/frame was resolved within 5% (median 1%), and no clip without flow
-was. On the 109 limbs of the aim-1 check it measured 42 at rest instead of 24.
-But a single line cannot tell slow flow from the picture moving along it: a
-steady drift, or a movement of 10–20 px over a few seconds that goes one way
-slower than the other, reads as slow flow. The recordings show both
-(`analysis/pattern_shift_slow_flow/`), so slow results need a check that the
-picture held still, such as the loop's other limb running the opposite way.
-Part of what first looked like such movement was the stabilized frame's black
-strip crossing the line (FP03_Wföre's loops E and F at rest); such lines are
-refused since 2026-10-14 (see *How a recording is stabilized*).
-
-**The arterial limb (since 2026-10-11).** Resting velocity is measured on the
-arterial limb of a capillary loop, since the velocity changes towards the
-venous side. Blood flows up the arterial limb to the apex and down the venous
-limb, so a line drawn from a limb's base to the apex shows which limb it is by
-the direction of the pooled flow: towards the apex in the arterial limb. A line
-marked as an arterial limb saves this check with its data set
-(`limb_check`: arterial, venous, or unknown when the flow is not resolved),
-and the range's official phase (`phase`: rest, occlusion, after release, or
-several).
-
-**The whole loop (since 2026-10-14).** At rest most single limbs gave too
-little signal: a line from the base of one limb, over the apex, to the base
-of the other collects both limbs' signal, since the flow runs one way round
-the loop. On the aim-1 check it measured 23 of 53 loops at rest against 14 by
-their single limbs (`analysis/whole_loop/`). The direction of its pooled flow
-says which end of the line lies on the arterial limb (`arterial_end`: start,
-end or unknown). The line is also split at its apex (the point farthest from
-both ends) and each limb measured on its own: flow runs the same way along the
-line in both, while the picture moving along the loop runs opposite ways, so
-such a loop is marked (`loop_movement`) and not counted by `capillary.aims`.
-On the aim-1 check this marked the same one loop as separately traced limbs.
-
-**Two boxes (the original method).** The delay between the brightness signals
-of two boxes on the vessel, found by cross-correlation in windows of
-201–301 frames, gives the velocity as distance ÷ delay. In the 2019
-recordings about 70% of what a box on a capillary sees is a change of the
-whole vessel at once (probably small movements or focus), which both boxes see
-simultaneously, so the delay comes out as zero ("too fast to resolve") even
-where the flow is slow. See the 2026-10-06 entries in `DEVLOG.md`.
-
-**Validation on synthetic recordings.** `python3 -m capillary.benchmark`
-renders synthetic capillary loops with a known red-cell speed and the
-disturbances measured in the 2019 recordings (`capillary/simulate.py`),
-measures them with all three methods, and writes a table of errors (about 8
-minutes; `--quick` for a short run). On it the centre line measures within ±2%
-in its range and reports flow it cannot measure as unresolved; the two boxes
-are off by up to ±10%, and much more under stronger disturbances.
-
-**Validation on real recordings (Validation page).** A recording has no ground
-truth, so the estimator is compared with people:
-
-1. *Blinded reading.* A reading set draws a few non-overlapping 3-s blocks at
-   random from each chosen centre-line data set (by default half of them
-   from blocks the estimator resolved) and copies them, with a recorded seed,
-   into `Validation/<set>/`. Each observer reads every block in an order of
-   their own, without seeing its recording or the estimator's result: they
-   draw lines along the streaks (the block's slope is the mean of their
-   slopes) or mark it as having no clear streaks. A second session by the same
-   observer gives the repeatability. The agreement report measures every block
-   again with the current estimator and compares it with every reading, with
-   the mean of the observers, observers with each other and sessions with each
-   other (`capillary/validation.py`).
-2. *Line placement.* Centre-line data sets of the same capillary over the same
-   frames (lines running along each other, frame ranges overlapping by at
-   least 80%) are matched automatically, and their median velocities compared
-   between observers and between two measurements by one observer
-   (`capillary/placement.py`).
-
-Velocities are compared with Bland–Altman bias and 95% limits of agreement
-(with confidence intervals, a test for a difference that grows with the
-velocity, and the same on a log scale as ratios) and the intraclass
-correlation ICC(A,1); whether a block can be read at all with Cohen's kappa
-(`capillary/agreement.py`).
-
-## Data folder
-
-`settings.csv` stores `Application_path`, the folder that holds the research
-data, `mm_per_pixel`, the spatial calibration of the microscope,
-`box_size`, the default box size, and `observer`, the initials last entered.
-Each computer has its own `settings.csv`; git ignores it. On first start (or
-if the file is missing) the app asks for the folder; the settings can be
-changed later with the gear button. Inside the folder it uses:
-
-- `RecordedVideos/`: raw recordings, copied in to be stabilized.
-- `StabilizedVideos/`: stabilized copies, used for measuring, each with the
-  shift of every frame (`<recording>___stabilization.csv`) and how it was made
-  (`<recording>___stabilization_provenance.json`).
-- `Statistics/`: the saved data sets (`<recording>___<data set>___…`), their
-  provenance files, and each recording's time points. A centre-line data set
-  keeps its space-time diagram (`___space_time.npy`), so its report can be
-  written again without the video.
-- `Reports/`: the plots and summary tables written from the data sets.
-- `Validation/`: reading sets, one folder each (`set.json`, the blocks in
-  `blocks.npz`, `readings/<observer>_s<session>.json`, the agreement tables
-  and plots in `report/`), and the line-placement comparison in
-  `line_placement/`. Created when the first reading set is drawn.
-- `.trash/`: what was moved to the trash, one dated folder per action.
-- `Flows/`: optical-flow videos from versions before 2026-10-06, when the
-  optical-flow measurement was removed. The app no longer creates or reads
-  this folder, except to move a recording's old flow files to the trash along
-  with the recording.
-
-## Code layout
+## What is here
 
 | Path | What it holds |
 | --- | --- |
-| `Application.py` | Entry point: logging, then the window from `gui/` |
-| `gui/app.py` | The main window: header, recording list, pages, status bar, keyboard routing, application-wide actions |
-| `gui/line_page.py`, `gui/analyze_page.py`, `gui/results_page.py`, `gui/validation_page.py` | The four pages (Centre line, Two boxes, Results, Validation) |
-| `gui/measure_page.py` | What both measure pages build on: video, timeline, frame range, time points, the Measure footer, the last result |
-| `gui/reading_view.py` | The Validation page's reading mode: one block at a time, lines drawn along its streaks |
-| `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas with zoom and pan, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
-| `gui/jobs.py`, `gui/tasks.py` | Background jobs, and the work they run (stabilize, previews, measurements, reports, reading sets, agreement) |
-| `gui/library.py`, `gui/settings.py`, `gui/media.py` | Finding recordings, settings, frames for display |
-| `gui/blind.py` | Blind placement: which recordings it lists, and the one role its lines take (the codes are `capillary/blinding.py`'s) |
-| `Caper.py` | The report plots of both methods, and the agreement plots of the Validation page |
-| `capillary/` | The GUI-free measurement engine, the stabilizer (`stabilize.py`, with the vendored registration in `registration.py`), simulator, benchmark and batch CLI (see below), the validation on real recordings (`validation.py`, `placement.py`, `agreement.py`), the study's recordings (`inventory.py`), the blind codes (`blinding.py`) and the aims from the saved data sets (`aims.py`) |
-| `tests/` | Unit tests |
-| `metadata/` | Study metadata: the official occlusion and release times of every ESMOKE and ISMOKE recording, exported from DynCap (see its README); the measure pages take their Rest, Occlusion and After release ranges from them |
+| `Application.py`, `gui/` | The app: recordings, the Centre line page, the Results page, blind placement |
+| `capillary/` | The measurement, without any GUI: stabilizer, space-time diagram, velocity estimators, the study's recordings and statistics, simulator and benchmark |
+| `tests/` | Unit tests, on synthetic videos with a known velocity |
+| `PROTOCOL.md` | The study's measurement and analysis protocol, fixed before the first line was placed, with every later change dated |
+| `analysis/` | The analyses, each with its scripts, result tables and a README; `analysis/README.md` lists them |
+| `metadata/` | The official occlusion and release times of every recording, and which recordings the aims use |
+| `DEVLOG.md` | The diary of every change: what, why, and how it was checked. The code and the protocol cite its entries by date |
+| `CLAUDE.md` | The working instructions for Claude Code, the AI coding assistant the code was written with |
+
+The videos and the measurements made on them are not in the repository. They
+stay in the data folder (below), which git ignores.
+
+## The study in brief
+
+- **Recordings:** a retrospective archive of two crossover trials. In ESMOKE
+  (2019–2020) participants used an e-cigarette with nicotine (W) and one
+  without (Q); in ISMOKE (2020) a heated tobacco product (S) and no exposure
+  (C). Each visit has a recording before (före) and after (efter) the exposure.
+- **Every recording** is about a minute of rest, a minute of occlusion (a cuff
+  at 200 mmHg at the base of the finger) and about a minute after release.
+  Resting velocity is measured in the rest before the occlusion.
+- **Aim 1 (primary):** the inter-day reproducibility of resting velocity, from
+  the two before-exposure recordings of each participant.
+- **Aim 2:** the change from before to after exposure on the nicotine visit.
+- **The measurement** is fixed in `PROTOCOL.md`: one line round a whole
+  capillary loop, placed blind, measured over the official rest, counted from
+  a signal-to-noise ratio of 8. The results are in `analysis/`.
 
 ## Setup
 
-1. **Set up the Python environment:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-   Tkinter comes from the system Python (on Ubuntu: `sudo apt install python3-tk`).
-   No separate ffmpeg is needed; the OpenCV wheel brings its own.
-
-2. **Start the application:**
-   ```bash
-   source venv/bin/activate
-   python3 Application.py
-   ```
-   On first start it asks for the data folder and the calibration. Messages and
-   errors are written to `capillaroscopy.log`.
-
-## Batch analysis without the GUI
-
-The measurement itself lives in the `capillary` package, which imports no GUI
-toolkit: `spacetime.py` (centre line), `roi.py`, `intensity.py` and
-`velocity.py` (two boxes). The pages and the command line therefore run the
-same arithmetic, and a result can be regenerated from the command line alone:
+Python 3.12 with Tk. On Ubuntu Tk comes with `sudo apt install python3-tk`; on
+macOS with Homebrew's `python-tk`. No separate ffmpeg is needed, since the
+OpenCV wheel brings its own.
 
 ```bash
-python3 -m capillary.cli StabilizedVideos/clip.avi \
-    --line "372,110;352,160;338,205" --start 1909 --max-frames 900 \
-    --out blocks.csv --summary-out summary.csv
-
-python3 -m capillary.cli StabilizedVideos/clip.avi \
-    --roi1 320,240 --roi2 320,300 --size 10x10 \
-    --out report.csv --summary-out summary.csv
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 Application.py          # or: bash run_app.sh
 ```
 
-`--line` lists the points of a centre line in pixel coordinates, from where
-the blood comes from; for a line it also prints the pattern-shift velocity
-pooled over all the frames measured (from 0.1 px/frame with `--slow-flow`,
-see above); `--roi1` is box 1 (downstream) and `--roi2` box 2
-(upstream), `--size` the box size for boxes given as just `x,y`. The points or
-box centres and the frames of a data set made in the app are in its
-`…_provenance.json`. The spatial calibration comes from `settings.csv`
-(`mm_per_pixel`) unless `--mm-per-pixel` overrides it. On a stabilized video
-(one with its shift file beside it) a line that reaches the black strip in a
-frame read is refused, as in the app.
-`python3 -m capillary.cli --help` lists the rest.
+`requirements.txt` names the versions the study's results were computed with.
+On first start the app asks for the data folder and the calibration. Messages
+and errors are written to `capillaroscopy.log`.
 
-## The aims from the saved data sets
+## Using the app
+
+The window has the list of recordings on the left and two pages. A recording
+is everything that shares one video's name: the raw recording, its stabilized
+copy and its data sets. The app does not record. Videos are copied into the
+data folder.
+
+**Stabilizing.** Right-click a recording, or use the **⋯** menu above the list
+for all raw recordings at once. It runs in the background.
+
+**Centre line page.** Click points along the middle of one capillary:
+
+- drag a point to move it, click on the line to add one, right-click a point
+  to remove it;
+- choose what the line follows: any stretch of a capillary; an **arterial
+  limb**, from its base to the apex; or a **whole loop**, from the base of one
+  limb over the apex to the base of the other (the study's line);
+- choose the frames to measure. For a recording of the study, **Rest**,
+  **Occlusion** and **After release** set them from its official times;
+- a live preview shows the space-time diagram of the frames around the
+  playhead with the slope it found, and the panel shows which velocities the
+  line can measure;
+- on a stabilized video a dashed outline shows where every frame of the range
+  has picture. A line that leaves it is refused (see below);
+- the lines already saved for the recording are drawn dashed;
+- name the data set, enter the observer's initials, and press **Measure
+  velocity and save**.
+
+**Results page.** The files, time points and data sets of a recording, with
+their reports. A report can be written again, a data set moved to the trash,
+and its line put back on the Centre line page.
+
+**Blind placement** (the button in the header) is for placing the study's
+lines with nothing but the anatomy deciding where they go:
+
+- the list shows only the recordings the aims use, each under a code (a hash
+  of its name), in the order of the codes;
+- the space-time preview and every result are hidden;
+- measuring uses the official rest, and every line is saved as a whole loop;
+- the Results page is closed;
+- it stays on between sessions until it is turned off.
+
+Nothing is deleted outright. Replaced or removed videos and data sets go to
+`.trash/` in the data folder, from where they can be put back by hand. **F1**
+lists every keyboard and mouse control.
+
+Every data set gets a `…_provenance.json` beside it: the video, the line's
+points, the frames, the calibration, the estimator's settings, the observer
+and the version of the code. A measurement reads its frames straight from the
+video file with the line held fixed, so it can be repeated from that record.
+
+## How a recording is stabilized
+
+The skin moves under the microscope, so every frame is first moved back into
+place (`capillary/stabilize.py`). Only translation is corrected.
+
+1. **Following the movement.** Every frame is registered onto the frame before
+   it, which gives the path of the picture through the recording. A frame that
+   matches the one before it too poorly (the picture went dark, or jumped)
+   breaks the path.
+2. **What is compared.** Registration works on a band-passed copy of each
+   frame (difference of Gaussians, σ 2 and 15 px). It removes pixel noise and
+   the uneven lighting, which stays with the camera while the skin moves.
+3. **Two references.** The sharpest frame among those where the picture
+   usually is, taken from the official rest when the recording has official
+   times, and the 12 frames on each side of it are aligned and averaged,
+   alternately, into two references. Averaging smooths out the moving blood.
+4. **Finding each frame.** Each frame is found in both references: a coarse
+   search on frames made four times smaller (reaching about a third of the
+   frame), then a fine search by normalized cross-correlation within 12 px of
+   the coarse result and of where the path says the frame should be, to a
+   fraction of a pixel. The frame's shift is the mean of the two results.
+5. **Frames the references miss** (a poor match, references that disagree by
+   more than 2 px, or a match at the edge of the search) are carried along the
+   path from the frames that were placed. A stretch of path without any placed
+   frame is lost and written black.
+6. **Writing.** The shifts are centred on their median over the official rest.
+   Each original frame is moved by its shift with bicubic interpolation and
+   written uncompressed (8-bit grey), frame for frame.
+
+The video is read from disk four times and never held in memory. A recording
+of three minutes takes about three minutes. Next to the stabilized video,
+`<recording>___stabilization.csv` holds every frame's shift and how sure it is
+(how it was placed, how well it matched, how far the two references disagreed),
+and `<recording>___stabilization_provenance.json` the settings and a summary.
+
+**Lines must stay in the picture.** Where the picture moved, the frame moved
+back into place has a black strip along its edge. A line that reaches the
+strip sees its edge move along the line, which reads as flow. So a line on a
+stabilized video is measured only if its samples keep 3 px clear of the strip
+in every frame of the range (`stabilize.check_picture`). A range with lost
+frames is refused as well.
+
+## How velocity is measured
+
+**The space-time diagram.** Along the drawn line the brightness is sampled in
+every frame, averaged over 5 pixels across the line. Stacked over time this is
+the space-time diagram: red cells and plasma gaps moving along the vessel draw
+slanted streaks in it, and the slope of the streaks is their speed.
+
+**Pattern shift, pooled over a stretch** (`capillary/pattern_shift.py`; the
+study's measurement). How far the pattern along the line moves between a frame
+and the next 1 to 8 frames:
+
+- rows are band-passed along the line (difference of Gaussians, σ 1 and 4 px:
+  cells and plasma gaps);
+- each row is correlated with the later rows at every shift, forward minus
+  backward, pooled over all 3-s blocks of the stretch, such as the minute of
+  rest. Still structure, noise and brightness changes of the whole vessel at
+  once are the same in both directions and cancel;
+- the estimate comes with a signal-to-noise ratio (8 to count) and a 95%
+  interval from leaving out one block at a time;
+- speeds are searched from 1 px/frame (0.04 mm/s at 30 fps and 1.33 µm per
+  pixel) up to half the line's length per frame.
+
+Pooling is what makes the faint flow at rest measurable: single 3-s blocks
+mostly miss it.
+
+**The whole loop.** A line from the base of one limb, over the apex, to the
+base of the other collects both limbs' signal, since the flow runs one way
+round the loop. At rest it resolved more loops than lines on single limbs did
+(`analysis/whole_loop/`).
+
+- The direction of the pooled flow says which end of the line lies on the
+  arterial limb.
+- The line is split at its apex (the point farthest from both ends) and each
+  limb is measured on its own. Flow runs the same way along the line in both.
+  The picture moving along the loop runs opposite ways, so such a loop is
+  marked and not counted.
+
+**3-s blocks** (`capillary/spacetime.py`). The slope of the streaks in blocks
+of 3 s, by a Radon-transform method evaluated in the Fourier domain, with a
+signal-to-noise ratio and a coherence for each block. It gives the time course
+of the velocity and the live preview. At 30 fps a line of *L* pixels follows
+flow up to about 0.045 × *L* pixels per frame (0.18 mm/s for 100 px); faster
+flow is reported as unresolved, not as a wrong number.
+
+**Options the study does not use:**
+
+- *The arterial limb.* A line drawn from a limb's base to the apex shows by
+  the direction of its flow whether it is the arterial limb (towards the
+  apex). At rest too few single limbs gave a signal
+  (`analysis/aim1_feasibility/`).
+- *The slow range.* Asked for, the pattern shift searches from 0.1 px/frame
+  (`--slow-flow` in the batch command). Below 1 px/frame a single line cannot
+  tell slow flow from the picture moving along it, so it is not the default
+  (`analysis/pattern_shift_slow_flow/`).
+
+## From the lines to the aims
 
 ```bash
 python3 -m capillary.aims [--data <data folder>] [--observer SJ] [--progress] [--unblind]
                           [--value reference|reference-only|mean] [--min-snr 7]
 ```
 
-collects the centre-line data sets into one resting velocity per recording, as
-`PROTOCOL.md` fixes it. A whole loop measured within the official rest counts
-when its pooled pattern shift is resolved (signal-to-noise 8 or more), its
-limbs did not move opposite ways along the line (the picture moving), it was
-measured on a stabilized video and its line does not cross itself (a twisted
-loop). A recording's value is its reference capillary (`loop1`) if it counts,
-else the first backup that counts (`loop2`, `loop3`); `--value` gives the
-reference alone or the mean of all counted loops instead, and `--min-snr`
-judges the loops at another threshold from their saved space-time diagrams
-(the protocol's sensitivity analyses). Then aim 1, pooled over both studies (the
-primary result) and per study: each participant's
-before-exposure recordings of both visits (`capillary.inventory` chooses them),
-the within-subject CV (typical error / mean), the smallest detectable change
-(2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval; and
-aim 2, per study and pooled over both: the change after minus before exposure
-on the nicotine visit (W, S; the control visit is not used), with its
-interval, a paired t-test, the Wilcoxon test and the same on the log scale. The tables go to `Reports/aims/`; each observer is
-summarized on their own. The data folder comes from `settings.csv` unless
-`--data` gives one.
+collects the saved data sets into one resting velocity per recording, as
+`PROTOCOL.md` fixes it, and computes both aims.
 
-While the app is in blind placement the results stay hidden unless `--unblind`
-is passed; `--progress` shows instead how far placement got, under the codes the
-app lists the recordings by, without a single result. The report on the primary
-endpoint, with the quality of the lines and what the signal-to-noise threshold
-removes, is built by `analysis/primary_endpoint/` (its README).
+- **A loop counts** when it is a whole loop measured within the official rest,
+  its pooled pattern shift is resolved (signal-to-noise 8 or more), its limbs
+  did not move opposite ways along the line, it was measured on a stabilized
+  video and its line does not cross itself.
+- **A recording's value** is its reference capillary (`loop1`) if it counts,
+  else the first backup that counts (`loop2`, `loop3`). `--value` and
+  `--min-snr` give the protocol's sensitivity analyses.
+- **Aim 1**, pooled over both studies (the primary result) and per study: the
+  within-subject CV (typical error / mean), the smallest detectable change
+  (2.77 × typical error), Bland–Altman and ICC(A,1) with its 95% interval.
+- **Aim 2**, per study and pooled: the change after minus before exposure on
+  the nicotine visit, with its 95% interval, a paired t-test, the Wilcoxon
+  test and the ratio after / before.
 
-Recordings can be stabilized the same way, for example one after another on
-a computer without a display:
+The tables go to `Reports/aims/` in the data folder. While the app is in blind
+placement the results stay hidden unless `--unblind` is passed, and
+`--progress` shows how far placement got, under the codes, without a result.
+
+Which recordings each aim uses comes from their names and official times
+(`python3 -m capillary.inventory`, tables in `metadata/derived/`).
+
+## How the method was checked
+
+- **Synthetic recordings with a known velocity.** `capillary/simulate.py`
+  renders capillary loops with red cells moving at a chosen speed, with the
+  noise, the brightness changes of the whole vessel and the residual movement
+  measured in the recordings. `python3 -m capillary.benchmark` measures them
+  (about 4 minutes; `--quick` about 12 s). On a 120-px line the 3-s blocks are
+  within about 2% from 0.25 to 5 px/frame and report faster flow as
+  unresolved. The pooled pattern shift is within 1% from 2 to 8 px/frame and
+  about 3% low at 12. Without flow the pooled pattern shift resolves no clip,
+  while about 7% of single 3-s blocks still do.
+- **Unit tests** (below) check the estimators, the stabilizer and the
+  statistics against known answers.
+- **On the recordings**, where there is no ground truth: lines through tissue,
+  the occlusion (when the blood should stand still), the direction of flow in
+  a loop's two limbs, and the same recordings placed a second time. Each is an
+  analysis of its own in `analysis/`.
+
+## What the method cannot do
+
+`CLAUDE.md` (Known issues) and the analyses' READMEs give the details.
+
+- **Calibration.** Every velocity scales with the frame rate and the pixel
+  size. Both are taken from the recordings and the recording program
+  (30 frames per second, 1.33 µm per pixel); neither was calibrated
+  independently.
+- **Slow flow against movement.** Below 1 px/frame (0.04 mm/s) one line cannot
+  tell slow flow from the picture moving along it.
+- **Many loops give no value.** More than half of the loops placed for the
+  study did not count: most of those showed no moving pattern at rest, the
+  others sat at the slowest speed searched (`analysis/primary_endpoint/`).
+- **A whole loop reads its dominant limb,** usually the venous one. It is not
+  an arterial velocity (`analysis/whole_loop_limbs/`).
+- **Stabilization corrects translation only,** not deformation of the skin.
+
+## Batch commands
+
+The measurement lives in the `capillary` package, which imports no GUI
+toolkit. The pages and the command line run the same arithmetic.
 
 ```bash
+# stabilize a recording
 python3 -m capillary.stabilize RecordedVideos/clip.avi --out StabilizedVideos/clip.avi
+
+# measure a line
+python3 -m capillary.cli StabilizedVideos/clip.avi \
+    --line "372,110;352,160;338,205" --start 1909 --max-frames 900 \
+    --out blocks.csv --summary-out summary.csv
 ```
+
+`--line` lists the points of a centre line in video pixels, from where the
+blood comes from. The command prints the 3-s blocks' summary and the pattern
+shift pooled over the frames measured. The points and the frames of a data set
+made in the app are in its `…_provenance.json`. The calibration comes from
+`settings.csv` (`mm_per_pixel`) unless `--mm-per-pixel` gives it. On a
+stabilized video a line that reaches the black strip is refused, as in the
+app. `python3 -m capillary.cli --help` lists the rest.
+
+## Data folder
+
+`settings.csv`, beside the code, keeps the data folder (`Application_path`),
+the calibration (`mm_per_pixel`), the observer's initials and whether blind
+placement is on. Each computer has its own; git ignores it. Inside the data
+folder:
+
+- `RecordedVideos/`: raw recordings, copied in to be stabilized.
+- `StabilizedVideos/`: stabilized copies, each with its shift file and its
+  provenance. The app takes every video in this folder as stabilized.
+- `Statistics/`: the data sets (`<recording>___<data set>___…`: the space-time
+  diagram, the 3-s blocks, the provenance) and each recording's time points.
+- `Reports/`: the plots and summary tables written from the data sets, and the
+  aims' tables in `Reports/aims/`.
+- `.trash/`: what was moved to the trash, one dated folder per action.
+
+## Code layout
+
+| Path | What it holds |
+| --- | --- |
+| `Application.py` | Entry point: logging, then the window |
+| `gui/app.py` | The main window: header, recording list, pages, status bar, keyboard |
+| `gui/line_page.py`, `gui/measure_page.py` | The Centre line page: the line tool and its preview; video, timeline, frame range, time points, the Measure footer |
+| `gui/results_page.py` | The Results page |
+| `gui/blind.py` | Blind placement: what it lists and hides |
+| `gui/jobs.py`, `gui/tasks.py`, `gui/reports.py` | Background jobs, the work they run (stabilize, preview, measure, report), and the report's plots |
+| `gui/video_view.py`, `gui/transport.py`, `gui/library_view.py`, `gui/widgets.py`, `gui/dialogs.py`, `gui/theme.py` | Video canvas, playback and timeline, the recording list, small widgets, dialogs, colours and icons |
+| `gui/library.py`, `gui/settings.py`, `gui/media.py` | Finding recordings, settings, frames for display |
+| `capillary/stabilize.py`, `capillary/quality.py`, `capillary/video.py` | The stabilizer, the sharpness score it uses, reading videos frame by frame |
+| `capillary/spacetime.py`, `capillary/pattern_shift.py` | The centre line, its space-time diagram and the two velocity estimators |
+| `capillary/datasets.py`, `capillary/cli.py` | The files of a saved data set; the batch command |
+| `capillary/inventory.py`, `capillary/blinding.py`, `capillary/aims.py`, `capillary/agreement.py`, `capillary/placement.py` | The study: its recordings and official times, the blind codes, the aims' values and statistics, Bland–Altman and ICC, whether two lines follow one capillary |
+| `capillary/simulate.py`, `capillary/benchmark.py` | Synthetic recordings with a known velocity, and the benchmark on them |
 
 ## Tests
 
 ```bash
 source venv/bin/activate
 pip install pytest
-python3 -m pytest
+python3 -m pytest          # 197 tests, about 30 s; no display needed
 ```
 
-The suite checks the engine against synthetic videos with an exactly known
-velocity — a real clip has no ground truth, so it cannot tell you whether the
-estimator is right. `tests/synthetic.py` generates a pattern sliding at a
-chosen pixels-per-frame rate; `capillary/simulate.py` renders capillary loops
-with the disturbances of the real recordings. Further tests cover both
-measurements as the pages run them, the saved file formats, the agreement
-statistics (against the published example of Shrout & Fleiss 1979 and values
-worked by hand), reading sets with simulated observers, the matching of line
-placements, and the GUI's non-visual logic (settings, the recording list, the
-trash, background jobs, the reading canvas). None of them needs a display.
+A real recording has no ground truth, so the suite checks the engine against
+synthetic videos with an exactly known velocity (`tests/synthetic.py`,
+`capillary/simulate.py`). Further tests cover the stabilizer, the measurement
+as the app runs it, the saved file formats, the study's recordings and
+statistics (the intraclass correlation against the published example of
+Shrout & Fleiss 1979), blind placement, and the app's logic without a window.
+
+## How it was written
+
+The tool grew out of an earlier capillaroscopy app (`Widaeus/capillaroscopy`).
+The measurement, the stabilizer and the study's analysis were written during
+the degree project, with Claude Code, Anthropic's AI coding assistant.
+`DEVLOG.md` records each step with its reasons and checks, and `CLAUDE.md` is
+the assistant's standing instructions.

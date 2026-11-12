@@ -1,9 +1,8 @@
 """Tkinter front end of the capillaroscopy tool; start it with ``python3 Application.py``.
 
 The package only lays out windows, handles input and runs work in background
-threads. The measurement lives in `capillary/`, stabilization and the report
-generator in `Caper.py`, so the GUI, the batch CLI and the tests share one
-implementation.
+threads. The measurement and the stabilization live in `capillary/`, so the
+GUI, the batch CLI and the tests share one implementation.
 
     app.py           main window: header, pages, library, status bar, shortcuts
     theme.py         colours, fonts, ttk styles and the drawn icons
@@ -12,12 +11,10 @@ implementation.
     video_view.py    the zoomable video canvas and its overlay
     transport.py     playback, timeline and transport bar
     library_view.py  the list of recordings on the left
-    measure_page.py  video, frame range, time points and Measure footer of both measure pages
+    measure_page.py  video, frame range, time points and Measure footer of the Centre line page
     line_page.py     velocity along a centre line (space-time diagram)
-    analyze_page.py  velocity measurement with two boxes
     results_page.py  saved data sets and their reports
-    validation_page.py  reading sets, observers' readings and their agreement; line placement
-    reading_view.py  the blinded reading of one block after another
+    blind.py         blind placement: what it lists and hides
 
 No Tk in these (they can be used and tested without a display):
 
@@ -26,6 +23,7 @@ No Tk in these (they can be used and tested without a display):
     media.py         frame reading and display conversion
     jobs.py          background jobs with progress and cancel
     tasks.py         the work the pages hand to background jobs
+    reports.py       the plots of a data set's report
 """
 import matplotlib
 

@@ -20,16 +20,11 @@ from typing import Iterable, Optional
 import numpy as np
 import pandas as pd
 
-import Caper
-from capillary import datasets, inventory, pattern_shift, placement, spacetime, validation
+from capillary import datasets, inventory, pattern_shift, spacetime
 from capillary import stabilize as stabilizer
-from capillary.intensity import extract_traces
-from capillary.measure import measure_velocity
-from capillary.roi import ROI
-from capillary.velocity import (DEFAULT_WINDOWS, lag_and_correlation, resolvable_range, velocity_from_lag,
-                                velocity_summary)
 from capillary.video import iter_frames, probe_video
 
+from . import reports
 from .library import Recording, stem_of, video_files
 from .settings import DataFolder
 
@@ -104,14 +99,12 @@ def stabilized_files(folder: DataFolder, stem: str) -> list[str]:
 
 
 def recording_files(folder: DataFolder, recording: Recording) -> list[str]:
-    """Every file that belongs to `recording`: videos and their stabilization records, data sets, reports,
-    time points, old flow files."""
+    """Every file that belongs to `recording`: videos and their stabilization records, data sets, reports
+    and time points."""
     paths = [recording.raw, recording.stabilized, *stabilized_files(folder, recording.stem)]
-    for kind in datasets.KINDS:
-        for name in recording.datasets_of(kind):
-            paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name, kind)
+    for name in recording.line_sets:
+        paths += datasets.dataset_paths(folder.statistics, folder.reports, recording.stem, name)
     paths.append(datasets.time_points_file(folder.statistics, recording.stem))
-    paths += recording.legacy_flow_files
     seen, result = set(), []
     for path in paths:
         if path and path not in seen and os.path.exists(path):
@@ -153,50 +146,6 @@ def stabilize(job, folder: DataFolder, raw_path: str) -> str:
 
 # -------------------------------------------------------------------- measurements
 
-#: Frames the live preview reads around the playhead: the report's shortest window.
-PREVIEW_FRAMES = DEFAULT_WINDOWS[0]
-
-
-def velocity_preview(path: str, box1: ROI, box2: ROI, start: int, count: int, mm_per_pixel: float) -> dict:
-    """One-window velocity estimate for the live preview, through the same engine as a measurement.
-
-    Positive velocity means flow from box 2 to box 1, the report's convention.
-    """
-    info = probe_video(path)
-    trace = extract_traces(iter_frames(path, max_frames=count, start=start), box1, box2, fps=info.fps)
-    lag, correlation = lag_and_correlation(trace.a, trace.b)
-    velocity = -velocity_from_lag(lag, trace.distance_px, info.fps, mm_per_pixel) if np.isfinite(lag) else float('nan')
-    return {'start': start, 'a': trace.a, 'b': trace.b, 'lag': lag, 'r': correlation, 'velocity': velocity,
-            'fps': info.fps, 'distance_px': trace.distance_px, 'max_lag': trace.n_frames // 2}
-
-
-def summarize_velocity_report(report: pd.DataFrame) -> dict:
-    """Headline numbers of a velocity report table (`Caper.CrossCorrelation`).
-
-    Velocity per row is the mean over the window lengths, as in the report's
-    plots, before smoothing; the zero-lag share counts every window estimate.
-    """
-    columns = [str(c) for c in report.columns]
-    velocity = report.loc[:, [c.startswith('velocity') for c in columns]].mean(axis=1)
-    correlation = report.loc[:, [c.startswith('correlation') for c in columns]].mean(axis=1)
-    lags = report.loc[:, [c.isdigit() for c in columns]].to_numpy(dtype=float)
-    summary = velocity_summary(velocity, correlation, lags)
-    times = pd.to_numeric(pd.Series(report.index), errors='coerce')
-    summary['first_s'] = float(times.min()) if len(times) else float('nan')
-    summary['last_s'] = float(times.max()) if len(times) else float('nan')
-    return summary
-
-
-def velocity_series(report: pd.DataFrame, max_points: int = 600) -> dict:
-    """Time and smoothed velocity as the report plots them, thinned out for a small chart."""
-    columns = [str(c) for c in report.columns]
-    velocity = report.loc[:, [c.startswith('velocity') for c in columns]].mean(axis=1)
-    smoothed = velocity.rolling(30, min_periods=1).mean()
-    step = max(1, int(np.ceil(len(smoothed) / max_points)))
-    times = pd.to_numeric(pd.Series(report.index), errors='coerce').to_numpy(dtype=float)
-    return {'t': times[::step].tolist(), 'v': smoothed.to_numpy(dtype=float)[::step].tolist()}
-
-
 def _video_record(path: str, info) -> dict:
     return {'file': os.path.basename(path), 'folder': os.path.basename(os.path.dirname(path)), 'path': path,
             'frame_count': info.frame_count, 'fps': info.fps, 'width': info.width, 'height': info.height}
@@ -218,98 +167,7 @@ def range_phase(stem: str, fps: float, frame_count, first: int, last: int) -> st
     return phases.phase_of(first, last, fps) if phases is not None else ''
 
 
-def measure_velocity_dataset(job, *, folder: DataFolder, stem: str, name: str, video_path: str,
-                             box1: ROI, box2: ROI, start: int, end: int, mm_per_pixel: float,
-                             time_points=(), blur_cache=None, observer: str = '') -> dict:
-    """Measure frames ``start..end`` (inclusive), save the data set, and write its report."""
-    job.report(0.0, 'Reading frames')
-    measurement = measure_velocity(video_path, box1, box2, start, end + 1,
-                                   progress=lambda p: job.report(0.5 * p, 'Reading frames'),
-                                   should_cancel=job.cancelled, blur_cache=blur_cache)
-    if measurement.frames_read < datasets.MIN_VELOCITY_FRAMES:
-        raise ValueError(f'Only {measurement.frames_read} frames could be read; the report needs at least '
-                         f'{datasets.MIN_VELOCITY_FRAMES}.')
-    files = datasets.velocity_dataset_files(folder.statistics, stem, name)
-    trace = measurement.trace
-    try:
-        job.report(0.52, 'Saving the data set')
-        datasets.write_velocity_dataset(folder.statistics, stem, name, trace.a, trace.b, trace.distance_px,
-                                        measurement.blur, measurement.start_frame, measurement.frame_count)
-        report = Caper.CrossCorrelation(fps=measurement.fps, mm_per_pixel=mm_per_pixel).generate_report(
-            datasets.dataset_prefix(folder.statistics, stem, name), sorted(time_points),
-            report_path=datasets.dataset_prefix(folder.reports, stem, name),
-            progress=lambda p: job.report(0.55 + 0.37 * p, 'Computing velocities'))
-        job.report(0.97, 'Writing the summary')
-        summary = summarize_velocity_report(report)
-        summary['phase'] = range_phase(stem, measurement.fps, measurement.frame_count, measurement.start_frame,
-                                       measurement.start_frame + measurement.frames_read - 1)
-        slowest, fastest = resolvable_range(trace.distance_px, measurement.fps, mm_per_pixel)
-        record = {
-            'kind': 'velocity',
-            'dataset': name,
-            'recording': stem,
-            'created': datetime.datetime.now().isoformat(timespec='seconds'),
-            'observer': observer or None,
-            'video': _video_record(video_path, measurement),
-            'frames': {'first': measurement.start_frame,
-                       'last': measurement.start_frame + measurement.frames_read - 1,
-                       'count': measurement.frames_read},
-            'boxes': {
-                'width_px': box1.width,
-                'height_px': box1.height,
-                'box1': {'x': box1.center_x, 'y': box1.center_y,
-                         'role': 'downstream: the blood reaches it last (column 0 of the data)'},
-                'box2': {'x': box2.center_x, 'y': box2.center_y,
-                         'role': 'upstream: the blood reaches it first (column 1 of the data)'},
-                'coordinates': 'box centre in video pixels, x to the right, y down from the top-left corner',
-            },
-            'distance_px': trace.distance_px,
-            'distance_um': trace.distance_px * mm_per_pixel * 1000.0,
-            'mm_per_pixel': mm_per_pixel,
-            'resolvable_mm_per_s': {'slowest': slowest, 'fastest': fastest},
-            'time_points_s': sorted(float(t) for t in time_points),
-            'report': {'windows_frames': [int(w) for w in DEFAULT_WINDOWS],
-                       'estimator': 'Caper.CrossCorrelation.calculate_cross_correlation, '
-                                    'lags from capillary.velocity.lag_and_correlation',
-                       'positive_velocity': 'flow from box 2 towards box 1'},
-            'summary': summary,
-            'software': datasets.software_version(),
-        }
-        datasets.write_provenance(files['provenance'], record)
-    except BaseException:
-        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name, 'velocity'):
-            _remove(path)
-        raise
-    return {'kind': 'velocity', 'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report),
-            'record': record}
-
-
-def regenerate_velocity_report(job, *, folder: DataFolder, stem: str, name: str, fps: float,
-                               mm_per_pixel: float, time_points=()) -> dict:
-    """Write the report of a saved velocity data set again (e.g. after adding time points)."""
-    job.report(0.0, 'Computing velocities')
-    report = Caper.CrossCorrelation(fps=fps, mm_per_pixel=mm_per_pixel).generate_report(
-        datasets.dataset_prefix(folder.statistics, stem, name), sorted(time_points),
-        report_path=datasets.dataset_prefix(folder.reports, stem, name),
-        progress=lambda p: job.report(0.9 * p, 'Computing velocities'))
-    summary = summarize_velocity_report(report)
-    provenance = datasets.velocity_dataset_files(folder.statistics, stem, name)['provenance']
-    record = datasets.read_provenance(provenance)
-    if record is not None:
-        frames = record.get('frames') or {}
-        if 'first' in frames and 'last' in frames:
-            summary['phase'] = range_phase(stem, fps, (record.get('video') or {}).get('frame_count'),
-                                           int(frames['first']), int(frames['last']))
-        record['summary'] = summary
-        record['time_points_s'] = sorted(float(t) for t in time_points)
-        record['report_regenerated'] = datetime.datetime.now().isoformat(timespec='seconds')
-        datasets.write_provenance(provenance, record)
-    return {'kind': 'velocity', 'stem': stem, 'name': name, 'summary': summary, 'series': velocity_series(report)}
-
-
-# ------------------------------------------------------------- centre-line velocity
-
-#: Frames the centre-line preview reads around the playhead (4 s at 30 fps), measured as one block.
+#: Frames the preview reads around the playhead (4 s at 30 fps), measured as one block.
 LINE_PREVIEW_FRAMES = 120
 
 
@@ -441,7 +299,7 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
     try:
         job.report(0.92, 'Saving the data set')
         datasets.write_line_dataset(folder.statistics, stem, name, diagram, blocks)
-        Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, info.fps,
+        reports.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, info.fps,
                                    mm_per_pixel, start, sorted(time_points), summary)
         record = {
             'kind': 'line',
@@ -472,11 +330,10 @@ def measure_line_dataset(job, *, folder: DataFolder, stem: str, name: str, video
         }
         datasets.write_provenance(files['provenance'], record)
     except BaseException:
-        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name, 'line'):
+        for path in datasets.dataset_paths(folder.statistics, folder.reports, stem, name):
             _remove(path)
         raise
-    return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks),
-            'record': record}
+    return {'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks), 'record': record}
 
 
 def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps: float, mm_per_pixel: float,
@@ -502,88 +359,36 @@ def regenerate_line_report(job, *, folder: DataFolder, stem: str, name: str, fps
                              range_phase(stem, fps, frame_count, first, first + diagram.shape[0] - 1),
                              _apex_px(line.get('points'), line.get('role')))
     job.report(0.9, 'Drawing the report')
-    Caper.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, fps,
+    reports.generate_line_report(datasets.dataset_prefix(folder.reports, stem, name), diagram, blocks, fps,
                                mm_per_pixel, first, sorted(time_points), summary)
     if record is not None:
         record.update(summary=summary, estimator=_estimator_record(), pattern_shift=_pattern_shift_record(),
                       mm_per_pixel=mm_per_pixel, time_points_s=sorted(float(t) for t in time_points),
                       report_regenerated=datetime.datetime.now().isoformat(timespec='seconds'))
         datasets.write_provenance(files['provenance'], record)
-    return {'kind': 'line', 'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks)}
-
-
-# ------------------------------------------------------------ validation (reading sets)
-
-def create_reading_set(job, *, folder: DataFolder, name: str, sources, blocks_per_dataset: int, balanced: bool,
-                       seed: Optional[int], mm_per_pixel: float) -> str:
-    """Draw a reading set from centre-line data sets (`capillary.validation`); returns its name."""
-    job.report(0.0, 'Drawing blocks')
-    reading_set = validation.create_reading_set(
-        folder.validation, folder.statistics, name, sources, blocks_per_dataset=blocks_per_dataset,
-        balanced=balanced, seed=seed, fallback_mm_per_pixel=mm_per_pixel,
-        progress=lambda p: job.report(0.95 * p, 'Drawing blocks'))
-    return reading_set.name
-
-
-def agreement_report(job, *, folder: DataFolder, name: str) -> dict:
-    """Measure every block of a reading set again, compare it with the readings, write tables and plots."""
-    job.report(0.0, 'Measuring the blocks')
-    reading_set = validation.load_reading_set(folder.validation, name)
-    readings = reading_set.readings()
-    estimates = validation.estimate_items(reading_set, progress=lambda p: job.report(0.8 * p, 'Measuring the blocks'))
-    table = validation.agreement_table(reading_set, readings, estimates)
-    comparisons = validation.compare(table, readings)
-    job.report(0.82, 'Writing the tables')
-    files = validation.write_report_tables(reading_set, table, comparisons, readings)
-    job.report(0.86, 'Drawing the plots')
-    files.update(Caper.generate_validation_report(reading_set.report_dir, table, comparisons))
-    return {'name': name, 'comparisons': comparisons, 'files': files, 'readings': len(readings)}
-
-
-def placement_report(job, *, folder: DataFolder, sources) -> dict:
-    """Find the capillaries measured more than once and compare their velocities (`capillary.placement`)."""
-    job.report(0.0, 'Reading the data sets')
-    measurements = placement.load_measurements(folder.statistics, sources)
-    job.report(0.2, 'Matching the lines')
-    groups = placement.group_measurements(measurements)
-    per_dataset, capillaries = placement.placement_tables(groups)
-    comparisons = placement.compare_placements(capillaries)
-    job.report(0.6, 'Writing the tables')
-    report_dir = os.path.join(folder.validation, placement.REPORT_DIR)
-    files = placement.write_report_tables(report_dir, per_dataset, capillaries, comparisons)
-    job.report(0.7, 'Drawing the plots')
-    files.update(Caper.generate_validation_report(report_dir, capillaries, comparisons, unit='capillaries'))
-    return {'measurements': len(measurements), 'capillaries': len(groups), 'comparisons': comparisons,
-            'files': files}
+    return {'stem': stem, 'name': name, 'summary': summary, 'series': line_series(blocks)}
 
 
 # ------------------------------------------------------------------ results browsing
 
-def dataset_info(folder: DataFolder, stem: str, name: str, kind: str = 'velocity') -> dict:
+def dataset_info(folder: DataFolder, stem: str, name: str) -> dict:
     """What the Results page shows for one data set (run off the Tk thread)."""
-    if kind == 'line':
-        files = datasets.line_dataset_files(folder.statistics, stem, name)
-        inputs = [files['space_time'], files['velocity']]
-        images = datasets.line_report_files(folder.reports, stem, name)
-        table = files['velocity']
-    else:
-        files = datasets.velocity_dataset_files(folder.statistics, stem, name)
-        inputs = [files[part] for part in datasets.VELOCITY_INPUTS]
-        images = datasets.velocity_report_files(folder.reports, stem, name)
-        table = files['report']
+    files = datasets.line_dataset_files(folder.statistics, stem, name)
+    inputs = [files['space_time'], files['velocity']]
+    images = datasets.line_report_files(folder.reports, stem, name)
+    table = files['velocity']
     images = {role: path for role, path in images.items() if path.endswith('.png')}
     record = datasets.read_provenance(files['provenance'])
     summary = (record or {}).get('summary')
     if summary is None and os.path.exists(table):
         try:
             frame = pd.read_csv(table, index_col=0)
-            summary = spacetime.space_time_summary(frame) if kind == 'line' else summarize_velocity_report(frame)
+            summary = spacetime.space_time_summary(frame)
         except Exception:  # noqa: BLE001 - a damaged report just has no summary
             log.warning('Could not read %s', table, exc_info=True)
     existing_inputs = [path for path in inputs if os.path.exists(path)]
     modified = max((os.path.getmtime(path) for path in existing_inputs), default=None)
     return {
-        'kind': kind,
         'name': name,
         'record': record,
         'summary': summary,

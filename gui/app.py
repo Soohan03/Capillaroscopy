@@ -1,11 +1,9 @@
 """The main window: header with the pages, the recording list, the status bar.
 
-Pages: Centre line (velocity from the space-time diagram along a capillary),
-Two boxes (velocity from the delay between two boxes), Results (saved data
-sets and reports) and Validation (observers reading blocks by hand, and their
-agreement with the estimator). The window owns the selected recording, the
-background jobs and the application-wide actions (stabilize, move to trash,
-settings, blind placement: `gui.blind`).
+Pages: Centre line (velocity from the space-time diagram along a capillary)
+and Results (saved data sets and reports). The window owns the selected
+recording, the background jobs and the application-wide actions (stabilize,
+move to trash, settings, blind placement: `gui.blind`).
 """
 
 from __future__ import annotations
@@ -22,7 +20,6 @@ from tkinter import ttk
 from typing import Optional
 
 from . import blind, library, tasks, theme
-from .analyze_page import AnalyzePage
 from .dialogs import SettingsDialog, ShortcutsDialog, confirm, show_error
 from .jobs import JobManager
 from .library_view import LibraryPanel
@@ -30,12 +27,11 @@ from .line_page import LinePage
 from .results_page import ResultsPage
 from .settings import APP_DIR, DataFolder, Settings
 from .theme import COLORS, icon, px
-from .validation_page import ValidationPage
 from .widgets import Tooltip, install_wheel_router
 
 log = logging.getLogger(__name__)
 
-PAGES = (('line', LinePage), ('analyze', AnalyzePage), ('results', ResultsPage), ('validation', ValidationPage))
+PAGES = (('line', LinePage), ('results', ResultsPage))
 START_PAGE = 'line'
 TEXT_INPUT_CLASSES = ('Entry', 'TEntry', 'Spinbox', 'TSpinbox', 'TCombobox', 'Text', 'Listbox')
 
@@ -128,13 +124,13 @@ class App:
         settings_button = ttk.Button(header, image=icon('gear', 15, COLORS['header_text']), style='Header.TButton',
                                      command=self.open_settings)
         settings_button.pack(side='right', padx=(0, px(4)))
-        Tooltip(settings_button, 'Settings: data folder, calibration, box size')
+        Tooltip(settings_button, 'Settings: data folder and calibration')
         self.blind_button = ttk.Button(header, command=self.toggle_blind)
         self.blind_button.pack(side='right', padx=(0, px(10)))
         Tooltip(self.blind_button, 'Blind placement: place lines on coded recordings without seeing what they '
                                    'measure. Only the recordings the aims use are listed, under codes; the preview '
-                                   'and every result are hidden; measuring uses the official rest; Two boxes, '
-                                   'Results and Validation are closed.', wrap=340)
+                                   'and every result are hidden; measuring uses the official rest; the Results '
+                                   'page is closed.', wrap=340)
 
         self.paned = ttk.Panedwindow(root, orient='horizontal')
         self.paned.grid(row=1, column=0, sticky='nsew')
@@ -145,7 +141,6 @@ class App:
         self.paned.add(self.library, weight=0)
         self.paned.add(self.page_area, weight=1)
         self.library.configure(width=px(310))
-        self._library_shown = True
 
         self.pages = {key: page(self.page_area, self) for key, page in PAGES}
 
@@ -187,10 +182,7 @@ class App:
         if self.blind and key in blind.LOCKED_PAGES:
             return 'Closed during blind placement: it shows what lines measure.'
         return {'line': 'Velocity along a line drawn on a capillary (Ctrl + 1)',
-                'analyze': 'Velocity between two boxes on a capillary: the original method (Ctrl + 2)',
-                'results': 'Saved data sets and their reports (Ctrl + 3)',
-                'validation': 'Observers read blocks by hand, blinded; their agreement with the estimator '
-                              '(Ctrl + 4)'}[key]
+                'results': 'Saved data sets and their reports (Ctrl + 2)'}[key]
 
     def show_page(self, key):
         if self.blind and key in blind.LOCKED_PAGES:
@@ -203,32 +195,18 @@ class App:
             return
         current = self.current_page
         if current is not None:
-            if hasattr(current, 'can_leave') and not current.can_leave():
-                self.nav.set(self.current_key)
-                return
             current.on_hide()
             current.grid_remove()
         page = self.pages[key]
         self.current_key = key
         self.nav.set(key)
-        self._show_library(page.uses_library)
         page.grid(row=0, column=0, sticky='nsew')
-        if page.uses_library:
-            page.show_recording(self.current_recording())
+        page.show_recording(self.current_recording())
         page.on_show()
         self.update_title()
 
-    def _show_library(self, show):
-        if show and not self._library_shown:
-            self.paned.insert(0, self.library, weight=0)
-            self._library_shown = True
-        elif not show and self._library_shown:
-            self.paned.forget(self.library)
-            self._library_shown = False
-
     def update_title(self):
-        page = self.current_page
-        stem = self.selected_stem if page is not None and page.uses_library else None
+        stem = self.selected_stem
         self.root.title(f'{self.display_name(stem)} — Capillaroscopy' if stem else 'Capillaroscopy')
 
     # -------------------------------------------------------------- blind placement
@@ -252,7 +230,7 @@ class App:
         if ask and on and not confirm(
                 self.root, 'Start blind placement?', 'Only the recordings the aims use are listed, under codes instead '
                 'of their names. The space-time preview and every result are hidden, measuring uses the official '
-                'rest, and Two boxes, Results and Validation are closed.',
+                'rest, and the Results page is closed.',
                 'Choose the capillaries and place the lines by the anatomy alone. Turn it off when every line is '
                 'placed.', ok='Start blind placement'):
             return
@@ -312,7 +290,7 @@ class App:
             self.selected_stem = stems[0] if stems else None
         self.library.set_recordings(self.recordings, self.selected_stem)
         page = self.current_page
-        if page is not None and page.uses_library:
+        if page is not None:
             page.show_recording(self.current_recording())
         self.update_title()
 
@@ -322,7 +300,7 @@ class App:
         self.selected_stem = stem
         self.library.set_selected(stem)
         page = self.current_page
-        if page is not None and page.uses_library:
+        if page is not None:
             page.show_recording(self.current_recording())
         self.update_title()
 
@@ -333,8 +311,8 @@ class App:
         if recording.is_stabilized and not confirm(
                 self.root, 'Stabilize again?', f'{self.display_name(recording.stem)} already has a stabilized video. '
                 'Stabilizing it again replaces it; the current one is moved to the .trash folder.',
-                'Data sets measured on the current video keep their numbers, but their box positions may not fit '
-                'the new video.', ok='Stabilize again'):
+                'Data sets measured on the current video keep their numbers, but their lines may not fit the new '
+                'video.', ok='Stabilize again'):
             return
         self._submit_stabilize(recording)
 
@@ -378,11 +356,9 @@ class App:
         listing = '\n'.join(tasks.relative_path(self.folder, path) for path in paths[:12])
         if len(paths) > 12:
             listing += f'\n… and {len(paths) - 12} more'
-        kinds = 'videos, data sets, reports and time points'
-        if recording.legacy_flow_files:
-            kinds = 'videos, data sets, reports, time points and old optical-flow files'
-        if not confirm(self.root, 'Move recording to trash?', f'All {len(paths)} files of {recording.stem} ({kinds}) '
-                       'are moved to the .trash folder in the data folder, where you can restore them by hand.',
+        if not confirm(self.root, 'Move recording to trash?', f'All {len(paths)} files of {recording.stem} (videos, '
+                       'data sets, reports and time points) are moved to the .trash folder in the data folder, '
+                       'where you can restore them by hand.',
                        listing, ok='Move to trash', danger=True):
             return
         for page in self.pages.values():
@@ -572,9 +548,6 @@ class App:
 
     # ------------------------------------------------------------------------ quit
     def quit(self):
-        page = self.current_page
-        if page is not None and hasattr(page, 'can_leave') and not page.can_leave():
-            return
         active = self.jobs.active()
         if active:
             titles = '\n'.join(job.title for job in active[:6])

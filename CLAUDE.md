@@ -87,20 +87,16 @@ without asking:
      black strip along its edge); a line that leaves it is refused, with how far to move it.
    - Blind placement (the header button): only the aims' recordings are listed, under
      codes; the preview and every result are hidden; measuring uses the official rest;
-     every line is saved as a whole loop; Two boxes, Results and Validation are closed. It stays
+     every line is saved as a whole loop; the Results page is closed. It stays
      on until turned off. `python3 -m capillary.aims --progress` checks the placement by code
      without a result; `--unblind` gives the results (the study's were unblinded on 2026-10-29).
-   - Two boxes page (the original method, kept for comparison): click places box 1
-     (orange, downstream), the next click box 2 (blue, upstream); WASD nudges a box.
-   - On both: Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
+   - Space plays/pauses, ←/→ step a frame, Q/E jump ±500 frames, I/O set the
      measured range, and Rest / Occlusion / After release set it from the recording's
      official times (the timeline marks the occlusion in orange); "Measure velocity and
      save" is at the bottom right, next to the data set name and the Observer initials
      (saved with the data set).
-   - Validation page (Ctrl+4): draw a reading set of 3-s blocks from centre-line data
-     sets, read them blinded (drag along the streaks, N for "no clear streaks", Enter
-     next), then compute the agreement; "Line placement" compares the same capillary
-     measured by different observers.
+   - Results page (Ctrl+2): a recording's files, time points and data sets with their
+     reports; a report can be written again, a data set moved to the trash, its line restored.
    - F1 shows every keyboard and mouse control.
    - The app does not record: new videos are copied into `RecordedVideos/` (raw, to be
      stabilized) or `StabilizedVideos/`.
@@ -125,14 +121,17 @@ If the user reports the app froze or crashed, check the task output file and
   been stabilized (Known issues). The study need not be sorted into separate folders: ISMOKE
   names start with `ISMOKE_`, and the inventory sorts by name (on 2026-10-12 the folder was
   briefly renamed `ESMOKE_Videos/`, which the app cannot see, and renamed back)
-- `Flows/` — optical-flow video of one recording, from before the flow feature was
-  removed (2026-10-06); kept on disk, not shown, trashed along with its recording
 - `Statistics/` — data sets (`<recording>___<name>___…`) with `…_provenance.json`, time
-  points; centre-line data sets keep their space-time diagram (`___space_time.npy`)
+  points; every data set keeps its space-time diagram (`___space_time.npy`)
 - `Reports/` — plots and summary tables written from the data sets
-- `Validation/` — reading sets (`<set>/set.json`, `blocks.npz`, `readings/`, `report/`)
-  and the line-placement comparison (`line_placement/`); so far only `reading1`, the
-  user's first try (6 blocks, observer "1"), drawn from video that had not been stabilized
+- Left on the desktop by features removed since, which the app no longer reads or lists
+  (git still ignores `Flows/` and `Validation/`):
+  - `Flows/` — the optical-flow video of one recording (the flow feature went on 2026-10-06,
+    the code that still trashed its files with their recording on 2026-11-12);
+  - `Validation/reading1` — the user's first try of a reading set (6 blocks, observer "1"),
+    drawn from video that had not been stabilized (the Validation page went on 2026-11-12);
+  - the two-box data sets `Test` and `Test2` of FP01_Qefter 09-46-17 in `Statistics/` and
+    `Reports/` (`___cross_correlation.csv` and others; the two-box method went on 2026-11-11).
 - `.trash/` — what the app moved to the trash (one dated folder per action, subfolders
   kept); emptied only by hand
 - `metadata/` (in the repository, tracked, unlike the data folders above) — the official
@@ -145,23 +144,25 @@ If the user reports the app froze or crashed, check the task output file and
 
 ## Code layout
 
-Exploratory analyses with their inputs and results live in `analysis/` (for example
-`analysis/resting_flow_feasibility/`, with a README on how to rerun it).
+The analyses with their scripts and results live in `analysis/`; `analysis/README.md`
+sorts them into the protocol's results, post hoc analyses and method development.
 
 See the table in `README.md`. The GUI is `Application.py` → `gui/app.py` (window,
 recording list, keyboard routing) → one module per page (`gui/line_page.py` "Centre
-line", `analyze_page.py` "Two boxes", `results_page.py`, `validation_page.py` with its
-reading mode in `reading_view.py`; the two measure pages build on
-`gui/measure_page.py`). Long work runs as background jobs: `gui/jobs.py` runs them,
-`gui/tasks.py` holds the work and has no Tk in it. The report plots of both methods
-are in `Caper.py`; stabilization is in `capillary/stabilize.py`.
+line", which builds on `gui/measure_page.py`, and `results_page.py`). Long work runs as
+background jobs: `gui/jobs.py` runs them, `gui/tasks.py` holds the work and has no Tk in
+it. The plots of a data set's report are in `gui/reports.py`; stabilization is in
+`capillary/stabilize.py`.
 
-The app measures velocity only. The optical-flow measurement (Flow page, flow
-videos, flow data sets) was removed on 2026-10-06 because it was not a valid measure
-as implemented and not an endpoint; see that DEVLOG entry. Old flow files are listed
-on a recording only so that moving it to the trash takes them along. The app no
-longer records either: the Capture page (camera preview and recording) was removed
-on 2026-10-07, since the thesis recordings are not made with this app.
+The app measures velocity only, along a centre line. Removed, with the reasons in the
+DEVLOG entries of these dates:
+
+- the optical-flow measurement (2026-10-06): not a valid measure as implemented, and not
+  an endpoint;
+- the Capture page (2026-10-07): the thesis recordings are not made with this app;
+- for the publication clean-up (DEVLOG 2026-11-12), since the study used neither: the
+  two-box method (the original velocity method, `Caper.py` with it; 2026-11-11) and the
+  Validation page (blinded reading sets and the line-placement comparison; 2026-11-12).
 
 ## Analysis engine (`capillary/`)
 
@@ -169,7 +170,7 @@ The measurement lives in the GUI-free `capillary` package; the pages, the batch 
 the tests all run the same arithmetic. Put new measurement code there, not in the
 Tkinter classes.
 
-- **Centre line (the primary method since 2026-10-06):** `capillary/spacetime.py`. The
+- **Centre line (the app's method since 2026-10-06):** `capillary/spacetime.py`. The
   space-time diagram along a drawn line; the streak slope per 3-s block by a
   direction-contrast Radon method in the Fourier domain, with a signal-to-noise ratio,
   coherence and measurable range per block. Its module docstring explains the method;
@@ -206,12 +207,12 @@ Tkinter classes.
   (`pattern_shift.limb_from_direction`): towards the apex is arterial, away from it venous.
   - Saved as `line.role` in the provenance and `limb_check` (arterial, venous, unknown) in the
     summary.
-  - Every data set (both methods) also saves the official phase of its range as `phase`
+  - Every data set also saves the official phase of its range as `phase`
     (`inventory.recording_phases`: rest, occlusion, after release, or several joined by ' + ').
 - **Whole loop (since 2026-10-14):** a line from the base of one limb, over the apex, to the base
   of the other (`pattern_shift.WHOLE_LOOP`). The resting CBV of the study since 2026-10-14: the user
-  places the lines by hand (blind placement, `gui/blind.py`), and a recording's value is the mean
-  of its counted loops (`capillary/aims.py`).
+  places the lines by hand (blind placement, `gui/blind.py`), and a recording's value comes from
+  its counted loops (`capillary/aims.py`, "The aims" below).
   - The sign tells which end lies on the arterial limb (`arterial_end`: start, end, unknown;
     `pattern_shift.loop_from_direction`).
   - Split at the apex (`Centreline.apex_arc_px`, the point farthest from both ends; on the aim-1
@@ -231,10 +232,8 @@ Tkinter classes.
   and on the log scale), SDC (2.77 × typical error), Bland–Altman,
   ICC(A,1). Aim 2 per study and pooled (`aims.POOLED`): the change after minus before on the
   nicotine visit, paired t-test, Wilcoxon, ratio after / before. Tables in `Reports/aims/`.
-- **Two boxes (original):** `roi.py`, `intensity.py`, `velocity.py`, `measure.py`
-  (fixed boxes, an explicit frame range read straight from the file), saved in the
-  file formats the report has always read.
-- Both save through `capillary.datasets`.
+- **Data sets:** `capillary/datasets.py` has the file names of a data set, its provenance
+  record (`"kind": "line"`) and the checks of data set names and observer codes.
 - **Recordings:** `capillary/inventory.py` parses the recording names and the official times,
   flags names and visits that do not fit, and chooses each aim's recordings (the last attempt
   with 30 s of rest). Run `python3 -m capillary.inventory [--have <video folder>] [--out <folder>]`;
@@ -269,23 +268,16 @@ Tkinter classes.
 - Validation on synthetic data: `capillary/simulate.py` renders capillary loops with a
   known speed and the disturbances measured in the 2019 recordings (measured on video that
   had not been stabilized; see Known issues);
-  `python3 -m capillary.benchmark` compares both methods on them (~6 min; `--quick` ~12 s).
-- Validation on real data (since 2026-10-07): `capillary/validation.py` (reading sets,
-  blinded readings, the comparisons), `capillary/placement.py` (the same capillary
-  measured by different observers, matched by line geometry and frames),
-  `capillary/agreement.py` (Bland–Altman, ICC(A,1)/(C,1), kappa; checked against
-  Shrout & Fleiss 1979). The protocol and statistics are in the 2026-10-07 DEVLOG entry.
-- Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`,
-  or `--roi1 x,y --roi2 x,y` for two boxes; `--start`/`--max-frames` pick the frames.
-- Tests: `python3 -m pytest` (319 tests, ~50 s; synthetic videos with known velocity,
-  the agreement statistics, simulated observers, plus the GUI's non-visual logic; no
+  `python3 -m capillary.benchmark` measures them with the 3-s blocks and the pooled pattern
+  shift (~4 min; `--quick` ~12 s).
+- Statistics: `capillary/agreement.py` (Bland–Altman, ICC(A,1)/(C,1); checked against
+  Shrout & Fleiss 1979), used by `capillary.aims`. `capillary/placement.py` (`line_overlap`)
+  tells whether two lines follow the same capillary, for the placement repeat.
+- Batch: `python3 -m capillary.cli <video> --line "x1,y1;x2,y2;..." --out blocks.csv`;
+  `--start`/`--max-frames` pick the frames.
+- Tests: `python3 -m pytest` (197 tests, ~30 s; synthetic videos with known velocity,
+  the stabilizer, the study's statistics, plus the GUI's logic without a window; no
   display needed)
-
-Velocities computed before 2026-09-17 are biased — the lag was one frame too large on
-every (odd) report window. See the 2026-09-17 DEVLOG entry; `--legacy-lag` reproduces
-the old numbers. Data sets saved by the old GUI (before the 2026-10-05 rebuild) store
-frame k+1 at index k, so their times read 33 ms early; velocities are unaffected. See
-the 2026-10-05 GUI rebuild entry.
 
 ## Known issues
 
@@ -439,14 +431,14 @@ the 2026-10-05 GUI rebuild entry.
     no longer fit (DEVLOG). They were moved onto the new videos in
     `analysis/aim1_feasibility/restabilized/` (`--dir restabilized` for the aim-1 scripts and
     `validate_real.py`).
-- **The two-box method failed on the 2019 recordings** (found 2026-10-06): about
-  70% of a box's signal changes along the whole vessel at once, so the delay comes out
-  as zero ("too fast to resolve") even where the flow is slow, and the existing two-box
-  data sets are unreliable. `set1` of `FP01_Wefter_14-Oct-2019_10-13-03` has its boxes
-  in still tissue next to a capillary and measured noise.
-  - This was found on video that had never been stabilized (2026-10-11). A vessel moving
-    under fixed boxes changes every position at once, so test the method again on
-    stabilized video before ruling it out.
+- **The same-moment change** (found 2026-10-06): about 70% of the brightness change of a
+  small patch of capillary happens along the whole vessel at once. Both estimators cancel
+  it, and the simulator reproduces it.
+  - It was measured on video that had never been stabilized (found 2026-10-11), where a
+    vessel moving under a fixed patch changes every position at once. It has not been
+    measured again on stabilized video.
+  - It made the original two-box method read a delay of zero. That method was removed on
+    2026-11-11, without having been tested on stabilized video.
 - **Centre-line limits:** at 30 fps a line follows flow up to about 0.0018 × its length
   in px, in mm/s (0.18 mm/s for 100 px); normal resting velocities need long lines or a
   faster camera. With no flow but strong jitter, the benchmark still resolves ~7–11% of
@@ -497,3 +489,12 @@ the 2026-10-05 GUI rebuild entry.
   make changes on a branch and open a pull request. `Thesis/` (LaTeX draft + bibliography,
   from July and outdated; the user keeps the current report elsewhere) and `.claude/` are
   untracked by choice. Ask before committing either.
+- **Publication clean-up** (2026-11-11 and 12, branch `cleanup/publication`, DEVLOG): the two-box
+  method, the Validation page and the optical-flow leftovers were removed, `README.md` was
+  rewritten and `analysis/README.md` added. The repository is still private. Before it is made
+  public, these are for the user and the PI to settle (none is done):
+  - there is no licence file, and the code derives from `Widaeus/capillaroscopy`;
+  - `metadata/`, the analyses' tables, the tests' example names and the diary name recordings
+    by participant code and visit date. That is pseudonymised study data
+    (`metadata/README.md`), and all of it is in the git history as well;
+  - the git history carries the authors' e-mail addresses.

@@ -351,8 +351,6 @@ class LibraryPanel(ttk.Frame):
         # during blind placement, what shows results or the recording's name is closed
         shown = 'disabled' if app.blind else 'normal'
         menu.add_command(label='Measure velocity along a centre line', command=lambda: app.show_page('line'))
-        menu.add_command(label='Measure velocity with two boxes', command=lambda: app.show_page('analyze'),
-                         state=shown)
         menu.add_command(label='Results', command=lambda: app.show_page('results'), state=shown)
         menu.add_separator()
         menu.add_command(label='Re-stabilize…' if recording.is_stabilized else 'Stabilize',

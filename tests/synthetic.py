@@ -3,12 +3,11 @@
 A real capillaroscopy clip has no ground truth — nobody knows how fast the
 blood in it was actually moving, so it cannot tell us whether the estimator is
 right. These generated clips can: an intensity pattern is translated down the
-frame at a chosen number of pixels per frame, so the true lag between two boxes
-`d` pixels apart is exactly `d / velocity` frames, and the true velocity in mm/s
-is `velocity * fps * mm_per_pixel`.
+frame at a chosen number of pixels per frame, so the true velocity in mm/s is
+`velocity * fps * mm_per_pixel`.
 
-The pattern moves towards increasing y, so a box higher up the frame (smaller y)
-encounters each feature first.
+The pattern moves towards increasing y, so a line drawn down the frame (from a
+smaller y to a larger one) runs with the flow.
 """
 
 from __future__ import annotations
@@ -21,8 +20,8 @@ def flow_profile(length: int, seed: int = 0, smooth: int = 15) -> np.ndarray:
 
     Smoothing matters: white noise correlates against itself over a single
     sample, which would let the estimator look good on a signal no real
-    capillary produces. A smoothed profile survives the averaging over a 10x10
-    box the way a genuine plug does.
+    capillary produces. A smoothed profile survives the averaging across the
+    line the way a genuine plug does.
     """
     rng = np.random.default_rng(seed)
     raw = rng.normal(size=length + 4 * smooth)
@@ -66,11 +65,6 @@ def make_flow_frames(
             frame = frame + rng.normal(0.0, noise_sd, frame.shape)
         frames.append(np.clip(frame, 0, 255).astype(np.uint8))
     return frames
-
-
-def expected_lag_frames(distance_px: float, velocity_px_per_frame: float) -> float:
-    """Ground-truth lag between two boxes `distance_px` apart."""
-    return distance_px / velocity_px_per_frame
 
 
 def expected_velocity_mm_s(

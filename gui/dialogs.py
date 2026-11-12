@@ -105,17 +105,6 @@ def confirm(parent, title, message, detail='', ok='OK', cancel='Cancel', danger=
     return bool(dialog.show())
 
 
-def choose(parent, title, message, options, detail='', cancel='Cancel'):
-    """Buttons for each ``(value, text, style)`` in `options`; returns the value or None."""
-    dialog = Dialog(parent, title)
-    _message_body(dialog, title, message, detail, 'question')
-    for value, text, style in reversed(options):
-        dialog.button(text, lambda v=value: dialog.finish(v), style)
-    if cancel:
-        dialog.button(cancel, dialog.cancel)
-    return dialog.show()
-
-
 def show_error(parent, title, message, detail=''):
     dialog = Dialog(parent, title)
     _message_body(dialog, title, message, detail, 'error')
@@ -123,17 +112,10 @@ def show_error(parent, title, message, detail=''):
     dialog.show()
 
 
-def show_info(parent, title, message, detail=''):
-    dialog = Dialog(parent, title)
-    _message_body(dialog, title, message, detail, 'info')
-    dialog.button('OK', dialog.cancel, 'Accent.TButton', default=True)
-    dialog.show()
-
-
 # ------------------------------------------------------------------------------ settings
 
 class SettingsDialog(Dialog):
-    """Data folder, spatial calibration and default box size."""
+    """Data folder and spatial calibration."""
 
     def __init__(self, parent, settings: Settings, first_run=False):
         super().__init__(parent, 'Welcome' if first_run else 'Settings')
@@ -179,15 +161,6 @@ class SettingsDialog(Dialog):
                        'magnification changes. Data sets record the value they were made with.').grid(
             row=4, column=0, columnspan=2, sticky='w', pady=(px(4), 0))
 
-        ttk.Label(grid, text='Default box size', style='Bold.Panel.TLabel').grid(row=5, column=0, sticky='w',
-                                                                               pady=(px(16), px(4)))
-        box_row = ttk.Frame(grid, style='Panel.TFrame')
-        box_row.grid(row=6, column=0, columnspan=2, sticky='w')
-        self.box_size = tk.StringVar(value=str(settings.box_size))
-        ttk.Spinbox(box_row, from_=2, to=200, textvariable=self.box_size, width=6).pack(side='left')
-        ttk.Label(box_row, text='pixels (width and height of a new measuring box)',
-                  style='Muted.Panel.TLabel').pack(side='left', padx=(px(8), 0))
-
         self.error = ttk.Label(body, text='', style='Danger.Panel.TLabel', wraplength=px(500))
         self.error.pack(anchor='w', pady=(px(12), 0))
 
@@ -231,15 +204,8 @@ class SettingsDialog(Dialog):
             self.error.configure(text='The calibration must be a number of mm per pixel, for example 0.00133.')
             self.mm_entry.state(['invalid'])
             return
-        try:
-            box_size = int(self.box_size.get())
-            if not 2 <= box_size <= 200:
-                raise ValueError
-        except ValueError:
-            self.error.configure(text='The box size must be a whole number between 2 and 200.')
-            return
-        self.finish(Settings(data_folder=folder, mm_per_pixel=mm_per_pixel, box_size=box_size,
-                             path=self.settings.path, extra=dict(self.settings.extra)))
+        self.finish(Settings(data_folder=folder, mm_per_pixel=mm_per_pixel, path=self.settings.path,
+                             extra=dict(self.settings.extra)))
 
 
 # ------------------------------------------------------------------------------ shortcuts
@@ -264,34 +230,14 @@ SHORTCUTS = (
         ('Backspace', 'Remove the last point'),
         ('X', 'Reverse the line'),
     )),
-    ('Boxes (Two boxes)', (
-        ('Click', 'Place the selected box (Box 1 first, then Box 2)'),
-        ('Right-click or Ctrl + click', 'Place Box 2'),
-        ('Drag a box', 'Move it'),
-        ('1 / 2', 'Select Box 1 / Box 2'),
-        ('W A S D', 'Nudge the selected box by 1 pixel'),
-        ('Shift + W A S D', 'Nudge both boxes together'),
-        ('X', 'Swap the boxes'),
-        ('Delete', 'Remove the selected box'),
-    )),
     ('Measurement', (
         ('I / O', 'Start / end the range at the current frame'),
         ('R', 'Reset the range to the whole video'),
         ('M', 'Mark a time point at the current frame'),
         ('Right-click a marker', 'Remove it'),
     )),
-    ('Reading blocks (Validation)', (
-        ('Drag on the block', 'Draw a line along a streak'),
-        ('Drag a line end', 'Move it'),
-        ('Right-click a line', 'Remove it'),
-        ('Backspace', 'Remove the last line'),
-        ('N', 'No clear streaks in this block'),
-        ('Enter or →', 'Next block'),
-        ('←', 'Previous block'),
-        ('Esc', 'Finish later (everything is saved)'),
-    )),
     ('Window', (
-        ('Ctrl + 1 … 4', 'Centre line, Two boxes, Results, Validation'),
+        ('Ctrl + 1 / 2', 'Centre line / Results'),
         ('Ctrl + R', 'Look for new videos and data sets'),
         ('Ctrl + ,', 'Settings'),
         ('F1 or ?', 'This list'),
@@ -308,7 +254,7 @@ class ShortcutsDialog(Dialog):
                                                                                       pady=(0, px(10)))
         columns = ttk.Frame(self.body, style='Panel.TFrame')
         columns.pack(fill='both')
-        halves = (SHORTCUTS[:3], SHORTCUTS[3:])
+        halves = (SHORTCUTS[:2], SHORTCUTS[2:])
         for column, groups in enumerate(halves):
             frame = ttk.Frame(columns, style='Panel.TFrame')
             frame.grid(row=0, column=column, sticky='nw', padx=(0 if column == 0 else px(28), 0))
