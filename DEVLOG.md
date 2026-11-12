@@ -6,6 +6,195 @@ it was verified. Newest entries first.
 
 ---
 
+## 2026-11-12 — Clean-up for publication: the two-box method, the Validation page and the optical-flow leftovers removed
+
+**Branch:** `cleanup/publication`, from `analysis/snr-threshold-6` at 7207425. The four commits of that branch
+after PR #33 are not in `main` yet and come along: 31e0e13 and 33335dd (the placement repeat's results and its
+report page), e557a77 and 7207425 (the cutoff of 6). Commits here:
+- `12d91b1` (2026-11-11): the two-box method removed;
+- `e86bed5` (2026-11-11): the launcher and the list of dependencies;
+- `658a2a5` (2026-11-12): the Validation page and the optical-flow leftovers removed;
+- a fourth with the documentation and this entry.
+
+**Why.** The final draft of the thesis is written, and the repository may be published with it. The user asked
+for it to be made scientifically presentable and reduced to its core, and for the two-box method to be deleted:
+the study does not use it, and the thesis never mentions a comparison with it. Asked in the session which other
+unused parts should go, the user chose:
+- to remove the Validation page and the optical-flow leftovers as well;
+- to keep all 12 analyses, with an index;
+- to keep `CLAUDE.md` and `DEVLOG.md` in the repository, updated.
+
+**The rule followed.** What the study's results rest on stays exactly as it is: the stabilizer, both estimators,
+`capillary.aims`, `capillary.inventory`, `PROTOCOL.md`, and the analyses' scripts and tables. What goes is what
+no result uses.
+
+### The two-box method (12d91b1)
+
+The original method read velocity from the delay between the brightness of two boxes on a vessel. Removed:
+- **Engine:** `capillary/roi.py`, `intensity.py`, `velocity.py` and `measure.py`; the two-box file formats in
+  `capillary/datasets.py` (`velocity_dataset_files`, `velocity_report_files`, `list_velocity_datasets`,
+  `write_velocity_dataset`, `MIN_VELOCITY_FRAMES`).
+- **Batch command:** `--roi1`, `--roi2`, `--size`, `--windows`, `--step`, `--positive-flow` and `--legacy-lag` of
+  `capillary.cli`. `--line` is now required.
+- **Benchmark:** its two-box rows and the zero-lag column. It now measures the 3-s blocks and the pooled pattern
+  shift.
+- **Simulator:** `SyntheticRecording.boxes`.
+- **App:** the Two boxes page (`gui/analyze_page.py`) and its work in `gui/tasks.py` (preview, measurement,
+  report); its entries in the navigation, the right-click menu, the Results page, the keyboard help and blind
+  placement; the box size in the settings; the two box colours, the correlation quality bands, the chart's
+  `normalize` option and `color_swatch`.
+- **Report:** `Caper.CrossCorrelation`. What was left of `Caper.py`, the plots of a line's report, is now
+  `gui/reports.py`.
+- **Tests:** `test_roi.py`, `test_velocity.py`, `test_measure.py`, and the two-box half of `test_pipeline.py`,
+  which is now `test_cli.py`.
+- **Not removed with it, since others use them:**
+  - `Cancelled`, the exception of a cancelled job, lived in `capillary/measure.py`. It is now defined in
+    `capillary/stabilize.py`, which raises it, and `gui/jobs.py` imports it from there.
+  - `capillary/quality.py` (`calculate_blur`): the stabilizer picks its reference frames with it.
+
+A data set is now always a centre line, so the "kind" of a data set is gone from the code:
+- `datasets.dataset_paths(statistics, reports, stem, name)` and `tasks.dataset_info(folder, stem, name)` take
+  no kind;
+- a recording has `line_sets` only;
+- the Results page's cards are found by name and carry no chip; "Restore positions" is now "Restore line".
+- The provenance files keep `"kind": "line"`, which `capillary.aims` checks.
+
+An old `box_size` row in `settings.csv` is dropped when the file is next saved.
+
+### The Validation page (658a2a5)
+
+The page held two things, neither used for a result: blinded reading sets (observers reading 3-s blocks by
+hand, compared with the estimator) and the line-placement comparison (the same capillary measured by different
+observers). Only a try-out reading set was ever made (`reading1`, 6 blocks). The placement repeat of 2026-11-05
+compared the protocol's values with its own script. Removed:
+- `gui/validation_page.py`, `gui/reading_view.py` and `capillary/validation.py`;
+- the comparison tables of `capillary/placement.py`. The module keeps `line_overlap`, `MATCH_PX` and
+  `MIN_LINE_OVERLAP`, which `analysis/placement_repeat/repeat.py` uses;
+- `generate_validation_report` in `gui/reports.py`, and the three jobs in `gui/tasks.py`;
+- Cohen's kappa and the same-direction count in `capillary/agreement.py`. Bland–Altman and the intraclass
+  correlation stay: `capillary.aims` and the analyses use them;
+- `tests/test_validation.py`, the table tests of `test_placement.py`, and the tests of the reading canvas, kappa
+  and direction.
+- Observer codes (`normalize_observer`, `validate_observer`) moved to `capillary/datasets.py`.
+
+The pages are now Centre line (Ctrl + 1) and Results (Ctrl + 2). Blind placement closes the Results page.
+
+### The optical-flow leftovers (658a2a5)
+
+The measurement itself went on 2026-10-06. What was left found its old files (in `Flows/`, `Statistics/` and
+`Reports/`), so that trashing a recording took them along: `legacy_flow_dataset_paths` and its constants,
+`Recording.legacy_flow_files`, `DataFolder.flows`, and their tests. Removed.
+
+### Code that nothing used any more (658a2a5)
+
+Found by searching for names without a reference, each checked by hand:
+- the window's handling of a page without the recording list (`uses_library`) and of a page that may refuse to
+  be left (`can_leave`): both existed for the Validation page;
+- the `choose` and `show_info` dialogs;
+- four ttk styles (`Seg.Toolbutton`, `Card.TFrame`, `Alt.TFrame`, `Muted.Header.TLabel`) and three icons
+  (`check`, `search`, `expand`);
+- `ScrollFrame.scroll_to_top` and `spacetime.estimate_from_frames`.
+
+All but the first had been unused since before this session (checked against 7207425).
+
+### Other changes
+
+- **`.gitlab-ci.yml` removed** (in 12d91b1): the repository is on GitHub, where it never ran.
+- **`run_app.sh`** changed into a fixed path under the user's home folder. It now starts from wherever the
+  script lies.
+- **`requirements.txt`** names the versions installed in the desktop's environment on 2026-06-11, with which
+  the study's results were computed (Python 3.12.3). `webcolors` was never imported and is dropped.
+- **`capillary/aims.py`'s docstring** described a recording's value as the mean of its loops, the plan before
+  the protocol. It now says what the code does: the reference capillary, else its first backup that counts.
+  No code changed there.
+- **`capillary/spacetime.py`'s docstring:** "Why not two boxes" is now "The same-moment change", which the
+  estimator cancels.
+- **The simulator's test** of that change read it through two boxes. It now reads it from the vessel's
+  space-time diagram: the vessel's two halves darken together (correlation above 0.7), and without the
+  disturbance they do not.
+- **This diary:** the heading of the 2026-11-05 entry had been overwritten when the 2026-11-06 entry was added
+  (7207425). It is restored.
+
+### Size
+
+| | Before (7207425) | Now |
+| --- | --- | --- |
+| `capillary/` | 20 files, 6044 lines | 15 files, 4212 lines |
+| `gui/` | 20 files, 8505 lines | 18 files, 6124 lines |
+| `tests/` | 19 files, 3561 lines | 15 files, 2527 lines |
+| `Application.py`, `Caper.py` | 406 lines | 27 lines (`Application.py`) |
+| Tests | 319 | 197 |
+
+### Documentation
+
+- **`README.md`** rewritten for a reader of the thesis: what the tool is and the study it was built for, what
+  the repository holds and what it does not (the videos and measurements), setup, the app, how a recording is
+  stabilized (brought up to date with the stabilizer of 2026-10-14), how velocity is measured, how the lines
+  become the aims, how the method was checked, what it cannot do, the batch commands, the data folder and the
+  code layout. Dated history is left to this diary.
+- **`analysis/README.md`** (new) sorts the 12 analyses into the protocol's results, post hoc analyses of the
+  study's loops, and method development, and says what can be rerun without the recordings.
+- **`CLAUDE.md`** follows the app: two pages, no two-box or Validation notes, the new numbers of tests. Its
+  Known issues keep the same-moment change, without the two-box method.
+- **`metadata/README.md`:** one line named the Two boxes page.
+
+### Verified
+
+- **Tests:** `python3 -m pytest`, 197 passed (about 30 s). File by file against 7207425:
+  - 319 → 220 with the two-box method: `test_measure.py` 22, `test_roi.py` 15 and `test_velocity.py` 51 gone;
+    `test_pipeline.py` 19 → `test_cli.py` 8; `test_datasets.py` 26 → 25; `test_gui_logic.py` 12 → 13 (the old
+    `box_size` row); `test_simulate.py` 9, one replaced.
+  - 220 → 197 with the Validation page and the leftovers: `test_validation.py` 13 gone; `test_placement.py`
+    6 → 2; `test_gui_logic.py` 13 → 10; `test_agreement.py` 10 → 7; `test_datasets.py` 25, one out and one in.
+- **Static:** every file compiles, and pyflakes reports only the two notes it reported before (the re-exports
+  of `gui/blind.py`, an unused import in `analysis/primary_endpoint/report.py`).
+- **The study's tables are the same.** `capillary.aims` was run on the desktop's data sets with the code of
+  7207425 and with the code now, into scratch folders: the protocol's run, `--min-snr 6` (which measures every
+  loop again from its saved diagram) and `--value mean`. Each gives 6 tables, byte for byte the same.
+  `capillary.inventory`'s 2 tables are the same too. Only "same" or "differs" was printed, no value.
+- **The analyses' synthetic checks were rerun:**
+  - `whole_loop_limbs/two_speeds.py`, `coarse_filter/checks.py synthetic` and
+    `pattern_shift_slow_flow/validate_wobble.py` give their tracked tables byte for byte.
+  - `pattern_shift_bandpass/validate_synthetic.py` and `validate_long_line.py` do not, with the code of 7207425
+    either: both codes give the same table. The tracked tables were made on 2026-10-11, before the estimator's
+    later changes. The same rows resolve (425 of 1404, 42 of 104), with the same estimates and scores. Only the
+    best speed reported for rows that are not resolved differs. The tracked tables were left as they are.
+- **The window,** run on a scratch copy of one recording (links to its stabilized video, copies of its data
+  sets; nothing in the real data folder was written), with windows that cannot take the keyboard:
+  - after 12d91b1, 30 of 30 checks, and after 658a2a5, 28 of 28;
+  - a saved whole loop was restored on the Centre line page and measured again over the official rest: 0.14034
+    against the saved 0.14030 mm/s (the provenance keeps the points to 0.01 px);
+  - the data set appeared on the Results page, its report was written again, its line restored, and it was
+    moved to the trash as a whole;
+  - Ctrl + 1 and 2 change the page, and blind placement closes Results and shows the recording under its code;
+  - the settings dialog and the keyboard help were opened, and no error was shown.
+- **Benchmark:** `python3 -m capillary.benchmark`, 3 min 45 s (`--quick` 12 s). On the 120-px line:
+  - the 3-s blocks are within 2.1% from 0.25 to 5 px/frame and not resolved from 8;
+  - the pooled pattern shift is within 0.8% from 2 to 8 px/frame, 3.1–3.6% low at 12, and not resolved from 16;
+  - without flow the pattern shift resolves no clip, the 3-s blocks 7% of blocks under the measured and the
+    strong disturbances.
+- **`run_app.sh`** finds the repository and its environment from its own place.
+
+### Not done, and left where it is
+
+- **Files of the removed features in the desktop's data folder.** The app no longer lists them, and trashing
+  their recording no longer takes them along:
+  - the two-box data sets `Test` and `Test2` of FP01_Qefter 09-46-17 (7 files in `Statistics/`, 5 in
+    `Reports/`);
+  - `Flows/` (one recording's flow video and summary);
+  - `Validation/reading1`.
+- **The history.** Everything removed is still in the git history.
+- **Before the repository is made public,** for the user and the PI to settle:
+  - there is no licence file, and the code derives from `Widaeus/capillaroscopy`;
+  - `metadata/`, the analyses' tables, the tests' example names and this diary name recordings by participant
+    code and visit date. `metadata/README.md` calls that pseudonymised study data kept in the private
+    repository. It is in the history as well;
+  - the history carries the authors' e-mail addresses;
+  - the last paragraph of `README.md` (where the tool comes from, and that it was written with Claude Code) is a
+    draft for the user to word.
+
+---
+
 ## 2026-11-06 — A signal-to-noise cutoff of 6 (the PI's question, post hoc)
 
 **Branch:** `analysis/snr-threshold-6`, from `analysis/placement-repeat` at 33335dd. PR #33 was merged at
@@ -97,6 +286,10 @@ So both aims were recounted at 6 as they stand now.
     open starts clean. No run has been logged since.
 
 **Verified:** the checks above (compare.py stops on any of them); `python3 -m pytest`: 319 passed.
+
+---
+
+## 2026-11-05 — The placement repeat: plan, draw and the repeat's own data folder
 
 **Branch:** `analysis/placement-repeat`, from `main` at 8ec216c (PR #32 merged). Commit `d2633a9` holds
 `analysis/placement_repeat/` (PLAN.md, README.md, repeat.py); it was committed and pushed before the draw.
@@ -231,6 +424,8 @@ https://claude.ai/artifact/WJ44Nm8aQrCWPyuksNHpyi, from the Dashboard type, writ
 
 **Next:** the results go into the first draft. The repeat folder's `Statistics/` needs the same backup as the
 main one.
+
+---
 
 ## 2026-11-03 — Three checks saved: a whole loop's two limbs, före against efter, the statistics report's numbers
 

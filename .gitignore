@@ -13,6 +13,7 @@ RecordedVideos/
 StabilizedVideos/
 Reports/
 Statistics/
+# Left in older data folders by features removed since (optical flow, the Validation page)
 Flows/
 Validation/
 
