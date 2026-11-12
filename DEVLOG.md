@@ -6,7 +6,97 @@ it was verified. Newest entries first.
 
 ---
 
-## 2026-11-05 — The placement repeat: plan, draw and the repeat's own data folder
+## 2026-11-06 — A signal-to-noise cutoff of 6 (the PI's question, post hoc)
+
+**Branch:** `analysis/snr-threshold-6`, from `analysis/placement-repeat` at 33335dd. PR #33 was merged at
+05289db, so that branch's last two commits (31e0e13, the repeat's results, and 33335dd, its report page) are not in
+`main` yet and come along. Commit `e557a77` holds `analysis/snr_threshold_6/` and the notes in PROTOCOL.md and
+CLAUDE.md; this entry follows in a second commit. `capillary/` and `gui/` are unchanged.
+
+**Why.** At a meeting on 2026-11-06 the PI asked whether the results would differ if the signal-to-noise cutoff
+were 6 instead of 8. The protocol (fixed and unblinded on 2026-10-29) sets 8 and lists 7 and 9 as its sensitivity
+analyses, so 6 is post hoc. PROTOCOL.md logs it under "Added after unblinding". The sweep from 4 to 14 in
+`analysis/primary_endpoint/report.py` (13:11 on 2026-10-29) had shown 6 per study, but from before the two
+corrections: no pooled aim 1, aim 2 by the old all-four-recordings rule, and without aim 2's three added recordings.
+So both aims were recounted at 6 as they stand now.
+
+**What was run** (data folder: the repository's, on the desktop):
+- `python3 -m capillary.aims --out <scratch>`: byte for byte the tables in `Reports/aims/` (written 2026-10-29
+  20:16). Nothing in `Statistics/` is newer, so the data sets are as they were.
+- `python3 -m capillary.aims --min-snr 6 --out Reports/aims/sensitivity_minsnr6`, and the same with `--value mean`
+  and `--value reference-only` (`..._valuemean`, `..._valuereferenceonly`). `--min-snr` (`aims.recount`) computes each
+  loop's pooled pattern shift again from its saved `___space_time.npy`, and its two limbs' for the movement check, and
+  judges both at the new cutoff.
+- `python3 -m capillary.aims --min-snr 8 --out Reports/aims/check_minsnr8_recomputed`: the same recompute at the
+  protocol's 8.
+- `python3 analysis/snr_threshold_6/compare.py` (new):
+  - stops unless the recompute at 8 gives the protocol's six tables to float precision. It does: the largest
+    relative difference is 2e-12, and the recomputed scores equal the saved ones exactly.
+  - stops unless every run judged the same 210 loops: the 200 placed before unblinding, the 9 on aim 2's three
+    added recordings, and ISMOKE FP19 Cefter's `loop3`, which no aim uses.
+  - stops if a loop scoring above the cutoff without counting is anywhere but at 1 px/frame, from its provenance's
+    `pattern_shift_speed_px_per_frame`. None is.
+  - recomputes aim 1 with the primary report's intervals (`report.aim1_table`), checked against `capillary.aims`'
+    own participants, CV and ICC.
+  - lists the loops counted at one cutoff only, the recordings whose value changes and what that does to each
+    aim's pair, and aim 1's pairs at both cutoffs.
+  - counts flow where there should be none, with the protocol's own filter (the `s1_` columns of the coarse-filter
+    analysis, judged as `capillary.aims` judges a loop, movement check included): its 120 synthetic no-flow line
+    clips, and the 163 lines of the 200 blind loops that stayed in the picture over the occlusion. Also whether the
+    loops counted at rest run the same way after release, where they count there too.
+  - writes the report page's tables (`dashboard/*.csv`), naming recordings by study, participant, visit and
+    before/after only.
+
+**Results** (README of `analysis/snr_threshold_6/`):
+- Loops: 101 of 210 count at 6, against 91. 15 score from 6 up to 8: 11 count at 6, and 4 sit at 1 px/frame and
+  count at neither. One loop is lost at 6, ISMOKE FP23 Cefter2 `loop2` (score 10.9): both its limbs resolve at 6,
+  opposite ways. No aim uses it. The loops below 8 score a median of 3.4.
+- Values: 4 of the 72 recordings the aims use change (42 have a value at 8, 45 at 6):
+  - ESMOKE FP22 W före gets one from its reference (score 6.3, 0.171 mm/s). With its Q före (0.049), FP22 enters
+    aim 1, a pair 3.5-fold apart.
+  - ISMOKE FP04 C före (0.117) and FP20 C före (0.060) get a value, but neither participant's S före has one, so
+    no new aim 1 pair.
+  - ESMOKE FP16 W efter switches from its backup (0.116) to its reference (score 6.06, 0.097). FP16 W före has no
+    value, so no aim 2 pair.
+- Aim 1 pooled (primary): 10 of 24 participants instead of 9; mean 0.120 mm/s, CV 62% (43–113%) instead of 63%
+  (43–121%), log scale 78% instead of 76%, SDC 0.205 mm/s instead of 0.211, bias +0.051 mm/s, ICC(A,1) 0.02
+  (−0.48 to 0.59) instead of 0.05 (−0.55 to 0.65).
+- ESMOKE: 8 of 14 instead of 7; CV 64% (43–131%) instead of 67%, ICC(A,1) −0.01 instead of 0.01. ISMOKE unchanged
+  (2 of 10).
+- Aim 2: the same in every figure, per study and pooled (pooled 8 of 23, −0.070 mm/s, p 0.043).
+- The protocol's other values at 6:
+  - the mean of the counted loops: aim 1 pooled 10 participants, CV 64%, ICC 0.09 (at 8: 9, 62%, 0.11);
+  - the reference only: 5 participants, CV 61%, ICC −0.24 (at 8: 4, 47%, 0.23);
+  - aim 2 unchanged in both.
+  - Thresholds 7 and 9 count 95 and 88 loops and give the protocol's figures.
+- Where there should be no flow:
+  - Synthetic no-flow clips: none reaches 6 inside the range searched (the highest scores 5.4); at 5, 2 of 120 would
+    count.
+  - Occlusion: 14 of 163 lines at 6, against 12 at 8 (16 at 5, 10 at 9).
+  - Every loop counted both at rest and after release runs the same way, at every cutoff from 5 to 9 (57 of 57 at 6).
+  - Of the 11 loops gained: 1 of 8 measured in the occlusion shows flow there (ESMOKE FP20 Q före `loop2`). After
+    release, 3 of the 8 measured count, all the same way (both of FP22 W före's loops, ISMOKE FP20 C före `loop1`).
+- Reading: lowering the cutoff to 6 adds one participant to aim 1 and changes no conclusion. The pooled CV stays at
+  62–63% and the ICC near zero, with intervals as wide as before; aim 2 does not change. The cutoff decides few
+  loops: most of those that do not count score far below 6, or score high at the slowest speed searched (the open
+  PI decision on the search floor).
+
+**Report page** (for the PI): https://claude.ai/artifact/BnybzKU5Z8vqfFG1xKY35g, from the Dashboard type.
+- Its page is `dashboard/index.html` here, written to the type's one-writer rule: fixed text in the HTML, every
+  number a drawing from a table, the cutoffs drawn from constants.
+- The eight CSV files are uploaded to the page as fixed files.
+- It shows tiles (aim 1 pooled CV, participants, ICC; aim 2 pooled change), aim 1 and aim 2 at 8, 6, 7 and 9, and a
+  chart of every loop's score by what became of it. Also the tables of what changes, the checks where there should
+  be no flow, the protocol's other values, and how it was done.
+- The type's own check runs in an open page.
+  - It began when the page was first stored (18:19 UTC) and ended without listing a fault.
+  - The one run logged then loaded all eight tables with the right row counts. Its two calculations (the chart's
+    groups, the other-values table) and its marks ran half a second before the page knew its tables ("isn't in this
+    dashboard"). As far as can be told, the page opened while it was being written.
+  - The page was stored again (version 2, with ids on the card headings, also in this commit) so that the next
+    open starts clean. No run has been logged since.
+
+**Verified:** the checks above (compare.py stops on any of them); `python3 -m pytest`: 319 passed.
 
 **Branch:** `analysis/placement-repeat`, from `main` at 8ec216c (PR #32 merged). Commit `d2633a9` holds
 `analysis/placement_repeat/` (PLAN.md, README.md, repeat.py); it was committed and pushed before the draw.
@@ -83,8 +173,64 @@ set settings.csv to that folder, observer SJ-R, blind placement on. Checked with
 
 `capillary/` and `gui/` are unchanged; `python3 -m pytest`: 319 passed.
 
-**Next:** the user places the 10 as SJ-R by `PROTOCOL.md`'s rules, then `repeat.py switch main` and
-`repeat.py compare`. The repeat's `Statistics/` needs the same backup as the main one.
+**Placed and compared (the same evening).**
+- The app was started on the repeat folder. The user placed the 10 recordings as SJ-R, 21 whole loops over
+  the official rest, at 17:25:52–17:34:52.
+- `repeat.py progress` (codes and loop names only) flagged SA8EY: `loop2` and `loop3` on one capillary.
+  - The user looked at the two lines (still blind) and confirmed an accidental second save: `loop3` was saved
+    6 s after `loop2`.
+  - `loop3` was moved, with its three report files, to the repeat folder's
+    `.trash/2026-11-05_17-37-05_SA8EY loop3 duplicate of loop2` (`gui.tasks.move_to_trash`, as the Results
+    page would). The recording was found by its code, and no name or result was printed.
+  - The user's ranking had no third loop that qualified, so none was placed. The progress check then found
+    nothing to fix.
+- Asked before the comparison, the user recognized none of the codes (PLAN.md).
+- The user closed the app. `switch main` set settings.csv back to the main data folder, observer SJ, blind
+  placement off (checked). `compare` wrote `recordings.csv`, `loops.csv` and `summary.csv`.
+
+**Results** (README of `analysis/placement_repeat/`):
+- 1, the same reference: 9 of 10 (95% CI 55–100%).
+- 2, its velocity where it counts in both: 3 pairs, 0.082/0.085, 0.075/0.080, 0.083/0.087 mm/s. CV 1% (1–8%);
+  the repeat read 0.004 mm/s higher in all three (limits 0.001 to 0.007).
+- Whether the reference counts: the same in all 9 (3 both, 6 neither).
+- 3, the recording's value: 4 pairs (6 with a value in neither, none in one only), CV 66% (38–247%), log 55%,
+  ICC(A,1) 0.02. 3 of the 4 values come from the same capillary.
+  - The fourth, ESMOKE FP07 Wföre (EPJXZ), carries the CV. Neither reference counted (signal-to-noise 3.75 and
+    3.77); the first placement's value came from `loop3` (0.284 mm/s), the repeat's from `loop2` (0.086), two
+    capillaries the other placement did not place.
+- Also: 18 of the repeat's 21 loops lie on a capillary of the first placement (on its loop1 9, loop2 8,
+  loop3 1).
+  - On those 18 the same loops count (5 both, 13 neither). The 5 counted in both agree within 0.005 mm/s.
+  - The reference that differed is on ISMOKE FP08 Sefter (M5LN3). There the repeat's `loop1`/`loop2` are the
+    first placement's `loop2`/`loop3`.
+- Every loop that scored 8 or more without counting was at 1 px/frame in both placements, on the same
+  capillaries (checked from the provenance: `pattern_shift_speed_px_per_frame` 1.0). This holds for 5 pairs,
+  plus RAHFG's `loop2` at 7.7 / 8.0.
+- **Reading:** the observer and the line explain little of aim 1's 63%. Where a value comes from a backup, the
+  choice of backup can move it several-fold. These rest on 3–5 velocity pairs.
+
+**A report page of its own** (asked for as a separate analysis rather than a tab of the primary report):
+https://claude.ai/artifact/WJ44Nm8aQrCWPyuksNHpyi, from the Dashboard type, written for the PI.
+- `analysis/placement_repeat/dashboard.py` writes the four tables it reads into `dashboard/`:
+  - `recordings.csv`: recordings named by study, participant, visit and before/after instead of their file
+    names (the codes stay);
+  - `loop_pairs.csv`: the 18 loops placed twice, with both readings and the size of the speed each found (from
+    the provenance; its sign only says which way the line was drawn). The outcome is "counted both times" (5),
+    "at the slowest speed searched" (6) or "below 8 both times" (7). The script stops if a loop scoring 8 or
+    more without counting is not at 1 px/frame; none was.
+  - `summary.csv` with a key per comparison;
+  - `aim1.csv`: the pooled primary row of the report page's `aim1.json` (CV 63%, 43–121%).
+  - Yes/no columns are written as words.
+- The page (`dashboard/index.html`, kept here) fills every number from those tables:
+  - tiles: same reference, same-capillary CV, value CV, aim 1 for comparison;
+  - three charts: velocity first against repeat for the 5 loops counted both times; signal-to-noise first
+    against repeat on log scales with the limit; each recording's two values, the pair from different backups
+    flagged;
+  - the per-recording and statistics tables, and how it was done.
+- The type's own check had not finished when this was written (it runs in an open page).
+
+**Next:** the results go into the first draft. The repeat folder's `Statistics/` needs the same backup as the
+main one.
 
 ## 2026-11-03 — Three checks saved: a whole loop's two limbs, före against efter, the statistics report's numbers
 

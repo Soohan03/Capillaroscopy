@@ -139,6 +139,11 @@ a second observer code (for example `SJ-R`), also blind. Compared:
 - its velocity;
 - the recording's value.
 
+Done on 2026-11-05. `analysis/placement_repeat/PLAN.md`, committed before the draw, fixed what this section
+left open: the pool (70 recordings: the aims' 72 without ESMOKE FP03 Wefter and ISMOKE FP04 Sföre, whose
+blind lines had been looked at after unblinding), the seed, the repeat's own data folder and the statistics.
+The results are in its README.
+
 ## Fixed before unblinding
 
 Found with `--progress` once every recording had been placed, and fixed without a result
@@ -179,6 +184,10 @@ These describe the results further; none changes a value or a statistic fixed ab
 - Exploratory, post hoc, not agreed with the PI beforehand: a coarser filter for flow too fast for the
   default one (`analysis/coarse_filter/`). Its rule and pass marks were written down and committed
   (`PLAN.md`) before its checks were run; the values above stay the primary result.
+- Post hoc, asked for by the PI on 2026-11-06: a signal-to-noise threshold of 6 for both aims, with the
+  protocol's value and its two sensitivity values (`analysis/snr_threshold_6/`). The same loops are
+  judged again from their saved space-time diagrams; nothing is placed again. The values above stay the
+  primary result.
 
 ## Changes after unblinding
 

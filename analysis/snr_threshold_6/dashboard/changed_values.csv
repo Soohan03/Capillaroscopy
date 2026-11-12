@@ -1,0 +1,5 @@
+label,study,participant,aims,value_8_mm_s,from_8,value_6_mm_s,from_6,effect
+ESMOKE FP16 W after,ESMOKE,FP16,aim 2,0.1163862118481579,loop2,0.096766073235263,loop1,aim 2: no value before exposure
+ESMOKE FP22 W before,ESMOKE,FP22,"aims 1, 2",,,0.1707304311988182,loop1,enters aim 1; aim 2: no value after exposure
+ISMOKE FP04 C before,ISMOKE,FP04,aim 1,,,0.1172194530925744,loop2,aim 1: no value on the other visit
+ISMOKE FP20 C before,ISMOKE,FP20,aim 1,,,0.0598772184243575,loop1,aim 1: no value on the other visit

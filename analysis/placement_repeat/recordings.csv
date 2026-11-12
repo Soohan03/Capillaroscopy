@@ -1,0 +1,11 @@
+code,recording,study,first_loops,repeat_loops,same_reference,reference_overlap,repeat_reference_lies_on,first_reference_counted,first_reference_mm_s,first_value_mm_s,first_value_from,first_mean_mm_s,first_loops_counted,repeat_reference_counted,repeat_reference_mm_s,repeat_value_mm_s,repeat_value_from,repeat_mean_mm_s,repeat_loops_counted,values_same_capillary
+EPJXZ,FP07_Wföre_07-Nov-2019_08-56-50,ESMOKE,3,3,True,0.9064449064449065,loop1,False,,0.283847401390475,loop3,0.283847401390475,1,False,,0.08574602304080839,loop2,0.08574602304080839,1,False
+3MJS9,FP21_Wefter_20-Nov-2019_10-28-19,ESMOKE,2,2,True,0.9358974358974359,loop1,True,0.08242230948132732,0.08242230948132732,loop1,0.08242230948132732,1,True,0.08480872617805531,0.08480872617805531,loop1,0.08480872617805531,1,True
+782X8,ISMOKE_FP02_Sföre_10-Nov-2020_09-22-12,ISMOKE,3,2,True,1.0,loop1,False,,,,,0,False,,,,,0,
+M5LN3,ISMOKE_FP08_Sefter_17-Nov-2020_09-51-15,ISMOKE,3,2,False,0.0,loop2,False,,,,,0,False,,,,,0,
+48JBX,ISMOKE_FP08_Sföre_17-Nov-2020_08-19-12,ISMOKE,2,2,True,1.0,loop1,False,,,,,0,False,,,,,0,
+LK9EV,ISMOKE_FP19_Sföre_24-Nov-2020_09-04-50,ISMOKE,2,2,True,1.0,loop1,False,,,,,0,False,,,,,0,
+RAHFG,ISMOKE_FP20_Cföre_27-Nov-2020_08-36-16,ISMOKE,2,2,True,0.9458128078817734,loop1,False,,,,,0,False,,,,,0,
+FHRW9,ISMOKE_FP20_Sefter_08-Dec-2020_09-16-50,ISMOKE,2,2,True,1.0,loop1,True,0.07452045850878937,0.07452045850878937,loop1,0.0882696280221097,2,True,0.0796981872914183,0.0796981872914183,loop1,0.09093512672560734,2,True
+SA8EY,ISMOKE_FP20_Sföre_08-Dec-2020_08-20-08,ISMOKE,2,2,True,0.9664804469273743,loop1,False,,,,,0,False,,,,,0,
+S5UK5,ISMOKE_FP23_Cföre_09-Dec-2020_08-26-58,ISMOKE,2,2,True,0.9755351681957186,loop1,True,0.08339634073437979,0.08339634073437979,loop1,0.0651772753627006,2,True,0.08748091207436634,0.08748091207436634,loop1,0.06713581874893557,2,True

@@ -1,0 +1,492 @@
+<meta name="dash-one-writer">
+<style>
+  /* One reading column for the argument, cards for the evidence: summary, then the same capillary twice,
+     then each recording's value, then the tables and how it was done. */
+  .pr { display: grid; gap: var(--cds-gap-xl); max-width: 72rem; margin-inline: auto; font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+  .pr b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pr-head { display: grid; gap: var(--cds-gap-sm); }
+  .pr-eyebrow { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); letter-spacing: .02em; }
+  .pr-title { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; text-wrap: balance; }
+  .pr-lede { margin: 0; max-width: 68ch; font-size: var(--cds-font-size-body); line-height: 1.6; }
+  .pr-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr)); gap: var(--cds-gap-md); }
+  .pr-tile { display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; padding: var(--cds-pad-lg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .pr-tile.is-context { background: transparent; border-style: dashed; }
+  .pr-tile-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pr-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .pr-tile-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
+  .pr-section { display: grid; gap: var(--cds-gap-md); }
+  .pr-h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); text-wrap: balance; }
+  .pr-intro { margin: 0; max-width: 68ch; line-height: 1.55; }
+  .pr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+  .pr-card { display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; padding: var(--cds-pad-lg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .pr-h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .pr-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+  .pr-chart { position: relative; min-height: 300px; }
+  .pr-chart.is-rows { min-height: 340px; }
+  .pr-chart svg { display: block; overflow: visible; }
+  .pr-tick, .pr-axis-title, .pr-row-label, .pr-none, .pr-flag { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); }
+  .pr-tick, .pr-axis-title, .pr-none { fill: var(--color-fg-muted); }
+  .pr-row-label { fill: var(--color-fg); }
+  .pr-flag { fill: var(--color-bad); }
+  .pr-tip { position: absolute; z-index: 2; max-width: 16rem; padding: var(--cds-pad-xs) var(--cds-pad-sm); background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); font-size: var(--cds-font-size-caption); line-height: 1.45; pointer-events: none; }
+  .pr-tip-head { color: var(--cds-text-secondary); }
+  .pr-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); margin: 0; padding: 0; list-style: none; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pr-legend li { display: inline-flex; align-items: center; gap: .4rem; }
+  .pr-swatch { width: .65rem; height: .65rem; border-radius: 50%; flex: none; background: var(--cds-chart-muted); border: 2px solid transparent; box-sizing: border-box; }
+  .pr-swatch.is-ring { background: var(--color-panel); }
+  .pr-table-wrap { overflow-x: auto; }
+  .pr-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .pr-table th, .pr-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); text-align: right; white-space: nowrap; }
+  .pr-table th:first-child, .pr-table td:first-child { text-align: left; }
+  .pr-table thead th { color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); vertical-align: bottom; }
+  .pr-table td:first-child { font-weight: var(--cds-font-weight-medium); }
+  .pr-prose { display: grid; gap: var(--cds-gap-sm); max-width: 68ch; line-height: 1.6; }
+  .pr-prose p, .pr-prose ul { margin: 0; }
+  .pr-prose ul { display: grid; gap: var(--cds-gap-xs); padding-left: 1.2rem; }
+  .pr-foot { margin: 0; max-width: 68ch; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+  .pr-fail { display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pr-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+  .pr [data-dash-source-state=empty] { color: transparent; }
+  .pr [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="pr">
+  <header class="pr-head" id="summary">
+    <p class="pr-eyebrow">Nailfold capillary velocity · reproducibility of the line placement · 5 November 2026</p>
+    <h1 class="pr-title">Placement reproducibility</h1>
+    <p class="pr-lede"><b data-draw="value" data-source="summary" data-field="recordings" data-where="key=reference" data-format="int">—</b> recordings drawn at random were placed again, blind, a week after the study's placement, by the same observer. On the same video the observer chose the same reference capillary in <b data-draw="value" data-source="summary" data-field="same" data-where="key=reference" data-format="int">—</b> of <b data-draw="value" data-source="summary" data-field="recordings" data-where="key=reference" data-format="int">—</b> recordings, and where it counted both times its velocity agreed with a CV of <b data-draw="value" data-source="summary" data-field="cv_percent" data-where="key=velocity" data-format="pct">—</b>. The recordings' values agreed less (CV <b data-draw="value" data-source="summary" data-field="cv_percent" data-where="key=value" data-format="pct">—</b>), because on one recording the two placements took their value from different backup capillaries.</p>
+  </header>
+
+  <section class="pr-tiles" aria-label="Main figures">
+    <div class="pr-tile">
+      <span class="pr-tile-label">Same reference capillary chosen</span>
+      <span class="pr-big"><span data-draw="value" data-source="summary" data-field="same" data-where="key=reference" data-format="int">—</span> of <span data-draw="value" data-source="summary" data-field="recordings" data-where="key=reference" data-format="int">—</span></span>
+      <span class="pr-tile-note">recordings · 95% CI <span data-draw="value" data-source="summary" data-field="share_ci_low" data-where="key=reference" data-format="share">—</span>–<span data-draw="value" data-source="summary" data-field="share_ci_high" data-where="key=reference" data-format="share">—</span></span>
+    </div>
+    <div class="pr-tile">
+      <span class="pr-tile-label">Same capillary, velocity measured twice</span>
+      <span class="pr-big">CV <span data-draw="value" data-source="summary" data-field="cv_percent" data-where="key=velocity" data-format="pct">—</span></span>
+      <span class="pr-tile-note"><span data-draw="value" data-source="summary" data-field="pairs" data-where="key=velocity" data-format="int">—</span> references that counted both times · 95% CI <span data-draw="value" data-source="summary" data-field="cv_ci_low" data-where="key=velocity" data-format="pct">—</span>–<span data-draw="value" data-source="summary" data-field="cv_ci_high" data-where="key=velocity" data-format="pct">—</span></span>
+    </div>
+    <div class="pr-tile">
+      <span class="pr-tile-label">Each recording's value, as the protocol takes it</span>
+      <span class="pr-big">CV <span data-draw="value" data-source="summary" data-field="cv_percent" data-where="key=value" data-format="pct">—</span></span>
+      <span class="pr-tile-note"><span data-draw="value" data-source="summary" data-field="pairs" data-where="key=value" data-format="int">—</span> recordings with a value both times · 95% CI <span data-draw="value" data-source="summary" data-field="cv_ci_low" data-where="key=value" data-format="pct">—</span>–<span data-draw="value" data-source="summary" data-field="cv_ci_high" data-where="key=value" data-format="pct">—</span></span>
+    </div>
+    <div class="pr-tile is-context">
+      <span class="pr-tile-label">For comparison: aim 1, between two days</span>
+      <span class="pr-big">CV <span data-draw="value" data-source="aim1" data-field="cv_percent" data-row="0" data-format="pct">—</span></span>
+      <span class="pr-tile-note"><span data-draw="value" data-source="aim1" data-field="participants" data-row="0" data-format="int">—</span> participants, both studies pooled · 95% CI <span data-draw="value" data-source="aim1" data-field="cv_ci_low" data-row="0" data-format="pct">—</span>–<span data-draw="value" data-source="aim1" data-field="cv_ci_high" data-row="0" data-format="pct">—</span></span>
+    </div>
+  </section>
+
+  <section class="pr-section" id="same-capillary">
+    <h2 class="pr-h2">The same capillary, measured twice</h2>
+    <p class="pr-intro"><b data-draw="value" data-source="summary" data-field="on_first" data-where="key=loops" data-format="int">—</b> of the repeat's <b data-draw="value" data-source="summary" data-field="loops" data-where="key=loops" data-format="int">—</b> loops lie on a capillary the first placement also chose, mostly at the same rank. Two lines lie on the same capillary when at least half of either runs within 5 px (6.6 µm) of the other.</p>
+    <div class="pr-grid">
+      <article class="pr-card" id="velocity">
+        <h3 class="pr-h3">Velocity of the loops that counted both times</h3>
+        <p class="pr-note">First placement against the repeat, mm/s; the dashed line marks equal readings. The largest difference is <b data-draw="value" data-source="max_difference" data-field="max_difference_mm_s" data-row="0" data-format="mm">—</b> mm/s.</p>
+        <div class="pr-chart" data-draw="velocity-chart" data-source="loop_pairs"></div>
+      </article>
+      <article class="pr-card" id="signal">
+        <h3 class="pr-h3">Signal-to-noise of every loop placed twice</h3>
+        <p class="pr-note">First placement against the repeat, on log scales. The lines across mark <span data-draw="threshold">—</span>, the protocol's limit.</p>
+        <div class="pr-chart" data-draw="snr-chart" data-source="loop_pairs"></div>
+        <ul class="pr-legend">
+          <li><span class="pr-swatch" data-swatch="0"></span>Counted both times (<span data-draw="value" data-source="outcomes" data-field="loops" data-where="outcome=counted both times" data-format="int">—</span>)</li>
+          <li><span class="pr-swatch" data-swatch="1"></span>Not counted, at the slowest speed searched (<span data-draw="value" data-source="outcomes" data-field="loops" data-where="outcome=at the slowest speed searched" data-format="int">—</span>)</li>
+          <li><span class="pr-swatch"></span>Below the limit both times (<span data-draw="value" data-source="outcomes" data-field="loops" data-where="outcome=below 8 both times" data-format="int">—</span>)</li>
+        </ul>
+        <p class="pr-note">The same loops count in both placements. Every loop that scored <span data-draw="threshold">—</span> or more without counting sat at 1 px/frame (0.04 mm/s), the slowest speed the protocol searches, both times. Whether a loop counts follows the capillary, not where its line lies.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="pr-section" id="values">
+    <h2 class="pr-h2">Each recording's value</h2>
+    <p class="pr-intro">The protocol takes the reference capillary's velocity if it counts, otherwise that of the first backup that counts. <b data-draw="value" data-source="summary" data-field="neither" data-where="key=value" data-format="int">—</b> recordings had no value either time.</p>
+    <article class="pr-card">
+      <h3 class="pr-h3">The two placements' values, recording by recording</h3>
+      <ul class="pr-legend">
+        <li><span class="pr-swatch is-ring" data-swatch-ring="0"></span>First placement (29 October)</li>
+        <li><span class="pr-swatch" data-swatch="0"></span>Repeat (5 November)</li>
+      </ul>
+      <div class="pr-chart is-rows" data-draw="value-chart" data-source="recordings"></div>
+      <p class="pr-note">ESMOKE FP07 W before carries the CV. Neither placement's reference counted (signal-to-noise <span data-draw="value" data-source="loop_pairs" data-field="first_snr" data-where="code=EPJXZ&amp;first_loop=loop1" data-format="snr">—</span> and <span data-draw="value" data-source="loop_pairs" data-field="repeat_snr" data-where="code=EPJXZ&amp;first_loop=loop1" data-format="snr">—</span>), so each took its value from a backup: <span data-draw="value" data-source="recordings" data-field="first_value_from" data-where="code=EPJXZ">—</span> at <span data-draw="value" data-source="recordings" data-field="first_value_mm_s" data-where="code=EPJXZ" data-format="mm">—</span> mm/s the first time, <span data-draw="value" data-source="recordings" data-field="repeat_value_from" data-where="code=EPJXZ">—</span> at <span data-draw="value" data-source="recordings" data-field="repeat_value_mm_s" data-where="code=EPJXZ" data-format="mm">—</span> mm/s the second. They are two capillaries the other placement did not place, <span data-draw="value" data-source="backup_ratio" data-field="ratio" data-where="code=EPJXZ" data-format="ratio">—</span> times apart. The other three values agree within the differences above.</p>
+      <p class="pr-note">The one reference that differed, on ISMOKE FP08 S after: the repeat's reference lies on the first placement's <span data-draw="value" data-source="recordings" data-field="repeat_reference_lies_on" data-where="code=M5LN3">—</span>, and the first placement's reference was not placed again. Neither placement gave it a value.</p>
+    </article>
+  </section>
+
+  <section class="pr-section" id="meaning">
+    <h2 class="pr-h2">What it means for aim 1</h2>
+    <div class="pr-prose">
+      <p>Choosing and placing the line adds little to the variation. On the same video the observer picked the same reference in <b data-draw="value" data-source="summary" data-field="same" data-where="key=reference" data-format="int">—</b> of <b data-draw="value" data-source="summary" data-field="recordings" data-where="key=reference" data-format="int">—</b> recordings, and the same capillary measured twice differed by at most <b data-draw="value" data-source="max_difference" data-field="max_difference_mm_s" data-row="0" data-format="mm">—</b> mm/s. Aim 1's CV between days, <b data-draw="value" data-source="aim1" data-field="cv_percent" data-row="0" data-format="pct">—</b>, must then come mostly from what differs between the days: the field of view, which capillaries are in it, and the flow itself.</p>
+      <p>Where the reference does not count, the value comes from a backup, and which backup is used can change it several-fold. The velocity comparison rests on few pairs, so these figures give the size of the effect, not a precise estimate.</p>
+    </div>
+  </section>
+
+  <section class="pr-section" id="recordings">
+    <h2 class="pr-h2">Recording by recording</h2>
+    <div class="pr-card">
+      <p class="pr-note">Recordings are named by study, participant, visit (W and S nicotine, Q and C control) and whether before or after exposure. The code is the one the app showed during blind placement. Loops are named in the order of the observer's ranking: loop1 is the reference, loop2 and loop3 its backups.</p>
+      <div class="pr-table-wrap">
+        <table class="pr-table" data-source="recordings" data-row-key="code">
+          <thead>
+            <tr>
+              <th scope="col" data-field="label">Recording</th>
+              <th scope="col" data-field="code">Code</th>
+              <th scope="col" data-field="first_loops">Loops, first</th>
+              <th scope="col" data-field="repeat_loops">Loops, repeat</th>
+              <th scope="col" data-field="same_reference">Same reference</th>
+              <th scope="col" data-field="first_value_mm_s">Value, first (mm/s)</th>
+              <th scope="col" data-field="first_value_from">From</th>
+              <th scope="col" data-field="repeat_value_mm_s">Value, repeat (mm/s)</th>
+              <th scope="col" data-field="repeat_value_from">From</th>
+              <th scope="col" data-field="values_same_capillary">Same capillary</th>
+            </tr>
+          </thead>
+          <tbody data-draw="recording-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-section" id="statistics">
+    <h2 class="pr-h2">Statistics</h2>
+    <div class="pr-card">
+      <p class="pr-note">As for aim 1: the typical error is the SD of the differences divided by √2, the CV the typical error over the mean of all values, both with 95% intervals from the chi-square distribution; the bias and limits of agreement are the repeat minus the first placement; ICC(A,1) is two-way, absolute agreement, single measurement. Few pairs make the ICC uninformative here.</p>
+      <div class="pr-table-wrap">
+        <table class="pr-table" data-source="summary" data-row-key="key">
+          <thead>
+            <tr>
+              <th scope="col" data-field="comparison">Comparison</th>
+              <th scope="col" data-field="pairs">Pairs</th>
+              <th scope="col" data-field="typical_error_mm_s">Typical error (mm/s)</th>
+              <th scope="col" data-field="cv_percent">CV</th>
+              <th scope="col" data-field="cv_ci_low">95% CI from</th>
+              <th scope="col" data-field="cv_ci_high">to</th>
+              <th scope="col" data-field="cv_log_percent">CV, log scale</th>
+              <th scope="col" data-field="ba_bias">Bias (mm/s)</th>
+              <th scope="col" data-field="ba_loa_low">Limits from</th>
+              <th scope="col" data-field="ba_loa_high">to</th>
+              <th scope="col" data-field="icc_a1">ICC(A,1)</th>
+              <th scope="col" data-field="icc_a1_ci_low">95% CI from</th>
+              <th scope="col" data-field="icc_a1_ci_high">to</th>
+            </tr>
+          </thead>
+          <tbody data-draw="stat-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-section" id="method">
+    <h2 class="pr-h2">How it was done</h2>
+    <div class="pr-prose">
+      <ul>
+        <li><strong>Planned before the draw.</strong> The protocol of 29 October planned a second blind placement of ten random recordings on another day, under a second observer code. A written plan fixed what it left open (the pool, the seed, the comparisons and their statistics) and was committed and pushed before the recordings were drawn.</li>
+        <li><strong>The draw.</strong> Ten of 70 recordings, with numpy's random generator and seed 20261105. The pool was the 72 recordings the aims use, less two: ESMOKE FP03 W after, on which no line stays in the picture over the rest, and ISMOKE FP04 S before, whose lines had been looked at after unblinding.</li>
+        <li><strong>Blind.</strong> The app's blind placement listed the recordings under codes, hid every result and fixed the range to the official rest. The repeat had its own data folder holding only the drawn videos, so none of the first placement's lines showed. The observer recognized none of the codes.</li>
+        <li><strong>Placed as the protocol says.</strong> Rank the loops of the whole field first, then place up to three whole loops in that order (the reference, then two backups). A loop counts with a signal-to-noise of <span data-draw="threshold">—</span> or more, its speed inside the range searched, no movement and the official rest.</li>
+        <li><strong>Fixed before the comparison.</strong> On one recording a backup had been saved twice on the same capillary, six seconds apart; the copy was removed. No other change was made.</li>
+      </ul>
+      <p><strong>Limits.</strong> <span data-draw="value" data-source="summary" data-field="recordings" data-where="key=reference" data-format="int">—</span> recordings, <span data-draw="value" data-source="by_study" data-field="recordings" data-where="study=ISMOKE" data-format="int">—</span> of them ISMOKE; one observer, one week apart; the velocity comparison rests on <span data-draw="value" data-source="summary" data-field="pairs" data-where="key=velocity" data-format="int">—</span> references, <span data-draw="value" data-source="outcomes" data-field="loops" data-where="outcome=counted both times" data-format="int">—</span> loops with the backups. The repeat sees the same video, so it measures the choice and placement of the line, not the field or the flow, which differ between the days of aim 1.</p>
+    </div>
+    <p class="pr-foot">Source tables: analysis/placement_repeat/dashboard/ in the project repository, written by dashboard.py from the comparison of 5 November (PLAN.md and README.md in the same folder). The aim 1 figure is the protocol's pooled result from the primary report.</p>
+  </section>
+</div>
+
+<script>
+  (() => {
+    // The protocol's signal-to-noise limit for a loop to count (PROTOCOL.md).
+    const THRESHOLD = 8;
+    const num = (value) => (value === '' || value === null || value === undefined ? NaN : Number(value));
+    const FORMATS = {
+      int: (v) => d3.format(',')(Math.round(v)),
+      pct: (v) => `${d3.format(Math.abs(v) < 10 ? '.1f' : '.0f')(v)}%`,
+      share: (v) => d3.format('.0%')(v),
+      mm: (v) => d3.format('.3f')(v),
+      signed: (v) => d3.format('+.3f')(v),
+      snr: (v) => d3.format('.1f')(v),
+      icc: (v) => d3.format('.2f')(v),
+      ratio: (v) => d3.format('.1f')(v),
+    };
+    const show = (value, format) => {
+      if (!FORMATS[format]) return value === '' || value === null || value === undefined ? '–' : String(value);
+      const n = num(value);
+      return Number.isFinite(n) ? FORMATS[format](n) : '–';
+    };
+
+    dash.calc('outcomes', {
+      inputs: ['loop_pairs'],
+      title: 'Loops placed twice, by outcome',
+      description: 'How many loops placed twice counted both times, sat at the slowest speed searched, or scored below 8 both times.',
+      fn: (loop_pairs) => ['counted both times', 'at the slowest speed searched', 'below 8 both times', 'counted once']
+        .map((outcome) => ({outcome, loops: loop_pairs.filter((row) => row.outcome === outcome).length})),
+    });
+    dash.calc('max_difference', {
+      inputs: ['loop_pairs'],
+      title: 'Largest difference, same capillary',
+      description: 'The largest difference in velocity between the two placements among loops that counted both times.',
+      fn: (loop_pairs) => {
+        const both = loop_pairs.filter((row) => row.outcome === 'counted both times');
+        const differences = both.map((row) => Math.abs(Number(row.repeat_mm_s) - Number(row.first_mm_s)));
+        return [{loops: both.length, max_difference_mm_s: differences.length ? Math.max(...differences) : null}];
+      },
+    });
+    dash.calc('by_study', {
+      inputs: ['recordings'],
+      title: 'Drawn recordings by study',
+      description: 'How many of the drawn recordings come from each study.',
+      fn: (recordings) => ['ESMOKE', 'ISMOKE'].map((study) => ({study, recordings: recordings.filter((row) => row.study === study).length})),
+    });
+    dash.calc('backup_ratio', {
+      inputs: ['recordings'],
+      title: 'Values from different capillaries',
+      description: 'For each recording whose two values came from different capillaries, the larger value over the smaller.',
+      fn: (recordings) => recordings.filter((row) => row.values_same_capillary === 'no').map((row) => {
+        const values = [Number(row.first_value_mm_s), Number(row.repeat_value_mm_s)];
+        return {code: row.code, label: row.label, ratio: Math.max(...values) / Math.min(...values)};
+      }),
+    });
+
+    const conditions = (el) => (el.dataset.where || '').split('&').filter(Boolean)
+      .map((part) => part.split('=').map(decodeURIComponent));
+    const rowOf = (el) => {
+      const d = dash.data(el.dataset.source);
+      if (d.status !== 'ok') return {status: d.status};
+      const rows = d.data || [];
+      if (el.dataset.row !== undefined) return {status: 'ok', row: rows[Number(el.dataset.row)]};
+      const where = conditions(el);
+      return {status: 'ok', row: rows.find((row) => where.every(([key, value]) => String(row[key]) === value))};
+    };
+    dash.draw('value', (el) => {
+      const {status, row} = rowOf(el);
+      el.classList.toggle('dash-skeleton', status === 'loading');
+      el.textContent = row ? show(row[el.dataset.field], el.dataset.format) : '—';
+    });
+    dash.draw('threshold', (el) => { el.textContent = String(THRESHOLD); });
+
+    document.querySelectorAll('[data-swatch]').forEach((el) => { el.style.background = dash.colors[Number(el.dataset.swatch)]; });
+    document.querySelectorAll('[data-swatch-ring]').forEach((el) => { el.style.borderColor = dash.colors[Number(el.dataset.swatchRing)]; });
+
+    // ---------------------------------------------------------------- shared chart pieces
+    const ready = (el, ...ids) => {
+      const states = ids.map((id) => dash.data(id).status);
+      el.replaceChildren();
+      el.classList.toggle('dash-skeleton', states.includes('loading'));
+      if (states.every((s) => s === 'ok')) return true;
+      if (states.includes('error')) {
+        const fail = document.createElement('div');
+        fail.className = 'pr-fail';
+        fail.textContent = 'Failed to load';
+        el.append(fail);
+      }
+      return false;
+    };
+    const widest = (svg, texts, className) => {
+      const probe = svg.append('g');
+      const width = d3.max(texts, (text) => probe.append('text').attr('class', className).text(text).node().getComputedTextLength()) || 0;
+      probe.remove();
+      return width;
+    };
+    const styleAxis = (g) => {
+      g.attr('font-size', null).attr('font-family', null);
+      g.selectAll('.domain, .tick line').style('stroke', 'var(--cds-chart-axis)');
+      g.selectAll('.tick text').attr('class', 'pr-tick');
+    };
+    const tooltip = (el) => {
+      const tip = document.createElement('div');
+      tip.className = 'pr-tip';
+      tip.hidden = true;
+      el.append(tip);
+      return {
+        show(lines, x, y) {
+          tip.replaceChildren(...lines.map((text, i) => {
+            const line = document.createElement('div');
+            line.textContent = text;
+            if (i === 0) line.className = 'pr-tip-head';
+            return line;
+          }));
+          tip.hidden = false;
+          let left = x + 14;
+          if (left + tip.offsetWidth > el.clientWidth) left = Math.max(0, x - 14 - tip.offsetWidth);
+          let top = y - tip.offsetHeight - 10;
+          if (top < 0) top = y + 14;
+          tip.style.left = `${left}px`;
+          tip.style.top = `${top}px`;
+        },
+        hide() { tip.hidden = true; },
+      };
+    };
+    const mm = d3.format('.3f');
+
+    // Both placements' readings of one quantity against each other, with the line of equal readings.
+    const scatter = (el, o) => {
+      const width = Math.max(260, el.clientWidth);
+      const height = 300;
+      const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('role', 'img').attr('aria-label', o.label);
+      const m = {top: 12, right: 18, bottom: 46, left: Math.ceil(widest(svg, o.ticks.map(o.format), 'pr-tick')) + 34};
+      const scale = o.log ? d3.scaleLog : d3.scaleLinear;
+      const x = scale(o.domain, [m.left, width - m.right]);
+      const y = scale(o.domain, [height - m.bottom, m.top]);
+      const grid = svg.append('g');
+      grid.selectAll('.h').data(o.ticks).join('line').attr('class', 'h')
+        .attr('x1', m.left).attr('x2', width - m.right).attr('y1', (t) => y(t)).attr('y2', (t) => y(t))
+        .style('stroke', 'var(--cds-chart-grid)');
+      grid.selectAll('.v').data(o.ticks).join('line').attr('class', 'v')
+        .attr('y1', m.top).attr('y2', height - m.bottom).attr('x1', (t) => x(t)).attr('x2', (t) => x(t))
+        .style('stroke', 'var(--cds-chart-grid)');
+      (o.limits || []).forEach((limit) => {
+        svg.append('line').attr('x1', x(limit)).attr('x2', x(limit)).attr('y1', m.top).attr('y2', height - m.bottom)
+          .style('stroke', 'var(--cds-chart-reference)').style('stroke-dasharray', '6 3');
+        svg.append('line').attr('x1', m.left).attr('x2', width - m.right).attr('y1', y(limit)).attr('y2', y(limit))
+          .style('stroke', 'var(--cds-chart-reference)').style('stroke-dasharray', '6 3');
+      });
+      svg.append('line').attr('x1', x(o.domain[0])).attr('y1', y(o.domain[0])).attr('x2', x(o.domain[1])).attr('y2', y(o.domain[1]))
+        .style('stroke', 'var(--cds-chart-axis)').style('stroke-dasharray', '2 4');
+      styleAxis(svg.append('g').attr('transform', `translate(0,${height - m.bottom})`)
+        .call(d3.axisBottom(x).tickValues(o.ticks).tickFormat(o.format).tickSizeOuter(0)));
+      styleAxis(svg.append('g').attr('transform', `translate(${m.left},0)`)
+        .call(d3.axisLeft(y).tickValues(o.ticks).tickFormat(o.format).tickSizeOuter(0)));
+      svg.append('text').attr('class', 'pr-axis-title').attr('text-anchor', 'middle')
+        .attr('x', (m.left + width - m.right) / 2).attr('y', height - 8).text(o.xTitle);
+      svg.append('text').attr('class', 'pr-axis-title').attr('text-anchor', 'middle')
+        .attr('transform', `translate(12,${(m.top + height - m.bottom) / 2}) rotate(-90)`).text(o.yTitle);
+      const tip = tooltip(el);
+      svg.append('g').selectAll('circle').data(o.points).join('circle')
+        .attr('cx', (p) => x(p.x)).attr('cy', (p) => y(p.y)).attr('r', 5.5)
+        .style('fill', (p) => p.color).style('stroke', 'var(--color-panel)').style('stroke-width', 1.5)
+        .on('mouseenter', (event, p) => tip.show(p.lines, x(p.x), y(p.y)))
+        .on('mouseleave', () => tip.hide());
+    };
+
+    dash.draw('velocity-chart', (el) => {
+      if (!ready(el, 'loop_pairs')) return;
+      const points = dash.data('loop_pairs').data.filter((row) => row.outcome === 'counted both times').map((row) => ({
+        x: num(row.first_mm_s), y: num(row.repeat_mm_s), color: dash.colors[0],
+        lines: [row.recording, `${row.first_loop} first: ${mm(num(row.first_mm_s))} mm/s`,
+          `${row.repeat_loop} repeat: ${mm(num(row.repeat_mm_s))} mm/s`],
+      }));
+      const values = points.flatMap((p) => [p.x, p.y]);
+      const domain = values.length ? [Math.floor(d3.min(values) * 0.8 * 100) / 100, Math.ceil(d3.max(values) * 1.1 * 100) / 100] : [0, 0.1];
+      scatter(el, {
+        points, domain, ticks: d3.ticks(domain[0], domain[1], 5), format: d3.format('.2f'),
+        xTitle: 'First placement (mm/s)', yTitle: 'Repeat (mm/s)', label: 'Velocity, first placement against the repeat',
+      });
+    });
+
+    dash.draw('snr-chart', (el) => {
+      if (!ready(el, 'loop_pairs')) return;
+      const colors = {'counted both times': dash.colors[0], 'at the slowest speed searched': dash.colors[1]};
+      const points = dash.data('loop_pairs').data.map((row) => ({
+        x: num(row.first_snr), y: num(row.repeat_snr), color: colors[row.outcome] || 'var(--cds-chart-muted)',
+        lines: [row.recording, `${row.first_loop} first: ${d3.format('.1f')(num(row.first_snr))}`,
+          `${row.repeat_loop} repeat: ${d3.format('.1f')(num(row.repeat_snr))}`, row.outcome],
+      }));
+      const values = points.flatMap((p) => [p.x, p.y]);
+      const domain = [Math.min(2, d3.min(values) * 0.9), Math.max(100, d3.max(values) * 1.1)];
+      const ticks = [2, 4, 8, 16, 32, 64].filter((t) => t >= domain[0] && t <= domain[1]);
+      scatter(el, {
+        points, domain, ticks, log: true, limits: [THRESHOLD], format: d3.format('d'),
+        xTitle: 'First placement', yTitle: 'Repeat', label: 'Signal-to-noise, first placement against the repeat',
+      });
+    });
+
+    dash.draw('value-chart', (el) => {
+      if (!ready(el, 'recordings')) return;
+      const rows = dash.data('recordings').data.map((row) => ({...row, a: num(row.first_value_mm_s), b: num(row.repeat_value_mm_s)}));
+      const top = (row) => d3.max([row.a, row.b].filter(Number.isFinite)) ?? -1;
+      rows.sort((p, q) => top(q) - top(p) || p.label.localeCompare(q.label));
+      const width = Math.max(260, el.clientWidth);
+      const rowHeight = 30;
+      const m = {top: 4, right: 20, bottom: 42};
+      const height = m.top + rows.length * rowHeight + m.bottom;
+      const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('role', 'img').attr('aria-label', 'Each recording’s value in both placements');
+      m.left = Math.ceil(widest(svg, rows.map((row) => row.label), 'pr-row-label')) + 14;
+      const max = d3.max(rows, top);
+      const x = d3.scaleLinear([0, max > 0 ? Math.ceil(max * 1.1 * 20) / 20 : 0.1], [m.left, width - m.right]);
+      const y = d3.scaleBand(rows.map((row) => row.code), [m.top, m.top + rows.length * rowHeight]);
+      const ticks = x.ticks(Math.max(2, Math.floor((width - m.left - m.right) / 70)));
+      svg.append('g').selectAll('line').data(ticks).join('line')
+        .attr('x1', (t) => x(t)).attr('x2', (t) => x(t)).attr('y1', m.top).attr('y2', height - m.bottom)
+        .style('stroke', 'var(--cds-chart-grid)');
+      styleAxis(svg.append('g').attr('transform', `translate(0,${height - m.bottom})`)
+        .call(d3.axisBottom(x).tickValues(ticks).tickFormat(d3.format('.2f')).tickSizeOuter(0)));
+      svg.append('text').attr('class', 'pr-axis-title').attr('text-anchor', 'middle')
+        .attr('x', (m.left + width - m.right) / 2).attr('y', height - 6).text('Value (mm/s)');
+      const tip = tooltip(el);
+      const flagWidth = widest(svg, ['different backups'], 'pr-flag');
+      rows.forEach((row) => {
+        const cy = y(row.code) + rowHeight / 2;
+        const g = svg.append('g');
+        g.append('text').attr('class', 'pr-row-label').attr('x', m.left - 10).attr('y', cy).attr('dy', '0.35em')
+          .attr('text-anchor', 'end').text(row.label);
+        const present = [row.a, row.b].filter(Number.isFinite);
+        if (!present.length) {
+          g.append('text').attr('class', 'pr-none').attr('x', x(0) + 6).attr('y', cy).attr('dy', '0.35em').text('no value either time');
+        } else {
+          const apart = row.values_same_capillary === 'no';
+          if (present.length === 2) {
+            g.append('line').attr('x1', x(row.a)).attr('x2', x(row.b)).attr('y1', cy).attr('y2', cy)
+              .style('stroke', apart ? 'var(--cds-chart-status-critical)' : 'var(--cds-chart-muted)')
+              .style('stroke-width', 2).style('stroke-linecap', 'round');
+          }
+          if (Number.isFinite(row.a)) {
+            g.append('circle').attr('cx', x(row.a)).attr('cy', cy).attr('r', 5)
+              .style('fill', 'var(--color-panel)').style('stroke', dash.colors[0]).style('stroke-width', 2);
+          }
+          if (Number.isFinite(row.b)) {
+            g.append('circle').attr('cx', x(row.b)).attr('cy', cy).attr('r', 5).style('fill', dash.colors[0]);
+          }
+          if (apart) {
+            const right = x(d3.max(present)) + 12;
+            const left = x(d3.min(present)) - 12;
+            if (right + flagWidth <= width - m.right) {
+              g.append('text').attr('class', 'pr-flag').attr('x', right).attr('y', cy).attr('dy', '0.35em').text('different backups');
+            } else if (left - flagWidth >= m.left) {
+              g.append('text').attr('class', 'pr-flag').attr('x', left).attr('y', cy).attr('dy', '0.35em')
+                .attr('text-anchor', 'end').text('different backups');
+            }
+          }
+        }
+        const line = (when, value, from) => `${when}: ${Number.isFinite(value) ? `${mm(value)} mm/s (${from})` : 'no value'}`;
+        g.append('rect').attr('x', 0).attr('y', y(row.code)).attr('width', width).attr('height', rowHeight)
+          .style('fill', 'transparent')
+          .on('mouseenter', () => tip.show([row.label, line('First', row.a, row.first_value_from),
+            line('Repeat', row.b, row.repeat_value_from)], x(present.length ? d3.max(present) : 0), cy))
+          .on('mouseleave', () => tip.hide());
+      });
+    });
+
+    // ---------------------------------------------------------------- tables
+    const fill = (tbody, id, key, columns, keep = () => true) => {
+      tbody.replaceChildren();
+      const d = dash.data(id);
+      if (d.status !== 'ok') return;
+      d.data.filter(keep).forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.dataset.key = row[key];
+        columns.forEach(([field, format]) => {
+          const td = document.createElement('td');
+          td.textContent = show(row[field], format);
+          tr.append(td);
+        });
+        tbody.append(tr);
+      });
+    };
+    dash.draw('recording-rows', (tbody) => fill(tbody, 'recordings', 'code', [
+      ['label'], ['code'], ['first_loops', 'int'], ['repeat_loops', 'int'], ['same_reference'],
+      ['first_value_mm_s', 'mm'], ['first_value_from'], ['repeat_value_mm_s', 'mm'], ['repeat_value_from'],
+      ['values_same_capillary'],
+    ]));
+    dash.draw('stat-rows', (tbody) => fill(tbody, 'summary', 'key', [
+      ['comparison'], ['pairs', 'int'], ['typical_error_mm_s', 'mm'], ['cv_percent', 'pct'], ['cv_ci_low', 'pct'],
+      ['cv_ci_high', 'pct'], ['cv_log_percent', 'pct'], ['ba_bias', 'signed'], ['ba_loa_low', 'signed'],
+      ['ba_loa_high', 'signed'], ['icc_a1', 'icc'], ['icc_a1_ci_low', 'icc'], ['icc_a1_ci_high', 'icc'],
+    ], (row) => ['velocity', 'value', 'mean'].includes(row.key)));
+  })();
+</script>

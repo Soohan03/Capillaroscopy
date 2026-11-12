@@ -1,0 +1,6 @@
+cutoff,synthetic_clips,synthetic_flow,occlusion_lines,occlusion_flow,rest_loops,rest_counted,after_release_counted_too,after_release_same_way
+5.0,120,2,163,16,200,107,60,60
+6.0,120,0,163,14,200,101,57,57
+7.0,120,0,163,12,200,95,49,49
+8.0,120,0,163,12,200,91,45,45
+9.0,120,0,163,10,200,88,40,40
